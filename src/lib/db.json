@@ -1,0 +1,236 @@
+{
+  "galleries": [
+    {
+      "id": "gallery-paintings",
+      "name": "Tranh Sơn Dầu Nghệ Thuật",
+      "description": "Không gian trưng bày các tác phẩm hội họa kinh điển thế giới chất liệu sơn dầu.",
+      "scene_asset_url": "",
+      "is_active": true
+    },
+    {
+      "id": "gallery-sculptures",
+      "name": "Cổ Vật Điêu Khắc & Điêu Khắc Hiện Đại",
+      "description": "Không gian triển lãm mô hình điêu khắc 3D tương tác đa chiều.",
+      "scene_asset_url": "",
+      "is_active": true
+    }
+  ],
+  "exhibits": [
+    {
+      "id": "painting-monalisa",
+      "gallery_id": "gallery-paintings",
+      "title": {
+        "vi": "Mona Lisa",
+        "en": "Mona Lisa"
+      },
+      "author": {
+        "vi": "Leonardo da Vinci",
+        "en": "Leonardo da Vinci"
+      },
+      "description": {
+        "vi": "Mona Lisa là một bức chân dung thế kỷ 16 được vẽ bằng sơn dầu trên một tấm gỗ bóng của vùng Lombardy bởi Leonardo da Vinci trong thời kỳ Phục hưng Ý. Tác phẩm thuộc sở hữu của Chính phủ Pháp và hiện được trưng bày tại Bảo tàng Louvre ở Paris.",
+        "en": "The Mona Lisa is a half-length portrait painting by Italian artist Leonardo da Vinci. Considered an archetypal masterpiece of the Italian Renaissance, it has been described as 'the best known, the most visited, the most written about, the most sung about, the most parodied work of art in the world'."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1580136579312-94651dfd596d?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": -5.9,
+      "coordinate_y": 3.0,
+      "coordinate_z": -6.0,
+      "rotation_x": 0.0,
+      "rotation_y": 1.5708,
+      "rotation_z": 0.0,
+      "scale_x": 2.2,
+      "scale_y": 3.0,
+      "scale_z": 0.1
+    },
+    {
+      "id": "painting-starrynight",
+      "gallery_id": "gallery-paintings",
+      "title": {
+        "vi": "Đêm Đầy Sao",
+        "en": "The Starry Night"
+      },
+      "author": {
+        "vi": "Vincent van Gogh",
+        "en": "Vincent van Gogh"
+      },
+      "description": {
+        "vi": "Đêm đầy sao là một bức tranh sơn dầu của họa sĩ hậu ấn tượng người Hà Lan Vincent van Gogh. Được vẽ vào tháng 6 năm 1889, bức tranh miêu tả khung cảnh từ cửa sổ phòng bệnh của ông ở Saint-Rémy-de-Provence hướng ra ngoài vào ban đêm.",
+        "en": "The Starry Night is an oil-on-canvas painting by the Dutch Post-Impressionist painter Vincent van Gogh. Painted in June 1889, it depicts the view from the east-facing window of his asylum room at Saint-Rémy-de-Provence, just before sunrise, with the addition of an imaginary village."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": -5.9,
+      "coordinate_y": 2.6,
+      "coordinate_z": 6.0,
+      "rotation_x": 0.0,
+      "rotation_y": 1.5708,
+      "rotation_z": 0.0,
+      "scale_x": 2.8,
+      "scale_y": 2.2,
+      "scale_z": 0.1
+    },
+    {
+      "id": "painting-scream",
+      "gallery_id": "gallery-paintings",
+      "title": {
+        "vi": "Tiếng Thét",
+        "en": "The Scream"
+      },
+      "author": {
+        "vi": "Edvard Munch",
+        "en": "Edvard Munch"
+      },
+      "description": {
+        "vi": "Tiếng thét là tên của một loạt các bức tranh và bản in được tạo ra bởi nghệ sĩ biểu hiện người Na Uy Edvard Munch, miêu tả một nhân vật đau đớn tột cùng trước bầu trời đỏ rực rỡ.",
+        "en": "The Scream is the popular name given to a composition created by Norwegian Expressionist artist Edvard Munch in 1893. The agonized face in the painting has become one of the most iconic images of art, symbolizing the anxiety of the human condition."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 5.9,
+      "coordinate_y": 2.9,
+      "coordinate_z": -6.0,
+      "rotation_x": 0.0,
+      "rotation_y": -1.5708,
+      "rotation_z": 0.0,
+      "scale_x": 2.2,
+      "scale_y": 2.8,
+      "scale_z": 0.1
+    },
+    {
+      "id": "painting-persistence",
+      "gallery_id": "gallery-paintings",
+      "title": {
+        "vi": "Sự Dai Dẳng Của Ký Ức",
+        "en": "The Persistence of Memory"
+      },
+      "author": {
+        "vi": "Salvador Dalí",
+        "en": "Salvador Dalí"
+      },
+      "description": {
+        "vi": "Sự dai dẳng của ký ức là một tác phẩm tranh sơn dầu nổi tiếng năm 1931 của họa sĩ trường phái siêu thực Salvador Dalí. Nó miêu tả những chiếc đồng hồ quả quýt đang tan chảy trong một khung cảnh sa mạc tĩnh lặng.",
+        "en": "The Persistence of Memory is a 1931 painting by artist Salvador Dalí, and one of the most recognizable works of Surrealism. First shown at the Julien Levy Gallery in 1932, since 1934 the painting has been in the collection of the Museum of Modern Art (MoMA) in New York City."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1579783928621-7a13d66a62d1?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 5.9,
+      "coordinate_y": 2.5,
+      "coordinate_z": 6.0,
+      "rotation_x": 0.0,
+      "rotation_y": -1.5708,
+      "rotation_z": 0.0,
+      "scale_x": 2.6,
+      "scale_y": 2.0,
+      "scale_z": 0.1
+    },
+    {
+      "id": "painting-wave",
+      "gallery_id": "gallery-paintings",
+      "title": {
+        "vi": "Sóng Lớn Ngoài Khơi Kanagawa",
+        "en": "The Great Wave off Kanagawa"
+      },
+      "author": {
+        "vi": "Hokusai",
+        "en": "Hokusai"
+      },
+      "description": {
+        "vi": "Sóng lớn ngoài khơi Kanagawa là một bản in mộc bản của nghệ sĩ ukiyo-e người Nhật Hokusai. Đây là tác phẩm nổi tiếng nhất của ông và là một trong những tác phẩm nghệ thuật Nhật Bản được biết đến nhiều nhất trên thế giới.",
+        "en": "The Great Wave off Kanagawa is a woodblock print by the Japanese ukiyo-e artist Hokusai. It was published sometime between 1829 and 1833 in the late Edo period as the first print in Hokusai's series Thirty-six Views of Mount Fuji."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 2.6,
+      "coordinate_z": -14.9,
+      "rotation_x": 0.0,
+      "rotation_y": 0.0,
+      "rotation_z": 0.0,
+      "scale_x": 3.4,
+      "scale_y": 2.2,
+      "scale_z": 0.1
+    },
+    {
+      "id": "sculpture-torusknot",
+      "gallery_id": "gallery-sculptures",
+      "title": {
+        "vi": "Vòng Xoắn Hoàng Kim",
+        "en": "The Golden Torus"
+      },
+      "author": {
+        "vi": "Nghệ sĩ Độc bản",
+        "en": "Procedural Sculptor"
+      },
+      "description": {
+        "vi": "Một cấu trúc điêu khắc kim loại trừu tượng với các vòng thắt vô tận mạ vàng bóng. Tác phẩm tượng trưng cho vòng lặp vô hạn của thời gian và không gian trong nghệ thuật hiện đại.",
+        "en": "An abstract metallic sculpture featuring infinite golden loops. It symbolizes the infinite loops of space and time in modern spatial art."
+      },
+      "model_3d_url": "procedural-torusknot",
+      "thumbnail_url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 1.4,
+      "coordinate_z": -8.0,
+      "rotation_x": 0.0,
+      "rotation_y": 0.0,
+      "rotation_z": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
+    },
+    {
+      "id": "sculpture-octahedron",
+      "gallery_id": "gallery-sculptures",
+      "title": {
+        "vi": "Tinh Thể Đa Diện",
+        "en": "Crystalline Octahedron"
+      },
+      "author": {
+        "vi": "Nhóm Thiết kế Không gian",
+        "en": "Spatial Design Lab"
+      },
+      "description": {
+        "vi": "Một khối bát diện tinh thể với khả năng khúc xạ ánh sáng đa sắc. Khi tương tác, các mặt tinh thể sẽ phản chiếu ánh sáng môi trường tạo ra những vệt sắc cầu vồng sinh động.",
+        "en": "A crystalline octahedral sculpture with multi-spectral light refraction. When interacted with, the crystal faces reflect surrounding light to create vivid rainbow flares."
+      },
+      "model_3d_url": "procedural-octahedron",
+      "thumbnail_url": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 1.4,
+      "coordinate_z": 8.0,
+      "rotation_x": 0.0,
+      "rotation_y": 0.78539,
+      "rotation_z": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
+    },
+    {
+      "id": "sculpture-helix",
+      "gallery_id": "gallery-sculptures",
+      "title": {
+        "vi": "Mầm Sống Sinh Học",
+        "en": "Bronze Bio-Helix"
+      },
+      "author": {
+        "vi": "Nhà điêu khắc Cổ đại",
+        "en": "Ancient Futurist"
+      },
+      "description": {
+        "vi": "Tượng đồng dạng chuỗi xoắn kép mô tả cấu trúc di truyền học của sự sống sinh học cổ đại. Bề mặt tượng được xử lý chất liệu đồng cổ phong hóa thời gian.",
+        "en": "A bronze double-helix sculpture depicting the genetic structure of ancient biological life. The surface is textured with aged, weathered bronze patina."
+      },
+      "model_3d_url": "procedural-helix",
+      "thumbnail_url": "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 1.4,
+      "coordinate_z": 0.0,
+      "rotation_x": 0.0,
+      "rotation_y": 0.0,
+      "rotation_z": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
+    }
+  ]
+}
