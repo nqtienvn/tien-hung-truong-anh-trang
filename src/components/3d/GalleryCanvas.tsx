@@ -113,28 +113,35 @@ const CameraLerpController: React.FC = () => {
 
     let minT = dist;
 
-    // 1. Kiểm tra va chạm với tường phòng (X: -6m -> 6m, Z: -15m -> 15m)
-    // Tường trái (X = -5.8) và tường phải (X = 5.8)
+    const roomWidth = activeGallery?.room_width ?? 12;
+    const roomLength = activeGallery?.room_length ?? 30;
+    const roomHeight = activeGallery?.room_height ?? 6;
+
+    // 1. Kiểm tra va chạm với tường phòng
+    const boundaryX = roomWidth / 2 - 0.25;
+    const boundaryZ = roomLength / 2 - 0.25;
+
+    // Tường trái và tường phải
     if (dir.x < 0) {
-      const t = (-5.75 - px) / dir.x;
+      const t = (-boundaryX - px) / dir.x;
       if (t > 0 && t < minT) minT = t;
     } else if (dir.x > 0) {
-      const t = (5.75 - px) / dir.x;
+      const t = (boundaryX - px) / dir.x;
       if (t > 0 && t < minT) minT = t;
     }
 
-    // Tường trước (Z = -14.75) và tường sau (Z = 14.75)
+    // Tường trước và sau
     if (dir.z < 0) {
-      const t = (-14.75 - pz) / dir.z;
+      const t = (-boundaryZ - pz) / dir.z;
       if (t > 0 && t < minT) minT = t;
     } else if (dir.z > 0) {
-      const t = (14.75 - pz) / dir.z;
+      const t = (boundaryZ - pz) / dir.z;
       if (t > 0 && t < minT) minT = t;
     }
 
-    // Trần nhà (Y = 5.5) và sàn nhà (Y = 0.2)
+    // Trần nhà và sàn nhà
     if (dir.y > 0) {
-      const t = (5.5 - targetHeight) / dir.y;
+      const t = (roomHeight - 0.5 - targetHeight) / dir.y;
       if (t > 0 && t < minT) minT = t;
     } else if (dir.y < 0) {
       const t = (0.25 - targetHeight) / dir.y;
@@ -144,13 +151,13 @@ const CameraLerpController: React.FC = () => {
     // 2. Va chạm với vách ngăn trung tâm tại Z = 0 (chỉ phòng tranh)
     if (!isSculptures) {
       if (dir.z !== 0) {
-        // Vách ngăn dày 0.4m => biên giới hạn ở Z = 0.22 hoặc Z = -0.22 dựa theo vị trí người chơi
         const wallZ = pz > 0 ? 0.22 : -0.22;
         const t = (wallZ - pz) / dir.z;
         if (t > 0 && t < minT) {
           const intersectX = px + t * dir.x;
-          // Vách ngăn rộng từ X = -3m đến 3m (cộng thêm biên an toàn thành -3.1m đến 3.1m)
-          if (intersectX > -3.1 && intersectX < 3.1) {
+          const partitionWidth = Math.min(roomWidth * 0.5, 8);
+          const limitX = partitionWidth / 2 + 0.1;
+          if (intersectX > -limitX && intersectX < limitX) {
             minT = t;
           }
         }
@@ -218,7 +225,7 @@ const CameraLerpController: React.FC = () => {
 };
 
 export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryId }) => {
-  const { selectedExhibit, setSelectedExhibit, nickname } = useMuseum();
+  const { selectedExhibit, setSelectedExhibit, nickname, settings } = useMuseum();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Xử lý click ngoài tác phẩm để hủy tiêu điểm phóng to
@@ -232,21 +239,21 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
     <div ref={containerRef} className="w-full h-full bg-[#0a0a0d] relative overflow-hidden select-none">
       {/* 3D Canvas */}
       <Canvas
-        shadows
+        shadows={settings.shadows}
         camera={{ position: [0, 2.0, 14.5], fov: 60 }}
         onClick={handleMiss}
       >
-        <color attach="background" args={['#0a0a0d']} />
-        <fog attach="fog" args={['#0a0a0d', 5, 18]} />
+        <color attach="background" args={['#14141a']} />
+        <fog attach="fog" args={['#14141a', 8, 25]} />
 
         {/* Ánh sáng chung (tăng độ sáng) */}
-        <ambientLight intensity={0.45} />
+        <ambientLight intensity={0.8} />
         
         {/* Ánh sáng đổ bóng xéo */}
         <directionalLight 
           position={[5, 12, 5]} 
-          intensity={0.5} 
-          castShadow 
+          intensity={0.7} 
+          castShadow={settings.shadows} 
           shadow-mapSize-width={1024} 
           shadow-mapSize-height={1024} 
         />
@@ -254,7 +261,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
         {/* Ánh sáng tự nhiên từ giếng trời chiếu thẳng xuống */}
         <directionalLight 
           position={[0, 10, 0]} 
-          intensity={0.8} 
+          intensity={1.2} 
           color="#f0f9ff"
         />
 

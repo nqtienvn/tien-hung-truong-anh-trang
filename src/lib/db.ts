@@ -12,6 +12,15 @@ export interface Gallery {
   description: string;
   scene_asset_url: string;
   is_active: boolean;
+  
+  // Cấu hình không gian 3D
+  room_width?: number;
+  room_length?: number;
+  room_height?: number;
+  floor_color?: string;
+  wall_color?: string;
+  wainscoting_color?: string;
+  floor_type?: 'wood' | 'marble' | 'carpet';
 }
 
 export interface Exhibit {
@@ -143,6 +152,27 @@ export function updateExhibitCoordinates(
   }
   return success;
 }
+
+export function updateGallery(
+  id: string,
+  data: Partial<Gallery>
+): boolean {
+  const db = readDb();
+  const index = db.galleries.findIndex(g => g.id === id);
+  if (index === -1) return false;
+
+  db.galleries[index] = {
+    ...db.galleries[index],
+    ...data
+  };
+
+  const success = writeDb(db);
+  if (success) {
+    invalidateCache();
+  }
+  return success;
+}
+
 
 export function saveExhibit(exhibit: Exhibit): boolean {
   const db = readDb();

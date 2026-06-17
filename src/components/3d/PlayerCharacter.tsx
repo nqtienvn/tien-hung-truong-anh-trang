@@ -3,9 +3,33 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useMuseum } from "@/context/MuseumContext";
 
+// ─── Kích thước dùng chung ───────────────────────────────────────────────────
+const HEAD_R = 0.22;
+const TORSO_R = 0.175;
+const TORSO_H = 0.3;
+
+const ARM_R = 0.068;
+const ARM_LEN = 0.22;
+
+const LEG_R = 0.075;
+const LEG_LEN = 0.22;
+
+const TORSO_TOP = 0.28 + TORSO_R + TORSO_H / 2;
+const ARM_PIVOT_X = TORSO_R + ARM_R * 0.95; // Đẩy tay dịch ra ngoài để không dính vào thân
+const ARM_PIVOT_Y = TORSO_TOP - 0.1;
+const ARM_MESH_Y = -(ARM_R + ARM_LEN / 2);
+
+const LEG_PIVOT_Y = 0.28 - TORSO_H / 2 - TORSO_R + LEG_R * 1.6; // Đẩy chân lên cao để ăn khớp mượt mà với thân
+const LEG_PIVOT_X = 0.082;
+const LEG_MESH_Y = -(LEG_R + LEG_LEN / 2);
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const PlayerCharacter: React.FC = () => {
-  const { selectedExhibit, socket, activeGallery, nickname } = useMuseum();
+  const { selectedExhibit, socket, activeGallery, nickname, settings } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
+
+  const isPawn = settings.preset === 'low';
+  const baseY = isPawn ? 0.15 : 0.295;
 
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
@@ -26,9 +50,9 @@ export const PlayerCharacter: React.FC = () => {
   // Thiết lập vị trí ban đầu
   useEffect(() => {
     if (playerRef.current) {
-      playerRef.current.position.set(0, 0.9, 12);
+      playerRef.current.position.set(0, baseY, 12);
     }
-  }, []);
+  }, [baseY]);
 
   // Lắng nghe bàn phím di chuyển
   useEffect(() => {
@@ -123,8 +147,8 @@ export const PlayerCharacter: React.FC = () => {
       let nextX = currentPos.x + stepX;
       let nextZ = currentPos.z + stepZ;
 
-      const limitX = 5.4;
-      const limitZ = 14.4;
+      const limitX = (activeGallery?.room_width ?? 12) / 2 - 0.6;
+      const limitZ = (activeGallery?.room_length ?? 30) / 2 - 0.6;
 
       nextX = Math.max(-limitX, Math.min(limitX, nextX));
       nextZ = Math.max(-limitZ, Math.min(limitZ, nextZ));
@@ -143,17 +167,20 @@ export const PlayerCharacter: React.FC = () => {
       playerRef.current.rotation.y += diff * rotationSpeed * delta;
     }
 
-    // Hiệu ứng lơ lửng nhịp nhàng (idle bobbing)
-    playerRef.current.position.y =
-      0.9 + Math.sin(state.clock.getElapsedTime() * 2.5) * 0.025;
-
-    // Hiệu ứng vung tay vung chân khi di chuyển
     const isMoving = w || a || s || d;
     const t = state.clock.getElapsedTime();
+
+    // Chỉ nhún nhảy nhẹ khi di chuyển, đứng yên thì đứng thẳng trên mặt đất (tránh say sóng camera)
+    if (isMoving && settings.animations) {
+      playerRef.current.position.y =
+        baseY + Math.sin(t * 10) * 0.02;
+    } else {
+      playerRef.current.position.y = baseY;
+    }
     const swingSpeed = 10;
     const swingAmp = 0.45;
 
-    if (isMoving) {
+    if (isMoving && settings.animations) {
       if (leftLegRef.current)
         leftLegRef.current.rotation.x = Math.sin(t * swingSpeed) * swingAmp;
       if (rightLegRef.current)
@@ -197,7 +224,7 @@ export const PlayerCharacter: React.FC = () => {
       if (socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
-          y: playerRef.current.position.y,
+          y: playerRef.current.position.y - baseY, // Gửi tọa độ Y logic (bàn chân chạm đất)
           z: playerRef.current.position.z,
           yaw: playerRef.current.rotation.y,
         });
@@ -216,95 +243,78 @@ export const PlayerCharacter: React.FC = () => {
 
   return (
     <group ref={playerRef} name="player-character">
-      {/* ĐẦU - To, tròn, chiếm tỉ lệ lớn (giống ảnh) */}
-      <mesh position={[0, 0.72, 0]} castShadow>
-        <sphereGeometry args={[0.22, 28, 28]} />
-        <meshStandardMaterial {...skinProps} />
-      </mesh>
+      {isPawn ? (
+        <group>
+          {/* MÔ HÌNH CON CỜ (CHESS PAWN) - Cấu hình Thấp để tối ưu tối đa */}
+          {/* Đầu con cờ */}
+          <mesh position={[0, 0.7, 0]}>
+            <sphereGeometry args={[0.18, 20, 20]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+          {/* Cổ con cờ */}
+          <mesh position={[0, 0.48, 0]}>
+            <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+          {/* Thân con cờ */}
+          <mesh position={[0, 0.2, 0]}>
+            <cylinderGeometry args={[0.07, 0.18, 0.5, 16]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+          {/* Đế con cờ */}
+          <mesh position={[0, -0.1, 0]}>
+            <cylinderGeometry args={[0.22, 0.22, 0.1, 16]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+        </group>
+      ) : (
+        <group>
+          {/* MÔ HÌNH CON NGƯỜI (HUMANOID MANNEQUIN) - Cấu hình Trung bình / Cao */}
+          {/* ĐẦU - To, tròn, castShadow từ settings */}
+          <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>
+            <sphereGeometry args={[HEAD_R, 28, 28]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
 
-      {/* THÂN - Oval mập, không có cổ rõ, liền trực tiếp với đầu */}
-      {/* Phần trên thân - vai rộng, tròn */}
-      <mesh position={[0, 0.3, 0]} castShadow>
-        {/* Capsule mập và ngắn để tạo cảm giác béo đáng yêu */}
-        <capsuleGeometry args={[0.175, 0.28, 10, 20]} />
-        <meshStandardMaterial {...skinProps} />
-      </mesh>
+          {/* THÂN - Capsule mập, castShadow từ settings */}
+          <mesh position={[0, 0.28, 0]} castShadow={settings.shadows}>
+            <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
 
-      {/* CÁNH TAY TRÁI - Ngắn, mập, hơi chìa ra */}
-      <group ref={leftArmRef} position={[-0.225, 0.38, 0]}>
-        {/* Vai tròn */}
-        <mesh position={[0, 0, 0]} castShadow>
-          <sphereGeometry args={[0.075, 16, 16]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Cánh tay: ngắn, mập */}
-        <mesh position={[-0.04, -0.16, 0]} castShadow>
-          <capsuleGeometry args={[0.065, 0.18, 6, 12]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Bàn tay tròn mập */}
-        <mesh position={[-0.06, -0.3, 0]} castShadow>
-          <sphereGeometry args={[0.07, 14, 14]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-      </group>
+          {/* CÁNH TAY TRÁI - Không castShadow để tối ưu năng lực render của GPU */}
+          <group ref={leftArmRef} position={[-ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
+            <mesh position={[0, ARM_MESH_Y, 0]}>
+              <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
 
-      {/* CÁNH TAY PHẢI - Ngắn, mập, hơi chìa ra */}
-      <group ref={rightArmRef} position={[0.225, 0.38, 0]}>
-        {/* Vai tròn */}
-        <mesh position={[0, 0, 0]} castShadow>
-          <sphereGeometry args={[0.075, 16, 16]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Cánh tay: ngắn, mập */}
-        <mesh position={[0.04, -0.16, 0]} castShadow>
-          <capsuleGeometry args={[0.065, 0.18, 6, 12]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Bàn tay tròn mập */}
-        <mesh position={[0.06, -0.3, 0]} castShadow>
-          <sphereGeometry args={[0.07, 14, 14]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-      </group>
+          {/* CÁNH TAY PHẢI - Không castShadow để tối ưu */}
+          <group ref={rightArmRef} position={[ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
+            <mesh position={[0, ARM_MESH_Y, 0]}>
+              <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
 
-      {/* CHÂN TRÁI - Ngắn, mập, nằm sát nhau */}
-      <group ref={leftLegRef} position={[-0.085, -0.08, 0]}>
-        {/* Đùi tròn nối thân */}
-        <mesh position={[0, 0, 0]} castShadow>
-          <sphereGeometry args={[0.075, 16, 16]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Ống chân ngắn mập */}
-        <mesh position={[0, -0.2, 0]} castShadow>
-          <capsuleGeometry args={[0.068, 0.16, 6, 12]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Bàn chân tròn */}
-        <mesh position={[0, -0.34, 0.025]} castShadow>
-          <sphereGeometry args={[0.075, 14, 14]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-      </group>
+          {/* CHÂN TRÁI - Không castShadow để tối ưu */}
+          <group ref={leftLegRef} position={[-LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
+            <mesh position={[0, LEG_MESH_Y, 0]}>
+              <capsuleGeometry args={[LEG_R, LEG_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
 
-      {/* CHÂN PHẢI - Ngắn, mập, nằm sát nhau */}
-      <group ref={rightLegRef} position={[0.085, -0.08, 0]}>
-        {/* Đùi tròn nối thân */}
-        <mesh position={[0, 0, 0]} castShadow>
-          <sphereGeometry args={[0.075, 16, 16]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Ống chân ngắn mập */}
-        <mesh position={[0, -0.2, 0]} castShadow>
-          <capsuleGeometry args={[0.068, 0.16, 6, 12]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-        {/* Bàn chân tròn */}
-        <mesh position={[0, -0.34, 0.025]} castShadow>
-          <sphereGeometry args={[0.075, 14, 14]} />
-          <meshStandardMaterial {...skinProps} />
-        </mesh>
-      </group>
+          {/* CHÂN PHẢI - Không castShadow để tối ưu */}
+          <group ref={rightLegRef} position={[LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
+            <mesh position={[0, LEG_MESH_Y, 0]}>
+              <capsuleGeometry args={[LEG_R, LEG_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
+        </group>
+      )}
     </group>
   );
 };

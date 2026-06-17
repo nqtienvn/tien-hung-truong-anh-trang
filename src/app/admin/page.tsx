@@ -190,9 +190,18 @@ export default function AdminDashboard() {
                     <Compass size={14} />
                     {gallery.name}
                   </h3>
-                  <span className="text-[10px] bg-slate-850 px-2 py-0.5 rounded text-slate-400 font-bold">
-                    {galleryExhibits.length} hiện vật
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => router.push(`/admin/map-builder?galleryId=${gallery.id}`)}
+                      className="py-1 px-3 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400 rounded-lg text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Sliders size={10} />
+                      Thiết kế Bản đồ 3D
+                    </button>
+                    <span className="text-[10px] bg-slate-850 px-2 py-0.5 rounded text-slate-400 font-bold">
+                      {galleryExhibits.length} hiện vật
+                    </span>
+                  </div>
                 </div>
 
                 <div className="divide-y divide-slate-900/60">

@@ -4,6 +4,13 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
 
+export interface GraphicsSettings {
+  preset: 'low' | 'medium';
+  shadows: boolean;
+  animations: boolean;
+  maxAvatars: number;
+}
+
 export interface MultiplayerUser {
   id: string;
   nickname: string;
@@ -26,6 +33,7 @@ interface MuseumContextType {
   audioPlaying: boolean;
   setAudioPlaying: (playing: boolean) => void;
   otherUsers: MultiplayerUser[];
+  otherUsersPositions: React.MutableRefObject<Record<string, MultiplayerUser>>;
   socket: Socket | null;
   localUserPos: [number, number, number];
   setLocalUserPos: (pos: [number, number, number]) => void;
@@ -37,6 +45,9 @@ interface MuseumContextType {
   setQueuePosition: (pos: number) => void;
   isAdmitted: boolean;
   setIsAdmitted: (admitted: boolean) => void;
+  settings: GraphicsSettings;
+  updateSettings: (newSettings: Partial<GraphicsSettings>) => void;
+  updatePreset: (preset: GraphicsSettings['preset']) => void;
 }
 
 const MuseumContext = createContext<MuseumContextType | undefined>(undefined);
@@ -48,6 +59,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeGallery, setActiveGallery] = useState<Gallery | null>(null);
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [otherUsers, setOtherUsers] = useState<MultiplayerUser[]>([]);
+  const otherUsersPositions = React.useRef<Record<string, MultiplayerUser>>({});
   const [socket, setSocket] = useState<Socket | null>(null);
   const [localUserPos, setLocalUserPos] = useState<[number, number, number]>([0, 1.7, 5]);
   const [localUserYaw, setLocalUserYaw] = useState<number>(0);
@@ -55,6 +67,57 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [inQueue, setInQueue] = useState<boolean>(false);
   const [queuePosition, setQueuePosition] = useState<number>(0);
   const [isAdmitted, setIsAdmitted] = useState<boolean>(false);
+
+  const [settings, setSettings] = useState<GraphicsSettings>({
+    preset: 'medium',
+    shadows: true,
+    animations: true,
+    maxAvatars: 99,
+  });
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('museum_graphics_settings');
+      if (saved) {
+        try {
+          setSettings(JSON.parse(saved));
+        } catch (e) {
+          console.error('Lỗi phân tích settings từ localStorage:', e);
+        }
+      }
+    }
+  }, []);
+
+  const getPresetSettings = (preset: GraphicsSettings['preset']) => {
+    switch (preset) {
+      case 'low':
+        return { shadows: false, animations: false, maxAvatars: 10 };
+      case 'medium':
+      default:
+        return { shadows: true, animations: true, maxAvatars: 99 };
+    }
+  };
+
+  const updatePreset = (preset: GraphicsSettings['preset']) => {
+    setSettings(() => {
+      const presetSettings = getPresetSettings(preset);
+      const updated = {
+        preset,
+        ...presetSettings
+      };
+      localStorage.setItem('museum_graphics_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const updateSettings = (newSettings: Partial<GraphicsSettings>) => {
+    setSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      localStorage.setItem('museum_graphics_settings', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Khởi tạo Socket.io Connection khi đã vào phòng (kết nối ngay cả khi chưa nhập nickname để hiển thị người chơi khác ở nền)
   useEffect(() => {
@@ -84,7 +147,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         nickname,
         galleryId: activeGallery.id,
         x: localUserPos[0],
-        y: localUserPos[1],
+        y: 0, // Chiều cao logic mặt đất
         z: localUserPos[2],
         yaw: localUserYaw,
       });
@@ -112,7 +175,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Gửi ngay tọa độ hiện tại lên server để người khác thấy
       newSocket.emit('move', {
         x: localUserPos[0],
-        y: localUserPos[1],
+        y: 0, // Chiều cao logic mặt đất
         z: localUserPos[2],
         yaw: localUserYaw,
       });
@@ -123,6 +186,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Loại bỏ chính mình ra khỏi danh sách
       const filtered = users.filter(u => u.id !== newSocket.id);
       setOtherUsers(filtered);
+      
+      // Đồng thời cập nhật vào ref positions
+      otherUsersPositions.current = {};
+      filtered.forEach(u => {
+        otherUsersPositions.current[u.id] = u;
+      });
     });
 
     // Nhận sự kiện có người chơi mới tham gia
@@ -131,16 +200,19 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (prev.some(u => u.id === user.id)) return prev;
         return [...prev, user];
       });
+      otherUsersPositions.current[user.id] = user;
     });
 
     // Nhận sự kiện có người chơi di chuyển
     newSocket.on('user-moved', (user: MultiplayerUser) => {
-      setOtherUsers(prev => prev.map(u => (u.id === user.id ? user : u)));
+      // Chỉ cập nhật trực tiếp vào ref để tránh re-render React liên tục!
+      otherUsersPositions.current[user.id] = user;
     });
 
     // Nhận sự kiện người chơi rời phòng
     newSocket.on('user-left', (userId: string) => {
       setOtherUsers(prev => prev.filter(u => u.id !== userId));
+      delete otherUsersPositions.current[userId];
     });
 
     setSocket(newSocket);
@@ -150,6 +222,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setInQueue(false);
       setQueuePosition(0);
       setIsAdmitted(false);
+      otherUsersPositions.current = {}; // Clear positions on disconnect
     };
   }, [activeGallery, nickname]);
 
@@ -158,7 +231,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && socket.connected && isAdmitted) {
       socket.emit('move', {
         x: localUserPos[0],
-        y: localUserPos[1],
+        y: 0, // Chiều cao logic mặt đất
         z: localUserPos[2],
         yaw: localUserYaw,
       });
@@ -178,18 +251,22 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setActiveGallery,
         audioPlaying,
         setAudioPlaying,
-        otherUsers,
-        socket,
         localUserPos,
         setLocalUserPos,
         localUserYaw,
         setLocalUserYaw,
+        socket,
+        otherUsers,
+        otherUsersPositions,
         inQueue,
         setInQueue,
         queuePosition,
         setQueuePosition,
         isAdmitted,
         setIsAdmitted,
+        settings,
+        updateSettings,
+        updatePreset,
       }}
     >
       {children}

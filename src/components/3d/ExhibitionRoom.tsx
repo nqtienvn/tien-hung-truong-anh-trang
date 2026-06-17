@@ -1,52 +1,112 @@
 import React from 'react';
 import * as THREE from 'three';
+import { useMuseum } from '@/context/MuseumContext';
 
 interface ExhibitionRoomProps {
   galleryId: string;
+  customSettings?: {
+    room_width: number;
+    room_length: number;
+    room_height: number;
+    floor_color: string;
+    wall_color: string;
+    wainscoting_color: string;
+    floor_type: 'wood' | 'marble' | 'carpet';
+  };
 }
 
-export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => {
+export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, customSettings }) => {
   const isSculptures = galleryId === 'gallery-sculptures';
+  const { activeGallery } = useMuseum();
+
+  // Đọc cấu hình động hoặc fallback về mặc định
+  const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
+  const roomLength = customSettings?.room_length ?? activeGallery?.room_length ?? 30;
+  const roomHeight = customSettings?.room_height ?? activeGallery?.room_height ?? 6;
+  const floorColor = customSettings?.floor_color ?? activeGallery?.floor_color ?? '#4e3629';
+  const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
+  const wainscotingColor = customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#eae5dc';
+  const floorType = customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood';
+
+  // Tính toán kích thước trần vòm và giếng trời
+  const skylightWidth = Math.min(roomWidth * 0.4, 5);
+  const sideWidth = (roomWidth - skylightWidth) / 2;
+  const panelWidth = sideWidth / Math.cos(Math.PI / 12);
+  const leftPanelX = -(skylightWidth / 2 + sideWidth / 2);
+  const rightPanelX = skylightWidth / 2 + sideWidth / 2;
+  const panelHeightY = roomHeight - 0.6;
+
+  // Tính toán chiều rộng vách ngăn (ở phòng tranh)
+  const partitionWidth = Math.min(roomWidth * 0.5, 8);
 
   return (
     <group>
       {/* 1. SÀN NHÀ & THẢM TRẢI SÀN (Floor & Center Carpet) */}
-      {/* Sàn gỗ cơ bản (viền ngoài) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[12, 30]} />
-        <meshStandardMaterial 
-          color="#4e3629" // Gỗ mun/sồi tối cổ kính
-          roughness={0.4}
-          metalness={0.1}
-        />
-      </mesh>
+      {/* Sàn gỗ/đá/thảm dựa trên cấu hình */}
+      {floorType === 'wood' && (
+        <>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+            <planeGeometry args={[roomWidth, roomLength]} />
+            <meshStandardMaterial 
+              color={floorColor} 
+              roughness={0.4}
+              metalness={0.1}
+            />
+          </mesh>
+          <gridHelper args={[roomLength, Math.round(roomLength), '#312017', '#251811']} position={[0, 0.005, 0]} />
+        </>
+      )}
 
-      {/* Vân sàn gỗ giả lập chạy dọc hai bên */}
-      <gridHelper args={[30, 30, '#312017', '#251811']} position={[0, 0.005, 0]} />
+      {floorType === 'marble' && (
+        <>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+            <planeGeometry args={[roomWidth, roomLength]} />
+            <meshStandardMaterial 
+              color={floorColor} 
+              roughness={0.15}
+              metalness={0.25}
+            />
+          </mesh>
+          <gridHelper args={[roomLength, Math.round(roomLength / 2), '#cbd5e1', '#94a3b8']} position={[0, 0.005, 0]} />
+        </>
+      )}
 
-      {/* Tấm thảm dài màu xám-be cổ điển ở trục chính hành lang */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <planeGeometry args={[6, 30]} />
-        <meshStandardMaterial 
-          color="#a29587" // Màu thảm be cổ điển sang trọng
-          roughness={0.95}
-          metalness={0.0}
-        />
-      </mesh>
+      {floorType === 'carpet' && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+          <planeGeometry args={[roomWidth, roomLength]} />
+          <meshStandardMaterial 
+            color={floorColor} 
+            roughness={0.95}
+            metalness={0.0}
+          />
+        </mesh>
+      )}
+
+      {/* Tấm thảm dài màu xám-be cổ điển ở trục chính hành lang (chỉ hiển thị nếu sàn chính không phải thảm) */}
+      {floorType !== 'carpet' && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+          <planeGeometry args={[Math.min(roomWidth / 2, 6), roomLength]} />
+          <meshStandardMaterial 
+            color="#a29587" 
+            roughness={0.95}
+            metalness={0.0}
+          />
+        </mesh>
+      )}
 
       {/* 2. TRẦN NHÀ HÌNH VÒM & GIẾNG TRỜI (Vaulted Ceiling & Glass Skylight) */}
       {/* Tấm trần vòm nghiêng bên trái */}
-      <mesh position={[-4.25, 5.4, 0]} rotation={[0, 0, -Math.PI / 12]} castShadow receiveShadow>
-        <boxGeometry args={[3.6, 0.1, 30]} />
+      <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]} castShadow receiveShadow>
+        <boxGeometry args={[panelWidth, 0.1, roomLength]} />
         <meshStandardMaterial 
-          color="#eae5dc" // Thạch cao trắng kem
+          color="#eae5dc" 
           roughness={0.8}
         />
       </mesh>
 
       {/* Tấm trần vòm nghiêng bên phải */}
-      <mesh position={[4.25, 5.4, 0]} rotation={[0, 0, Math.PI / 12]} castShadow receiveShadow>
-        <boxGeometry args={[3.6, 0.1, 30]} />
+      <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]} castShadow receiveShadow>
+        <boxGeometry args={[panelWidth, 0.1, roomLength]} />
         <meshStandardMaterial 
           color="#eae5dc"
           roughness={0.8}
@@ -54,12 +114,12 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
       </mesh>
 
       {/* Trần giếng trời kính (Skylight) ở chính giữa trục dọc hành lang */}
-      <mesh position={[0, 5.8, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[5, 30]} />
+      <mesh position={[0, roomHeight - 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[skylightWidth, roomLength]} />
         <meshStandardMaterial 
-          color="#bae6fd" // Kính đón nắng xanh nhạt tự nhiên
+          color="#bae6fd" 
           emissive="#bae6fd"
-          emissiveIntensity={0.8} // Tăng mạnh độ sáng giếng trời phát ra
+          emissiveIntensity={1.5} 
           transparent
           opacity={0.8}
           roughness={0.1}
@@ -69,117 +129,120 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
 
       {/* Khung sắt giếng trời cổ điển chạy dọc */}
       {Array.from({ length: 11 }).map((_, i) => (
-        <mesh key={`skylight-grid-${i}`} position={[0, 5.81, -15 + i * 3]} castShadow>
-          <boxGeometry args={[5, 0.05, 0.05]} />
+        <mesh key={`skylight-grid-${i}`} position={[0, roomHeight - 0.19, -roomLength / 2 + i * (roomLength / 10)]} castShadow>
+          <boxGeometry args={[skylightWidth, 0.05, 0.05]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
       ))}
-      <mesh position={[0, 5.81, 0]}>
-        <boxGeometry args={[0.05, 0.05, 30]} />
+      <mesh position={[0, roomHeight - 0.19, 0]}>
+        <boxGeometry args={[0.05, 0.05, roomLength]} />
         <meshStandardMaterial color="#1e293b" roughness={0.9} />
       </mesh>
-      <mesh position={[-2.5, 5.81, 0]}>
-        <boxGeometry args={[0.05, 0.05, 30]} />
+      <mesh position={[-skylightWidth / 2, roomHeight - 0.19, 0]}>
+        <boxGeometry args={[0.05, 0.05, roomLength]} />
         <meshStandardMaterial color="#1e293b" roughness={0.9} />
       </mesh>
-      <mesh position={[2.5, 5.81, 0]}>
-        <boxGeometry args={[0.05, 0.05, 30]} />
+      <mesh position={[skylightWidth / 2, roomHeight - 0.19, 0]}>
+        <boxGeometry args={[0.05, 0.05, roomLength]} />
         <meshStandardMaterial color="#1e293b" roughness={0.9} />
       </mesh>
 
 
-      {/* 3. BỨC TƯỜNG ĐỎ CỔ ĐIỂN & PHÀO CHÂN TƯỜNG TRẮNG (Classical Crimson Walls & Wainscoting) */}
-      {/* Tường trái (Crimson Red) */}
-      <mesh position={[-6, 3, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[30, 6, 0.2]} />
+      {/* 3. BỨC TƯỜNG & PHÀO CHÂN TƯỜNG (Dynamic Walls & Wainscoting) */}
+      {/* Tường trái */}
+      <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[roomLength, roomHeight, 0.2]} />
         <meshStandardMaterial 
-          color="#8a1923" // Màu đỏ thẫm quý tộc
+          color={wallColor} 
           roughness={0.7}
         />
       </mesh>
-      {/* Tường phải (Crimson Red) */}
-      <mesh position={[6, 3, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[30, 6, 0.2]} />
+
+      {/* Tường phải */}
+      <mesh position={[roomWidth / 2, roomHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[roomLength, roomHeight, 0.2]} />
         <meshStandardMaterial 
-          color="#8a1923"
+          color={wallColor}
           roughness={0.7}
         />
       </mesh>
-      {/* Tường sau (Crimson Red) */}
-      <mesh position={[0, 3, 15]} receiveShadow>
-        <boxGeometry args={[12, 6, 0.2]} />
+
+      {/* Tường sau */}
+      <mesh position={[0, roomHeight / 2, roomLength / 2]} receiveShadow>
+        <boxGeometry args={[roomWidth, roomHeight, 0.2]} />
         <meshStandardMaterial 
-          color="#8a1923"
+          color={wallColor}
           roughness={0.7}
         />
       </mesh>
-      {/* Tường trước (Crimson Red) */}
-      <mesh position={[0, 3, -15]} receiveShadow>
-        <boxGeometry args={[12, 6, 0.2]} />
+
+      {/* Tường trước */}
+      <mesh position={[0, roomHeight / 2, -roomLength / 2]} receiveShadow>
+        <boxGeometry args={[roomWidth, roomHeight, 0.2]} />
         <meshStandardMaterial 
-          color="#8a1923"
+          color={wallColor}
           roughness={0.7}
         />
       </mesh>
 
       {/* Ốp gỗ chân tường (Wainscoting) màu kem sáng cao 1.2m */}
       {/* Wainscoting tường trái */}
-      <mesh position={[-5.89, 0.6, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[30, 1.2, 0.02]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.5} />
+      <mesh position={[-roomWidth / 2 + 0.112, 0.6, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[roomLength, 1.2, 0.02]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
-      <mesh position={[-5.87, 1.2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <boxGeometry args={[30, 0.06, 0.04]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+      <mesh position={[-roomWidth / 2 + 0.124, 1.2, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <boxGeometry args={[roomLength, 0.06, 0.04]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 
       {/* Wainscoting tường phải */}
-      <mesh position={[5.89, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[30, 1.2, 0.02]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.5} />
+      <mesh position={[roomWidth / 2 - 0.112, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[roomLength, 1.2, 0.02]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
-      <mesh position={[5.87, 1.2, 0]} rotation={[0, -Math.PI / 2, 0]}>
-        <boxGeometry args={[30, 0.06, 0.04]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+      <mesh position={[roomWidth / 2 - 0.124, 1.2, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <boxGeometry args={[roomLength, 0.06, 0.04]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 
       {/* Wainscoting tường trước */}
-      <mesh position={[0, 0.6, -14.89]} receiveShadow>
-        <boxGeometry args={[11.8, 1.2, 0.02]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.5} />
+      <mesh position={[0, 0.6, -roomLength / 2 + 0.112]} receiveShadow>
+        <boxGeometry args={[roomWidth - 0.224, 1.2, 0.02]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 1.2, -14.87]}>
-        <boxGeometry args={[11.8, 0.06, 0.04]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+      <mesh position={[0, 1.2, -roomLength / 2 + 0.124]}>
+        <boxGeometry args={[roomWidth - 0.248, 0.06, 0.04]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 
       {/* Wainscoting tường sau */}
-      <mesh position={[0, 0.6, 14.89]} receiveShadow>
-        <boxGeometry args={[11.8, 1.2, 0.02]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.5} />
+      <mesh position={[0, 0.6, roomLength / 2 - 0.112]} receiveShadow>
+        <boxGeometry args={[roomWidth - 0.224, 1.2, 0.02]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 1.2, 14.87]}>
-        <boxGeometry args={[11.8, 0.06, 0.04]} />
-        <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+      <mesh position={[0, 1.2, roomLength / 2 - 0.124]}>
+        <boxGeometry args={[roomWidth - 0.248, 0.06, 0.04]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 
       {/* Các cột trang trí ốp tường (Pilasters) giả lập thạch cao trắng kem dọc hai bên */}
       {Array.from({ length: 6 }).map((_, idx) => {
-        const zPos = -12.5 + idx * 5;
+        const zPos = -roomLength / 2 + 2.5 + idx * ((roomLength - 5) / 5);
         // Bỏ qua cột ở vị trí vách ngăn trung tâm z = 0
         if (Math.abs(zPos) < 1) return null;
 
         return (
           <group key={`pilasters-${idx}`}>
             {/* Cột trái */}
-            <mesh position={[-5.85, 3, zPos]} castShadow receiveShadow>
-              <boxGeometry args={[0.1, 6, 0.4]} />
-              <meshStandardMaterial color="#eae5dc" roughness={0.8} />
+            <mesh position={[-roomWidth / 2 + 0.13, roomHeight / 2, zPos]} castShadow receiveShadow>
+              <boxGeometry args={[0.1, roomHeight, 0.4]} />
+              <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
             </mesh>
             {/* Cột phải */}
-            <mesh position={[5.85, 3, zPos]} castShadow receiveShadow>
-              <boxGeometry args={[0.1, 6, 0.4]} />
-              <meshStandardMaterial color="#eae5dc" roughness={0.8} />
+            <mesh position={[roomWidth / 2 - 0.13, roomHeight / 2, zPos]} castShadow receiveShadow>
+              <boxGeometry args={[0.1, roomHeight, 0.4]} />
+              <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
             </mesh>
           </group>
         );
@@ -191,40 +254,40 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
         <group>
           {/* Vách ngăn trung tâm đỏ thẫm tại Z = 0 */}
           <mesh position={[0, 2.0, 0]} castShadow receiveShadow>
-            <boxGeometry args={[6.0, 4.0, 0.4]} />
+            <boxGeometry args={[partitionWidth, 4.0, 0.4]} />
             <meshStandardMaterial 
-              color="#8a1923"
+              color={wallColor}
               roughness={0.7}
             />
           </mesh>
 
           {/* Cột trang trí ở rìa vách ngăn trung tâm */}
-          <mesh position={[-3.0, 2.0, 0]} castShadow receiveShadow>
+          <mesh position={[-partitionWidth / 2, 2.0, 0]} castShadow receiveShadow>
             <boxGeometry args={[0.1, 4.0, 0.48]} />
-            <meshStandardMaterial color="#eae5dc" roughness={0.8} />
+            <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
           </mesh>
-          <mesh position={[3.0, 2.0, 0]} castShadow receiveShadow>
+          <mesh position={[partitionWidth / 2, 2.0, 0]} castShadow receiveShadow>
             <boxGeometry args={[0.1, 4.0, 0.48]} />
-            <meshStandardMaterial color="#eae5dc" roughness={0.8} />
+            <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
           </mesh>
 
-          {/* Ốp chân tường wainscoting cho vách ngăn trung tâm (cả 2 mặt Z = -0.2 và Z = 0.2) */}
-          <mesh position={[0, 0.6, -0.21]} receiveShadow>
-            <boxGeometry args={[6.0, 1.2, 0.02]} />
-            <meshStandardMaterial color="#eae5dc" roughness={0.5} />
+          {/* Ốp chân tường wainscoting cho vách ngăn trung tâm */}
+          <mesh position={[0, 0.6, -0.212]} receiveShadow>
+            <boxGeometry args={[partitionWidth, 1.2, 0.02]} />
+            <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
           </mesh>
-          <mesh position={[0, 1.2, -0.22]}>
-            <boxGeometry args={[6.0, 0.06, 0.04]} />
-            <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+          <mesh position={[0, 1.2, -0.224]}>
+            <boxGeometry args={[partitionWidth, 0.06, 0.04]} />
+            <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
           </mesh>
 
-          <mesh position={[0, 0.6, 0.21]} receiveShadow>
-            <boxGeometry args={[6.0, 1.2, 0.02]} />
-            <meshStandardMaterial color="#eae5dc" roughness={0.5} />
+          <mesh position={[0, 0.6, 0.212]} receiveShadow>
+            <boxGeometry args={[partitionWidth, 1.2, 0.02]} />
+            <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
           </mesh>
-          <mesh position={[0, 1.2, 0.22]}>
-            <boxGeometry args={[6.0, 0.06, 0.04]} />
-            <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+          <mesh position={[0, 1.2, 0.224]}>
+            <boxGeometry args={[partitionWidth, 0.06, 0.04]} />
+            <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
           </mesh>
 
           {/* Bàn Console gỗ cổ điển bên dưới vách ngăn (Z = -0.45 và Z = 0.45) */}
@@ -248,7 +311,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
               <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
               <meshStandardMaterial color="#2d1d19" roughness={0.4} />
             </mesh>
-            {/* Vật trang trí trên bàn (Tượng kim loại nhỏ) */}
+            {/* Vật trang trí trên bàn */}
             <mesh position={[0, 0.9, 0]} castShadow>
               <torusKnotGeometry args={[0.1, 0.03, 64, 8]} />
               <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
@@ -279,25 +342,21 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
             </mesh>
           </group>
 
-          {/* Ghế băng dài cổ điển ở giữa 2 khoang (Z = -7.0 và Z = 7.0) */}
-          {[-7.0, 7.0].map((zPos, idx) => (
+          {/* Ghế băng dài cổ điển */}
+          {[-roomLength / 4.2, roomLength / 4.2].map((zPos, idx) => (
             <group key={`bench-${idx}`} position={[0, 0, zPos]}>
-              {/* Đệm ngồi da màu nâu sẫm */}
               <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
                 <boxGeometry args={[4.0, 0.15, 1.2]} />
                 <meshStandardMaterial color="#4e2c1e" roughness={0.5} />
               </mesh>
-              {/* Viền đế bàn gỗ nâng */}
               <mesh position={[0, 0.32, 0]} castShadow receiveShadow>
                 <boxGeometry args={[4.1, 0.1, 1.3]} />
                 <meshStandardMaterial color="#27150c" roughness={0.3} />
               </mesh>
-              {/* Chân ghế trái */}
               <mesh position={[-1.7, 0.15, 0]} castShadow>
                 <boxGeometry args={[0.2, 0.3, 1.1]} />
                 <meshStandardMaterial color="#1b110b" roughness={0.4} />
               </mesh>
-              {/* Chân ghế phải */}
               <mesh position={[1.7, 0.15, 0]} castShadow>
                 <boxGeometry args={[0.2, 0.3, 1.1]} />
                 <meshStandardMaterial color="#1b110b" roughness={0.4} />
@@ -309,12 +368,10 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
 
 
       {/* 5. CHI TIẾT RIÊNG CHO PHÒNG ĐIÊU KHẮC (Sculptures Gallery Pedestals) */}
-      {/* Đặt 3 bệ tượng tại đúng các tọa độ trong database và collision physics: Z = -8.0, 0.0, 8.0 */}
       {isSculptures && (
         <group>
-          {[-8.0, 0.0, 8.0].map((zPos, idx) => (
+          {[-roomLength * 0.27, 0.0, roomLength * 0.27].map((zPos, idx) => (
             <group key={`pedestal-${idx}`} position={[0, 0, zPos]}>
-              {/* Thân bệ đỡ: Đá cẩm thạch xám-đen mịn */}
               <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
                 <boxGeometry args={[1.0, 1.0, 1.0]} />
                 <meshStandardMaterial 
@@ -323,14 +380,10 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
                   metalness={0.15}
                 />
               </mesh>
-              
-              {/* Viền chỉ vàng chân bệ đỡ */}
               <mesh position={[0, 0.05, 0]} castShadow>
                 <boxGeometry args={[1.05, 0.1, 1.05]} />
                 <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
               </mesh>
-
-              {/* Viền chỉ vàng cổ bệ đỡ sát đỉnh */}
               <mesh position={[0, 0.95, 0]} castShadow>
                 <boxGeometry args={[1.05, 0.08, 1.05]} />
                 <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
@@ -341,10 +394,8 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
       )}
 
       {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG (Hallway Lighting Systems) */}
-      {/* Treo các nguồn sáng chung ấm áp dọc theo hành lang để không gian không bị tối tăm */}
-      {[-12, -6, 0, 6, 12].map((zPos, idx) => (
-        <group key={`hall-light-${idx}`} position={[0, 5.0, zPos]}>
-          {/* Đèn downlight phát sáng nhỏ */}
+      {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
+        <group key={`hall-light-${idx}`} position={[0, roomHeight - 1.0, zPos]}>
           <mesh>
             <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
             <meshStandardMaterial color="#334155" metalness={0.8} />
@@ -353,11 +404,10 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId }) => 
             <sphereGeometry args={[0.08, 16, 16]} />
             <meshBasicMaterial color="#fff" />
           </mesh>
-          {/* Ánh sáng điểm tạo bầu không khí ấm cúng */}
           <pointLight 
-            intensity={2.8} // Tăng từ 1.2 lên 2.8 cho phòng sáng sủa
-            distance={20} // Tăng khoảng cách chiếu sáng
-            color="#fff1e0" // Màu ánh sáng ấm sạch/trắng kem sang trọng thay vì cam đậm
+            intensity={4.5} 
+            distance={roomLength * 0.6} 
+            color="#fff1e0" 
             castShadow
             shadow-mapSize-width={512}
             shadow-mapSize-height={512}

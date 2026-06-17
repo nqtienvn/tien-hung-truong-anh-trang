@@ -5,14 +5,28 @@
       "name": "Tranh Sơn Dầu Nghệ Thuật",
       "description": "Không gian trưng bày các tác phẩm hội họa kinh điển thế giới chất liệu sơn dầu.",
       "scene_asset_url": "",
-      "is_active": true
+      "is_active": true,
+      "room_width": 12,
+      "room_length": 30,
+      "room_height": 6,
+      "floor_color": "#4e3629",
+      "wall_color": "#8a1923",
+      "wainscoting_color": "#eae5dc",
+      "floor_type": "wood"
     },
     {
       "id": "gallery-sculptures",
       "name": "Cổ Vật Điêu Khắc & Điêu Khắc Hiện Đại",
       "description": "Không gian triển lãm mô hình điêu khắc 3D tương tác đa chiều.",
       "scene_asset_url": "",
-      "is_active": true
+      "is_active": true,
+      "room_width": 12,
+      "room_length": 30,
+      "room_height": 6,
+      "floor_color": "#4e3629",
+      "wall_color": "#8a1923",
+      "wainscoting_color": "#eae5dc",
+      "floor_type": "wood"
     }
   ],
   "exhibits": [
