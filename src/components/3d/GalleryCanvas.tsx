@@ -18,6 +18,7 @@ const CameraLerpController: React.FC = () => {
   const { 
     selectedExhibit, 
     activeGallery,
+    nickname,
   } = useMuseum();
   
   const { camera, gl } = useThree();
@@ -32,50 +33,44 @@ const CameraLerpController: React.FC = () => {
   const targetLookAt = useRef(new THREE.Vector3(0, 1.7, 0));
 
   const wasInspecting = useRef(false);
+  const isMouseDown = useRef(false);
 
-  // Xử lý sự kiện di chuyển chuột khi đã khóa pointer
+  // Xử lý sự kiện nhấn giữ chuột và kéo để xoay camera (Click & Drag)
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (document.pointerLockElement !== gl.domElement) return;
+    const canvas = gl.domElement;
 
-      const sensitivity = 0.0025; // Tốc độ xoay camera nhạy hơn một chút
+    const handleMouseDown = () => {
+      isMouseDown.current = true;
+    };
+
+    const handleMouseUp = () => {
+      isMouseDown.current = false;
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Chỉ xoay camera khi đang giữ chuột trái và không ở chế độ Inspect
+      if (!isMouseDown.current || selectedExhibit) return;
+
+      const sensitivity = 0.003; // Tốc độ xoay camera mượt mà
       theta.current -= e.movementX * sensitivity;
       phi.current -= e.movementY * sensitivity;
 
       // Giới hạn góc nhìn lên xuống (tránh lật camera hoặc đi xuyên sàn)
-      const minPhi = 0.35; // Góc nhìn từ trên xuống
-      const maxPhi = Math.PI / 2 - 0.08; // Góc nhìn ngang sát sàn
+      const minPhi = 0.35;
+      const maxPhi = Math.PI / 2 - 0.08;
       phi.current = Math.max(minPhi, Math.min(maxPhi, phi.current));
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [gl]);
+    canvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousemove', handleMouseMove);
 
-  // Click vào canvas để kích hoạt Pointer Lock
-  useEffect(() => {
-    const canvas = gl.domElement;
-    const handleCanvasClick = () => {
-      if (selectedExhibit) return; // Không khóa chuột khi đang xem chi tiết tác phẩm
-      if (document.pointerLockElement !== canvas) {
-        canvas.requestPointerLock();
-      }
-    };
-
-    canvas.addEventListener('click', handleCanvasClick);
     return () => {
-      canvas.removeEventListener('click', handleCanvasClick);
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, [gl, selectedExhibit]);
-
-  // Tự động nhả khóa chuột khi xem chi tiết tác phẩm (mở Inspect Modal)
-  useEffect(() => {
-    if (selectedExhibit && document.pointerLockElement) {
-      document.exitPointerLock();
-    }
-  }, [selectedExhibit]);
 
   // Cập nhật tọa độ camera khi ở chế độ Inspect
   useEffect(() => {
@@ -223,28 +218,8 @@ const CameraLerpController: React.FC = () => {
 };
 
 export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryId }) => {
-  const { selectedExhibit, setSelectedExhibit } = useMuseum();
-  const [isLocked, setIsLocked] = useState(false);
+  const { selectedExhibit, setSelectedExhibit, nickname } = useMuseum();
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Lắng nghe sự kiện thay đổi trạng thái khóa chuột (Pointer Lock)
-  useEffect(() => {
-    const handleLockChange = () => {
-      setIsLocked(document.pointerLockElement !== null);
-    };
-    document.addEventListener('pointerlockchange', handleLockChange);
-    return () => {
-      document.removeEventListener('pointerlockchange', handleLockChange);
-    };
-  }, []);
-
-  // Yêu cầu Pointer Lock từ container chứa canvas
-  const handleRequestLock = () => {
-    const canvas = containerRef.current?.querySelector('canvas');
-    if (canvas && document.pointerLockElement !== canvas) {
-      canvas.requestPointerLock();
-    }
-  };
 
   // Xử lý click ngoài tác phẩm để hủy tiêu điểm phóng to
   const handleMiss = (e: any) => {
@@ -292,8 +267,8 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
             <ExhibitObject key={exhibit.id} exhibit={exhibit} />
           ))}
 
-          {/* Nhân vật của người chơi hiện tại (Góc nhìn thứ 3) */}
-          <PlayerCharacter />
+          {/* Nhân vật của người chơi hiện tại (Góc nhìn thứ 3 - Chỉ hiển thị sau khi đăng ký biệt danh) */}
+          {nickname && <PlayerCharacter />}
 
           {/* Những người chơi khác trực tuyến */}
           <MultiplayerAvatars />
@@ -303,51 +278,13 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
         <CameraLerpController />
       </Canvas>
 
-      {/* Màn hình tối mờ yêu cầu khóa chuột để xoay camera/di chuyển */}
-      {!isLocked && !selectedExhibit && (
-        <div 
-          onClick={handleRequestLock}
-          className="absolute inset-0 bg-black/85 backdrop-blur-[4px] z-20 flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
-        >
-          <div className="bg-slate-950/90 border border-amber-500/30 p-8 rounded-2xl shadow-2xl text-center max-w-xs sm:max-w-sm mx-4 transform transition-all duration-300 hover:border-amber-500/50 hover:scale-105">
-            <div className="w-16 h-16 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20 animate-pulse">
-              <span className="text-3xl">🖱️</span>
-            </div>
-            <h3 className="text-white text-base sm:text-lg font-bold mb-3 tracking-wider leading-snug">
-              Vui lòng ấn vào màn để di chuyển
-            </h3>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">
-              Nhấp chuột để khóa tâm, xoay camera bằng cách di chuột và đi lại bằng bàn phím (phím W-A-S-D).
-            </p>
-            <span className="inline-block bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 text-xs sm:text-sm font-bold py-2.5 px-6 rounded-full shadow-lg transition-all tracking-wide">
-              Bắt đầu di chuyển
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Tâm ngắm (Crosshair) nhỏ chính giữa màn hình khi khóa chuột */}
-      {isLocked && !selectedExhibit && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-10 flex items-center justify-center">
-          <div className="w-1.5 h-1.5 bg-white rounded-full border border-black/40 shadow-lg" />
-        </div>
-      )}
-
-      {/* Hướng dẫn tương tác nâng cấp động */}
+      {/* Hướng dẫn tương tác */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-xs py-1.5 px-4 rounded-full pointer-events-none select-none border border-white/10 text-center flex items-center gap-3">
-        {!isLocked && !selectedExhibit ? (
-          <span>🖱️ <b>Click vào màn hình</b> để khóa chuột & Xoay camera bằng di chuột</span>
-        ) : (
-          <>
-            <span>🏃 <b>W-A-S-D</b> để di chuyển</span>
-            <div className="w-px h-3 bg-white/20" />
-            <span>🖱️ <b>Di chuyển chuột</b> để xoay camera</span>
-            <div className="w-px h-3 bg-white/20" />
-            <span>🖼️ <b>Ngắm tâm & Click</b> để xem thuyết minh</span>
-            <div className="w-px h-3 bg-white/20" />
-            <span>⌨️ <b>Phím ESC</b> để hiện lại chuột</span>
-          </>
-        )}
+        <span>🏃 <b>W-A-S-D</b> để di chuyển</span>
+        <div className="w-px h-3 bg-white/20" />
+        <span>🖱️ <b>Nhấn giữ &amp; Rê chuột</b> để xoay camera</span>
+        <div className="w-px h-3 bg-white/20" />
+        <span>🖼️ <b>Click tranh/tượng</b> để xem thuyết minh</span>
       </div>
     </div>
   );

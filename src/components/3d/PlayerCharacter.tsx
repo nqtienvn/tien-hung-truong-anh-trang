@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 
 export const PlayerCharacter: React.FC = () => {
-  const { selectedExhibit, socket, activeGallery } = useMuseum();
+  const { selectedExhibit, socket, activeGallery, nickname } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
   
   // Trạng thái phím điều khiển
@@ -87,8 +87,8 @@ export const PlayerCharacter: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
-    // Khóa di chuyển khi đang ở chế độ xem chi tiết tác phẩm (Inspect Mode)
-    if (selectedExhibit) return;
+    // Khóa di chuyển khi đang ở chế độ xem chi tiết tác phẩm (Inspect Mode) hoặc chưa có biệt danh
+    if (selectedExhibit || !nickname) return;
 
     const { w, a, s, d } = keysPressed.current;
     

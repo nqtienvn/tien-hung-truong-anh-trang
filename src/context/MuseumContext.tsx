@@ -31,6 +31,12 @@ interface MuseumContextType {
   setLocalUserPos: (pos: [number, number, number]) => void;
   localUserYaw: number;
   setLocalUserYaw: (yaw: number) => void;
+  inQueue: boolean;
+  setInQueue: (inQueue: boolean) => void;
+  queuePosition: number;
+  setQueuePosition: (pos: number) => void;
+  isAdmitted: boolean;
+  setIsAdmitted: (admitted: boolean) => void;
 }
 
 const MuseumContext = createContext<MuseumContextType | undefined>(undefined);
@@ -46,14 +52,21 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [localUserPos, setLocalUserPos] = useState<[number, number, number]>([0, 1.7, 5]);
   const [localUserYaw, setLocalUserYaw] = useState<number>(0);
 
-  // Khởi tạo Socket.io Connection khi đã vào phòng và có nickname
+  const [inQueue, setInQueue] = useState<boolean>(false);
+  const [queuePosition, setQueuePosition] = useState<number>(0);
+  const [isAdmitted, setIsAdmitted] = useState<boolean>(false);
+
+  // Khởi tạo Socket.io Connection khi đã vào phòng (kết nối ngay cả khi chưa nhập nickname để hiển thị người chơi khác ở nền)
   useEffect(() => {
-    if (!activeGallery || !nickname) {
+    if (!activeGallery) {
       if (socket) {
         socket.disconnect();
         setSocket(null);
       }
       setOtherUsers([]);
+      setInQueue(false);
+      setQueuePosition(0);
+      setIsAdmitted(false);
       return;
     }
 
@@ -66,10 +79,38 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect', () => {
       console.log('Đã kết nối Socket.io server:', newSocket.id);
-      // Tham gia phòng triển lãm
+      // Tham gia phòng triển lãm (server sẽ kiểm tra giới hạn 30 người)
       newSocket.emit('join-room', {
         nickname,
         galleryId: activeGallery.id,
+        x: localUserPos[0],
+        y: localUserPos[1],
+        z: localUserPos[2],
+        yaw: localUserYaw,
+      });
+    });
+
+    // Nhận thông báo đang ở hàng xếp hàng chờ
+    newSocket.on('queue-status', (data: { inQueue: boolean; position: number }) => {
+      setInQueue(data.inQueue);
+      setQueuePosition(data.position);
+      setIsAdmitted(false);
+    });
+
+    // Nhận thông báo đã tham gia phòng thành công trực tiếp (không bị xếp hàng)
+    newSocket.on('join-success', () => {
+      setInQueue(false);
+      setQueuePosition(0);
+      setIsAdmitted(true);
+    });
+
+    // Nhận thông báo được duyệt vào phòng (sau khi xếp hàng chờ)
+    newSocket.on('admitted', () => {
+      setInQueue(false);
+      setQueuePosition(0);
+      setIsAdmitted(true);
+      // Gửi ngay tọa độ hiện tại lên server để người khác thấy
+      newSocket.emit('move', {
         x: localUserPos[0],
         y: localUserPos[1],
         z: localUserPos[2],
@@ -106,12 +147,15 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     return () => {
       newSocket.disconnect();
+      setInQueue(false);
+      setQueuePosition(0);
+      setIsAdmitted(false);
     };
   }, [activeGallery, nickname]);
 
-  // Gửi vị trí của chính mình lên server khi thay đổi
+  // Gửi vị trí của chính mình lên server khi thay đổi (chỉ gửi khi đã được phê duyệt vào phòng)
   useEffect(() => {
-    if (socket && socket.connected) {
+    if (socket && socket.connected && isAdmitted) {
       socket.emit('move', {
         x: localUserPos[0],
         y: localUserPos[1],
@@ -119,7 +163,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         yaw: localUserYaw,
       });
     }
-  }, [localUserPos, localUserYaw, socket]);
+  }, [localUserPos, localUserYaw, socket, isAdmitted]);
 
   return (
     <MuseumContext.Provider
@@ -140,6 +184,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setLocalUserPos,
         localUserYaw,
         setLocalUserYaw,
+        inQueue,
+        setInQueue,
+        queuePosition,
+        setQueuePosition,
+        isAdmitted,
+        setIsAdmitted,
       }}
     >
       {children}

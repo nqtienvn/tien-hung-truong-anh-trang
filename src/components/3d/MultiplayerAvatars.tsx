@@ -99,9 +99,11 @@ export const MultiplayerAvatars: React.FC = () => {
 
   return (
     <group>
-      {otherUsers.map((user) => (
-        <MultiplayerAvatarItem key={user.id} user={user} />
-      ))}
+      {otherUsers
+        .filter((user) => user.nickname !== '')
+        .map((user) => (
+          <MultiplayerAvatarItem key={user.id} user={user} />
+        ))}
     </group>
   );
 };

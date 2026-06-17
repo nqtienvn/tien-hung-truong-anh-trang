@@ -1,201 +1,341 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMuseum } from '@/context/MuseumContext';
-import { Gallery } from '@/lib/db';
-import { Sparkles, ArrowRight, ShieldAlert, Globe, Compass, Image as ImageIcon, Box } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
 
 export default function Home() {
-  const router = useRouter();
-  const { 
-    language, 
-    setLanguage, 
-    nickname, 
-    setNickname, 
-    setActiveGallery,
-    setSelectedExhibit
-  } = useMuseum();
-
-  const [inputName, setInputName] = useState(nickname);
-  const [galleries, setGalleries] = useState<Gallery[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  // Fetch danh sách phòng triển lãm từ API
-  useEffect(() => {
-    setActiveGallery(null); // Reset phòng khi về sảnh chính
-    setSelectedExhibit(null); // Reset hiện vật đang chọn
-
-    fetch('/api/galleries')
-      .then((res) => res.json())
-      .then((data) => {
-        setGalleries(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Lỗi fetch phòng triển lãm:', err);
-        setError('Không thể kết nối đến máy chủ.');
-        setLoading(false);
-      });
-  }, [setActiveGallery, setSelectedExhibit]);
-
-  const handleEnterRoom = (gallery: Gallery) => {
-    if (!inputName.trim()) {
-      setError(language === 'vi' ? 'Vui lòng nhập biệt danh của bạn!' : 'Please enter your nickname!');
-      return;
-    }
-    setError('');
-    setNickname(inputName.trim());
-    setActiveGallery(gallery);
-    router.push(`/gallery/${gallery.id}`);
-  };
-
   return (
-    <div className="relative min-h-screen bg-[#07070a] flex flex-col justify-between overflow-hidden">
-      
-      {/* 1. NỀN BACKGROUND MESH GRADIENT HÚT MẮT */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-tr from-amber-500/15 to-rose-500/10 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-br from-cyan-500/10 to-indigo-500/20 blur-[150px]" />
-        <div className="absolute top-[30%] right-[20%] w-[30vw] h-[30vw] rounded-full bg-violet-600/10 blur-[100px]" />
-        {/* Đường lưới tọa độ ảo tạo chiều sâu công nghệ */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:40px_40px]" />
-      </div>
-
-      {/* 2. THANH HEADER LOBBY */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="bg-gradient-to-tr from-amber-500 to-rose-500 p-2 rounded-xl shadow-lg shadow-amber-500/20">
-            <Compass className="text-slate-950" size={20} />
-          </div>
-          <span className="font-sans font-black tracking-widest text-lg bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent uppercase">
-            ORTUS MUSEUM
-          </span>
+    <div className="bg-[#fbf9f8] text-[#1b1c1c] min-h-screen flex flex-col relative overflow-x-hidden">
+      {/* TopNavBar */}
+      <nav className="bg-[#fbf9f8]/80 backdrop-blur-md text-[#5f5e5e] border-b border-[#c4c7c6]/30 fixed top-0 w-full z-50 flex justify-between items-center px-16 py-4 hidden md:flex">
+        <div className="font-headline-md text-[32px] font-bold text-[#5f5e5e] whitespace-nowrap overflow-hidden text-ellipsis max-w-sm">
+          Bảo tàng Tiến hóa Kinh tế
         </div>
 
-        {/* Nút đổi ngôn ngữ & Quản trị */}
-        <div className="flex items-center gap-3">
-          {/* Admin link */}
-          <button 
-            onClick={() => router.push('/admin')}
-            className="text-xs bg-slate-900/60 hover:bg-slate-800/60 text-slate-300 hover:text-white px-3.5 py-1.8 rounded-lg border border-slate-800 transition-all font-semibold flex items-center gap-1.5 cursor-pointer"
+        {/* <div className="flex items-center gap-6">
+          <Link
+            href="/"
+            className="text-[#725b29] border-b-2 border-[#725b29] pb-1 font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
           >
-            <ShieldAlert size={12} className="text-amber-500" />
-            CMS Admin
-          </button>
-          
-          <div className="flex bg-slate-900/60 p-0.5 rounded-lg border border-slate-800/80">
-            <button 
-              onClick={() => setLanguage('vi')}
-              className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer ${language === 'vi' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-            >
-              VI
-            </button>
-            <button 
-              onClick={() => setLanguage('en')}
-              className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-            >
-              EN
-            </button>
-          </div>
-        </div>
-      </header>
+            Sảnh chính
+          </Link>
+          <Link
+            href="/gallery/gallery-paintings"
+            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
+          >
+            Khởi nguồn
+          </Link>
+          <Link
+            href="/gallery/gallery-sculptures"
+            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
+          >
+            Thị trường
+          </Link>
+          <Link
+            href="/gallery/gallery-sculptures"
+            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
+          >
+            Giới hạn
+          </Link>
+          <Link
+            href="/gallery/gallery-paintings"
+            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
+          >
+            Việt Nam
+          </Link>
+        </div> */}
 
-      {/* 3. NỘI DUNG CHÍNH (MAIN CONTENT CARD) */}
-      <main className="relative z-10 flex-1 max-w-4xl mx-auto px-6 flex flex-col justify-center items-center py-12">
-        <div className="text-center space-y-4 max-w-2xl mb-10">
-          <div className="inline-flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full text-amber-400 text-xs font-bold uppercase tracking-wider animate-bounce">
-            <Sparkles size={12} />
-            {language === 'vi' ? 'Nền tảng thực tế ảo thế hệ mới' : 'Next-Gen VR Platform'}
-          </div>
-          
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight font-sans">
-            {language === 'vi' ? 'Khám Phá ' : 'Explore '}
-            <span className="bg-gradient-to-r from-amber-400 via-rose-400 to-indigo-400 bg-clip-text text-transparent">
-              {language === 'vi' ? 'Bảo Tàng Không Gian 3D' : '3D Space Museum'}
+        <div className="flex items-center gap-4">
+          <button className="text-[#444747] hover:text-[#5f5e5e] transition-colors p-2 rounded-full hover:bg-[#e3e2e2]/50 flex items-center justify-center">
+            <span className="material-symbols-outlined font-normal">
+              search
             </span>
-          </h1>
-          
-          <p className="text-sm sm:text-base text-slate-400 leading-relaxed">
-            {language === 'vi' 
-              ? 'Tận hưởng chuyến tham quan trực quan sinh động, lắng nghe thuyết minh nghệ thuật tự động và trò chuyện đồng hành thời gian thực cùng bạn bè ngay trên trình duyệt web.'
-              : 'Enjoy interactive spatial visiting, listen to audio guide, and walk together with other online visitors in real-time.'}
-          </p>
+          </button>
+          {/* <Link
+            href="/gallery/gallery-paintings"
+            className="bg-[#5f5e5e]/10 text-[#5f5e5e] border border-[#5f5e5e]/30 px-6 py-2 rounded scale-95 active:opacity-80 transition-all font-label-sm text-[12px] font-semibold hover:bg-[#5f5e5e] hover:text-white uppercase tracking-widest text-center"
+          >
+            Tham quan
+          </Link> */}
         </div>
+      </nav>
 
-        {/* Khung nhập tên & chọn phòng */}
-        <div className="w-full max-w-md bg-slate-950/40 backdrop-blur-xl border border-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 tracking-wider uppercase block">
-              {language === 'vi' ? '1. Nhập biệt danh của bạn' : '1. Enter your nickname'}
-            </label>
-            <input 
-              type="text"
-              value={inputName}
-              onChange={(e) => setInputName(e.target.value)}
-              placeholder={language === 'vi' ? 'Ví dụ: Nghệ Sĩ Trẻ...' : 'E.g., John Doe...'}
-              maxLength={20}
-              className="w-full bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-amber-500/50 transition-colors font-semibold"
+      {/* SideNavBar (Mobile Bottom Navigation) */}
+      <nav className="md:hidden fixed bottom-0 w-full bg-[#f5f3f3]/95 backdrop-blur-xl border-t border-[#c4c7c6]/20 z-50 flex justify-around py-3 px-5">
+        <Link
+          className="flex flex-col items-center gap-1 text-[#725b29]"
+          href="/"
+        >
+          <div className="bg-[#fcf9f8] text-[#737272] rounded-full p-1 px-4">
+            <span className="material-symbols-outlined text-xl font-semibold">
+              account_balance
+            </span>
+          </div>
+          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
+            Sảnh chính
+          </span>
+        </Link>
+        <Link
+          className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
+          href="/gallery/gallery-paintings"
+        >
+          <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
+            <span className="material-symbols-outlined text-xl">
+              history_edu
+            </span>
+          </div>
+          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
+            Khởi nguồn
+          </span>
+        </Link>
+        <Link
+          className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
+          href="/gallery/gallery-sculptures"
+        >
+          <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
+            <span className="material-symbols-outlined text-xl">
+              account_tree
+            </span>
+          </div>
+          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
+            Thị trường
+          </span>
+        </Link>
+        <Link
+          className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
+          href="/gallery/gallery-paintings"
+        >
+          <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
+            <span className="material-symbols-outlined text-xl">explore</span>
+          </div>
+          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
+            Việt Nam
+          </span>
+        </Link>
+      </nav>
+
+      {/* Main Content Canvas */}
+      <main className="flex-grow pt-24 md:pt-32 pb-[120px] flex flex-col items-center w-full z-10">
+        {/* Hero Section */}
+        <section className="w-full max-w-[1440px] px-5 md:px-16 mb-[120px] relative">
+          <div className="relative w-full aspect-[4/3] md:aspect-[21/9] rounded-xl overflow-hidden flex items-center justify-center">
+            {/* Atmospheric Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center z-0"
+              style={{
+                backgroundImage:
+                  'url("https://lh3.googleusercontent.com/aida-public/AB6AXuA25Y0I_1xm3GK_b0qEfPJytu2jKXdqF8FKJ1edhkR96uKHmo_NzpkZaSe4zVI3bFiEhUQex4uz7cGxJjphMiwvUTxWlVYTrSpGEhCxiNdoMZ31L_lNOAr7ZiERiGGb328ESRbpxERoKJW-Z7hwYEWwG0Bjq8C3aEEWnxoNUWdJpMNaPDjsBfej0S2w_KtsBN5myBRT-DI8jD_GqU9p-Sa9m2zaRf9UE6-n6QeG4GOcLO4X_k8nnqnNaroAZY3e4TwccQqe8p78yl4")',
+              }}
             />
+            {/* Gradient Overlay for readability and depth */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10"></div>
+
+            <div className="relative z-20 text-center md:text-left md:absolute md:left-20 md:bottom-20 max-w-3xl px-6 md:px-0">
+              <h1 className="font-display-lg text-[40px] sm:text-[64px] font-medium mb-6 drop-shadow-lg text-white leading-tight">
+                Bảo tàng Tiến hóa Kinh tế &amp; Tọa độ Việt Nam
+              </h1>
+              <p className="font-body-lg text-[16px] sm:text-[18px] mb-10 max-w-2xl drop-shadow-md text-white/95 leading-relaxed">
+                Hành trình khám phá sự phát triển của nền kinh tế nhân loại từ
+                sơ khai đến hội nhập toàn cầu.
+              </p>
+              <Link
+                href="/gallery/gallery-paintings"
+                className="group inline-flex items-center gap-3 bg-[#725b29] px-8 py-4 rounded-full border border-[#725b29] hover:bg-[#725b29]/90 transition-all duration-300 drop-shadow-lg text-white cursor-pointer"
+              >
+                <span className="font-label-sm text-[12px] uppercase tracking-widest font-semibold">
+                  Bắt đầu chuyến tham quan
+                </span>
+                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Museum Map Section (Bản đồ tham quan) */}
+        <section className="w-full max-w-[1440px] px-5 md:px-16">
+          <div className="mb-16 flex items-center gap-6">
+            <h2 className="font-headline-lg text-[40px] text-[#1b1c1c] font-medium">
+              Bản đồ tham quan
+            </h2>
+            <div className="h-[1px] flex-grow bg-gradient-to-r from-[#725b29]/50 to-transparent"></div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-slate-400 tracking-wider uppercase block">
-              {language === 'vi' ? '2. Chọn phòng trưng bày' : '2. Select exhibition gallery'}
-            </label>
+          {/* Bento Grid Layout for Rooms */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[400px]">
+            {/* Room 1 */}
+            <div className="md:col-span-7 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+              <div
+                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
+                style={{
+                  backgroundImage:
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCC_hh3d34wdzjzqhFpCpfo_EbdCst6ktWreBQogw577k2YyEUSN4Mx6oqkomdQ3pwMcwN10o1kW7iewEdEKaZhTah8o-2L9Pjluz9imprWkCKKRWF03PEHcxRvfMjXg4UVMqJ4mV1vaV_9j9vZQrSPdHRjeGXzzpCB6i9nRF1CJgyUg4Eo5ftLbl6ult057rpX88lIcnvFmX0S5hdxIaMPLNDDOjcx1NLRbcKPIHc0calxo0E4aUN81QchEwoixeCmNbDsxgl-qh0")',
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
+              <div className="relative z-20 flex flex-col gap-4">
+                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
+                  Phòng 01
+                </span>
+                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
+                  Khởi nguồn Trao đổi &amp; Quyền lực Tiền tệ
+                </h3>
+                <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
+                  Khám phá những hình thái sơ khai của thương mại và sự ra đời
+                  của các công cụ đo lường giá trị đầu tiên.
+                </p>
+                <Link
+                  href="/gallery/gallery-paintings"
+                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
+                >
+                  Vào phòng
+                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
+                    arrow_right_alt
+                  </span>
+                </Link>
+              </div>
+            </div>
 
-            {loading ? (
-              <div className="flex justify-center py-6">
-                <div className="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            {/* Room 2 */}
+            <div className="md:col-span-5 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+              <div
+                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
+                style={{
+                  backgroundImage:
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBlIiV8Wmlpprxt79Nw5wJlhBZgXlfbRrGbPN8OIKLl5TvoEILXi3b3WaQRwEvTxjXLkaHdzn9vfsJYpvlTzMyv6swvFtgOuC3wkPqQnOkFKLXOjhl5ouRUvtg7bYiCYbXX5J-irM6v6dzSV82HZ2xcElhuy0_nlh87Wy0bMvkc3MYqk9DEy-TqenAgsJhp7uEPBwTN7Hl9Vv1Yqry9LWGl2jQzVcETsN2fF-ULApfpkKngxexSHiI2_mAltipCBhgjgaXZcXgeTd0")',
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
+              <div className="relative z-20 flex flex-col gap-4">
+                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
+                  Phòng 02
+                </span>
+                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
+                  Cỗ máy Thị trường &amp; Bí mật Tư bản
+                </h3>
+                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
+                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và
+                  những quy luật ngầm điều hành thương mại toàn cầu.
+                </p>
+                <Link
+                  href="/gallery/gallery-sculptures"
+                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
+                >
+                  Vào phòng
+                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
+                    arrow_right_alt
+                  </span>
+                </Link>
               </div>
-            ) : error ? (
-              <div className="text-rose-400 text-xs text-center py-2 bg-rose-500/10 border border-rose-500/20 rounded-lg">
-                {error}
+            </div>
+
+            {/* Room 3 */}
+            <div className="md:col-span-5 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+              <div
+                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
+                style={{
+                  backgroundImage:
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD1KCNyN5dt90QPfAeh1T1W6Rg0xEHEsBQAX3ju6xrJtnEhBsOM3Lv3Igc2PPSF0YDswcqUEWc0FnBb1eD_B7ZrGD3gDM5lVVjKRK6MJdNlxZnQBiGUCvWOMQBxS0mu5526JTThbMajX3nyTfyTTrKVLdZxpLzC-SbGVFlKt4o2b3Vfq23X3hqMujOem9a4UyWzJDcLRGVRzuAjacoOC_JZsFktMIiMeiqYYegpHuf6-2CbYioX50eNS5gcvzwPgZ1TtGIBTlKw-0Q")',
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
+              <div className="relative z-20 flex flex-col gap-4">
+                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
+                  Phòng 03
+                </span>
+                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
+                  Giới hạn Tư bản &amp; Bài toán Độc quyền
+                </h3>
+                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
+                  Nhìn nhận những cuộc khủng hoảng, bong bóng tài chính và hệ
+                  lụy của sự tập trung quyền lực kinh tế.
+                </p>
+                <Link
+                  href="/gallery/gallery-sculptures"
+                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
+                >
+                  Vào phòng
+                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
+                    arrow_right_alt
+                  </span>
+                </Link>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3">
-                {galleries.map((gallery) => (
-                  <button
-                    key={gallery.id}
-                    onClick={() => handleEnterRoom(gallery)}
-                    className="group flex items-center justify-between text-left bg-slate-900/40 hover:bg-slate-900 border border-slate-800/80 hover:border-amber-500/40 p-4 rounded-2xl transition-all cursor-pointer shadow-lg hover:shadow-amber-500/5"
-                  >
-                    <div className="flex items-center gap-3.5">
-                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-slate-400 group-hover:text-amber-400 transition-colors">
-                        {gallery.id === 'gallery-paintings' ? <ImageIcon size={20} /> : <Box size={20} />}
-                      </div>
-                      <div className="max-w-[200px] sm:max-w-[240px]">
-                        <h3 className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
-                          {gallery.name}
-                        </h3>
-                        <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                          {gallery.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="bg-slate-950 p-2 rounded-full border border-slate-800 text-slate-500 group-hover:text-amber-400 group-hover:border-amber-500/30 transition-all">
-                      <ArrowRight size={14} />
-                    </div>
-                  </button>
-                ))}
+            </div>
+
+            {/* Room 4 */}
+            <div className="md:col-span-7 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+              <div
+                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
+                style={{
+                  backgroundImage:
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8V5NbwVaHSRdNNh6GL1qWsB-dp-VFfqIOSbG-aTdcZQb7_LwhIJ3hbpANTJ5fGS83veqnJBjfR-z_JR8lw1ctIrmzmn4uKnxqqfMfF91dkzZ2mjM7sUMWfzoVwZ-jc9ErGjNAPKYWCYqyYc-j1Fws9QPbbJB5RNTQ4G3tYvB4A7-pIgBsrlQZDA8UA2vJFiLc6X6PTGfwpV3QlftRJsGm57swa5VG0z5NgZVHlNcoq9rd-JYgXW4ysTRXY5uhzfOwCIWHKz4J9Rg")',
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
+              <div className="relative z-20 flex flex-col gap-4">
+                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
+                  Phòng 04
+                </span>
+                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
+                  Tọa độ Việt Nam &amp; Kỷ nguyên Không biên giới
+                </h3>
+                <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
+                  Vị thế của nền kinh tế Việt Nam trong dòng chảy toàn cầu hóa
+                  và những thách thức trong kỷ nguyên số.
+                </p>
+                <Link
+                  href="/gallery/gallery-paintings"
+                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
+                >
+                  Vào phòng
+                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
+                    arrow_right_alt
+                  </span>
+                </Link>
               </div>
-            )}
+            </div>
           </div>
-          
-          {error && !loading && (
-            <p className="text-xs text-rose-400 text-center font-semibold bg-rose-500/10 py-2 rounded-lg border border-rose-500/20 animate-shake">
-              ⚠️ {error}
-            </p>
-          )}
-        </div>
+        </section>
       </main>
 
-      {/* 4. CHÂN TRANG (FOOTER) */}
-      <footer className="relative z-10 w-full py-6 text-center text-[10px] text-slate-600 border-t border-slate-950">
-        © 2026 Ortus Museum Virtual Platform. Built with Next.js, React Three Fiber and Socket.io.
+      {/* Footer */}
+      <footer className="bg-[#ffffff] border-t border-[#c4c7c6]/20 w-full py-[120px] px-16 flex flex-col items-center gap-6 z-10 relative mb-16 md:mb-0">
+        <div className="font-headline-md text-[32px] text-[#725b29] mb-4 text-center font-bold">
+          Bảo tàng Tiến hóa Kinh tế &amp; Tọa độ Việt Nam
+        </div>
+        {/* <div className="flex flex-wrap justify-center gap-8 mb-8">
+          <Link
+            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
+            href="#"
+          >
+            Điều khoản
+          </Link>
+          <Link
+            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
+            href="#"
+          >
+            Bảo mật
+          </Link>
+          <Link
+            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
+            href="#"
+          >
+            Lưu trữ
+          </Link>
+          <Link
+            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
+            href="#"
+          >
+            Tọa độ số
+          </Link>
+        </div> */}
+        <p className="text-[#5f5e5e] font-body-md text-[16px] text-center max-w-2xl opacity-70 leading-relaxed">
+          © 2026 Bảo tàng Tiến hóa Kinh tế &amp; Tọa độ Việt Nam. Một sản phẩm
+          của Nhóm 7 - MLN122.
+        </p>
       </footer>
-      
     </div>
   );
 }
