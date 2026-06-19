@@ -206,19 +206,28 @@ export const MuseumLobby: React.FC = () => {
           </mesh>
 
           {/* Trụ đứng lan can mạ vàng */}
-          {[
-            { z: 2.0, y: 1.0 + 0.0, h: 0.9 },
-            { z: 3.2, y: 1.0 + 0.72, h: 0.9 },
-            { z: 4.4, y: 1.0 + 1.44, h: 0.9 },
-            { z: 5.6, y: 1.0 + 2.16, h: 0.9 },
-            { z: 6.8, y: 1.0 + 2.88, h: 0.9 },
-            { z: 7.9, y: 1.0 + 3.0, h: 0.9 },
-          ].map((post, idx) => (
-            <mesh key={`post-${idx}`} position={[x, post.y + post.h / 2, post.z]} castShadow>
-              <cylinderGeometry args={[0.02, 0.02, post.h, 8]} />
-              <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
-            </mesh>
-          ))}
+          {[2.0, 3.2, 4.4, 5.6, 6.8, 7.9].map((postZ, idx) => {
+            // Xác định postY dựa trên đoạn thành đá
+            let postY = 3.925; // Đoạn 5
+            if (postZ <= 3.0) postY = 1.225; // Đoạn 1
+            else if (postZ <= 4.25) postY = 1.975; // Đoạn 2
+            else if (postZ <= 5.5) postY = 2.725; // Đoạn 3
+            else if (postZ <= 6.75) postY = 3.475; // Đoạn 4
+
+            // Độ cao tay vịn chéo tại postZ
+            const handrailY = 1.9 + ((postZ - 1.75) / 6.25) * 3.0;
+
+            // Chiều cao cột đứng
+            const postH = handrailY - postY;
+            const postCenterY = postY + postH / 2;
+
+            return (
+              <mesh key={`post-${idx}`} position={[x, postCenterY, postZ]} castShadow>
+                <cylinderGeometry args={[0.02, 0.02, postH, 8]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+              </mesh>
+            );
+          })}
 
           {/* Thanh tay vịn lan can mạ vàng chạy chéo */}
           <mesh
