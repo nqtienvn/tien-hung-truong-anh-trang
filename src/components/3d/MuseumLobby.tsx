@@ -223,7 +223,7 @@ export const MuseumLobby: React.FC = () => {
           {/* Thanh tay vịn lan can mạ vàng chạy chéo */}
           <mesh
             position={[x, 1.9 + 3.0 / 2, 1.75 + 6.25 / 2]}
-            rotation={[Math.atan2(3.0, 6.25), 0, 0]}
+            rotation={[-Math.atan2(3.0, 6.25), 0, 0]}
             castShadow
           >
             <boxGeometry args={[0.06, 0.06, Math.sqrt(6.25 * 6.25 + 3.0 * 3.0)]} />
