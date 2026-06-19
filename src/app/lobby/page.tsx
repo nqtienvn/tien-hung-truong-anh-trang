@@ -107,11 +107,8 @@ const LobbyPlayer: React.FC = () => {
       // 1. Biên giới phòng (tường sau dịch lên Z = 8.0, chặn ở Z > 7.4)
       if (x < -14.4 || x > 14.4 || z < -9.4 || z > 7.4) return true;
 
-      // 2. Quầy lễ tân (X: 7→14, Z: -3.8→-2.2)
-      if (x > 6.8 && x < 14.0 && z > -3.8 && z < -2.2) return true;
-
-      // 3. Cột chắn dây lễ tân
-      if (x > 8.0 && x < 13.0 && z > -4.6 && z < -3.9) return true;
+      // 2. Quầy lễ tân bên phải (X: 12.0 → 15.0, Z: -6.7 → 0.7)
+      if (x > 12.0 && x < 15.0 && z > -6.7 && z < 0.7) return true;
 
       // 4. Thành cầu thang hai bên (X: ±4.0→±4.5, Z: 1.5→8.0)
       if (z > 1.5 && z <= 8.0) {

@@ -154,9 +154,9 @@ export const MuseumLobby: React.FC = () => {
         <boxGeometry args={[L, H, 0.3]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.75} />
       </mesh>
-      {/* Bệ nhô ra (canopy) phía trên quầy lễ tân */}
-      <mesh position={[W / 2 - 1.0, 3.8, -2]} castShadow>
-        <boxGeometry args={[2.0, 0.15, 10]} />
+      {/* Bệ nhô ra (canopy) phía trên quầy lễ tân bên phải */}
+      <mesh position={[W / 2 - 1.0, 3.8, -3.0]} castShadow>
+        <boxGeometry args={[2.0, 0.15, 8.0]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.4} />
       </mesh>
 
@@ -301,55 +301,63 @@ export const MuseumLobby: React.FC = () => {
       </mesh>
 
       {/* ═══════════════════════════════════════════════════════════════
-          6. QUẦY LỄ TÂN & MÀN HÌNH THÔNG TIN (Reception Desk & Screens)
+          6. QUẦY LỄ TÂN & MÀN HÌNH THÔNG TIN BÊN PHẢI (Reception Desk & Screens)
+          Xoay dọc theo trục Z, hướng mặt ra thảm đỏ ở giữa (X-)
       ═══════════════════════════════════════════════════════════════ */}
-      {/* Quầy chính */}
-      <mesh position={[10.5, 0.55, -3.0]} castShadow receiveShadow>
-        <boxGeometry args={[7.0, 1.1, 0.8]} />
+      {/* Vách tường gỗ/đá backdrop phía sau quầy */}
+      <mesh position={[14.8, 2.0, -3.0]} receiveShadow castShadow>
+        <boxGeometry args={[0.2, 4.0, 8.0]} />
+        <meshStandardMaterial color={sandstoneDark} roughness={0.45} />
+      </mesh>
+
+      {/* Quầy chính dọc theo Z */}
+      <mesh position={[13.5, 0.55, -3.0]} castShadow receiveShadow>
+        <boxGeometry args={[0.8, 1.1, 7.0]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.25} metalness={0.1} />
       </mesh>
       {/* Mặt quầy vàng ánh kim */}
-      <mesh position={[10.5, 1.12, -3.0]}>
-        <boxGeometry args={[7.1, 0.04, 0.85]} />
+      <mesh position={[13.5, 1.12, -3.0]}>
+        <boxGeometry args={[0.85, 0.04, 7.1]} />
         <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
       </mesh>
       {/* Đế quầy */}
-      <mesh position={[10.5, 0.04, -3.0]}>
-        <boxGeometry args={[7.15, 0.08, 0.9]} />
+      <mesh position={[13.5, 0.04, -3.0]}>
+        <boxGeometry args={[0.9, 0.08, 7.15]} />
         <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.3} />
       </mesh>
 
-      {/* Cột chắn dây (Stanchion posts) */}
+      {/* Cột chắn dây (Stanchion posts) - đặt dọc bên trái quầy, chắn phía thảm đỏ */}
       {[-2.0, 0, 2.0].map((offset) => (
         <group key={`stanchion-${offset}`}>
-          <mesh position={[10.5 + offset, 0.5, -4.2]} castShadow>
+          <mesh position={[12.3, 0.5, -3.0 + offset]} castShadow>
             <cylinderGeometry args={[0.03, 0.03, 1.0, 8]} />
             <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
           </mesh>
-          <mesh position={[10.5 + offset, 1.0, -4.2]}>
+          <mesh position={[12.3, 1.0, -3.0 + offset]}>
             <sphereGeometry args={[0.06, 12, 12]} />
             <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
           </mesh>
-          <mesh position={[10.5 + offset, 0.02, -4.2]}>
+          <mesh position={[12.3, 0.02, -3.0 + offset]}>
             <cylinderGeometry args={[0.13, 0.13, 0.04, 12]} />
             <meshStandardMaterial color="#1a1a1a" metalness={0.8} roughness={0.2} />
           </mesh>
         </group>
       ))}
 
-      {/* Màn hình thông tin (Information Screens) */}
+      {/* Màn hình thông tin (Information Screens) - Treo trên backdrop bên phải, hướng ra X- */}
       {Array.from({ length: 4 }).map((_, i) => {
         const screenColors = ['#4fc3f7', '#ffd54f', '#81c784', '#ffab91'];
+        const zPos = -5.5 + i * 1.7; // phân bố đều dọc Z
         return (
           <group key={`screen-${i}`}>
             {/* Khung màn hình */}
-            <mesh position={[W / 2 - 0.12, 2.5, -5.5 + i * 2.5]} rotation={[0, -Math.PI / 2, 0]}>
-              <boxGeometry args={[1.8, 1.1, 0.08]} />
+            <mesh position={[14.6, 2.5, zPos]} rotation={[0, -Math.PI / 2, 0]}>
+              <boxGeometry args={[1.5, 1.0, 0.08]} />
               <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
             </mesh>
             {/* Màn hình phát sáng */}
-            <mesh position={[W / 2 - 0.17, 2.5, -5.5 + i * 2.5]} rotation={[0, -Math.PI / 2, 0]}>
-              <planeGeometry args={[1.6, 0.95]} />
+            <mesh position={[14.55, 2.5, zPos]} rotation={[0, -Math.PI / 2, 0]}>
+              <planeGeometry args={[1.35, 0.85]} />
               <meshStandardMaterial
                 color={screenColors[i]}
                 emissive={screenColors[i]}
@@ -361,14 +369,14 @@ export const MuseumLobby: React.FC = () => {
         );
       })}
 
-      {/* Màn hình nghiêng trên bàn (kiểu kiosk) */}
-      {Array.from({ length: 3 }).map((_, i) => (
+      {/* Màn hình nghiêng trên bàn (kiểu kiosk) - quay nghiêng hướng về phía thảm đỏ X- */}
+      {[-1.8, 0, 1.8].map((offset, i) => (
         <group key={`kiosk-${i}`}>
-          <mesh position={[8.5 + i * 2.0, 1.3, -3.7]} rotation={[-0.5, 0, 0]} castShadow>
+          <mesh position={[13.3, 1.3, -3.0 + offset]} rotation={[0, -Math.PI / 2, -0.5]} castShadow>
             <boxGeometry args={[1.0, 0.7, 0.06]} />
             <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
           </mesh>
-          <mesh position={[8.5 + i * 2.0, 1.32, -3.72]} rotation={[-0.5, 0, 0]}>
+          <mesh position={[13.28, 1.32, -3.0 + offset]} rotation={[0, -Math.PI / 2, -0.5]}>
             <planeGeometry args={[0.85, 0.55]} />
             <meshStandardMaterial
               color={i % 2 === 0 ? '#e8f5e9' : '#fff3e0'}
