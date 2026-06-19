@@ -83,9 +83,9 @@ const LobbyCameraController: React.FC = () => {
     const yOff = idealDist * Math.cos(phi.current);
     const zOff = idealDist * Math.cos(theta.current) * Math.sin(phi.current);
 
-    // Giới hạn camera trong phạm vi sảnh
+    // Giới hạn camera trong phạm vi sảnh (ngăn camera chui ra sau tường sau Z = 8.0 hoặc tường trước Z = -10)
     const camX = Math.max(-LOBBY_W / 2 + 0.5, Math.min(LOBBY_W / 2 - 0.5, px + xOff));
-    const camZ = Math.max(-LOBBY_L / 2 + 0.5, Math.min(LOBBY_L / 2 - 0.5, pz + zOff));
+    const camZ = Math.max(-9.4, Math.min(7.35, pz + zOff));
 
     // Ngăn camera đi xuyên xuống mặt đất/cầu thang/sàn tầng 2 bằng cách tính Y tối thiểu tại vị trí của camera
     const groundYAtCam = getLobbyGroundY(camX, camZ);
@@ -125,11 +125,19 @@ const LobbyPlayer: React.FC = () => {
    */
   const checkCollision = useCallback(
     (x: number, z: number, currentY: number): boolean => {
-      // 1. Biên giới phòng (tường sau dịch lên Z = 8.0, chặn ở Z > 7.4)
-      if (x < -14.4 || x > 14.4 || z < -9.4 || z > 7.4) return true;
+      // 1. Biên giới phòng (tường sau dịch lên Z = 8.0, chặn ở Z > 7.3 để ngăn đi xuyên tường)
+      if (x < -14.4 || x > 14.4 || z < -9.4 || z > 7.3) return true;
 
       // 2. Quầy lễ tân bên phải (X: 12.0 → 15.0, Z: -6.7 → 0.7)
       if (x > 12.0 && x < 15.0 && z > -6.7 && z < 0.7) return true;
+
+      // 3. Chặn đi dưới gầm cầu thang ở tầng 1 (nếu Y hiện tại thấp hơn mặt bậc thang)
+      if (x > -4.0 && x < 4.0 && z > 2.0 && z <= 7.0) {
+        const stepIndex = Math.floor((z - 2.0) / 0.5);
+        const clampedIndex = Math.max(0, Math.min(9, stepIndex));
+        const stairY = clampedIndex * 0.3;
+        if (currentY < stairY - 0.1) return true;
+      }
 
       // 4. Thành cầu thang hai bên (X: ±4.0→±4.5, Z: 1.5→8.0)
       if (z > 1.5 && z <= 8.0) {
