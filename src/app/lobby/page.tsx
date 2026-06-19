@@ -16,6 +16,26 @@ const LOBBY_L = 20;
 const LOBBY_H = 12;
 
 // ═══════════════════════════════════════════════════════════════════════════
+// HÀM HỖ TRỢ TÍNH TOÀN ĐỘ CAO MẶT ĐẤT/CẦU THANG CHO SẢNH
+// ═══════════════════════════════════════════════════════════════════════════
+/**
+ * Tính Y mặt đất tại tọa độ (x, z).
+ * Cầu thang gồm 10 bậc giật cấp từ Z=2 đến Z=7, mỗi bậc sâu 0.5m, cao 0.3m.
+ * Mezzanine: Z > 7, Y = 3m
+ */
+const getLobbyGroundY = (x: number, z: number): number => {
+  if (x > -4.0 && x < 4.0) {
+    if (z > 2.0 && z <= 7.0) {
+      const stepIndex = Math.floor((z - 2.0) / 0.5);
+      const clampedIndex = Math.max(0, Math.min(9, stepIndex));
+      return (clampedIndex + 1) * 0.3;
+    }
+    if (z > 7.0) return 3.0;
+  }
+  return 0;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // BỘ ĐIỀU KHIỂN CAMERA CHO SẢNH (Lobby Camera Controller)
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
@@ -33,7 +53,8 @@ const LobbyCameraController: React.FC = () => {
       const sensitivity = 0.003;
       theta.current -= e.movementX * sensitivity;
       phi.current -= e.movementY * sensitivity;
-      phi.current = Math.max(0.3, Math.min(Math.PI / 2 + 0.5, phi.current));
+      // Giới hạn phi.current tối đa đến Math.PI / 2 + 0.35 để tránh góc nghiêng quá thấp nhìn xuyên kết cấu
+      phi.current = Math.max(0.3, Math.min(Math.PI / 2 + 0.35, phi.current));
     };
 
     canvas.addEventListener('mousedown', handleMouseDown);
@@ -64,8 +85,13 @@ const LobbyCameraController: React.FC = () => {
 
     // Giới hạn camera trong phạm vi sảnh
     const camX = Math.max(-LOBBY_W / 2 + 0.5, Math.min(LOBBY_W / 2 - 0.5, px + xOff));
-    const camY = Math.max(0.5, Math.min(LOBBY_H - 0.5, targetHeight + yOff));
     const camZ = Math.max(-LOBBY_L / 2 + 0.5, Math.min(LOBBY_L / 2 - 0.5, pz + zOff));
+
+    // Ngăn camera đi xuyên xuống mặt đất/cầu thang/sàn tầng 2 bằng cách tính Y tối thiểu tại vị trí của camera
+    const groundYAtCam = getLobbyGroundY(camX, camZ);
+    const minCamY = groundYAtCam + 0.45; // Khoảng cách an toàn tối thiểu 45cm trên bề mặt
+
+    const camY = Math.max(minCamY, Math.min(LOBBY_H - 0.5, targetHeight + yOff));
 
     const targetCamPos = new THREE.Vector3(camX, camY, camZ);
     const targetLookAt = new THREE.Vector3(px, targetHeight, pz);
@@ -83,21 +109,16 @@ const LobbyCameraController: React.FC = () => {
 const LobbyPlayer: React.FC = () => {
   const playerRef = useRef<THREE.Group>(null);
   const keys = useRef({ w: false, a: false, s: false, d: false });
-  const bodyBob = useRef(0);
   const isMoving = useRef(false);
 
-  /**
-   * Tính Y mặt đất tại tọa độ (x, z).
-   * Cầu thang: Z=2→7, X=-4→4, Y tăng tuyến tính từ 0→3m
-   * Mezzanine: Z>7, Y=3m
-   */
-  const getGroundY = useCallback((x: number, z: number): number => {
-    if (x > -4.0 && x < 4.0 && z > 2.0 && z <= 7.0) {
-      return ((z - 2.0) / 5.0) * 3.0;
-    }
-    if (x > -4.0 && x < 4.0 && z > 7.0) return 3.0;
-    return 0;
-  }, []);
+  const leftLegRef = useRef<THREE.Group>(null);
+  const rightLegRef = useRef<THREE.Group>(null);
+  const leftArmRef = useRef<THREE.Group>(null);
+  const rightArmRef = useRef<THREE.Group>(null);
+
+  const { settings } = useMuseum();
+  const isPawn = settings.preset === 'low';
+  const baseY = isPawn ? 0.24 : 0.472;
 
   /**
    * Kiểm tra va chạm cho sảnh
@@ -162,75 +183,185 @@ const LobbyPlayer: React.FC = () => {
     const moving = w || a || s || d;
     isMoving.current = moving;
 
-    if (!moving) return;
+    if (moving) {
+      // Hướng di chuyển tương đối với camera
+      const frontVec = new THREE.Vector3();
+      state.camera.getWorldDirection(frontVec);
+      frontVec.y = 0;
+      frontVec.normalize();
+      const rightVec = new THREE.Vector3(-frontVec.z, 0, frontVec.x).normalize();
 
-    // Hướng di chuyển tương đối với camera
-    const frontVec = new THREE.Vector3();
-    state.camera.getWorldDirection(frontVec);
-    frontVec.y = 0;
-    frontVec.normalize();
-    const rightVec = new THREE.Vector3(-frontVec.z, 0, frontVec.x);
+      const moveDir = new THREE.Vector3();
+      if (w) moveDir.add(frontVec);
+      if (s) moveDir.sub(frontVec);
+      if (d) moveDir.add(rightVec);
+      if (a) moveDir.sub(rightVec);
+      moveDir.normalize();
 
-    const moveDir = new THREE.Vector3();
-    if (w) moveDir.add(frontVec);
-    if (s) moveDir.sub(frontVec);
-    if (d) moveDir.add(rightVec);
-    if (a) moveDir.sub(rightVec);
-    moveDir.normalize();
+      const speed = 4.5;
+      const curPos = playerRef.current.position;
+      const curGroundY = getLobbyGroundY(curPos.x, curPos.z);
 
-    const speed = 4.5;
+      const nextX = curPos.x + moveDir.x * speed * delta;
+      const nextZ = curPos.z + moveDir.z * speed * delta;
+
+      // Kiểm tra va chạm X và Z riêng biệt (wall sliding)
+      if (!checkCollision(nextX, curPos.z, curGroundY)) {
+        curPos.x = nextX;
+      }
+      if (!checkCollision(curPos.x, nextZ, curGroundY)) {
+        curPos.z = nextZ;
+      }
+
+      // Xoay nhân vật theo hướng di chuyển
+      const targetRot = Math.atan2(moveDir.x, moveDir.z);
+      let diff = targetRot - playerRef.current.rotation.y;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      playerRef.current.rotation.y += diff * 12 * delta;
+    }
+
     const curPos = playerRef.current.position;
-    const curGroundY = getGroundY(curPos.x, curPos.z);
+    const curGroundY = getLobbyGroundY(curPos.x, curPos.z);
 
-    const nextX = curPos.x + moveDir.x * speed * delta;
-    const nextZ = curPos.z + moveDir.z * speed * delta;
-
-    // Kiểm tra va chạm X và Z riêng biệt (wall sliding)
-    if (!checkCollision(nextX, curPos.z, curGroundY)) {
-      curPos.x = nextX;
+    // Cập nhật Y dựa trên vị trí mặt đất + baseY + hiệu ứng nhún nhảy
+    let bobY = 0;
+    const t = state.clock.getElapsedTime();
+    if (moving && settings.animations) {
+      bobY = Math.sin(t * 10) * 0.032;
     }
-    if (!checkCollision(curPos.x, nextZ, curGroundY)) {
-      curPos.z = nextZ;
+    const targetY = curGroundY + baseY + bobY;
+    curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, 0.2);
+
+    // Cập nhật góc quay của chân tay (Arm/Leg swing animations)
+    const swingSpeed = 10;
+    const swingAmp = 0.45;
+
+    if (moving && settings.animations) {
+      if (leftLegRef.current) leftLegRef.current.rotation.x = Math.sin(t * swingSpeed) * swingAmp;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.sin(t * swingSpeed) * swingAmp;
+
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -Math.sin(t * swingSpeed) * (swingAmp * 0.75);
+        leftArmRef.current.rotation.z = 0.2;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = Math.sin(t * swingSpeed) * (swingAmp * 0.75);
+        rightArmRef.current.rotation.z = -0.2;
+      }
+    } else {
+      if (leftLegRef.current) leftLegRef.current.rotation.x += (0 - leftLegRef.current.rotation.x) * 0.15;
+      if (rightLegRef.current) rightLegRef.current.rotation.x += (0 - rightLegRef.current.rotation.x) * 0.15;
+
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x += (0 - leftArmRef.current.rotation.x) * 0.15;
+        leftArmRef.current.rotation.z += (0.2 - leftArmRef.current.rotation.z) * 0.15;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x += (0 - rightArmRef.current.rotation.x) * 0.15;
+        rightArmRef.current.rotation.z += (-0.2 - rightArmRef.current.rotation.z) * 0.15;
+      }
     }
-
-    // Cập nhật Y dựa trên vị trí mặt đất (cầu thang, mezzanine)
-    const targetGroundY = getGroundY(curPos.x, curPos.z);
-    curPos.y = THREE.MathUtils.lerp(curPos.y, targetGroundY, 0.2);
-
-    // Xoay nhân vật theo hướng di chuyển
-    const targetRot = Math.atan2(moveDir.x, moveDir.z);
-    let diff = targetRot - playerRef.current.rotation.y;
-    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-    playerRef.current.rotation.y += diff * 12 * delta;
-
-    // Animation nhún nhẹ khi đi bộ
-    bodyBob.current += delta * 8;
   });
 
+  // Hằng số kích thước Mannequin
+  const HEAD_R = 0.22;
+  const TORSO_R = 0.175;
+  const TORSO_H = 0.3;
+
+  const ARM_R = 0.068;
+  const ARM_LEN = 0.22;
+
+  const LEG_R = 0.075;
+  const LEG_LEN = 0.22;
+
+  const TORSO_TOP = 0.28 + TORSO_R + TORSO_H / 2;
+  const ARM_PIVOT_X = TORSO_R + ARM_R * 0.95;
+  const ARM_PIVOT_Y = TORSO_TOP - 0.1;
+  const ARM_MESH_Y = -(ARM_R + ARM_LEN / 2);
+
+  const LEG_PIVOT_Y = 0.28 - TORSO_H / 2 - TORSO_R + LEG_R * 1.6;
+  const LEG_PIVOT_X = 0.082;
+  const LEG_MESH_Y = -(LEG_R + LEG_LEN / 2);
+
+  const skinColor = "#e8e0d5";
+  const skinProps = {
+    color: skinColor,
+    roughness: 0.6,
+    metalness: 0.0,
+  };
+
   return (
-    <group ref={playerRef} name="lobby-player" position={[0, 0, -5]}>
-      <group scale={1.6}>
-        {/* Đầu quân cờ */}
-        <mesh position={[0, 0.7, 0]} castShadow>
-          <sphereGeometry args={[0.18, 20, 20]} />
-          <meshStandardMaterial color="#e8e0d5" roughness={0.6} />
-        </mesh>
-        {/* Cổ */}
-        <mesh position={[0, 0.48, 0]}>
-          <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
-          <meshStandardMaterial color="#e8e0d5" roughness={0.6} />
-        </mesh>
-        {/* Thân */}
-        <mesh position={[0, 0.2, 0]} castShadow>
-          <cylinderGeometry args={[0.07, 0.18, 0.5, 16]} />
-          <meshStandardMaterial color="#e8e0d5" roughness={0.6} />
-        </mesh>
-        {/* Đế */}
-        <mesh position={[0, -0.1, 0]}>
-          <cylinderGeometry args={[0.22, 0.22, 0.1, 16]} />
-          <meshStandardMaterial color="#d6cfc5" roughness={0.5} />
-        </mesh>
-      </group>
+    <group ref={playerRef} name="lobby-player" position={[0, baseY, -5]}>
+      {isPawn ? (
+        <group scale={1.6}>
+          {/* Đầu quân cờ */}
+          <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>
+            <sphereGeometry args={[0.18, 20, 20]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+          {/* Cổ */}
+          <mesh position={[0, 0.48, 0]}>
+            <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+          {/* Thân */}
+          <mesh position={[0, 0.2, 0]} castShadow={settings.shadows}>
+            <cylinderGeometry args={[0.07, 0.18, 0.5, 16]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+          {/* Đế */}
+          <mesh position={[0, -0.1, 0]}>
+            <cylinderGeometry args={[0.22, 0.22, 0.1, 16]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+        </group>
+      ) : (
+        <group scale={1.6}>
+          {/* ĐẦU */}
+          <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>
+            <sphereGeometry args={[HEAD_R, 28, 28]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+
+          {/* THÂN */}
+          <mesh position={[0, 0.28, 0]} castShadow={settings.shadows}>
+            <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
+            <meshStandardMaterial {...skinProps} />
+          </mesh>
+
+          {/* CÁNH TAY TRÁI */}
+          <group ref={leftArmRef} position={[-ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
+            <mesh position={[0, ARM_MESH_Y, 0]}>
+              <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
+
+          {/* CÁNH TAY PHẢI */}
+          <group ref={rightArmRef} position={[ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
+            <mesh position={[0, ARM_MESH_Y, 0]}>
+              <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
+
+          {/* CHÂN TRÁI */}
+          <group ref={leftLegRef} position={[-LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
+            <mesh position={[0, LEG_MESH_Y, 0]}>
+              <capsuleGeometry args={[LEG_R, LEG_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
+
+          {/* CHÂN PHẢI */}
+          <group ref={rightLegRef} position={[LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
+            <mesh position={[0, LEG_MESH_Y, 0]}>
+              <capsuleGeometry args={[LEG_R, LEG_LEN, 8, 16]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          </group>
+        </group>
+      )}
     </group>
   );
 };
@@ -348,16 +479,16 @@ export default function LobbyPage() {
                 <MuseumLobby />
                 <LobbyPlayer />
 
-                {/* Cổng vào phòng triển lãm (Phòng 1 & 3 dưới tầng 1, Phòng 2 trên tầng 2) */}
+                {/* Cổng vào phòng triển lãm (Phòng 2 & 3 dưới tầng 1, Phòng 1 trên tầng 2) */}
                 <GalleryPortal
                   position={[-9.0, 0.0, 8.0]}
-                  label="Phòng 01: Khởi nguồn"
-                  galleryId="gallery-paintings"
+                  label="Phòng 02: Thị trường"
+                  galleryId="gallery-sculptures"
                 />
                 <GalleryPortal
                   position={[0, 3.15, 8.0]}
-                  label="Phòng 02: Thị trường"
-                  galleryId="gallery-sculptures"
+                  label="Phòng 01: Khởi nguồn"
+                  galleryId="gallery-paintings"
                 />
                 <GalleryPortal
                   position={[9.0, 0.0, 8.0]}

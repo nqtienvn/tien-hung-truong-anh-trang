@@ -119,6 +119,107 @@ export const MuseumLobby: React.FC = () => {
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
 
+      {/* --- CỬA GỖ LỐI VÀO LỚN (Z = -10) --- */}
+      <group position={[0, 0, -L / 2]}>
+        {/* Khung cửa gỗ bao quanh */}
+        <mesh position={[0, 4.0, 0.05]} castShadow>
+          <boxGeometry args={[10.2, 8.1, 0.45]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.55} />
+        </mesh>
+        
+        {/* Cánh cửa bên trái */}
+        <group position={[-2.45, 3.95, 0.1]}>
+          {/* Thân cửa chính */}
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[4.8, 7.8, 0.15]} />
+            <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
+          </mesh>
+          {/* Các ô panel trang trí nổi (3 ô dọc mỗi cánh) */}
+          {[1.6, 3.9, 6.2].map((panelY, idx) => (
+            <group key={`door-panel-l-${idx}`} position={[0, panelY - 3.9, 0.08]}>
+              {/* Viền vàng nền */}
+              <mesh position={[0, 0, 0.005]}>
+                <boxGeometry args={[3.9, 1.8, 0.015]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
+              </mesh>
+              {/* Gỗ lòng trong màu tối hơn */}
+              <mesh position={[0, 0, 0.015]}>
+                <boxGeometry args={[3.7, 1.6, 0.02]} />
+                <meshStandardMaterial color="#2d1a10" roughness={0.45} />
+              </mesh>
+            </group>
+          ))}
+          {/* Tay nắm cửa lớn bằng vàng/đồng */}
+          <group position={[2.1, -1.3, 0.12]}>
+            {/* Thanh tay cầm dọc */}
+            <mesh castShadow>
+              <cylinderGeometry args={[0.04, 0.04, 1.0, 12]} />
+              <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+            </mesh>
+            {/* Đầu tròn trang trí */}
+            {[-0.5, 0.5].map((py) => (
+              <mesh key={`handle-end-l-${py}`} position={[0, py, 0]}>
+                <sphereGeometry args={[0.06, 12, 12]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+              </mesh>
+            ))}
+            {/* Khớp gắn vào cửa */}
+            {[-0.4, 0.4].map((py) => (
+              <mesh key={`handle-joint-l-${py}`} position={[-0.06, py, -0.06]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.02, 0.02, 0.12, 8]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+              </mesh>
+            ))}
+          </group>
+        </group>
+
+        {/* Cánh cửa bên phải */}
+        <group position={[2.45, 3.95, 0.1]}>
+          {/* Thân cửa chính */}
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[4.8, 7.8, 0.15]} />
+            <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
+          </mesh>
+          {/* Các ô panel trang trí nổi (3 ô dọc mỗi cánh) */}
+          {[1.6, 3.9, 6.2].map((panelY, idx) => (
+            <group key={`door-panel-r-${idx}`} position={[0, panelY - 3.9, 0.08]}>
+              {/* Viền vàng nền */}
+              <mesh position={[0, 0, 0.005]}>
+                <boxGeometry args={[3.9, 1.8, 0.015]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
+              </mesh>
+              {/* Gỗ lòng trong màu tối hơn */}
+              <mesh position={[0, 0, 0.015]}>
+                <boxGeometry args={[3.7, 1.6, 0.02]} />
+                <meshStandardMaterial color="#2d1a10" roughness={0.45} />
+              </mesh>
+            </group>
+          ))}
+          {/* Tay nắm cửa lớn bằng vàng/đồng */}
+          <group position={[-2.1, -1.3, 0.12]}>
+            {/* Thanh tay cầm dọc */}
+            <mesh castShadow>
+              <cylinderGeometry args={[0.04, 0.04, 1.0, 12]} />
+              <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+            </mesh>
+            {/* Đầu tròn trang trí */}
+            {[-0.5, 0.5].map((py) => (
+              <mesh key={`handle-end-r-${py}`} position={[0, py, 0]}>
+                <sphereGeometry args={[0.06, 12, 12]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+              </mesh>
+            ))}
+            {/* Khớp gắn vào cửa */}
+            {[-0.4, 0.4].map((py) => (
+              <mesh key={`handle-joint-r-${py}`} position={[0.06, py, -0.06]} rotation={[0, 0, Math.PI / 2]}>
+                <cylinderGeometry args={[0.02, 0.02, 0.12, 8]} />
+                <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+              </mesh>
+            ))}
+          </group>
+        </group>
+      </group>
+
       {/* --- Tường trái (X = -15) - TƯỜNG KÍNH LỚN --- */}
       {/* Khung kính dọc */}
       {Array.from({ length: 5 }).map((_, i) => (
