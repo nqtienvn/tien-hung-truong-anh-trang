@@ -29,7 +29,7 @@ export const PlayerCharacter: React.FC = () => {
   const playerRef = useRef<THREE.Group>(null);
 
   const isPawn = settings.preset === 'low';
-  const baseY = isPawn ? 0.15 : 0.295;
+  const baseY = isPawn ? 0.24 : 0.472; // Phóng to 1.6x (0.15 * 1.6 và 0.295 * 1.6)
 
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
@@ -47,12 +47,13 @@ export const PlayerCharacter: React.FC = () => {
   const lastUpdate = useRef(0);
   const isSculptures = activeGallery?.id === "gallery-sculptures";
 
-  // Thiết lập vị trí ban đầu
+  // Thiết lập vị trí ban đầu (Spawn Point linh hoạt dựa trên phòng người chơi bấm vào)
   useEffect(() => {
     if (playerRef.current) {
-      playerRef.current.position.set(0, baseY, 12);
+      const spawnZ = activeGallery?.id === "gallery-sculptures" ? -12 : 12;
+      playerRef.current.position.set(0, baseY, spawnZ);
     }
-  }, [baseY]);
+  }, [baseY, activeGallery?.id]);
 
   // Lắng nghe bàn phím di chuyển
   useEffect(() => {
@@ -85,28 +86,49 @@ export const PlayerCharacter: React.FC = () => {
     };
   }, []);
 
-  // Kiểm tra va chạm với các vật thể trong phòng
+  // Kiểm tra va chạm với các vật thể trong phòng (Hành lang rẽ chữ S)
   const checkCollision = (x: number, z: number): boolean => {
-    if (isSculptures) {
-      const pedestals = [
-        { x: 0, z: -8.0 },
-        { x: 0, z: 8.0 },
-        { x: 0, z: 0.0 },
-      ];
-      const collisionRadius = 1.0;
-      for (const ped of pedestals) {
-        const dx = x - ped.x;
-        const dz = z - ped.z;
-        if (Math.sqrt(dx * dx + dz * dz) < collisionRadius) return true;
-      }
-    } else {
-      const buffer = 0.5;
-      if (x > -3.3 && x < 3.3 && z > -0.5 && z < 0.5) {
+    // 1. Tường ngăn tại Z = 3.0 (phía Paintings): Cổng mở ở bên trái X từ -5.0 đến -2.0
+    // Chặn di chuyển nếu Z nằm trong khoảng [2.7, 3.3] và X nằm ngoài khoảng cổng mở
+    if (z > 2.7 && z < 3.3) {
+      if (x < -5.0 || x > -2.0) {
         return true;
       }
+    }
 
-      if (x > -2.3 && x < 2.3 && z > 6.3 && z < 7.7) return true;
-      if (x > -2.3 && x < 2.3 && z > -7.7 && z < -6.3) return true;
+    // 2. Tường ngăn tại Z = -3.0 (phía Sculptures): Cổng mở ở bên phải X từ 2.0 đến 5.0
+    // Chặn di chuyển nếu Z nằm trong khoảng [-3.3, -2.7] và X nằm ngoài khoảng cổng mở
+    if (z > -3.3 && z < -2.7) {
+      if (x < 2.0 || x > 5.0) {
+        return true;
+      }
+    }
+
+    // 3. Vách ngăn phụ phòng tranh tại Z = 13.0 (rộng 12m, X từ -6.0 đến 6.0)
+    // Chặn di chuyển nếu X từ -6.3 đến 6.3 và Z từ 12.6 đến 13.4
+    if (x > -6.3 && x < 6.3 && z > 12.6 && z < 13.4) {
+      return true;
+    }
+
+    // 4. Ghế băng trong phòng tranh tại Z = 8.0 và Z = 18.0
+    // Với buffer va chạm: X từ -2.3 đến 2.3, Z từ 7.3 đến 8.7 và từ 17.3 đến 18.7
+    if (x > -2.3 && x < 2.3 && z > 7.3 && z < 8.7) {
+      return true;
+    }
+    if (x > -2.3 && x < 2.3 && z > 17.3 && z < 18.7) {
+      return true;
+    }
+
+    // 5. Bệ đỡ tượng trong phòng tượng tại Z = -8.0, -14.0, -20.0
+    // Kích thước bệ là 1.0m x 1.0m. Bán kính va chạm là 1.0m
+    const pedestalsZ = [-8.0, -14.0, -20.0];
+    const collisionRadius = 1.0;
+    for (const pZ of pedestalsZ) {
+      const dx = x - 0;
+      const dz = z - pZ;
+      if (Math.sqrt(dx * dx + dz * dz) < collisionRadius) {
+        return true;
+      }
     }
 
     return false;
@@ -173,7 +195,7 @@ export const PlayerCharacter: React.FC = () => {
     // Chỉ nhún nhảy nhẹ khi di chuyển, đứng yên thì đứng thẳng trên mặt đất (tránh say sóng camera)
     if (isMoving && settings.animations) {
       playerRef.current.position.y =
-        baseY + Math.sin(t * 10) * 0.02;
+        baseY + Math.sin(t * 10) * 0.032; // Phóng to 1.6x nhún nhảy
     } else {
       playerRef.current.position.y = baseY;
     }
@@ -244,7 +266,7 @@ export const PlayerCharacter: React.FC = () => {
   return (
     <group ref={playerRef} name="player-character">
       {isPawn ? (
-        <group>
+        <group scale={1.6}>
           {/* MÔ HÌNH CON CỜ (CHESS PAWN) - Cấu hình Thấp để tối ưu tối đa */}
           {/* Đầu con cờ */}
           <mesh position={[0, 0.7, 0]}>
@@ -268,7 +290,7 @@ export const PlayerCharacter: React.FC = () => {
           </mesh>
         </group>
       ) : (
-        <group>
+        <group scale={1.6}>
           {/* MÔ HÌNH CON NGƯỜI (HUMANOID MANNEQUIN) - Cấu hình Trung bình / Cao */}
           {/* ĐẦU - To, tròn, castShadow từ settings */}
           <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>

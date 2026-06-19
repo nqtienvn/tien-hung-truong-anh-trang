@@ -1,0 +1,573 @@
+import React from 'react';
+import * as THREE from 'three';
+
+/**
+ * MuseumLobby - Không gian Sảnh Bảo tàng 3D
+ * Lấy cảm hứng từ Bảo tàng Đà Nẵng
+ * 
+ * Kích thước: 30m rộng × 20m dài × 12m cao
+ * Hệ trục: X [-15, 15], Z [-10, 10], Y [0, 12]
+ */
+export const MuseumLobby: React.FC = () => {
+  const W = 30;   // Chiều rộng (trục X)
+  const L = 20;   // Chiều dài (trục Z)
+  const H = 12;   // Chiều cao (trục Y)
+
+  // Bảng màu kiến trúc
+  const sandstone      = '#c49a6c';   // Đá sa thạch ấm (tường chính)
+  const sandstoneAlt   = '#a07840';   // Đá sa thạch tối
+  const sandstoneDark  = '#5a3a1a';   // Đá sa thạch rất tối (trần, chi tiết)
+  const woodFloor      = '#4a3325';   // Sàn gỗ tối
+  const redCarpet      = '#8b1a1a';   // Thảm đỏ đậm
+  const glassColor     = '#a8d8ea';   // Kính xanh nhạt
+  const metalGray      = '#2a2a2a';   // Kim loại xám
+  const creamWhite     = '#f0e4d4';   // Kem trắng (cột, ốp)
+  const goldAccent     = '#d4af37';   // Vàng trang trí
+
+  return (
+    <group>
+      {/* ═══════════════════════════════════════════════════════════════
+          1. SÀN NHÀ GỖ SỌC (Wood Strip Floor)
+      ═══════════════════════════════════════════════════════════════ */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[W, L]} />
+        <meshStandardMaterial color={woodFloor} roughness={0.35} metalness={0.1} />
+      </mesh>
+      <gridHelper
+        args={[L, 40, '#3d2817', '#2d1f10']}
+        position={[0, 0.005, 0]}
+      />
+
+      {/* ═══════════════════════════════════════════════════════════════
+          2. THẢM ĐỎ TRẢI DỌC TRỤC CHÍNH (Red Carpet)
+      ═══════════════════════════════════════════════════════════════ */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -2.5]} receiveShadow>
+        <planeGeometry args={[4.5, 13]} />
+        <meshStandardMaterial color={redCarpet} roughness={0.92} metalness={0} />
+      </mesh>
+      {/* Viền vàng hai bên thảm */}
+      {[-2.35, 2.35].map((x) => (
+        <mesh key={`carpet-trim-${x}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.016, -2.5]}>
+          <planeGeometry args={[0.12, 13]} />
+          <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
+        </mesh>
+      ))}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          3. HỆ THỐNG TƯỜNG CHÍNH (Main Walls)
+      ═══════════════════════════════════════════════════════════════ */}
+
+      {/* --- Tường sau (Z = 8.0) - Tường đá sa thạch phẳng lớn chạy suốt chiều rộng --- */}
+      <mesh position={[0, H / 2, 8.0]} receiveShadow>
+        <boxGeometry args={[W, H, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+
+      {/* Hai hốc lõm trang trí tường sau đối xứng ở hai bên (lattice panels) */}
+      {/* Hốc trái */}
+      <mesh position={[-9.5, H * 0.6, 7.84]}>
+        <boxGeometry args={[7.0, 4.0, 0.02]} />
+        <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
+      </mesh>
+      {/* Lưới trang trí hốc trái */}
+      {Array.from({ length: 9 }).map((_, i) => (
+        <mesh key={`wall-lattice-l-h-${i}`} position={[-9.5, 4.8 + i * 0.5, 7.83]}>
+          <boxGeometry args={[7.0, 0.03, 0.03]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
+        </mesh>
+      ))}
+      {Array.from({ length: 15 }).map((_, i) => (
+        <mesh key={`wall-lattice-l-v-${i}`} position={[-13.0 + i * 0.5, 6.8, 7.83]}>
+          <boxGeometry args={[0.03, 4.0, 0.03]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
+        </mesh>
+      ))}
+
+      {/* Hốc phải */}
+      <mesh position={[9.5, H * 0.6, 7.84]}>
+        <boxGeometry args={[7.0, 4.0, 0.02]} />
+        <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
+      </mesh>
+      {/* Lưới trang trí hốc phải */}
+      {Array.from({ length: 9 }).map((_, i) => (
+        <mesh key={`wall-lattice-r-h-${i}`} position={[9.5, 4.8 + i * 0.5, 7.83]}>
+          <boxGeometry args={[7.0, 0.03, 0.03]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
+        </mesh>
+      ))}
+      {Array.from({ length: 15 }).map((_, i) => (
+        <mesh key={`wall-lattice-r-v-${i}`} position={[6.0 + i * 0.5, 6.8, 7.83]}>
+          <boxGeometry args={[0.03, 4.0, 0.03]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
+        </mesh>
+      ))}
+
+      {/* --- Tường trước (Z = -10) - Tường có cổng vào --- */}
+      {/* Phần tường trái */}
+      <mesh position={[-10, H / 2, -L / 2]} receiveShadow>
+        <boxGeometry args={[10, H, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+      {/* Phần tường phải */}
+      <mesh position={[10, H / 2, -L / 2]} receiveShadow>
+        <boxGeometry args={[10, H, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+      {/* Phần trên cổng vào */}
+      <mesh position={[0, H - 2, -L / 2]} receiveShadow>
+        <boxGeometry args={[10, 4, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+
+      {/* --- Tường trái (X = -15) - TƯỜNG KÍNH LỚN --- */}
+      {/* Khung kính dọc */}
+      {Array.from({ length: 5 }).map((_, i) => (
+        <mesh key={`glass-vframe-${i}`} position={[-W / 2, H / 2, -L / 2 + i * 5]} castShadow>
+          <boxGeometry args={[0.15, H, 0.15]} />
+          <meshStandardMaterial color={metalGray} metalness={0.85} roughness={0.25} />
+        </mesh>
+      ))}
+      {/* Tấm kính */}
+      {Array.from({ length: 4 }).map((_, i) => (
+        <mesh key={`glass-panel-${i}`} position={[-W / 2 + 0.05, H / 2, -L / 2 + 2.5 + i * 5]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[4.6, H - 0.5]} />
+          <meshStandardMaterial
+            color={glassColor}
+            transparent
+            opacity={0.25}
+            roughness={0.05}
+            metalness={0.3}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+      {/* Khung kính ngang */}
+      {[3, 6, 9].map((y) => (
+        <mesh key={`glass-hframe-${y}`} position={[-W / 2 + 0.05, y, 0]}>
+          <boxGeometry args={[0.15, 0.06, L]} />
+          <meshStandardMaterial color={metalGray} metalness={0.85} roughness={0.25} />
+        </mesh>
+      ))}
+
+      {/* --- Tường phải (X = +15) - Tường đá sa thạch tối --- */}
+      <mesh position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[L, H, 0.3]} />
+        <meshStandardMaterial color={sandstoneAlt} roughness={0.75} />
+      </mesh>
+      {/* Bệ nhô ra (canopy) phía trên quầy lễ tân */}
+      <mesh position={[W / 2 - 1.0, 3.8, -2]} castShadow>
+        <boxGeometry args={[2.0, 0.15, 10]} />
+        <meshStandardMaterial color={sandstoneDark} roughness={0.4} />
+      </mesh>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          4. CẦU THANG HOÀNH TRÁNG (Grand Staircase)
+          10 bậc, mỗi bậc: 8m rộng × 0.3m cao × 0.5m sâu
+          Từ Z=2 (Y=0) đến Z=7 (Y=3)
+      ═══════════════════════════════════════════════════════════════ */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <mesh
+          key={`stair-step-${i}`}
+          position={[0, i * 0.3 + 0.15, 2.0 + i * 0.5 + 0.25]}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[8.0, 0.3, 0.5]} />
+          <meshStandardMaterial color={sandstone} roughness={0.45} metalness={0.05} />
+        </mesh>
+      ))}
+      {/* Thành bậc thang hai bên dốc theo cầu thang (Z = 1.75 đến 8.0) */}
+      {[-4.15, 4.15].map((x) => (
+        <group key={`stair-wall-group-${x}`}>
+          {/* Đoạn 1: Z 1.75 -> 3.0 (tâm 2.375), Y_stair=0.225, H_stone=1.225 */}
+          <mesh position={[x, 1.225 / 2, 2.375]} castShadow receiveShadow>
+            <boxGeometry args={[0.3, 1.225, 1.25]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
+          </mesh>
+          {/* Đoạn 2: Z 3.0 -> 4.25 (tâm 3.625), Y_stair=0.975, H_stone=1.975 */}
+          <mesh position={[x, 1.975 / 2, 3.625]} castShadow receiveShadow>
+            <boxGeometry args={[0.3, 1.975, 1.25]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
+          </mesh>
+          {/* Đoạn 3: Z 4.25 -> 5.5 (tâm 4.875), Y_stair=1.725, H_stone=2.725 */}
+          <mesh position={[x, 2.725 / 2, 4.875]} castShadow receiveShadow>
+            <boxGeometry args={[0.3, 2.725, 1.25]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
+          </mesh>
+          {/* Đoạn 4: Z 5.5 -> 6.75 (tâm 6.125), Y_stair=2.475, H_stone=3.475 */}
+          <mesh position={[x, 3.475 / 2, 6.125]} castShadow receiveShadow>
+            <boxGeometry args={[0.3, 3.475, 1.25]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
+          </mesh>
+          {/* Đoạn 5: Z 6.75 -> 8.0 (tâm 7.375), Y_stair=2.925, H_stone=3.925 */}
+          <mesh position={[x, 3.925 / 2, 7.375]} castShadow receiveShadow>
+            <boxGeometry args={[0.3, 3.925, 1.25]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
+          </mesh>
+
+          {/* Trụ đứng lan can mạ vàng */}
+          {[
+            { z: 2.0, y: 1.0 + 0.0, h: 0.9 },
+            { z: 3.2, y: 1.0 + 0.72, h: 0.9 },
+            { z: 4.4, y: 1.0 + 1.44, h: 0.9 },
+            { z: 5.6, y: 1.0 + 2.16, h: 0.9 },
+            { z: 6.8, y: 1.0 + 2.88, h: 0.9 },
+            { z: 7.9, y: 1.0 + 3.0, h: 0.9 },
+          ].map((post, idx) => (
+            <mesh key={`post-${idx}`} position={[x, post.y + post.h / 2, post.z]} castShadow>
+              <cylinderGeometry args={[0.02, 0.02, post.h, 8]} />
+              <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+            </mesh>
+          ))}
+
+          {/* Thanh tay vịn lan can mạ vàng chạy chéo */}
+          <mesh
+            position={[x, 1.9 + 3.0 / 2, 1.75 + 6.25 / 2]}
+            rotation={[Math.atan2(3.0, 6.25), 0, 0]}
+            castShadow
+          >
+            <boxGeometry args={[0.06, 0.06, Math.sqrt(6.25 * 6.25 + 3.0 * 3.0)]} />
+            <meshStandardMaterial color={goldAccent} metalness={0.95} roughness={0.05} />
+          </mesh>
+        </group>
+      ))}
+      {/* Thảm đỏ phủ lên cầu thang */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <mesh
+          key={`stair-carpet-${i}`}
+          position={[0, i * 0.3 + 0.305, 2.0 + i * 0.5 + 0.25]}
+        >
+          <boxGeometry args={[3.5, 0.02, 0.48]} />
+          <meshStandardMaterial color={redCarpet} roughness={0.9} />
+        </mesh>
+      ))}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          5. SÀN TẦNG 2 - MEZZANINE (Y = 3m, phía sau sảnh)
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Khoảng nghỉ (landing platform) ở đỉnh cầu thang (X = -4 đến 4, Z = 7.0 đến 8.0) */}
+      <mesh position={[0, 3.0, 7.5]} castShadow receiveShadow>
+        <boxGeometry args={[8.0, 0.3, 1.0]} />
+        <meshStandardMaterial color={sandstoneAlt} roughness={0.5} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3.16, 7.5]} receiveShadow>
+        <planeGeometry args={[8.0, 1.0]} />
+        <meshStandardMaterial color={woodFloor} roughness={0.4} metalness={0.1} />
+      </mesh>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          5b. CỔNG VÀO HOÀNH TRÁNG CHÍNH DIỆN (Grand Entrance Gate)
+          Đặt tại Z = 8.0m, ngay đỉnh cầu thang để đi thẳng vào
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Trụ đá lớn hai bên cổng để tạo sự uy nghi */}
+      {[-2.3, 2.3].map((x) => (
+        <group key={`gate-pillar-${x}`}>
+          {/* Trụ chính */}
+          <mesh position={[x, 5.0, 7.8]} castShadow receiveShadow>
+            <boxGeometry args={[0.5, 4.0, 0.5]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.5} />
+          </mesh>
+          {/* Chân cột */}
+          <mesh position={[x, 3.25, 7.8]} castShadow>
+            <boxGeometry args={[0.65, 0.5, 0.65]} />
+            <meshStandardMaterial color={sandstoneDark} roughness={0.4} />
+          </mesh>
+          {/* Đầu cột mạ vàng */}
+          <mesh position={[x, 7.1, 7.8]}>
+            <boxGeometry args={[0.6, 0.2, 0.6]} />
+            <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Mái đón cổng (arch lintel) phía trên cửa */}
+      <mesh position={[0, 7.2, 7.8]} castShadow>
+        <boxGeometry args={[5.2, 0.4, 0.6]} />
+        <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
+      </mesh>
+      {/* Hoa văn viền vàng trên mái đón */}
+      <mesh position={[0, 7.2, 8.11]}>
+        <planeGeometry args={[4.8, 0.15]} />
+        <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+      </mesh>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          6. QUẦY LỄ TÂN & MÀN HÌNH THÔNG TIN (Reception Desk & Screens)
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Quầy chính */}
+      <mesh position={[10.5, 0.55, -3.0]} castShadow receiveShadow>
+        <boxGeometry args={[7.0, 1.1, 0.8]} />
+        <meshStandardMaterial color={sandstoneDark} roughness={0.25} metalness={0.1} />
+      </mesh>
+      {/* Mặt quầy vàng ánh kim */}
+      <mesh position={[10.5, 1.12, -3.0]}>
+        <boxGeometry args={[7.1, 0.04, 0.85]} />
+        <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
+      </mesh>
+      {/* Đế quầy */}
+      <mesh position={[10.5, 0.04, -3.0]}>
+        <boxGeometry args={[7.15, 0.08, 0.9]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.7} roughness={0.3} />
+      </mesh>
+
+      {/* Cột chắn dây (Stanchion posts) */}
+      {[-2.0, 0, 2.0].map((offset) => (
+        <group key={`stanchion-${offset}`}>
+          <mesh position={[10.5 + offset, 0.5, -4.2]} castShadow>
+            <cylinderGeometry args={[0.03, 0.03, 1.0, 8]} />
+            <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+          </mesh>
+          <mesh position={[10.5 + offset, 1.0, -4.2]}>
+            <sphereGeometry args={[0.06, 12, 12]} />
+            <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
+          </mesh>
+          <mesh position={[10.5 + offset, 0.02, -4.2]}>
+            <cylinderGeometry args={[0.13, 0.13, 0.04, 12]} />
+            <meshStandardMaterial color="#1a1a1a" metalness={0.8} roughness={0.2} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Màn hình thông tin (Information Screens) */}
+      {Array.from({ length: 4 }).map((_, i) => {
+        const screenColors = ['#4fc3f7', '#ffd54f', '#81c784', '#ffab91'];
+        return (
+          <group key={`screen-${i}`}>
+            {/* Khung màn hình */}
+            <mesh position={[W / 2 - 0.12, 2.5, -5.5 + i * 2.5]} rotation={[0, -Math.PI / 2, 0]}>
+              <boxGeometry args={[1.8, 1.1, 0.08]} />
+              <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
+            </mesh>
+            {/* Màn hình phát sáng */}
+            <mesh position={[W / 2 - 0.17, 2.5, -5.5 + i * 2.5]} rotation={[0, -Math.PI / 2, 0]}>
+              <planeGeometry args={[1.6, 0.95]} />
+              <meshStandardMaterial
+                color={screenColors[i]}
+                emissive={screenColors[i]}
+                emissiveIntensity={0.6}
+                roughness={0.1}
+              />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* Màn hình nghiêng trên bàn (kiểu kiosk) */}
+      {Array.from({ length: 3 }).map((_, i) => (
+        <group key={`kiosk-${i}`}>
+          <mesh position={[8.5 + i * 2.0, 1.3, -3.7]} rotation={[-0.5, 0, 0]} castShadow>
+            <boxGeometry args={[1.0, 0.7, 0.06]} />
+            <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
+          </mesh>
+          <mesh position={[8.5 + i * 2.0, 1.32, -3.72]} rotation={[-0.5, 0, 0]}>
+            <planeGeometry args={[0.85, 0.55]} />
+            <meshStandardMaterial
+              color={i % 2 === 0 ? '#e8f5e9' : '#fff3e0'}
+              emissive={i % 2 === 0 ? '#a5d6a7' : '#ffcc80'}
+              emissiveIntensity={0.4}
+              roughness={0.1}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          7. TRẦN TRANG TRÍ LƯỚI (Lattice Ceiling)
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Tấm trần chính (bán trong suốt) */}
+      <mesh position={[0, H - 0.1, 0]}>
+        <boxGeometry args={[W, 0.08, L]} />
+        <meshStandardMaterial color={sandstoneDark} roughness={0.8} transparent opacity={0.7} />
+      </mesh>
+      {/* Thanh lưới ngang (chạy dọc X) */}
+      {Array.from({ length: 21 }).map((_, i) => (
+        <mesh key={`ceil-bar-x-${i}`} position={[0, H - 0.25, -L / 2 + i * (L / 20)]}>
+          <boxGeometry args={[W, 0.05, 0.05]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.6} />
+        </mesh>
+      ))}
+      {/* Thanh lưới dọc (chạy dọc Z) */}
+      {Array.from({ length: 31 }).map((_, i) => (
+        <mesh key={`ceil-bar-z-${i}`} position={[-W / 2 + i * (W / 30), H - 0.25, 0]}>
+          <boxGeometry args={[0.05, 0.05, L]} />
+          <meshStandardMaterial color={sandstoneDark} roughness={0.6} />
+        </mesh>
+      ))}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          8. CỘT TRANG TRÍ (Decorative Pillars)
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Cột bên trái (cạnh tường kính) */}
+      {[-7, -2, 3, 8].map((z) => (
+        <group key={`pillar-left-${z}`}>
+          <mesh position={[-W / 2 + 0.65, H / 2, z]} castShadow>
+            <boxGeometry args={[0.5, H, 0.5]} />
+            <meshStandardMaterial color={creamWhite} roughness={0.55} />
+          </mesh>
+          {/* Đế cột */}
+          <mesh position={[-W / 2 + 0.65, 0.15, z]}>
+            <boxGeometry args={[0.65, 0.3, 0.65]} />
+            <meshStandardMaterial color={creamWhite} roughness={0.4} />
+          </mesh>
+          {/* Đầu cột */}
+          <mesh position={[-W / 2 + 0.65, H - 0.15, z]}>
+            <boxGeometry args={[0.65, 0.3, 0.65]} />
+            <meshStandardMaterial color={creamWhite} roughness={0.4} />
+          </mesh>
+        </group>
+      ))}
+      {/* Cột bên phải */}
+      {[-7, 3, 8].map((z) => (
+        <group key={`pillar-right-${z}`}>
+          <mesh position={[W / 2 - 0.65, H / 2, z]} castShadow>
+            <boxGeometry args={[0.5, H, 0.5]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
+          </mesh>
+          <mesh position={[W / 2 - 0.65, 0.15, z]}>
+            <boxGeometry args={[0.65, 0.3, 0.65]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.4} />
+          </mesh>
+          <mesh position={[W / 2 - 0.65, H - 0.15, z]}>
+            <boxGeometry args={[0.65, 0.3, 0.65]} />
+            <meshStandardMaterial color={sandstoneAlt} roughness={0.4} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          9. BIỂN CHỈ DẪN TẦNG (Floor Level Sign "L1")
+      ═══════════════════════════════════════════════════════════════ */}
+      <mesh position={[-W / 2 + 0.22, 3.0, -8.0]} rotation={[0, Math.PI / 2, 0]}>
+        <boxGeometry args={[1.6, 0.9, 0.06]} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
+      </mesh>
+      <mesh position={[-W / 2 + 0.26, 3.0, -8.0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[1.4, 0.7]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.2} />
+      </mesh>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          10. NỘI THẤT TRANG TRÍ (Furniture & Decor)
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Ghế băng dài bên trái */}
+      <group position={[-10, 0, -4]}>
+        <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+          <boxGeometry args={[3.0, 0.12, 0.8]} />
+          <meshStandardMaterial color="#3e2723" roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.28, 0]} castShadow>
+          <boxGeometry args={[3.1, 0.08, 0.85]} />
+          <meshStandardMaterial color="#1b110b" roughness={0.3} />
+        </mesh>
+        {[-1.2, 1.2].map((lx) => (
+          <mesh key={`bench-leg-${lx}`} position={[lx, 0.14, 0]} castShadow>
+            <boxGeometry args={[0.15, 0.28, 0.7]} />
+            <meshStandardMaterial color="#1b110b" roughness={0.4} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Chậu cây trang trí cạnh cầu thang */}
+      {[-5.5, 5.5].map((x) => (
+        <group key={`plant-${x}`} position={[x, 0, 1.5]}>
+          {/* Chậu */}
+          <mesh position={[0, 0.35, 0]} castShadow>
+            <cylinderGeometry args={[0.35, 0.28, 0.7, 12]} />
+            <meshStandardMaterial color="#4a3c2a" roughness={0.5} />
+          </mesh>
+          {/* Đế chậu */}
+          <mesh position={[0, 0.02, 0]}>
+            <cylinderGeometry args={[0.32, 0.32, 0.04, 12]} />
+            <meshStandardMaterial color="#2d2015" roughness={0.4} />
+          </mesh>
+          {/* Cây (hình cầu xanh) */}
+          <mesh position={[0, 1.1, 0]}>
+            <sphereGeometry args={[0.5, 12, 12]} />
+            <meshStandardMaterial color="#2e7d32" roughness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.75, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.4, 6]} />
+            <meshStandardMaterial color="#5d4037" roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          11. HỆ THỐNG CHIẾU SÁNG (Lighting System)
+      ═══════════════════════════════════════════════════════════════ */}
+      {/* Ánh sáng môi trường ấm */}
+      <ambientLight intensity={0.45} color="#fff5e6" />
+
+      {/* Ánh nắng tự nhiên xuyên qua tường kính bên trái */}
+      <directionalLight
+        position={[-12, 10, 0]}
+        intensity={1.2}
+        color="#ffe8cc"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+      />
+
+      {/* Ánh sáng từ trên xuống (giếng trời) */}
+      <directionalLight position={[0, 12, 0]} intensity={0.5} color="#fff8f0" />
+
+      {/* Hàng đèn spotlight gắn trên trần */}
+      {Array.from({ length: 10 }).map((_, i) => {
+        const x = -13 + i * 3;
+        return (
+          <group key={`spotlight-${i}`}>
+            {/* Thân đèn */}
+            <mesh position={[x, H - 0.4, -2]}>
+              <cylinderGeometry args={[0.1, 0.1, 0.12, 8]} />
+              <meshStandardMaterial color={metalGray} metalness={0.8} />
+            </mesh>
+            {/* Bóng đèn */}
+            <mesh position={[x, H - 0.48, -2]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color="#fff" />
+            </mesh>
+            <pointLight
+              position={[x, H - 0.6, -2]}
+              intensity={3.5}
+              distance={14}
+              color="#fff1e0"
+            />
+          </group>
+        );
+      })}
+
+      {/* Hàng đèn spotlight thứ 2 (giữa sảnh) */}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const x = -10.5 + i * 3;
+        return (
+          <group key={`spotlight2-${i}`}>
+            <mesh position={[x, H - 0.4, 3]}>
+              <cylinderGeometry args={[0.08, 0.08, 0.1, 8]} />
+              <meshStandardMaterial color={metalGray} metalness={0.8} />
+            </mesh>
+            <mesh position={[x, H - 0.47, 3]}>
+              <sphereGeometry args={[0.04, 8, 8]} />
+              <meshBasicMaterial color="#fff" />
+            </mesh>
+            <pointLight
+              position={[x, H - 0.55, 3]}
+              intensity={2.5}
+              distance={12}
+              color="#fff1e0"
+            />
+          </group>
+        );
+      })}
+
+      {/* Ánh sáng xanh nhạt từ tường kính */}
+      <pointLight position={[-14, 6, 0]} intensity={2.5} distance={22} color="#a8d8ea" />
+      <pointLight position={[-14, 3, -5]} intensity={1.5} distance={15} color="#a8d8ea" />
+
+      {/* Ánh sáng ấm khu vực lễ tân */}
+      <pointLight position={[10.5, 3.5, -3]} intensity={2.0} distance={10} color="#ffd54f" />
+      <pointLight position={[10.5, 3.5, 0]} intensity={1.5} distance={8} color="#ffd54f" />
+    </group>
+  );
+};
+
+export default MuseumLobby;

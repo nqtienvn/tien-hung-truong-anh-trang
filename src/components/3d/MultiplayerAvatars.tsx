@@ -40,7 +40,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
   const rightArmRef = useRef<THREE.Group>(null);
 
   const isPawn = settings.preset === 'low';
-  const baseY = isPawn ? 0.15 : 0.295;
+  const baseY = isPawn ? 0.24 : 0.472; // Phóng to 1.6x (0.15 * 1.6 và 0.295 * 1.6)
 
   const lastPos = useRef(new THREE.Vector3(user.x, user.y + baseY, user.z));
   const isMoving = useRef(false);
@@ -120,7 +120,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
   return (
     <group ref={groupRef}>
       {isPawn ? (
-        <group>
+        <group scale={1.6}>
           {/* MÔ HÌNH CON CỜ (CHESS PAWN) - Tối ưu hiệu năng tối đa cho cấu hình Thấp */}
           <mesh position={[0, 0.7, 0]}>
             <sphereGeometry args={[0.18, 20, 20]} />
@@ -140,7 +140,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
           </mesh>
         </group>
       ) : (
-        <group>
+        <group scale={1.6}>
           {/* MÔ HÌNH CON NGƯỜI (HUMANOID MANNEQUIN) - Cấu hình Trung bình / Cao */}
           {/* ĐẦU */}
           <mesh position={[0, 0.7, 0]}>
@@ -190,7 +190,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
 
       {/* Nhãn tên người chơi */}
       <Html
-        position={[0, 1.1, 0]}
+        position={[0, 1.8, 0]}
         center
         distanceFactor={8}
         className="pointer-events-none select-none text-center"

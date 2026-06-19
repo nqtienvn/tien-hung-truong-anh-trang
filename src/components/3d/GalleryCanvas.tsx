@@ -19,6 +19,7 @@ const CameraLerpController: React.FC = () => {
     selectedExhibit, 
     activeGallery,
     nickname,
+    settings,
   } = useMuseum();
   
   const { camera, gl } = useThree();
@@ -55,9 +56,9 @@ const CameraLerpController: React.FC = () => {
       theta.current -= e.movementX * sensitivity;
       phi.current -= e.movementY * sensitivity;
 
-      // Giới hạn góc nhìn lên xuống (tránh lật camera hoặc đi xuyên sàn)
+      // Giới hạn góc nhìn lên xuống (cho phép nhìn lên trên trần nhà)
       const minPhi = 0.35;
-      const maxPhi = Math.PI / 2 - 0.08;
+      const maxPhi = Math.PI / 2 + 0.4; // Cho phép camera xoay thấp xuống và ngước nhìn lên
       phi.current = Math.max(minPhi, Math.min(maxPhi, phi.current));
     };
 
@@ -106,7 +107,7 @@ const CameraLerpController: React.FC = () => {
     yOffset: number,
     zOffset: number
   ) => {
-    const idealDistance = 3.2;
+    const idealDistance = 4.5;
     const dir = new THREE.Vector3(xOffset, yOffset, zOffset);
     const dist = dir.length();
     dir.normalize();
@@ -148,18 +149,41 @@ const CameraLerpController: React.FC = () => {
       if (t > 0 && t < minT) minT = t;
     }
 
-    // 2. Va chạm với vách ngăn trung tâm tại Z = 0 (chỉ phòng tranh)
-    if (!isSculptures) {
-      if (dir.z !== 0) {
-        const wallZ = pz > 0 ? 0.22 : -0.22;
-        const t = (wallZ - pz) / dir.z;
-        if (t > 0 && t < minT) {
-          const intersectX = px + t * dir.x;
-          const partitionWidth = Math.min(roomWidth * 0.5, 8);
-          const limitX = partitionWidth / 2 + 0.1;
-          if (intersectX > -limitX && intersectX < limitX) {
-            minT = t;
-          }
+    // 2. Va chạm với tường ngăn tại Z = 3.0 (Paintings divider wall)
+    if (dir.z !== 0) {
+      const wallZ = pz > 3.0 ? 3.24 : 2.76;
+      const t = (wallZ - pz) / dir.z;
+      if (t > 0 && t < minT) {
+        const intersectX = px + t * dir.x;
+        // Chặn camera nếu giao điểm nằm ngoài khoảng cổng mở phía bên trái (X < -5.0 hoặc X > -2.0)
+        if (intersectX < -5.0 || intersectX > -2.0) {
+          minT = t;
+        }
+      }
+    }
+
+    // 3. Va chạm với tường ngăn tại Z = -3.0 (Sculptures divider wall)
+    if (dir.z !== 0) {
+      const wallZ = pz > -3.0 ? -2.76 : -3.24;
+      const t = (wallZ - pz) / dir.z;
+      if (t > 0 && t < minT) {
+        const intersectX = px + t * dir.x;
+        // Chặn camera nếu giao điểm nằm ngoài khoảng cổng mở phía bên phải (X < 2.0 hoặc X > 5.0)
+        if (intersectX < 2.0 || intersectX > 5.0) {
+          minT = t;
+        }
+      }
+    }
+
+    // 4. Va chạm với vách ngăn phụ tại Z = 13.0 (Sub-divider wall)
+    if (dir.z !== 0) {
+      const wallZ = pz > 13.0 ? 13.224 : 12.776;
+      const t = (wallZ - pz) / dir.z;
+      if (t > 0 && t < minT) {
+        const intersectX = px + t * dir.x;
+        // Chặn camera nếu giao điểm nằm trong chiều rộng vách ngăn (X từ -6.2 đến 6.2)
+        if (intersectX > -6.2 && intersectX < 6.2) {
+          minT = t;
         }
       }
     }
@@ -176,7 +200,8 @@ const CameraLerpController: React.FC = () => {
     const px = player.position.x;
     const py = player.position.y;
     const pz = player.position.z;
-    const targetHeight = py + 0.35; // Nhắm vào đầu nhân vật
+    const isPawn = settings.preset === 'low';
+    const targetHeight = py + (isPawn ? 0.55 : 0.65); // Nhắm vào đầu/thân trên nhân vật đã phóng to 1.6x
 
     if (selectedExhibit) {
       // --- CHẾ ĐỘ INSPECT: Khóa góc nhìn vào tác phẩm ---
@@ -185,7 +210,7 @@ const CameraLerpController: React.FC = () => {
       camera.lookAt(currentLookAt.current);
     } else {
       // --- CHẾ ĐỘ FOLLOW: Bám đuôi nhân vật góc nhìn thứ 3 bằng Pointer Lock ---
-      const distance = 3.2; // Khoảng cách lý tưởng ban đầu từ camera đến nhân vật
+      const distance = 4.5; // Khoảng cách lý tưởng ban đầu từ camera đến nhân vật
       
       // Tính toán vị trí camera mục tiêu dựa trên tọa độ cầu lý thuyết
       const xOffset = distance * Math.sin(theta.current) * Math.sin(phi.current);

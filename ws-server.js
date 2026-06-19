@@ -9,8 +9,16 @@ const MAX_USERS_PER_ROOM = 30;
 const activeUsers = {};
 
 // Lưu trữ danh sách socket ID xếp hàng chờ cho từng phòng
-// Cấu trúc: { [galleryId]: [socketId1, socketId2, ...] }
+// Cấu trúc: { [socketRoom]: [socketId1, socketId2, ...] }
 const waitingQueues = {};
+
+// Hàm ánh xạ phòng triển lãm sang phòng socket hợp nhất
+const getSocketRoom = (galleryId) => {
+  if (galleryId === 'gallery-paintings' || galleryId === 'gallery-sculptures') {
+    return 'gallery-unified';
+  }
+  return galleryId;
+};
 
 const server = http.createServer((req, res) => {
   // CORS Headers để cho phép gọi API từ client ở cổng khác (cổng 3000) hoặc production URL
@@ -32,8 +40,9 @@ const server = http.createServer((req, res) => {
     const urlParams = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const galleryId = urlParams.searchParams.get('galleryId') || 'gallery-paintings';
     
-    // Đếm số người hiện đang ở trong phòng galleryId
-    const activeCount = Object.values(activeUsers).filter(u => u.galleryId === galleryId).length;
+    // Đếm số người hiện đang ở trong phòng hợp nhất (hoặc phòng tương ứng)
+    const socketRoom = getSocketRoom(galleryId);
+    const activeCount = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom).length;
     
     res.end(JSON.stringify({
       activeCount,
@@ -59,24 +68,25 @@ io.on('connection', (socket) => {
   // 1. Khi người chơi tham gia phòng
   socket.on('join-room', (data) => {
     const { nickname, galleryId, x, y, z, yaw } = data;
+    const socketRoom = getSocketRoom(galleryId);
     
     // Nếu chưa có nickname -> Chỉ cho phép quan sát (Spectator), không chiếm vị trí trong phòng
     if (!nickname) {
-      socket.join(galleryId);
-      console.log(`[SPECTATE] Du khách ẩn danh (${socket.id}) đang quan sát phòng ${galleryId}.`);
+      socket.join(socketRoom);
+      console.log(`[SPECTATE] Du khách ẩn danh (${socket.id}) đang quan sát phòng ${galleryId} (socket room: ${socketRoom}).`);
       
       // Gửi danh sách người chơi hiện tại cho spectator
-      const usersInRoom = Object.values(activeUsers).filter(u => u.galleryId === galleryId);
+      const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
       socket.emit('users-list', usersInRoom);
       return;
     }
 
-    if (!waitingQueues[galleryId]) {
-      waitingQueues[galleryId] = [];
+    if (!waitingQueues[socketRoom]) {
+      waitingQueues[socketRoom] = [];
     }
 
-    // Đếm số người hiện đang ở trong phòng triển lãm này
-    const activeInRoom = Object.values(activeUsers).filter(u => u.galleryId === galleryId);
+    // Đếm số người hiện đang ở trong phòng triển lãm này (hợp nhất)
+    const activeInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
 
     // Lưu thông tin người dùng mới
     const newUser = {
@@ -92,29 +102,29 @@ io.on('connection', (socket) => {
     if (activeInRoom.length < MAX_USERS_PER_ROOM) {
       // Cho phép vào phòng trực tiếp
       activeUsers[socket.id] = newUser;
-      socket.join(galleryId);
-      console.log(`[JOIN] ${newUser.nickname} (${socket.id}) vào phòng ${galleryId} trực tiếp. (${activeInRoom.length + 1}/${MAX_USERS_PER_ROOM})`);
+      socket.join(socketRoom);
+      console.log(`[JOIN] ${newUser.nickname} (${socket.id}) vào phòng ${galleryId} (socket: ${socketRoom}) trực tiếp. (${activeInRoom.length + 1}/${MAX_USERS_PER_ROOM})`);
       
       // Phản hồi thành công
       socket.emit('join-success');
 
       // Gửi danh sách toàn bộ người chơi trong phòng cho người mới
-      const usersInRoom = Object.values(activeUsers).filter(u => u.galleryId === galleryId);
+      const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
       socket.emit('users-list', usersInRoom);
 
       // Phát thông báo cho những người khác trong phòng
-      socket.to(galleryId).emit('user-joined', newUser);
+      socket.to(socketRoom).emit('user-joined', newUser);
     } else {
       // Phòng đầy -> Đưa vào hàng chờ
-      if (!waitingQueues[galleryId].includes(socket.id)) {
-        waitingQueues[galleryId].push(socket.id);
+      if (!waitingQueues[socketRoom].includes(socket.id)) {
+        waitingQueues[socketRoom].push(socket.id);
       }
       
       // Lưu tạm thông tin người dùng để duyệt vào sau này
       socket.tempUserData = newUser;
 
-      const position = waitingQueues[galleryId].indexOf(socket.id) + 1;
-      console.log(`[QUEUE] ${newUser.nickname} (${socket.id}) xếp hàng chờ phòng ${galleryId}. Vị trí: #${position}`);
+      const position = waitingQueues[socketRoom].indexOf(socket.id) + 1;
+      console.log(`[QUEUE] ${newUser.nickname} (${socket.id}) xếp hàng chờ phòng ${galleryId} (socket: ${socketRoom}). Vị trí: #${position}`);
 
       // Gửi vị trí xếp hàng thời gian thực
       socket.emit('queue-status', { inQueue: true, position, limit: MAX_USERS_PER_ROOM });
@@ -131,8 +141,9 @@ io.on('connection', (socket) => {
     user.z = data.z;
     user.yaw = data.yaw;
 
+    const socketRoom = getSocketRoom(user.galleryId);
     // Phát sóng tọa độ mới cho những người dùng khác trong phòng
-    socket.to(user.galleryId).emit('user-moved', user);
+    socket.to(socketRoom).emit('user-moved', user);
   });
 
   // 3. Khi người chơi gửi tin nhắn Chat
@@ -147,22 +158,23 @@ io.on('connection', (socket) => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
+    const socketRoom = getSocketRoom(user.galleryId);
     // Phát tin nhắn cho những người khác trong cùng phòng
-    socket.to(user.galleryId).emit('receive-message', chatMsg);
-    console.log(`[CHAT] [Room ${user.galleryId}] ${user.nickname}: ${data.text}`);
+    socket.to(socketRoom).emit('receive-message', chatMsg);
+    console.log(`[CHAT] [Room ${user.galleryId}] (socket: ${socketRoom}) ${user.nickname}: ${data.text}`);
   });
 
   // 4. Khi người chơi ngắt kết nối
   socket.on('disconnect', () => {
     // A. Nếu người dùng ngắt kết nối khi đang xếp hàng chờ
-    for (const galleryId in waitingQueues) {
-      const idx = waitingQueues[galleryId].indexOf(socket.id);
+    for (const socketRoom in waitingQueues) {
+      const idx = waitingQueues[socketRoom].indexOf(socket.id);
       if (idx !== -1) {
-        waitingQueues[galleryId].splice(idx, 1);
-        console.log(`[QUEUE-LEFT] ${socket.id} đã thoát khỏi hàng chờ phòng ${galleryId}`);
+        waitingQueues[socketRoom].splice(idx, 1);
+        console.log(`[QUEUE-LEFT] ${socket.id} đã thoát khỏi hàng chờ phòng (socket: ${socketRoom})`);
 
         // Cập nhật lại số thứ tự xếp hàng cho những người còn lại
-        waitingQueues[galleryId].forEach((sid, index) => {
+        waitingQueues[socketRoom].forEach((sid, index) => {
           io.to(sid).emit('queue-status', { inQueue: true, position: index + 1, limit: MAX_USERS_PER_ROOM });
         });
       }
@@ -172,17 +184,18 @@ io.on('connection', (socket) => {
     const user = activeUsers[socket.id];
     if (user) {
       const galleryId = user.galleryId;
-      console.log(`[LEFT] ${user.nickname} (${socket.id}) đã thoát khỏi phòng ${galleryId}`);
+      const socketRoom = getSocketRoom(galleryId);
+      console.log(`[LEFT] ${user.nickname} (${socket.id}) đã thoát khỏi phòng ${galleryId} (socket: ${socketRoom})`);
       
       // Phát thông báo cho những người còn lại trong phòng
-      socket.to(galleryId).emit('user-left', socket.id);
+      socket.to(socketRoom).emit('user-left', socket.id);
       
       // Xóa khỏi danh sách active
       delete activeUsers[socket.id];
 
       // C. Tự động duyệt người đầu tiên trong hàng chờ (nếu có)
-      if (waitingQueues[galleryId] && waitingQueues[galleryId].length > 0) {
-        const nextSocketId = waitingQueues[galleryId].shift();
+      if (waitingQueues[socketRoom] && waitingQueues[socketRoom].length > 0) {
+        const nextSocketId = waitingQueues[socketRoom].shift();
         const nextSocket = io.sockets.sockets.get(nextSocketId);
 
         if (nextSocket && nextSocket.tempUserData) {
@@ -190,22 +203,22 @@ io.on('connection', (socket) => {
 
           // Thêm người chơi mới vào phòng hoạt động
           activeUsers[nextSocketId] = nextUser;
-          nextSocket.join(galleryId);
-          console.log(`[QUEUE-ADMIT] ${nextUser.nickname} (${nextSocketId}) được duyệt vào phòng ${galleryId} từ hàng chờ.`);
+          nextSocket.join(socketRoom);
+          console.log(`[QUEUE-ADMIT] ${nextUser.nickname} (${nextSocketId}) được duyệt vào phòng ${nextUser.galleryId} (socket: ${socketRoom}) từ hàng chờ.`);
 
           // Gửi thông báo phê duyệt
           nextSocket.emit('admitted');
 
           // Gửi danh sách toàn bộ người chơi trong phòng cho người mới
-          const usersInRoom = Object.values(activeUsers).filter(u => u.galleryId === galleryId);
+          const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
           nextSocket.emit('users-list', usersInRoom);
 
           // Phát thông báo cho những người khác trong phòng
-          nextSocket.to(galleryId).emit('user-joined', nextUser);
+          nextSocket.to(socketRoom).emit('user-joined', nextUser);
         }
 
         // Cập nhật lại số thứ tự xếp hàng cho những người còn lại
-        waitingQueues[galleryId].forEach((sid, index) => {
+        waitingQueues[socketRoom].forEach((sid, index) => {
           io.to(sid).emit('queue-status', { inQueue: true, position: index + 1, limit: MAX_USERS_PER_ROOM });
         });
       }

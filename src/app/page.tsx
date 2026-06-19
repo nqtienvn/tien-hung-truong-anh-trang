@@ -140,7 +140,7 @@ export default function Home() {
                 sơ khai đến hội nhập toàn cầu.
               </p>
               <Link
-                href="/gallery/gallery-paintings"
+                href="/lobby"
                 className="group inline-flex items-center gap-3 bg-[#725b29] px-8 py-4 rounded-full border border-[#725b29] hover:bg-[#725b29]/90 transition-all duration-300 drop-shadow-lg text-white cursor-pointer"
               >
                 <span className="font-label-sm text-[12px] uppercase tracking-widest font-semibold">
