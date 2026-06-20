@@ -569,9 +569,6 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
             intensity={4.5} 
             distance={roomLength * 0.6} 
             color="#fff1e0" 
-            castShadow
-            shadow-mapSize-width={512}
-            shadow-mapSize-height={512}
           />
         </group>
       ))}

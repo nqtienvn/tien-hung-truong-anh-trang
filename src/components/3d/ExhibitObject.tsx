@@ -78,7 +78,6 @@ const PaintingComponent: React.FC<{
         )}
       </mesh>
 
-      {/* Đèn rọi tranh đặt phía trên trần chiếu xuống */}
       <spotLight
         position={[0, 3, 2]}
         target-position={[0, 0, 0]}
@@ -86,7 +85,6 @@ const PaintingComponent: React.FC<{
         distance={8}
         angle={Math.PI / 6}
         penumbra={0.5}
-        castShadow
       />
 
       {/* 3. Tấm nhãn tên tác phẩm nhỏ bên dưới */}

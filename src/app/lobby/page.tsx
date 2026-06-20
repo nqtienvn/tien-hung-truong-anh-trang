@@ -543,7 +543,7 @@ export default function LobbyPage() {
               camera={{ position: [0, 3, -2], fov: 65 }}
             >
               <color attach="background" args={['#0d0d12']} />
-              <fog attach="fog" args={['#0d0d12', 15, 55]} />
+              <fog attach="fog" args={['#0d0d12', 30, 120]} />
 
               <Suspense fallback={null}>
                 {/* Sảnh bảo tàng */}
