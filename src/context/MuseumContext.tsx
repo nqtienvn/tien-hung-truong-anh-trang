@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
 
@@ -19,6 +19,28 @@ export interface MultiplayerUser {
   z: number;
   yaw: number;
   galleryId: string;
+}
+
+// Vị trí spawn của các phòng trưng bày
+const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
+  'lobby': { x: 0, y: 0, z: -5.0 },
+  'gallery-paintings': { x: 0, y: 3.0, z: 10.0 },
+  'gallery-sculptures': { x: 0, y: 3.0, z: 60.0 },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRẠNG THÁI CỬA (Door State)
+// ═══════════════════════════════════════════════════════════════════════════
+export interface DoorState {
+  isOpen: boolean;
+  targetRoom: string;
+}
+
+// Thông tin phòng đang được tải động
+export interface LoadedRoom {
+  galleryId: string;
+  exhibits: Exhibit[];
+  gallery: Gallery | null;
 }
 
 interface MuseumContextType {
@@ -48,6 +70,15 @@ interface MuseumContextType {
   settings: GraphicsSettings;
   updateSettings: (newSettings: Partial<GraphicsSettings>) => void;
   updatePreset: (preset: GraphicsSettings['preset']) => void;
+
+  // ═══ Door & Room State ═══
+  doorStates: Record<string, DoorState>;
+  loadedRooms: LoadedRoom[];
+  currentRoom: string; // 'lobby' hoặc gallery ID
+  setCurrentRoom: (room: string) => void;
+  doorClosingAlert: { doorId: string; teleportTo: string; countdownMs: number } | null;
+  teleportTarget: { x: number; y: number; z: number } | null;
+  clearTeleport: () => void;
 }
 
 const MuseumContext = createContext<MuseumContextType | undefined>(undefined);
@@ -67,6 +98,15 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [inQueue, setInQueue] = useState<boolean>(false);
   const [queuePosition, setQueuePosition] = useState<number>(0);
   const [isAdmitted, setIsAdmitted] = useState<boolean>(false);
+
+  // ═══ Door & Room State ═══
+  const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
+  const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
+  const [currentRoom, setCurrentRoom] = useState<string>('lobby');
+  const [doorClosingAlert, setDoorClosingAlert] = useState<{ doorId: string; teleportTo: string; countdownMs: number } | null>(null);
+  const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
+
+  const clearTeleport = useCallback(() => setTeleportTarget(null), []);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
     preset: 'medium',
@@ -119,21 +159,41 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   };
 
-  // Khởi tạo Socket.io Connection khi đã vào phòng (kết nối ngay cả khi chưa nhập nickname để hiển thị người chơi khác ở nền)
-  useEffect(() => {
-    if (!activeGallery) {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-      }
-      setOtherUsers([]);
-      setInQueue(false);
-      setQueuePosition(0);
-      setIsAdmitted(false);
-      return;
-    }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TẢI PHÒNG ĐỘNG KHI CỬA MỞ (Dynamic Room Loading)
+  // ═══════════════════════════════════════════════════════════════════════════
+  const loadRoom = useCallback(async (galleryId: string) => {
+    try {
+      const [galleriesRes, exhibitsRes] = await Promise.all([
+        fetch('/api/galleries'),
+        fetch(`/api/exhibits?galleryId=${galleryId}`),
+      ]);
 
-    // Kết nối tới WebSocket server chạy trên cổng 3001
+      const galleries: Gallery[] = await galleriesRes.json();
+      const exhibits: Exhibit[] = await exhibitsRes.json();
+      const gallery = galleries.find(g => g.id === galleryId) || null;
+
+      setLoadedRooms(prev => {
+        // Kiểm tra nếu phòng đã được tải rồi thì bỏ qua
+        if (prev.some(r => r.galleryId === galleryId)) return prev;
+        console.log(`[ROOM-LOADED] Phòng "${galleryId}" đã được tải thành công (${exhibits.length} hiện vật).`);
+        return [...prev, { galleryId, exhibits, gallery }];
+      });
+    } catch (err) {
+      console.error(`[ROOM-LOAD-ERROR] Lỗi tải phòng "${galleryId}":`, err);
+    }
+  }, []);
+
+  const unloadRoom = useCallback((galleryId: string) => {
+    setLoadedRooms(prev => prev.filter(r => r.galleryId !== galleryId));
+    console.log(`[ROOM-UNLOADED] Phòng "${galleryId}" đã được dỡ bỏ.`);
+  }, []);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // SOCKET.IO — KẾT NỐI & LẮNG NGHE SỰ KIỆN
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Kết nối socket ngay khi provider mount (cho cả lobby và gallery)
     const socketUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
     const newSocket = io(socketUrl, {
       transports: ['websocket'],
@@ -142,59 +202,77 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect', () => {
       console.log('Đã kết nối Socket.io server:', newSocket.id);
-      // Tham gia phòng triển lãm (server sẽ kiểm tra giới hạn 30 người)
-      newSocket.emit('join-room', {
-        nickname,
-        galleryId: activeGallery.id,
-        x: localUserPos[0],
-        y: 0, // Chiều cao logic mặt đất
-        z: localUserPos[2],
-        yaw: localUserYaw,
-      });
     });
 
-    // Nhận thông báo đang ở hàng xếp hàng chờ
-    newSocket.on('queue-status', (data: { inQueue: boolean; position: number }) => {
-      setInQueue(data.inQueue);
-      setQueuePosition(data.position);
-      setIsAdmitted(false);
+    // ── Door Events ──
+    newSocket.on('door-states', (states: Record<string, DoorState>) => {
+      // Loại bỏ closingTimer từ server (không serialize được)
+      const cleanStates: Record<string, DoorState> = {};
+      for (const [key, val] of Object.entries(states)) {
+        cleanStates[key] = {
+          isOpen: (val as any).isOpen,
+          targetRoom: (val as any).targetRoom,
+        };
+      }
+      setDoorStates(cleanStates);
     });
 
-    // Nhận thông báo đã tham gia phòng thành công trực tiếp (không bị xếp hàng)
+    newSocket.on('door-opened', (data: { doorId: string; targetRoom: string }) => {
+      setDoorStates(prev => ({
+        ...prev,
+        [data.doorId]: { isOpen: true, targetRoom: data.targetRoom },
+      }));
+    });
+
+    newSocket.on('door-closing', (data: { doorId: string; teleportTo: string; countdownMs: number }) => {
+      setDoorClosingAlert(data);
+      // Tự động clear alert sau countdown
+      setTimeout(() => setDoorClosingAlert(null), data.countdownMs + 500);
+    });
+
+    newSocket.on('door-closed', (data: { doorId: string; teleportTo: string }) => {
+      setDoorStates(prev => ({
+        ...prev,
+        [data.doorId]: { isOpen: false, targetRoom: '' },
+      }));
+      setDoorClosingAlert(null);
+
+      // Teleport về phòng được chỉ định (hoặc sảnh mặc định)
+      const target = data.teleportTo || 'lobby';
+      const spawn = SPAWN_POINTS[target] || SPAWN_POINTS['lobby'];
+      setTeleportTarget(spawn);
+      setCurrentRoom(target);
+      console.log(`[TELEPORT] Di chuyển người chơi về phòng "${target}" tại tọa độ Z = ${spawn.z}`);
+    });
+
+    // ── Multiplayer Events ──
     newSocket.on('join-success', () => {
       setInQueue(false);
       setQueuePosition(0);
       setIsAdmitted(true);
     });
 
-    // Nhận thông báo được duyệt vào phòng (sau khi xếp hàng chờ)
+    newSocket.on('queue-status', (data: { inQueue: boolean; position: number }) => {
+      setInQueue(data.inQueue);
+      setQueuePosition(data.position);
+      setIsAdmitted(false);
+    });
+
     newSocket.on('admitted', () => {
       setInQueue(false);
       setQueuePosition(0);
       setIsAdmitted(true);
-      // Gửi ngay tọa độ hiện tại lên server để người khác thấy
-      newSocket.emit('move', {
-        x: localUserPos[0],
-        y: 0, // Chiều cao logic mặt đất
-        z: localUserPos[2],
-        yaw: localUserYaw,
-      });
     });
 
-    // Nhận danh sách người chơi hiện tại trong phòng
     newSocket.on('users-list', (users: MultiplayerUser[]) => {
-      // Loại bỏ chính mình ra khỏi danh sách
       const filtered = users.filter(u => u.id !== newSocket.id);
       setOtherUsers(filtered);
-      
-      // Đồng thời cập nhật vào ref positions
       otherUsersPositions.current = {};
       filtered.forEach(u => {
         otherUsersPositions.current[u.id] = u;
       });
     });
 
-    // Nhận sự kiện có người chơi mới tham gia
     newSocket.on('user-joined', (user: MultiplayerUser) => {
       setOtherUsers(prev => {
         if (prev.some(u => u.id === user.id)) return prev;
@@ -203,13 +281,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       otherUsersPositions.current[user.id] = user;
     });
 
-    // Nhận sự kiện có người chơi di chuyển
     newSocket.on('user-moved', (user: MultiplayerUser) => {
-      // Chỉ cập nhật trực tiếp vào ref để tránh re-render React liên tục!
       otherUsersPositions.current[user.id] = user;
     });
 
-    // Nhận sự kiện người chơi rời phòng
     newSocket.on('user-left', (userId: string) => {
       setOtherUsers(prev => prev.filter(u => u.id !== userId));
       delete otherUsersPositions.current[userId];
@@ -222,21 +297,50 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setInQueue(false);
       setQueuePosition(0);
       setIsAdmitted(false);
-      otherUsersPositions.current = {}; // Clear positions on disconnect
+      otherUsersPositions.current = {};
     };
-  }, [activeGallery, nickname]);
+  }, []);
 
-  // Gửi vị trí của chính mình lên server khi thay đổi (chỉ gửi khi đã được phê duyệt vào phòng)
+  // Join room khi có nickname + activeGallery
   useEffect(() => {
-    if (socket && socket.connected && isAdmitted) {
-      socket.emit('move', {
-        x: localUserPos[0],
-        y: 0, // Chiều cao logic mặt đất
-        z: localUserPos[2],
-        yaw: localUserYaw,
-      });
+    if (!socket || !socket.connected) return;
+    if (!nickname || !activeGallery) return;
+
+    socket.emit('join-room', {
+      nickname,
+      galleryId: activeGallery.id,
+      x: localUserPos[0],
+      y: 0,
+      z: localUserPos[2],
+      yaw: localUserYaw,
+    });
+  }, [socket, nickname, activeGallery]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TỰ ĐỘNG TẢI/DỠ PHÒNG KHI CỬA MỞ/ĐÓNG
+  // ═══════════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    for (const [doorId, state] of Object.entries(doorStates)) {
+      if (state.isOpen && state.targetRoom) {
+        loadRoom(state.targetRoom);
+      }
+      if (!state.isOpen && state.targetRoom === '') {
+        // Tìm phòng đã tải bởi cửa này trước đó và dỡ bỏ
+        // (Phòng sẽ bị dỡ nếu không có cửa nào khác đang mở dẫn tới nó)
+        const allOpenTargets = Object.values(doorStates)
+          .filter(s => s.isOpen)
+          .map(s => s.targetRoom);
+
+        setLoadedRooms(prev => prev.filter(room => {
+          if (!allOpenTargets.includes(room.galleryId)) {
+            console.log(`[ROOM-UNLOADED] Phòng "${room.galleryId}" đã được dỡ bỏ.`);
+            return false;
+          }
+          return true;
+        }));
+      }
     }
-  }, [localUserPos, localUserYaw, socket, isAdmitted]);
+  }, [doorStates, loadRoom]);
 
   return (
     <MuseumContext.Provider
@@ -267,6 +371,15 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         settings,
         updateSettings,
         updatePreset,
+
+        // Door & Room
+        doorStates,
+        loadedRooms,
+        currentRoom,
+        setCurrentRoom,
+        doorClosingAlert,
+        teleportTarget,
+        clearTeleport,
       }}
     >
       {children}

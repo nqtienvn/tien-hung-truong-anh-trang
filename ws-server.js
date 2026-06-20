@@ -12,12 +12,20 @@ const activeUsers = {};
 // Cấu trúc: { [socketRoom]: [socketId1, socketId2, ...] }
 const waitingQueues = {};
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TRẠNG THÁI CỬA PHÒNG (Door States) — Admin điều khiển mở/đóng
+// Cấu trúc: { [doorId]: { isOpen: boolean, targetRoom: string } }
+// ═══════════════════════════════════════════════════════════════════════════
+const doorStates = {};
+const closingTimers = {};
+
+// Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
+const DOOR_CLOSE_COUNTDOWN_MS = 5000;
+
 // Hàm ánh xạ phòng triển lãm sang phòng socket hợp nhất
 const getSocketRoom = (galleryId) => {
-  if (galleryId === 'gallery-paintings' || galleryId === 'gallery-sculptures') {
-    return 'gallery-unified';
-  }
-  return galleryId;
+  // Tất cả phòng trong bảo tàng giờ chung 1 socket room (vì chúng nối liền nhau)
+  return 'museum-unified';
 };
 
 const server = http.createServer((req, res) => {
@@ -51,6 +59,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // API lấy trạng thái cửa
+  if (req.url.startsWith('/door-status')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ doors: doorStates }));
+    return;
+  }
+
   res.writeHead(200, { 'Content-Type': 'text/plain' });
   res.end('Ortus 3D Museum Multiplayer Server is running\n');
 });
@@ -64,6 +79,9 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
   console.log(`Du khách kết nối: ${socket.id}`);
+
+  // Gửi trạng thái cửa hiện tại cho client mới kết nối
+  socket.emit('door-states', doorStates);
 
   // 1. Khi người chơi tham gia phòng
   socket.on('join-room', (data) => {
@@ -164,7 +182,81 @@ io.on('connection', (socket) => {
     console.log(`[CHAT] [Room ${user.galleryId}] (socket: ${socketRoom}) ${user.nickname}: ${data.text}`);
   });
 
-  // 4. Khi người chơi ngắt kết nối
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 4. ADMIN: MỞ CỬA PHÒNG (Admin opens a door to a gallery room)
+  // ═══════════════════════════════════════════════════════════════════════════
+  socket.on('admin:open-door', (data) => {
+    const { doorId, targetRoom } = data;
+    console.log(`[ADMIN] Mở cửa "${doorId}" → phòng "${targetRoom}"`);
+
+    // Hủy timer đóng cửa nếu có
+    if (closingTimers[doorId]) {
+      clearTimeout(closingTimers[doorId]);
+      delete closingTimers[doorId];
+    }
+
+    doorStates[doorId] = {
+      isOpen: true,
+      targetRoom,
+    };
+
+    // Phát sóng cho tất cả client
+    io.emit('door-opened', { doorId, targetRoom });
+    // Gửi lại toàn bộ trạng thái cửa
+    io.emit('door-states', doorStates);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 5. ADMIN: ĐÓNG CỬA PHÒNG (Admin closes a door, teleport remaining players)
+  // ═══════════════════════════════════════════════════════════════════════════
+  socket.on('admin:close-door', (data) => {
+    const { doorId, teleportTo } = data;
+    // teleportTo: 'lobby' hoặc ID phòng mà admin chọn giữ lại
+    console.log(`[ADMIN] Đóng cửa "${doorId}", teleport về "${teleportTo}"`);
+
+    if (!doorStates[doorId]) {
+      doorStates[doorId] = { isOpen: false, targetRoom: '' };
+    }
+
+    // Bước 1: Gửi cảnh báo đóng cửa (đếm ngược 5 giây)
+    io.emit('door-closing', { 
+      doorId, 
+      teleportTo, 
+      countdownMs: DOOR_CLOSE_COUNTDOWN_MS 
+    });
+
+    // Bước 2: Sau 5 giây, đóng cửa hoàn toàn
+    const timer = setTimeout(() => {
+      doorStates[doorId] = {
+        isOpen: false,
+        targetRoom: '',
+      };
+
+      if (closingTimers[doorId]) {
+        delete closingTimers[doorId];
+      }
+
+      // Phát sóng cho tất cả client: Cửa đã đóng + teleport
+      io.emit('door-closed', { doorId, teleportTo });
+      io.emit('door-states', doorStates);
+
+      console.log(`[ADMIN] Cửa "${doorId}" đã đóng hoàn toàn. Teleport → "${teleportTo}".`);
+    }, DOOR_CLOSE_COUNTDOWN_MS);
+
+    if (closingTimers[doorId]) {
+      clearTimeout(closingTimers[doorId]);
+    }
+    closingTimers[doorId] = timer;
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 6. ADMIN: LẤY TRẠNG THÁI CỬA (Get all door states)
+  // ═══════════════════════════════════════════════════════════════════════════
+  socket.on('admin:get-door-status', () => {
+    socket.emit('door-states', doorStates);
+  });
+
+  // 7. Khi người chơi ngắt kết nối
   socket.on('disconnect', () => {
     // A. Nếu người dùng ngắt kết nối khi đang xếp hàng chờ
     for (const socketRoom in waitingQueues) {

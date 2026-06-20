@@ -167,22 +167,38 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         />
       </mesh>
 
-      {/* Tường sau */}
-      <mesh position={[0, roomHeight / 2, roomLength / 2]} receiveShadow>
-        <boxGeometry args={[roomWidth, roomHeight, 0.2]} />
-        <meshStandardMaterial 
-          color={wallColor}
-          roughness={0.7}
-        />
+      {/* --- TƯỜNG TRƯỚC (Front Wall with Doorway) --- */}
+      {/* Tường trước bên trái */}
+      <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+        <meshStandardMaterial color={wallColor} roughness={0.7} />
+      </mesh>
+      {/* Tường trước bên phải */}
+      <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+        <meshStandardMaterial color={wallColor} roughness={0.7} />
+      </mesh>
+      {/* Tường trước phía trên cửa */}
+      <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2]} receiveShadow>
+        <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
+        <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
 
-      {/* Tường trước */}
-      <mesh position={[0, roomHeight / 2, -roomLength / 2]} receiveShadow>
-        <boxGeometry args={[roomWidth, roomHeight, 0.2]} />
-        <meshStandardMaterial 
-          color={wallColor}
-          roughness={0.7}
-        />
+      {/* --- TƯỜNG SAU (Back Wall with Doorway) --- */}
+      {/* Tường sau bên trái */}
+      <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+        <meshStandardMaterial color={wallColor} roughness={0.7} />
+      </mesh>
+      {/* Tường sau bên phải */}
+      <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+        <meshStandardMaterial color={wallColor} roughness={0.7} />
+      </mesh>
+      {/* Tường sau phía trên cửa */}
+      <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2]} receiveShadow>
+        <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
+        <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
 
       {/* Ốp gỗ chân tường (Wainscoting) màu kem sáng cao 1.2m */}
@@ -206,23 +222,41 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 
-      {/* Wainscoting tường trước */}
-      <mesh position={[0, 0.6, -roomLength / 2 + 0.112]} receiveShadow>
-        <boxGeometry args={[roomWidth - 0.224, 1.2, 0.02]} />
+      {/* Wainscoting tường trước bên trái */}
+      <mesh position={[-(roomWidth / 4 + 1.056), 0.6, -roomLength / 2 + 0.112]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 1.2, -roomLength / 2 + 0.124]}>
-        <boxGeometry args={[roomWidth - 0.248, 0.06, 0.04]} />
+      <mesh position={[-(roomWidth / 4 + 1.056), 1.2, -roomLength / 2 + 0.124]}>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
+      </mesh>
+      {/* Wainscoting tường trước bên phải */}
+      <mesh position={[roomWidth / 4 + 1.056, 0.6, -roomLength / 2 + 0.112]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
+      </mesh>
+      <mesh position={[roomWidth / 4 + 1.056, 1.2, -roomLength / 2 + 0.124]}>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 
-      {/* Wainscoting tường sau */}
-      <mesh position={[0, 0.6, roomLength / 2 - 0.112]} receiveShadow>
-        <boxGeometry args={[roomWidth - 0.224, 1.2, 0.02]} />
+      {/* Wainscoting tường sau bên trái */}
+      <mesh position={[-(roomWidth / 4 + 1.056), 0.6, roomLength / 2 - 0.112]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
-      <mesh position={[0, 1.2, roomLength / 2 - 0.124]}>
-        <boxGeometry args={[roomWidth - 0.248, 0.06, 0.04]} />
+      <mesh position={[-(roomWidth / 4 + 1.056), 1.2, roomLength / 2 - 0.124]}>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
+      </mesh>
+      {/* Wainscoting tường sau bên phải */}
+      <mesh position={[roomWidth / 4 + 1.056, 0.6, roomLength / 2 - 0.112]} receiveShadow>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
+        <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
+      </mesh>
+      <mesh position={[roomWidth / 4 + 1.056, 1.2, roomLength / 2 - 0.124]}>
+        <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
 

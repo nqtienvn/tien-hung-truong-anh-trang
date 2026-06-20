@@ -57,9 +57,25 @@ export const MuseumLobby: React.FC = () => {
           3. HỆ THỐNG TƯỜNG CHÍNH (Main Walls)
       ═══════════════════════════════════════════════════════════════ */}
 
-      {/* --- Tường sau (Z = 8.0) - Tường đá sa thạch phẳng lớn chạy suốt chiều rộng --- */}
-      <mesh position={[0, H / 2, 8.0]} receiveShadow>
-        <boxGeometry args={[W, H, 0.3]} />
+      {/* --- Tường sau (Z = 8.0) - Được phân đoạn để tạo ô cửa rỗng cho Door 1 --- */}
+      {/* Tường sau bên trái (X: -15 đến -2) */}
+      <mesh position={[-8.5, H / 2, 8.0]} receiveShadow>
+        <boxGeometry args={[13.0, H, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+      {/* Tường sau bên phải (X: 2 đến 15) */}
+      <mesh position={[8.5, H / 2, 8.0]} receiveShadow>
+        <boxGeometry args={[13.0, H, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+      {/* Tường sau phía dưới cửa (X: -2 đến 2, Y: 0 đến 3.0) - Dưới Mezzanine */}
+      <mesh position={[0, 1.5, 8.0]} receiveShadow>
+        <boxGeometry args={[4.0, 3.0, 0.3]} />
+        <meshStandardMaterial color={sandstone} roughness={0.7} />
+      </mesh>
+      {/* Tường sau phía trên cửa (X: -2 đến 2, Y: 7.0 đến 12) - Trên Door 1 */}
+      <mesh position={[0, 9.5, 8.0]} receiveShadow>
+        <boxGeometry args={[4.0, 5.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
 
