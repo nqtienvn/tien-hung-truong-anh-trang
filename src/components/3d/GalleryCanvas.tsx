@@ -264,7 +264,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
     <div ref={containerRef} className="w-full h-full bg-[#0a0a0d] relative overflow-hidden select-none">
       {/* 3D Canvas */}
       <Canvas
-        shadows={settings.shadows}
+        shadows={false}
         camera={{ position: [0, 2.0, 14.5], fov: 60 }}
         onClick={handleMiss}
       >
@@ -274,13 +274,10 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
         {/* Ánh sáng chung (tăng độ sáng) */}
         <ambientLight intensity={0.8} />
         
-        {/* Ánh sáng đổ bóng xéo */}
+        {/* Ánh sáng xéo */}
         <directionalLight 
           position={[5, 12, 5]} 
           intensity={0.7} 
-          castShadow={settings.shadows} 
-          shadow-mapSize-width={1024} 
-          shadow-mapSize-height={1024} 
         />
 
         {/* Ánh sáng tự nhiên từ giếng trời chiếu thẳng xuống */}

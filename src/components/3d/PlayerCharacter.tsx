@@ -292,19 +292,19 @@ export const PlayerCharacter: React.FC = () => {
       ) : (
         <group scale={1.6}>
           {/* MÔ HÌNH CON NGƯỜI (HUMANOID MANNEQUIN) - Cấu hình Trung bình / Cao */}
-          {/* ĐẦU - To, tròn, castShadow từ settings */}
-          <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>
+          {/* ĐẦU - To, tròn */}
+          <mesh position={[0, 0.7, 0]}>
             <sphereGeometry args={[HEAD_R, 28, 28]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
 
-          {/* THÂN - Capsule mập, castShadow từ settings */}
-          <mesh position={[0, 0.28, 0]} castShadow={settings.shadows}>
+          {/* THÂN - Capsule mập */}
+          <mesh position={[0, 0.28, 0]}>
             <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
 
-          {/* CÁNH TAY TRÁI - Không castShadow để tối ưu năng lực render của GPU */}
+          {/* CÁNH TAY TRÁI - Không để tối ưu năng lực render của GPU */}
           <group ref={leftArmRef} position={[-ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
             <mesh position={[0, ARM_MESH_Y, 0]}>
               <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
@@ -312,7 +312,7 @@ export const PlayerCharacter: React.FC = () => {
             </mesh>
           </group>
 
-          {/* CÁNH TAY PHẢI - Không castShadow để tối ưu */}
+          {/* CÁNH TAY PHẢI - Không để tối ưu */}
           <group ref={rightArmRef} position={[ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
             <mesh position={[0, ARM_MESH_Y, 0]}>
               <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
@@ -320,7 +320,7 @@ export const PlayerCharacter: React.FC = () => {
             </mesh>
           </group>
 
-          {/* CHÂN TRÁI - Không castShadow để tối ưu */}
+          {/* CHÂN TRÁI - Không để tối ưu */}
           <group ref={leftLegRef} position={[-LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
             <mesh position={[0, LEG_MESH_Y, 0]}>
               <capsuleGeometry args={[LEG_R, LEG_LEN, 8, 16]} />
@@ -328,7 +328,7 @@ export const PlayerCharacter: React.FC = () => {
             </mesh>
           </group>
 
-          {/* CHÂN PHẢI - Không castShadow để tối ưu */}
+          {/* CHÂN PHẢI - Không để tối ưu */}
           <group ref={rightLegRef} position={[LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
             <mesh position={[0, LEG_MESH_Y, 0]}>
               <capsuleGeometry args={[LEG_R, LEG_LEN, 8, 16]} />

@@ -29,7 +29,7 @@ export const MuseumLobby: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════════════
           1. SÀN NHÀ GỖ SỌC (Wood Strip Floor)
       ═══════════════════════════════════════════════════════════════ */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
         <planeGeometry args={[W, L]} />
         <meshStandardMaterial color={woodFloor} roughness={0.35} metalness={0.1} />
       </mesh>
@@ -41,7 +41,7 @@ export const MuseumLobby: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════════════
           2. THẢM ĐỎ TRẢI DỌC TRỤC CHÍNH (Red Carpet)
       ═══════════════════════════════════════════════════════════════ */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -2.5]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -2.5]}>
         <planeGeometry args={[4.5, 13]} />
         <meshStandardMaterial color={redCarpet} roughness={0.92} metalness={0} />
       </mesh>
@@ -59,22 +59,22 @@ export const MuseumLobby: React.FC = () => {
 
       {/* --- Tường sau (Z = 8.0) - Được phân đoạn để tạo ô cửa rỗng cho Door 1 --- */}
       {/* Tường sau bên trái (X: -15 đến -2) */}
-      <mesh position={[-8.5, H / 2, 8.0]} receiveShadow>
+      <mesh position={[-8.5, H / 2, 8.0]}>
         <boxGeometry args={[13.0, H, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
       {/* Tường sau bên phải (X: 2 đến 15) */}
-      <mesh position={[8.5, H / 2, 8.0]} receiveShadow>
+      <mesh position={[8.5, H / 2, 8.0]}>
         <boxGeometry args={[13.0, H, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
       {/* Tường sau phía dưới cửa (X: -2 đến 2, Y: 0 đến 3.0) - Dưới Mezzanine */}
-      <mesh position={[0, 1.5, 8.0]} receiveShadow>
+      <mesh position={[0, 1.5, 8.0]}>
         <boxGeometry args={[4.0, 3.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
       {/* Tường sau phía trên cửa (X: -2 đến 2, Y: 7.0 đến 12) - Trên Door 1 */}
-      <mesh position={[0, 9.5, 8.0]} receiveShadow>
+      <mesh position={[0, 9.5, 8.0]}>
         <boxGeometry args={[4.0, 5.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
@@ -120,17 +120,17 @@ export const MuseumLobby: React.FC = () => {
 
       {/* --- Tường trước (Z = -10) - Tường có cổng vào --- */}
       {/* Phần tường trái */}
-      <mesh position={[-10, H / 2, -L / 2]} receiveShadow>
+      <mesh position={[-10, H / 2, -L / 2]}>
         <boxGeometry args={[10, H, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
       {/* Phần tường phải */}
-      <mesh position={[10, H / 2, -L / 2]} receiveShadow>
+      <mesh position={[10, H / 2, -L / 2]}>
         <boxGeometry args={[10, H, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
       {/* Phần trên cổng vào */}
-      <mesh position={[0, H - 2, -L / 2]} receiveShadow>
+      <mesh position={[0, H - 2, -L / 2]}>
         <boxGeometry args={[10, 4, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
@@ -138,7 +138,7 @@ export const MuseumLobby: React.FC = () => {
       {/* --- CỬA GỖ LỐI VÀO LỚN (Z = -10) --- */}
       <group position={[0, 0, -L / 2]}>
         {/* Khung cửa gỗ bao quanh */}
-        <mesh position={[0, 4.0, 0.05]} castShadow>
+        <mesh position={[0, 4.0, 0.05]}>
           <boxGeometry args={[10.2, 8.1, 0.45]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.55} />
         </mesh>
@@ -146,7 +146,7 @@ export const MuseumLobby: React.FC = () => {
         {/* Cánh cửa bên trái */}
         <group position={[-2.45, 3.95, 0.1]}>
           {/* Thân cửa chính */}
-          <mesh castShadow receiveShadow>
+          <mesh>
             <boxGeometry args={[4.8, 7.8, 0.15]} />
             <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
           </mesh>
@@ -168,7 +168,7 @@ export const MuseumLobby: React.FC = () => {
           {/* Tay nắm cửa lớn bằng vàng/đồng */}
           <group position={[2.1, -1.3, 0.12]}>
             {/* Thanh tay cầm dọc */}
-            <mesh castShadow>
+            <mesh>
               <cylinderGeometry args={[0.04, 0.04, 1.0, 12]} />
               <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
             </mesh>
@@ -192,7 +192,7 @@ export const MuseumLobby: React.FC = () => {
         {/* Cánh cửa bên phải */}
         <group position={[2.45, 3.95, 0.1]}>
           {/* Thân cửa chính */}
-          <mesh castShadow receiveShadow>
+          <mesh>
             <boxGeometry args={[4.8, 7.8, 0.15]} />
             <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
           </mesh>
@@ -214,7 +214,7 @@ export const MuseumLobby: React.FC = () => {
           {/* Tay nắm cửa lớn bằng vàng/đồng */}
           <group position={[-2.1, -1.3, 0.12]}>
             {/* Thanh tay cầm dọc */}
-            <mesh castShadow>
+            <mesh>
               <cylinderGeometry args={[0.04, 0.04, 1.0, 12]} />
               <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
             </mesh>
@@ -239,7 +239,7 @@ export const MuseumLobby: React.FC = () => {
       {/* --- Tường trái (X = -15) - TƯỜNG KÍNH LỚN --- */}
       {/* Khung kính dọc */}
       {Array.from({ length: 5 }).map((_, i) => (
-        <mesh key={`glass-vframe-${i}`} position={[-W / 2, H / 2, -L / 2 + i * 5]} castShadow>
+        <mesh key={`glass-vframe-${i}`} position={[-W / 2, H / 2, -L / 2 + i * 5]}>
           <boxGeometry args={[0.15, H, 0.15]} />
           <meshStandardMaterial color={metalGray} metalness={0.85} roughness={0.25} />
         </mesh>
@@ -267,12 +267,12 @@ export const MuseumLobby: React.FC = () => {
       ))}
 
       {/* --- Tường phải (X = +15) - Tường đá sa thạch tối --- */}
-      <mesh position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+      <mesh position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <boxGeometry args={[L, H, 0.3]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.75} />
       </mesh>
       {/* Bệ nhô ra (canopy) phía trên quầy lễ tân bên phải */}
-      <mesh position={[W / 2 - 1.0, 3.8, -3.0]} castShadow>
+      <mesh position={[W / 2 - 1.0, 3.8, -3.0]}>
         <boxGeometry args={[2.0, 0.15, 8.0]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.4} />
       </mesh>
@@ -286,8 +286,6 @@ export const MuseumLobby: React.FC = () => {
         <mesh
           key={`stair-step-${i}`}
           position={[0, i * 0.3 + 0.15, 2.0 + i * 0.5 + 0.25]}
-          castShadow
-          receiveShadow
         >
           <boxGeometry args={[8.0, 0.3, 0.5]} />
           <meshStandardMaterial color={sandstone} roughness={0.45} metalness={0.05} />
@@ -297,27 +295,27 @@ export const MuseumLobby: React.FC = () => {
       {[-4.15, 4.15].map((x) => (
         <group key={`stair-wall-group-${x}`}>
           {/* Đoạn 1: Z 1.75 -> 3.0 (tâm 2.375), Y_stair=0.225, H_stone=1.225 */}
-          <mesh position={[x, 1.225 / 2, 2.375]} castShadow receiveShadow>
+          <mesh position={[x, 1.225 / 2, 2.375]}>
             <boxGeometry args={[0.3, 1.225, 1.25]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
           </mesh>
           {/* Đoạn 2: Z 3.0 -> 4.25 (tâm 3.625), Y_stair=0.975, H_stone=1.975 */}
-          <mesh position={[x, 1.975 / 2, 3.625]} castShadow receiveShadow>
+          <mesh position={[x, 1.975 / 2, 3.625]}>
             <boxGeometry args={[0.3, 1.975, 1.25]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
           </mesh>
           {/* Đoạn 3: Z 4.25 -> 5.5 (tâm 4.875), Y_stair=1.725, H_stone=2.725 */}
-          <mesh position={[x, 2.725 / 2, 4.875]} castShadow receiveShadow>
+          <mesh position={[x, 2.725 / 2, 4.875]}>
             <boxGeometry args={[0.3, 2.725, 1.25]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
           </mesh>
           {/* Đoạn 4: Z 5.5 -> 6.75 (tâm 6.125), Y_stair=2.475, H_stone=3.475 */}
-          <mesh position={[x, 3.475 / 2, 6.125]} castShadow receiveShadow>
+          <mesh position={[x, 3.475 / 2, 6.125]}>
             <boxGeometry args={[0.3, 3.475, 1.25]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
           </mesh>
           {/* Đoạn 5: Z 6.75 -> 8.0 (tâm 7.375), Y_stair=2.925, H_stone=3.925 */}
-          <mesh position={[x, 3.925 / 2, 7.375]} castShadow receiveShadow>
+          <mesh position={[x, 3.925 / 2, 7.375]}>
             <boxGeometry args={[0.3, 3.925, 1.25]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
           </mesh>
@@ -339,7 +337,7 @@ export const MuseumLobby: React.FC = () => {
             const postCenterY = postY + postH / 2;
 
             return (
-              <mesh key={`post-${idx}`} position={[x, postCenterY, postZ]} castShadow>
+              <mesh key={`post-${idx}`} position={[x, postCenterY, postZ]}>
                 <cylinderGeometry args={[0.02, 0.02, postH, 8]} />
                 <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
               </mesh>
@@ -350,7 +348,6 @@ export const MuseumLobby: React.FC = () => {
           <mesh
             position={[x, 1.9 + 3.0 / 2, 1.75 + 6.25 / 2]}
             rotation={[-Math.atan2(3.0, 6.25), 0, 0]}
-            castShadow
           >
             <boxGeometry args={[0.06, 0.06, Math.sqrt(6.25 * 6.25 + 3.0 * 3.0)]} />
             <meshStandardMaterial color={goldAccent} metalness={0.95} roughness={0.05} />
@@ -372,11 +369,11 @@ export const MuseumLobby: React.FC = () => {
           5. SÀN TẦNG 2 - MEZZANINE (Y = 3m, phía sau sảnh)
       ═══════════════════════════════════════════════════════════════ */}
       {/* Khoảng nghỉ (landing platform) ở đỉnh cầu thang (X = -4 đến 4, Z = 7.0 đến 8.0) */}
-      <mesh position={[0, 3.0, 7.5]} castShadow receiveShadow>
+      <mesh position={[0, 3.0, 7.5]}>
         <boxGeometry args={[8.0, 0.3, 1.0]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.5} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3.16, 7.5]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 3.16, 7.5]}>
         <planeGeometry args={[8.0, 1.0]} />
         <meshStandardMaterial color={woodFloor} roughness={0.4} metalness={0.1} />
       </mesh>
@@ -389,12 +386,12 @@ export const MuseumLobby: React.FC = () => {
       {[-2.3, 2.3].map((x) => (
         <group key={`gate-pillar-${x}`}>
           {/* Trụ chính */}
-          <mesh position={[x, 5.0, 7.8]} castShadow receiveShadow>
+          <mesh position={[x, 5.0, 7.8]}>
             <boxGeometry args={[0.5, 4.0, 0.5]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.5} />
           </mesh>
           {/* Chân cột */}
-          <mesh position={[x, 3.25, 7.8]} castShadow>
+          <mesh position={[x, 3.25, 7.8]}>
             <boxGeometry args={[0.65, 0.5, 0.65]} />
             <meshStandardMaterial color={sandstoneDark} roughness={0.4} />
           </mesh>
@@ -407,7 +404,7 @@ export const MuseumLobby: React.FC = () => {
       ))}
 
       {/* Mái đón cổng (arch lintel) phía trên cửa */}
-      <mesh position={[0, 7.2, 7.8]} castShadow>
+      <mesh position={[0, 7.2, 7.8]}>
         <boxGeometry args={[5.2, 0.4, 0.6]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
       </mesh>
@@ -422,13 +419,13 @@ export const MuseumLobby: React.FC = () => {
           Xoay dọc theo trục Z, hướng mặt ra thảm đỏ ở giữa (X-)
       ═══════════════════════════════════════════════════════════════ */}
       {/* Vách tường gỗ/đá backdrop phía sau quầy */}
-      <mesh position={[14.8, 2.0, -3.0]} receiveShadow castShadow>
+      <mesh position={[14.8, 2.0, -3.0]}>
         <boxGeometry args={[0.2, 4.0, 8.0]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.45} />
       </mesh>
 
       {/* Quầy chính dọc theo Z */}
-      <mesh position={[13.5, 0.55, -3.0]} castShadow receiveShadow>
+      <mesh position={[13.5, 0.55, -3.0]}>
         <boxGeometry args={[0.8, 1.1, 7.0]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.25} metalness={0.1} />
       </mesh>
@@ -446,7 +443,7 @@ export const MuseumLobby: React.FC = () => {
       {/* Cột chắn dây (Stanchion posts) - đặt dọc bên trái quầy, chắn phía thảm đỏ */}
       {[-2.0, 0, 2.0].map((offset) => (
         <group key={`stanchion-${offset}`}>
-          <mesh position={[12.3, 0.5, -3.0 + offset]} castShadow>
+          <mesh position={[12.3, 0.5, -3.0 + offset]}>
             <cylinderGeometry args={[0.03, 0.03, 1.0, 8]} />
             <meshStandardMaterial color={goldAccent} metalness={0.9} roughness={0.1} />
           </mesh>
@@ -489,7 +486,7 @@ export const MuseumLobby: React.FC = () => {
       {/* Màn hình nghiêng trên bàn (kiểu kiosk) - quay nghiêng hướng về phía thảm đỏ X- */}
       {[-1.8, 0, 1.8].map((offset, i) => (
         <group key={`kiosk-${i}`}>
-          <mesh position={[13.3, 1.3, -3.0 + offset]} rotation={[0, -Math.PI / 2, -0.5]} castShadow>
+          <mesh position={[13.3, 1.3, -3.0 + offset]} rotation={[0, -Math.PI / 2, -0.5]}>
             <boxGeometry args={[1.0, 0.7, 0.06]} />
             <meshStandardMaterial color="#1a1a1a" roughness={0.3} />
           </mesh>
@@ -534,7 +531,7 @@ export const MuseumLobby: React.FC = () => {
       {/* Cột bên trái (cạnh tường kính) */}
       {[-7, -2, 3, 8].map((z) => (
         <group key={`pillar-left-${z}`}>
-          <mesh position={[-W / 2 + 0.65, H / 2, z]} castShadow>
+          <mesh position={[-W / 2 + 0.65, H / 2, z]}>
             <boxGeometry args={[0.5, H, 0.5]} />
             <meshStandardMaterial color={creamWhite} roughness={0.55} />
           </mesh>
@@ -553,7 +550,7 @@ export const MuseumLobby: React.FC = () => {
       {/* Cột bên phải */}
       {[-7, 3, 8].map((z) => (
         <group key={`pillar-right-${z}`}>
-          <mesh position={[W / 2 - 0.65, H / 2, z]} castShadow>
+          <mesh position={[W / 2 - 0.65, H / 2, z]}>
             <boxGeometry args={[0.5, H, 0.5]} />
             <meshStandardMaterial color={sandstoneAlt} roughness={0.55} />
           </mesh>
@@ -585,16 +582,16 @@ export const MuseumLobby: React.FC = () => {
       ═══════════════════════════════════════════════════════════════ */}
       {/* Ghế băng dài bên trái */}
       <group position={[-10, 0, -4]}>
-        <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+        <mesh position={[0, 0.4, 0]}>
           <boxGeometry args={[3.0, 0.12, 0.8]} />
           <meshStandardMaterial color="#3e2723" roughness={0.4} />
         </mesh>
-        <mesh position={[0, 0.28, 0]} castShadow>
+        <mesh position={[0, 0.28, 0]}>
           <boxGeometry args={[3.1, 0.08, 0.85]} />
           <meshStandardMaterial color="#1b110b" roughness={0.3} />
         </mesh>
         {[-1.2, 1.2].map((lx) => (
-          <mesh key={`bench-leg-${lx}`} position={[lx, 0.14, 0]} castShadow>
+          <mesh key={`bench-leg-${lx}`} position={[lx, 0.14, 0]}>
             <boxGeometry args={[0.15, 0.28, 0.7]} />
             <meshStandardMaterial color="#1b110b" roughness={0.4} />
           </mesh>
@@ -605,7 +602,7 @@ export const MuseumLobby: React.FC = () => {
       {[-5.5, 5.5].map((x) => (
         <group key={`plant-${x}`} position={[x, 0, 1.5]}>
           {/* Chậu */}
-          <mesh position={[0, 0.35, 0]} castShadow>
+          <mesh position={[0, 0.35, 0]}>
             <cylinderGeometry args={[0.35, 0.28, 0.7, 12]} />
             <meshStandardMaterial color="#4a3c2a" roughness={0.5} />
           </mesh>
@@ -637,9 +634,6 @@ export const MuseumLobby: React.FC = () => {
         position={[-12, 10, 0]}
         intensity={1.2}
         color="#ffe8cc"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
       />
 
       {/* Ánh sáng từ trên xuống (giếng trời) */}

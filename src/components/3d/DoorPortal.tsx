@@ -79,19 +79,19 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
     <group position={position} rotation={rotation}>
       {/* ═══ KHUNG CỬA (Door Frame) ═══ */}
       {/* Thanh trên */}
-      <mesh position={[0, DOOR_HEIGHT + FRAME_THICKNESS / 2, 0]} castShadow>
+      <mesh position={[0, DOOR_HEIGHT + FRAME_THICKNESS / 2, 0]}>
         <boxGeometry args={[DOOR_WIDTH * 2 + FRAME_THICKNESS * 2, FRAME_THICKNESS, FRAME_THICKNESS]} />
         <meshStandardMaterial color={DOOR_FRAME} roughness={0.3} metalness={0.1} />
       </mesh>
 
       {/* Thanh trái */}
-      <mesh position={[-(DOOR_WIDTH + FRAME_THICKNESS / 2), DOOR_HEIGHT / 2, 0]} castShadow>
+      <mesh position={[-(DOOR_WIDTH + FRAME_THICKNESS / 2), DOOR_HEIGHT / 2, 0]}>
         <boxGeometry args={[FRAME_THICKNESS, DOOR_HEIGHT, FRAME_THICKNESS]} />
         <meshStandardMaterial color={DOOR_FRAME} roughness={0.3} metalness={0.1} />
       </mesh>
 
       {/* Thanh phải */}
-      <mesh position={[DOOR_WIDTH + FRAME_THICKNESS / 2, DOOR_HEIGHT / 2, 0]} castShadow>
+      <mesh position={[DOOR_WIDTH + FRAME_THICKNESS / 2, DOOR_HEIGHT / 2, 0]}>
         <boxGeometry args={[FRAME_THICKNESS, DOOR_HEIGHT, FRAME_THICKNESS]} />
         <meshStandardMaterial color={DOOR_FRAME} roughness={0.3} metalness={0.1} />
       </mesh>
@@ -107,7 +107,7 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
       <group ref={leftDoorRef} position={[-DOOR_WIDTH, 0, 0]}>
         <group position={[DOOR_WIDTH / 2, DOOR_HEIGHT / 2, 0]}>
           {/* Thân cửa */}
-          <mesh castShadow receiveShadow>
+          <mesh>
             <boxGeometry args={[DOOR_WIDTH, DOOR_HEIGHT, DOOR_THICKNESS]} />
             <meshStandardMaterial color={DOOR_WOOD} roughness={0.35} metalness={0.05} />
           </mesh>
@@ -128,7 +128,7 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
 
           {/* Tay nắm cửa trái */}
           <group position={[DOOR_WIDTH / 2 - 0.25, -0.3, DOOR_THICKNESS / 2 + 0.04]}>
-            <mesh castShadow>
+            <mesh>
               <cylinderGeometry args={[0.035, 0.035, 0.7, 10]} />
               <meshStandardMaterial color={GOLD_ACCENT} metalness={0.9} roughness={0.1} />
             </mesh>
@@ -147,7 +147,7 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
       <group ref={rightDoorRef} position={[DOOR_WIDTH, 0, 0]}>
         <group position={[-DOOR_WIDTH / 2, DOOR_HEIGHT / 2, 0]}>
           {/* Thân cửa */}
-          <mesh castShadow receiveShadow>
+          <mesh>
             <boxGeometry args={[DOOR_WIDTH, DOOR_HEIGHT, DOOR_THICKNESS]} />
             <meshStandardMaterial color={DOOR_WOOD} roughness={0.35} metalness={0.05} />
           </mesh>
@@ -168,7 +168,7 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
 
           {/* Tay nắm cửa phải */}
           <group position={[-(DOOR_WIDTH / 2 - 0.25), -0.3, DOOR_THICKNESS / 2 + 0.04]}>
-            <mesh castShadow>
+            <mesh>
               <cylinderGeometry args={[0.035, 0.035, 0.7, 10]} />
               <meshStandardMaterial color={GOLD_ACCENT} metalness={0.9} roughness={0.1} />
             </mesh>
@@ -189,7 +189,6 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
         intensity={0}
         distance={10}
         color={LIGHT_GLOW}
-        castShadow={false}
       />
 
       {/* Ánh sáng bên trong nền (luôn có nhẹ nhàng) */}
@@ -198,7 +197,6 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
         intensity={isOpen ? 3 : 0.5}
         distance={8}
         color="#fff3e0"
-        castShadow={false}
       />
 
       {/* ═══ BIỂN TÊN PHÒNG (Room Label Sign) ═══ */}

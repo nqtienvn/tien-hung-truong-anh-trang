@@ -160,6 +160,23 @@ const LobbyCameraController: React.FC = () => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// BỘ TIỀN BIÊN DỊCH SHADER PHÒNG (Room Shader Precompiler)
+// ═══════════════════════════════════════════════════════════════════════════
+const RoomPrecompiler: React.FC = () => {
+  const { gl, scene, camera } = useThree();
+  const { loadedRooms } = useMuseum();
+
+  useEffect(() => {
+    if (loadedRooms.length === 0) return;
+    // Ép GPU compile/upload các vật liệu và hình học của phòng trước khi hiển thị
+    gl.compile(scene, camera);
+    console.log(`[PRECOMPILE] GPU đã biên dịch trước các vật liệu cho ${loadedRooms.length} phòng.`);
+  }, [loadedRooms, gl, scene, camera]);
+
+  return null;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // NHÂN VẬT NGƯỜI CHƠI TRONG SẢNH + PHÒNG (Player Character)
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyPlayer: React.FC = () => {
@@ -237,9 +254,9 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 1 (gallery-paintings: Z 8.0 -> 58.0) ──
       if (z > 8.0 && z <= 58.0) {
-        // Kiểm tra xem phòng 1 có đang loaded không
-        const isRoom1Loaded = loadedRooms.some(r => r.galleryId === 'gallery-paintings');
-        if (!isRoom1Loaded) return true;
+        // Kiểm tra xem phòng 1 có đang mở không
+        const isRoom1Open = doorStates['door-room1']?.isOpen;
+        if (!isRoom1Open) return true;
 
         // Biên giới tường bên (rộng 24m)
         if (x < -11.7 || x > 11.7) return true;
@@ -254,9 +271,9 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 2 (gallery-sculptures: Z 58.0 -> 108.0) ──
       if (z > 58.0 && z <= 108.0) {
-        // Kiểm tra xem phòng 2 có đang loaded không
-        const isRoom2Loaded = loadedRooms.some(r => r.galleryId === 'gallery-sculptures');
-        if (!isRoom2Loaded) return true;
+        // Kiểm tra xem phòng 2 có đang mở không
+        const isRoom2Open = doorStates['door-room2']?.isOpen;
+        if (!isRoom2Open) return true;
 
         // Biên giới tường bên (rộng 24m)
         if (x < -11.7 || x > 11.7) return true;
@@ -271,7 +288,7 @@ const LobbyPlayer: React.FC = () => {
 
       return false;
     },
-    [doorStates, loadedRooms]
+    [doorStates]
   );
 
   // Bắt phím WASD
@@ -430,7 +447,7 @@ const LobbyPlayer: React.FC = () => {
     <group ref={playerRef} name="lobby-player" position={[0, baseY, -5]}>
       {isPawn ? (
         <group scale={1.6}>
-          <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>
+          <mesh position={[0, 0.7, 0]}>
             <sphereGeometry args={[0.18, 20, 20]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
@@ -438,7 +455,7 @@ const LobbyPlayer: React.FC = () => {
             <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
-          <mesh position={[0, 0.2, 0]} castShadow={settings.shadows}>
+          <mesh position={[0, 0.2, 0]}>
             <cylinderGeometry args={[0.07, 0.18, 0.5, 16]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
@@ -449,11 +466,11 @@ const LobbyPlayer: React.FC = () => {
         </group>
       ) : (
         <group scale={1.6}>
-          <mesh position={[0, 0.7, 0]} castShadow={settings.shadows}>
+          <mesh position={[0, 0.7, 0]}>
             <sphereGeometry args={[HEAD_R, 28, 28]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
-          <mesh position={[0, 0.28, 0]} castShadow={settings.shadows}>
+          <mesh position={[0, 0.28, 0]}>
             <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
             <meshStandardMaterial {...skinProps} />
           </mesh>
@@ -539,7 +556,7 @@ export default function LobbyPage() {
         {entered && nickname ? (
           <div className="w-full h-full">
             <Canvas
-              shadows={settings.shadows}
+              shadows={false}
               camera={{ position: [0, 3, -2], fov: 65 }}
             >
               <color attach="background" args={['#0d0d12']} />
@@ -554,6 +571,9 @@ export default function LobbyPage() {
 
                 {/* Multiplayer avatars */}
                 <MultiplayerAvatars />
+
+                {/* Bộ precompiler ép GPU tải trước vật liệu */}
+                <RoomPrecompiler />
 
                 {/* ═══ CỬA NỐI PHÒNG (Door Portals) ═══ */}
                 {DOOR_CONFIGS.map((config) => (
@@ -571,12 +591,19 @@ export default function LobbyPage() {
                 {loadedRooms.map((room) => {
                   const offset = ROOM_OFFSETS[room.galleryId];
                   if (!offset) return null;
+
+                  // Xác định xem phòng này có đang mở/visible không dựa trên trạng thái cửa
+                  const isVisible = Object.values(doorStates).some(
+                    (d) => d.targetRoom === room.galleryId && d.isOpen
+                  );
+
                   return (
                     <DynamicRoom
                       key={room.galleryId}
                       room={room}
                       offsetZ={offset.z}
                       offsetY={offset.y}
+                      isVisible={isVisible}
                     />
                   );
                 })}

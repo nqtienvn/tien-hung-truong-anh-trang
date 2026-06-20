@@ -185,7 +185,7 @@ function BuilderContent() {
           <fog attach="fog" args={['#0a0a0d', 5, 18]} />
           
           <ambientLight intensity={0.3} />
-          <directionalLight position={[5, 10, 5]} intensity={0.5} castShadow />
+          <directionalLight position={[5, 10, 5]} intensity={0.5} />
 
           <Suspense fallback={null}>
             {gallery && <ExhibitionRoom galleryId={gallery.id} />}

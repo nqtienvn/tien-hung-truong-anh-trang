@@ -17,6 +17,8 @@ interface DynamicRoomProps {
   offsetZ: number;
   /** Offset tọa độ Y (mặc định = 0) */
   offsetY?: number;
+  /** Trạng thái hiển thị của phòng */
+  isVisible?: boolean;
 }
 
 // Bản đồ offset cho mỗi phòng (Gallery ID → Z offset từ sảnh)
@@ -34,7 +36,7 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'lobby': [0, 0, -5.0],                  // Spawn giữa sảnh
 };
 
-export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0 }) => {
+export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
   const { galleryId, exhibits, gallery } = room;
 
   // Build custom settings từ gallery data
@@ -52,27 +54,12 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
     <group position={[0, offsetY, offsetZ]}>
       <Suspense fallback={null}>
         {/* Phòng triển lãm */}
-        <ExhibitionRoom galleryId={galleryId} customSettings={customSettings} />
+        <ExhibitionRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} />
 
         {/* Các hiện vật trong phòng */}
         {exhibits.map((exhibit) => (
-          <ExhibitObject key={exhibit.id} exhibit={exhibit} />
+          <ExhibitObject key={exhibit.id} exhibit={exhibit} isVisible={isVisible} />
         ))}
-
-        {/* Ánh sáng bổ sung cho phòng động */}
-        <ambientLight intensity={0.6} />
-        <directionalLight
-          position={[3, 8, 3]}
-          intensity={0.6}
-          castShadow
-          shadow-mapSize-width={512}
-          shadow-mapSize-height={512}
-        />
-        <directionalLight
-          position={[0, 7, 0]}
-          intensity={1.0}
-          color="#f0f9ff"
-        />
       </Suspense>
     </group>
   );

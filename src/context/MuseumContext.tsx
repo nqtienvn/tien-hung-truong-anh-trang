@@ -110,7 +110,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const [settings, setSettings] = useState<GraphicsSettings>({
     preset: 'medium',
-    shadows: true,
+    shadows: false,
     animations: true,
     maxAvatars: 99,
   });
@@ -121,7 +121,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const saved = localStorage.getItem('museum_graphics_settings');
       if (saved) {
         try {
-          setSettings(JSON.parse(saved));
+          const parsed = JSON.parse(saved);
+          // Luôn tắt shadows bất kể giá trị lưu trữ
+          parsed.shadows = false;
+          setSettings(parsed);
         } catch (e) {
           console.error('Lỗi phân tích settings từ localStorage:', e);
         }
@@ -135,7 +138,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return { shadows: false, animations: false, maxAvatars: 10 };
       case 'medium':
       default:
-        return { shadows: true, animations: true, maxAvatars: 99 };
+        return { shadows: false, animations: true, maxAvatars: 99 };
     }
   };
 
@@ -316,6 +319,50 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [socket, nickname, activeGallery]);
 
+  // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình không phải 'low'
+  useEffect(() => {
+    if (settings.preset === 'low') return;
+
+    const idleCallback = typeof window !== 'undefined' 
+      ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000))) 
+      : null;
+    
+    if (!idleCallback) return;
+
+    const idleId = idleCallback(() => {
+      loadRoom('gallery-paintings');
+      loadRoom('gallery-sculptures');
+      console.log('[PRELOAD] [MEDIUM-PRESET] Bắt đầu tải trước ngầm các phòng triển lãm.');
+    }, { timeout: 5000 });
+
+    const cancelCallback = typeof window !== 'undefined'
+      ? (window.cancelIdleCallback || ((id: any) => clearTimeout(id)))
+      : null;
+
+    return () => {
+      if (cancelCallback && idleId) {
+        cancelCallback(idleId);
+      }
+    };
+  }, [settings.preset, loadRoom]);
+
+  // Nếu chuyển đổi cấu hình sang 'low', dỡ bỏ ngay những phòng đang đóng để giải phóng bộ nhớ GPU
+  useEffect(() => {
+    if (settings.preset === 'low') {
+      const allOpenTargets = Object.values(doorStates)
+        .filter(s => s.isOpen)
+        .map(s => s.targetRoom);
+
+      setLoadedRooms(prev => {
+        const filtered = prev.filter(room => allOpenTargets.includes(room.galleryId));
+        if (filtered.length !== prev.length) {
+          console.log('[ROOM-UNLOADED] [PRESET-SWITCH] Đã dỡ các phòng đóng để tiết kiệm tài nguyên ở Preset Thấp.');
+        }
+        return filtered;
+      });
+    }
+  }, [settings.preset, doorStates]);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // TỰ ĐỘNG TẢI/DỠ PHÒNG KHI CỬA MỞ/ĐÓNG
   // ═══════════════════════════════════════════════════════════════════════════
@@ -324,23 +371,23 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (state.isOpen && state.targetRoom) {
         loadRoom(state.targetRoom);
       }
-      if (!state.isOpen && state.targetRoom === '') {
-        // Tìm phòng đã tải bởi cửa này trước đó và dỡ bỏ
-        // (Phòng sẽ bị dỡ nếu không có cửa nào khác đang mở dẫn tới nó)
+
+      // Đối với preset 'low', tự động dỡ phòng khi đóng cửa để giải phóng tài nguyên GPU
+      if (!state.isOpen && state.targetRoom === '' && settings.preset === 'low') {
         const allOpenTargets = Object.values(doorStates)
           .filter(s => s.isOpen)
           .map(s => s.targetRoom);
 
         setLoadedRooms(prev => prev.filter(room => {
           if (!allOpenTargets.includes(room.galleryId)) {
-            console.log(`[ROOM-UNLOADED] Phòng "${room.galleryId}" đã được dỡ bỏ.`);
+            console.log(`[ROOM-UNLOADED] [LOW-PRESET] Phòng "${room.galleryId}" đã được dỡ bỏ khi đóng cửa.`);
             return false;
           }
           return true;
         }));
       }
     }
-  }, [doorStates, loadRoom]);
+  }, [doorStates, loadRoom, settings.preset]);
 
   return (
     <MuseumContext.Provider

@@ -13,9 +13,10 @@ interface ExhibitionRoomProps {
     wainscoting_color: string;
     floor_type: 'wood' | 'marble' | 'carpet';
   };
+  isVisible?: boolean;
 }
 
-export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, customSettings }) => {
+export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, customSettings, isVisible = true }) => {
   const isSculptures = galleryId === 'gallery-sculptures';
   const { activeGallery } = useMuseum();
 
@@ -41,11 +42,13 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
   return (
     <group>
+      {/* Hộp chứa meshes, được ẩn/hiện tức thì mà không unmount để tránh lag WebGL */}
+      <group visible={isVisible}>
       {/* 1. SÀN NHÀ & THẢM TRẢI SÀN (Floor & Center Carpet) */}
       {/* Sàn gỗ/đá/thảm dựa trên cấu hình */}
       {floorType === 'wood' && (
         <>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
             <planeGeometry args={[roomWidth, roomLength]} />
             <meshStandardMaterial 
               color={floorColor} 
@@ -59,7 +62,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
       {floorType === 'marble' && (
         <>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
             <planeGeometry args={[roomWidth, roomLength]} />
             <meshStandardMaterial 
               color={floorColor} 
@@ -72,7 +75,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       )}
 
       {floorType === 'carpet' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
           <planeGeometry args={[roomWidth, roomLength]} />
           <meshStandardMaterial 
             color={floorColor} 
@@ -84,7 +87,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
       {/* Tấm thảm dài màu xám-be cổ điển ở trục chính hành lang (chỉ hiển thị nếu sàn chính không phải thảm) */}
       {floorType !== 'carpet' && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
           <planeGeometry args={[Math.min(roomWidth / 2, 6), roomLength]} />
           <meshStandardMaterial 
             color="#a29587" 
@@ -96,7 +99,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
       {/* 2. TRẦN NHÀ HÌNH VÒM & GIẾNG TRỜI (Vaulted Ceiling & Glass Skylight) */}
       {/* Tấm trần vòm nghiêng bên trái */}
-      <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]} castShadow receiveShadow>
+      <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]}>
         <boxGeometry args={[panelWidth, 0.1, roomLength]} />
         <meshStandardMaterial 
           color="#eae5dc" 
@@ -105,7 +108,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       </mesh>
 
       {/* Tấm trần vòm nghiêng bên phải */}
-      <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]} castShadow receiveShadow>
+      <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]}>
         <boxGeometry args={[panelWidth, 0.1, roomLength]} />
         <meshStandardMaterial 
           color="#eae5dc"
@@ -129,7 +132,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
       {/* Khung sắt giếng trời cổ điển chạy dọc */}
       {Array.from({ length: 11 }).map((_, i) => (
-        <mesh key={`skylight-grid-${i}`} position={[0, roomHeight - 0.19, -roomLength / 2 + i * (roomLength / 10)]} castShadow>
+        <mesh key={`skylight-grid-${i}`} position={[0, roomHeight - 0.19, -roomLength / 2 + i * (roomLength / 10)]}>
           <boxGeometry args={[skylightWidth, 0.05, 0.05]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
@@ -150,7 +153,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
       {/* 3. BỨC TƯỜNG & PHÀO CHÂN TƯỜNG (Dynamic Walls & Wainscoting) */}
       {/* Tường trái */}
-      <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+      <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
         <boxGeometry args={[roomLength, roomHeight, 0.2]} />
         <meshStandardMaterial 
           color={wallColor} 
@@ -159,7 +162,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       </mesh>
 
       {/* Tường phải */}
-      <mesh position={[roomWidth / 2, roomHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+      <mesh position={[roomWidth / 2, roomHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <boxGeometry args={[roomLength, roomHeight, 0.2]} />
         <meshStandardMaterial 
           color={wallColor}
@@ -169,41 +172,41 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
       {/* --- TƯỜNG TRƯỚC (Front Wall with Doorway) --- */}
       {/* Tường trước bên trái */}
-      <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2]} receiveShadow>
+      <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2]}>
         <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
         <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
       {/* Tường trước bên phải */}
-      <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2]} receiveShadow>
+      <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2]}>
         <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
         <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
       {/* Tường trước phía trên cửa */}
-      <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2]} receiveShadow>
+      <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2]}>
         <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
         <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
 
       {/* --- TƯỜNG SAU (Back Wall with Doorway) --- */}
       {/* Tường sau bên trái */}
-      <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2]} receiveShadow>
+      <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2]}>
         <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
         <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
       {/* Tường sau bên phải */}
-      <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2]} receiveShadow>
+      <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2]}>
         <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
         <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
       {/* Tường sau phía trên cửa */}
-      <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2]} receiveShadow>
+      <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2]}>
         <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
         <meshStandardMaterial color={wallColor} roughness={0.7} />
       </mesh>
 
       {/* Ốp gỗ chân tường (Wainscoting) màu kem sáng cao 1.2m */}
       {/* Wainscoting tường trái */}
-      <mesh position={[-roomWidth / 2 + 0.112, 0.6, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+      <mesh position={[-roomWidth / 2 + 0.112, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
         <boxGeometry args={[roomLength, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
@@ -213,7 +216,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       </mesh>
 
       {/* Wainscoting tường phải */}
-      <mesh position={[roomWidth / 2 - 0.112, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
+      <mesh position={[roomWidth / 2 - 0.112, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <boxGeometry args={[roomLength, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
@@ -223,7 +226,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       </mesh>
 
       {/* Wainscoting tường trước bên trái */}
-      <mesh position={[-(roomWidth / 4 + 1.056), 0.6, -roomLength / 2 + 0.112]} receiveShadow>
+      <mesh position={[-(roomWidth / 4 + 1.056), 0.6, -roomLength / 2 + 0.112]}>
         <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
@@ -232,7 +235,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
       {/* Wainscoting tường trước bên phải */}
-      <mesh position={[roomWidth / 4 + 1.056, 0.6, -roomLength / 2 + 0.112]} receiveShadow>
+      <mesh position={[roomWidth / 4 + 1.056, 0.6, -roomLength / 2 + 0.112]}>
         <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
@@ -242,7 +245,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       </mesh>
 
       {/* Wainscoting tường sau bên trái */}
-      <mesh position={[-(roomWidth / 4 + 1.056), 0.6, roomLength / 2 - 0.112]} receiveShadow>
+      <mesh position={[-(roomWidth / 4 + 1.056), 0.6, roomLength / 2 - 0.112]}>
         <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
@@ -251,7 +254,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
       </mesh>
       {/* Wainscoting tường sau bên phải */}
-      <mesh position={[roomWidth / 4 + 1.056, 0.6, roomLength / 2 - 0.112]} receiveShadow>
+      <mesh position={[roomWidth / 4 + 1.056, 0.6, roomLength / 2 - 0.112]}>
         <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
         <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
       </mesh>
@@ -269,12 +272,12 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         return (
           <group key={`pilasters-${idx}`}>
             {/* Cột trái */}
-            <mesh position={[-roomWidth / 2 + 0.13, roomHeight / 2, zPos]} castShadow receiveShadow>
+            <mesh position={[-roomWidth / 2 + 0.13, roomHeight / 2, zPos]}>
               <boxGeometry args={[0.1, roomHeight, 0.4]} />
               <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
             </mesh>
             {/* Cột phải */}
-            <mesh position={[roomWidth / 2 - 0.13, roomHeight / 2, zPos]} castShadow receiveShadow>
+            <mesh position={[roomWidth / 2 - 0.13, roomHeight / 2, zPos]}>
               <boxGeometry args={[0.1, roomHeight, 0.4]} />
               <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
             </mesh>
@@ -285,20 +288,20 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       {/* 4. HÀNH LANG RẼ CHỮ S: TƯỜNG NGĂN Z = 3 (Paintings Room Side) */}
       <group>
         {/* Mảnh tường trái (rộng 7m, từ X = -12 đến X = -5) */}
-        <mesh position={[-8.5, roomHeight / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[-8.5, roomHeight / 2, 3.0]}>
           <boxGeometry args={[7.0, roomHeight, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
-        <mesh position={[-12.0 + 0.05, roomHeight / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[-12.0 + 0.05, roomHeight / 2, 3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
-        <mesh position={[-5.0 - 0.05, roomHeight / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[-5.0 - 0.05, roomHeight / 2, 3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
         {/* Wainscoting tường ngăn trái */}
-        <mesh position={[-8.5, 0.6, 3.0 - 0.212]} receiveShadow>
+        <mesh position={[-8.5, 0.6, 3.0 - 0.212]}>
           <boxGeometry args={[7.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -306,7 +309,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
           <boxGeometry args={[7.0, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
-        <mesh position={[-8.5, 0.6, 3.0 + 0.212]} receiveShadow>
+        <mesh position={[-8.5, 0.6, 3.0 + 0.212]}>
           <boxGeometry args={[7.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -316,20 +319,20 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         </mesh>
 
         {/* Mảnh tường phải (rộng 14m, từ X = -2 đến X = 12) */}
-        <mesh position={[5.0, roomHeight / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[5.0, roomHeight / 2, 3.0]}>
           <boxGeometry args={[14.0, roomHeight, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
-        <mesh position={[-2.0 + 0.05, roomHeight / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[-2.0 + 0.05, roomHeight / 2, 3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
-        <mesh position={[12.0 - 0.05, roomHeight / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[12.0 - 0.05, roomHeight / 2, 3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
         {/* Wainscoting tường ngăn phải */}
-        <mesh position={[5.0, 0.6, 3.0 - 0.212]} receiveShadow>
+        <mesh position={[5.0, 0.6, 3.0 - 0.212]}>
           <boxGeometry args={[14.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -337,7 +340,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
           <boxGeometry args={[14.0, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
-        <mesh position={[5.0, 0.6, 3.0 + 0.212]} receiveShadow>
+        <mesh position={[5.0, 0.6, 3.0 + 0.212]}>
           <boxGeometry args={[14.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -347,7 +350,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         </mesh>
 
         {/* Mảnh tường phía trên cổng (từ X = -5.0 đến X = -2.0) */}
-        <mesh position={[-3.5, (roomHeight + 3.5) / 2, 3.0]} castShadow receiveShadow>
+        <mesh position={[-3.5, (roomHeight + 3.5) / 2, 3.0]}>
           <boxGeometry args={[3.0, roomHeight - 3.5, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
@@ -356,20 +359,20 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       {/* 4.5. HÀNH LANG RẼ CHỮ S: TƯỜNG NGĂN Z = -3 (Sculptures Room Side) */}
       <group>
         {/* Mảnh tường trái (rộng 14m, từ X = -12 đến X = 2) */}
-        <mesh position={[-5.0, roomHeight / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[-5.0, roomHeight / 2, -3.0]}>
           <boxGeometry args={[14.0, roomHeight, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
-        <mesh position={[-12.0 + 0.05, roomHeight / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[-12.0 + 0.05, roomHeight / 2, -3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
-        <mesh position={[2.0 - 0.05, roomHeight / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[2.0 - 0.05, roomHeight / 2, -3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
         {/* Wainscoting tường ngăn trái */}
-        <mesh position={[-5.0, 0.6, -3.0 - 0.212]} receiveShadow>
+        <mesh position={[-5.0, 0.6, -3.0 - 0.212]}>
           <boxGeometry args={[14.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -377,7 +380,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
           <boxGeometry args={[14.0, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
-        <mesh position={[-5.0, 0.6, -3.0 + 0.212]} receiveShadow>
+        <mesh position={[-5.0, 0.6, -3.0 + 0.212]}>
           <boxGeometry args={[14.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -387,20 +390,20 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         </mesh>
 
         {/* Mảnh tường phải (rộng 7m, từ X = 5 đến X = 12) */}
-        <mesh position={[8.5, roomHeight / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[8.5, roomHeight / 2, -3.0]}>
           <boxGeometry args={[7.0, roomHeight, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
-        <mesh position={[5.0 + 0.05, roomHeight / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[5.0 + 0.05, roomHeight / 2, -3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
-        <mesh position={[12.0 - 0.05, roomHeight / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[12.0 - 0.05, roomHeight / 2, -3.0]}>
           <boxGeometry args={[0.1, roomHeight, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
         {/* Wainscoting tường ngăn phải */}
-        <mesh position={[8.5, 0.6, -3.0 - 0.212]} receiveShadow>
+        <mesh position={[8.5, 0.6, -3.0 - 0.212]}>
           <boxGeometry args={[7.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -408,7 +411,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
           <boxGeometry args={[7.0, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
-        <mesh position={[8.5, 0.6, -3.0 + 0.212]} receiveShadow>
+        <mesh position={[8.5, 0.6, -3.0 + 0.212]}>
           <boxGeometry args={[7.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -418,7 +421,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         </mesh>
 
         {/* Mảnh tường phía trên cổng (từ X = 2.0 đến X = 5.0) */}
-        <mesh position={[3.5, (roomHeight + 3.5) / 2, -3.0]} castShadow receiveShadow>
+        <mesh position={[3.5, (roomHeight + 3.5) / 2, -3.0]}>
           <boxGeometry args={[3.0, roomHeight - 3.5, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
@@ -427,23 +430,23 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
       {/* 5. KHU VỰC PHÒNG TRANH (Paintings Room - Z > 3) */}
       <group>
         {/* Vách ngăn trung tâm khu vực tranh tại Z = 13.0 (rộng 12m) */}
-        <mesh position={[0, 2.0, 13.0]} castShadow receiveShadow>
+        <mesh position={[0, 2.0, 13.0]}>
           <boxGeometry args={[12.0, 4.0, 0.4]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
 
         {/* Cột trang trí ở rìa vách ngăn trung tâm */}
-        <mesh position={[-6.0, 2.0, 13.0]} castShadow receiveShadow>
+        <mesh position={[-6.0, 2.0, 13.0]}>
           <boxGeometry args={[0.1, 4.0, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
-        <mesh position={[6.0, 2.0, 13.0]} castShadow receiveShadow>
+        <mesh position={[6.0, 2.0, 13.0]}>
           <boxGeometry args={[0.1, 4.0, 0.48]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
         </mesh>
 
         {/* Ốp chân tường wainscoting cho vách ngăn */}
-        <mesh position={[0, 0.6, 13.0 - 0.212]} receiveShadow>
+        <mesh position={[0, 0.6, 13.0 - 0.212]}>
           <boxGeometry args={[12.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -451,7 +454,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
           <boxGeometry args={[12.0, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
-        <mesh position={[0, 0.6, 13.0 + 0.212]} receiveShadow>
+        <mesh position={[0, 0.6, 13.0 + 0.212]}>
           <boxGeometry args={[12.0, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
@@ -462,45 +465,45 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
 
         {/* Bàn Console gỗ cổ điển bên dưới vách ngăn */}
         <group position={[0, 0, 13.0 - 0.45]}>
-          <mesh position={[0, 0.75, 0]} castShadow receiveShadow>
+          <mesh position={[0, 0.75, 0]}>
             <boxGeometry args={[2.0, 0.1, 0.5]} />
             <meshStandardMaterial color="#3e2723" roughness={0.2} />
           </mesh>
-          <mesh position={[-0.8, 0.35, 0]} castShadow>
+          <mesh position={[-0.8, 0.35, 0]}>
             <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
             <meshStandardMaterial color="#2d1d19" roughness={0.4} />
           </mesh>
-          <mesh position={[0, 0.35, 0.15]} castShadow>
+          <mesh position={[0, 0.35, 0.15]}>
             <cylinderGeometry args={[0.04, 0.04, 0.7, 8]} />
             <meshStandardMaterial color="#2d1d19" roughness={0.4} />
           </mesh>
-          <mesh position={[0.8, 0.35, 0]} castShadow>
+          <mesh position={[0.8, 0.35, 0]}>
             <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
             <meshStandardMaterial color="#2d1d19" roughness={0.4} />
           </mesh>
-          <mesh position={[0, 0.9, 0]} castShadow>
+          <mesh position={[0, 0.9, 0]}>
             <torusKnotGeometry args={[0.1, 0.03, 64, 8]} />
             <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
           </mesh>
         </group>
         <group position={[0, 0, 13.0 + 0.45]}>
-          <mesh position={[0, 0.75, 0]} castShadow receiveShadow>
+          <mesh position={[0, 0.75, 0]}>
             <boxGeometry args={[2.0, 0.1, 0.5]} />
             <meshStandardMaterial color="#3e2723" roughness={0.2} />
           </mesh>
-          <mesh position={[-0.8, 0.35, 0]} castShadow>
+          <mesh position={[-0.8, 0.35, 0]}>
             <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
             <meshStandardMaterial color="#2d1d19" roughness={0.4} />
           </mesh>
-          <mesh position={[0, 0.35, -0.15]} castShadow>
+          <mesh position={[0, 0.35, -0.15]}>
             <cylinderGeometry args={[0.04, 0.04, 0.7, 8]} />
             <meshStandardMaterial color="#2d1d19" roughness={0.4} />
           </mesh>
-          <mesh position={[0.8, 0.35, 0]} castShadow>
+          <mesh position={[0.8, 0.35, 0]}>
             <cylinderGeometry args={[0.08, 0.08, 0.7, 8]} />
             <meshStandardMaterial color="#2d1d19" roughness={0.4} />
           </mesh>
-          <mesh position={[0, 0.9, 0]} castShadow>
+          <mesh position={[0, 0.9, 0]}>
             <sphereGeometry args={[0.08, 16, 16]} />
             <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
           </mesh>
@@ -509,19 +512,19 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         {/* Ghế băng dài cổ điển trong Phòng Tranh */}
         {[8.0, 18.0].map((zPos, idx) => (
           <group key={`bench-${idx}`} position={[0, 0, zPos]}>
-            <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+            <mesh position={[0, 0.45, 0]}>
               <boxGeometry args={[4.0, 0.15, 1.2]} />
               <meshStandardMaterial color="#4e2c1e" roughness={0.5} />
             </mesh>
-            <mesh position={[0, 0.32, 0]} castShadow receiveShadow>
+            <mesh position={[0, 0.32, 0]}>
               <boxGeometry args={[4.1, 0.1, 1.3]} />
               <meshStandardMaterial color="#27150c" roughness={0.3} />
             </mesh>
-            <mesh position={[-1.7, 0.15, 0]} castShadow>
+            <mesh position={[-1.7, 0.15, 0]}>
               <boxGeometry args={[0.2, 0.3, 1.1]} />
               <meshStandardMaterial color="#1b110b" roughness={0.4} />
             </mesh>
-            <mesh position={[1.7, 0.15, 0]} castShadow>
+            <mesh position={[1.7, 0.15, 0]}>
               <boxGeometry args={[0.2, 0.3, 1.1]} />
               <meshStandardMaterial color="#1b110b" roughness={0.4} />
             </mesh>
@@ -534,7 +537,7 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         {/* Các bệ đỡ tượng */}
         {[-8.0, -14.0, -20.0].map((zPos, idx) => (
           <group key={`pedestal-${idx}`} position={[0, 0, zPos]}>
-            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+            <mesh position={[0, 0.5, 0]}>
               <boxGeometry args={[1.0, 1.0, 1.0]} />
               <meshStandardMaterial 
                 color="#26262b" 
@@ -542,11 +545,11 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
                 metalness={0.15}
               />
             </mesh>
-            <mesh position={[0, 0.05, 0]} castShadow>
+            <mesh position={[0, 0.05, 0]}>
               <boxGeometry args={[1.05, 0.1, 1.05]} />
               <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
             </mesh>
-            <mesh position={[0, 0.95, 0]} castShadow>
+            <mesh position={[0, 0.95, 0]}>
               <boxGeometry args={[1.05, 0.08, 1.05]} />
               <meshStandardMaterial color="#d4af37" metalness={0.9} roughness={0.1} />
             </mesh>
@@ -554,23 +557,31 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = ({ galleryId, custo
         ))}
       </group>
 
-      {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG (Hallway Lighting Systems) */}
+        {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - MESHES ONLY */}
+        {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
+          <group key={`hall-light-mesh-${idx}`} position={[0, roomHeight - 1.0, zPos]}>
+            <mesh>
+              <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
+              <meshStandardMaterial color="#334155" metalness={0.8} />
+            </mesh>
+            <mesh position={[0, -0.06, 0]}>
+              <sphereGeometry args={[0.08, 16, 16]} />
+              <meshBasicMaterial color="#fff" />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - ÁNH SÁNG THỰC TẾ
+          Đèn luôn ở trong scene graph để tránh recompilation, chỉ đổi intensity khi ẩn/hiện */}
       {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
-        <group key={`hall-light-${idx}`} position={[0, roomHeight - 1.0, zPos]}>
-          <mesh>
-            <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
-            <meshStandardMaterial color="#334155" metalness={0.8} />
-          </mesh>
-          <mesh position={[0, -0.06, 0]}>
-            <sphereGeometry args={[0.08, 16, 16]} />
-            <meshBasicMaterial color="#fff" />
-          </mesh>
-          <pointLight 
-            intensity={4.5} 
-            distance={roomLength * 0.6} 
-            color="#fff1e0" 
-          />
-        </group>
+        <pointLight 
+          key={`hall-light-source-${idx}`}
+          position={[0, roomHeight - 1.0, zPos]}
+          intensity={isVisible ? 4.5 : 0} 
+          distance={roomLength * 0.6} 
+          color="#fff1e0" 
+        />
       ))}
     </group>
   );

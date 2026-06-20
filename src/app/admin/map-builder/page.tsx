@@ -157,7 +157,7 @@ function MapBuilderContent() {
           <fog attach="fog" args={['#14141a', 10, 32]} />
           
           <ambientLight intensity={0.7} />
-          <directionalLight position={[10, 15, 10]} intensity={0.9} castShadow />
+          <directionalLight position={[10, 15, 10]} intensity={0.9} />
 
           <Suspense fallback={null}>
             {gallery && (
