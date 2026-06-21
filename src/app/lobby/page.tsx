@@ -2,6 +2,7 @@
 
 import React, { Suspense, useRef, useEffect, useState, useCallback } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
 import { useRouter } from 'next/navigation';
 import { useMuseum } from '@/context/MuseumContext';
@@ -83,6 +84,9 @@ const LobbyCameraController: React.FC = () => {
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
 
+  const targetCamPos = useRef(new THREE.Vector3()).current;
+  const targetLookAt = useRef(new THREE.Vector3()).current;
+
   useEffect(() => {
     const canvas = gl.domElement;
     const handleMouseDown = () => { isMouseDown.current = true; };
@@ -149,8 +153,8 @@ const LobbyCameraController: React.FC = () => {
     const minCamY = groundYAtCam + 0.45;
     const camY = Math.max(minCamY, Math.min(LOBBY_H + 5, targetHeight + yOff));
 
-    const targetCamPos = new THREE.Vector3(camX, camY, camZ);
-    const targetLookAt = new THREE.Vector3(px, targetHeight, pz);
+    targetCamPos.set(camX, camY, camZ);
+    targetLookAt.set(px, targetHeight, pz);
 
     camera.position.lerp(targetCamPos, 0.12);
     camera.lookAt(targetLookAt);
@@ -193,6 +197,10 @@ const LobbyPlayer: React.FC = () => {
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
+
+  const frontVec = useRef(new THREE.Vector3()).current;
+  const rightVec = useRef(new THREE.Vector3()).current;
+  const moveDir = useRef(new THREE.Vector3()).current;
 
   // Xử lý teleport
   useEffect(() => {
@@ -322,13 +330,13 @@ const LobbyPlayer: React.FC = () => {
     isMoving.current = moving;
 
     if (moving) {
-      const frontVec = new THREE.Vector3();
       state.camera.getWorldDirection(frontVec);
       frontVec.y = 0;
       frontVec.normalize();
-      const rightVec = new THREE.Vector3(-frontVec.z, 0, frontVec.x).normalize();
+      
+      rightVec.set(-frontVec.z, 0, frontVec.x).normalize();
 
-      const moveDir = new THREE.Vector3();
+      moveDir.set(0, 0, 0);
       if (w) moveDir.add(frontVec);
       if (s) moveDir.sub(frontVec);
       if (d) moveDir.add(rightVec);
@@ -557,8 +565,12 @@ export default function LobbyPage() {
           <div className="w-full h-full">
             <Canvas
               shadows={false}
+              dpr={settings.preset === 'low' ? [0.5, 0.75] : [0.5, 2]}
+              gl={{ antialias: settings.preset !== 'low' }}
               camera={{ position: [0, 3, -2], fov: 65 }}
             >
+              <AdaptiveDpr pixelated />
+              <AdaptiveEvents />
               <color attach="background" args={['#0d0d12']} />
               <fog attach="fog" args={['#0d0d12', 30, 120]} />
 

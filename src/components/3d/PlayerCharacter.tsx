@@ -47,6 +47,11 @@ export const PlayerCharacter: React.FC = () => {
   const lastUpdate = useRef(0);
   const isSculptures = activeGallery?.id === "gallery-sculptures";
 
+  // Cache vectors for useFrame to prevent GC pauses
+  const frontVec = useRef(new THREE.Vector3()).current;
+  const rightVec = useRef(new THREE.Vector3()).current;
+  const moveDirection = useRef(new THREE.Vector3()).current;
+
   // Thiết lập vị trí ban đầu (Spawn Point linh hoạt dựa trên phòng người chơi bấm vào)
   useEffect(() => {
     if (playerRef.current) {
@@ -142,17 +147,12 @@ export const PlayerCharacter: React.FC = () => {
     const { w, a, s, d } = keysPressed.current;
 
     if (w || a || s || d) {
-      const frontVec = new THREE.Vector3();
       state.camera.getWorldDirection(frontVec);
       frontVec.y = 0;
       frontVec.normalize();
 
-      const rightVec = new THREE.Vector3(
-        -frontVec.z,
-        0,
-        frontVec.x,
-      ).normalize();
-      const moveDirection = new THREE.Vector3(0, 0, 0);
+      rightVec.set(-frontVec.z, 0, frontVec.x).normalize();
+      moveDirection.set(0, 0, 0);
 
       if (w) moveDirection.add(frontVec);
       if (s) moveDirection.sub(frontVec);

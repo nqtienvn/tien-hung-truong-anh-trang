@@ -1,5 +1,6 @@
 import React, { Suspense, useRef, useEffect, useState } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
 import { ExhibitionRoom } from './ExhibitionRoom';
 import { ExhibitObject } from './ExhibitObject';
@@ -35,6 +36,11 @@ const CameraLerpController: React.FC = () => {
 
   const wasInspecting = useRef(false);
   const isMouseDown = useRef(false);
+
+  // Cache vectors for useFrame to prevent GC pauses
+  const dirHelper = useRef(new THREE.Vector3()).current;
+  const targetCamPosCache = useRef(new THREE.Vector3()).current;
+  const targetLookTargetCache = useRef(new THREE.Vector3()).current;
 
   // Xử lý sự kiện nhấn giữ chuột và kéo để xoay camera (Click & Drag)
   useEffect(() => {
@@ -108,9 +114,9 @@ const CameraLerpController: React.FC = () => {
     zOffset: number
   ) => {
     const idealDistance = 4.5;
-    const dir = new THREE.Vector3(xOffset, yOffset, zOffset);
-    const dist = dir.length();
-    dir.normalize();
+    dirHelper.set(xOffset, yOffset, zOffset);
+    const dist = dirHelper.length();
+    dirHelper.normalize();
 
     let minT = dist;
 
@@ -123,38 +129,38 @@ const CameraLerpController: React.FC = () => {
     const boundaryZ = roomLength / 2 - 0.25;
 
     // Tường trái và tường phải
-    if (dir.x < 0) {
-      const t = (-boundaryX - px) / dir.x;
+    if (dirHelper.x < 0) {
+      const t = (-boundaryX - px) / dirHelper.x;
       if (t > 0 && t < minT) minT = t;
-    } else if (dir.x > 0) {
-      const t = (boundaryX - px) / dir.x;
+    } else if (dirHelper.x > 0) {
+      const t = (boundaryX - px) / dirHelper.x;
       if (t > 0 && t < minT) minT = t;
     }
 
     // Tường trước và sau
-    if (dir.z < 0) {
-      const t = (-boundaryZ - pz) / dir.z;
+    if (dirHelper.z < 0) {
+      const t = (-boundaryZ - pz) / dirHelper.z;
       if (t > 0 && t < minT) minT = t;
-    } else if (dir.z > 0) {
-      const t = (boundaryZ - pz) / dir.z;
+    } else if (dirHelper.z > 0) {
+      const t = (boundaryZ - pz) / dirHelper.z;
       if (t > 0 && t < minT) minT = t;
     }
 
     // Trần nhà và sàn nhà
-    if (dir.y > 0) {
-      const t = (roomHeight - 0.5 - targetHeight) / dir.y;
+    if (dirHelper.y > 0) {
+      const t = (roomHeight - 0.5 - targetHeight) / dirHelper.y;
       if (t > 0 && t < minT) minT = t;
-    } else if (dir.y < 0) {
-      const t = (0.25 - targetHeight) / dir.y;
+    } else if (dirHelper.y < 0) {
+      const t = (0.25 - targetHeight) / dirHelper.y;
       if (t > 0 && t < minT) minT = t;
     }
 
     // 2. Va chạm với tường ngăn tại Z = 3.0 (Paintings divider wall)
-    if (dir.z !== 0) {
+    if (dirHelper.z !== 0) {
       const wallZ = pz > 3.0 ? 3.24 : 2.76;
-      const t = (wallZ - pz) / dir.z;
+      const t = (wallZ - pz) / dirHelper.z;
       if (t > 0 && t < minT) {
-        const intersectX = px + t * dir.x;
+        const intersectX = px + t * dirHelper.x;
         // Chặn camera nếu giao điểm nằm ngoài khoảng cổng mở phía bên trái (X < -5.0 hoặc X > -2.0)
         if (intersectX < -5.0 || intersectX > -2.0) {
           minT = t;
@@ -163,11 +169,11 @@ const CameraLerpController: React.FC = () => {
     }
 
     // 3. Va chạm với tường ngăn tại Z = -3.0 (Sculptures divider wall)
-    if (dir.z !== 0) {
+    if (dirHelper.z !== 0) {
       const wallZ = pz > -3.0 ? -2.76 : -3.24;
-      const t = (wallZ - pz) / dir.z;
+      const t = (wallZ - pz) / dirHelper.z;
       if (t > 0 && t < minT) {
-        const intersectX = px + t * dir.x;
+        const intersectX = px + t * dirHelper.x;
         // Chặn camera nếu giao điểm nằm ngoài khoảng cổng mở phía bên phải (X < 2.0 hoặc X > 5.0)
         if (intersectX < 2.0 || intersectX > 5.0) {
           minT = t;
@@ -176,11 +182,11 @@ const CameraLerpController: React.FC = () => {
     }
 
     // 4. Va chạm với vách ngăn phụ tại Z = 13.0 (Sub-divider wall)
-    if (dir.z !== 0) {
+    if (dirHelper.z !== 0) {
       const wallZ = pz > 13.0 ? 13.224 : 12.776;
-      const t = (wallZ - pz) / dir.z;
+      const t = (wallZ - pz) / dirHelper.z;
       if (t > 0 && t < minT) {
-        const intersectX = px + t * dir.x;
+        const intersectX = px + t * dirHelper.x;
         // Chặn camera nếu giao điểm nằm trong chiều rộng vách ngăn (X từ -6.2 đến 6.2)
         if (intersectX > -6.2 && intersectX < 6.2) {
           minT = t;
@@ -225,22 +231,22 @@ const CameraLerpController: React.FC = () => {
       const safeYOffset = safeDistance * Math.cos(phi.current);
       const safeZOffset = safeDistance * Math.cos(theta.current) * Math.sin(phi.current);
 
-      const targetCamPos = new THREE.Vector3(px + safeXOffset, targetHeight + safeYOffset, pz + safeZOffset);
-      const targetLookTarget = new THREE.Vector3(px, targetHeight, pz);
+      targetCamPosCache.set(px + safeXOffset, targetHeight + safeYOffset, pz + safeZOffset);
+      targetLookTargetCache.set(px, targetHeight, pz);
 
       if (wasInspecting.current) {
         // Mới thoát inspect: Lerp mượt mà cả vị trí và hướng nhìn về phía sau nhân vật
-        camera.position.lerp(targetCamPos, 0.08);
-        currentLookAt.current.lerp(targetLookTarget, 0.08);
+        camera.position.lerp(targetCamPosCache, 0.08);
+        currentLookAt.current.lerp(targetLookTargetCache, 0.08);
         camera.lookAt(currentLookAt.current);
 
-        if (camera.position.distanceTo(targetCamPos) < 0.2) {
+        if (camera.position.distanceTo(targetCamPosCache) < 0.2) {
           wasInspecting.current = false;
         }
       } else {
         // Trạng thái bình thường: Lerp vị trí và hướng nhìn mượt mà
-        camera.position.lerp(targetCamPos, 0.15);
-        currentLookAt.current.lerp(targetLookTarget, 0.15);
+        camera.position.lerp(targetCamPosCache, 0.15);
+        currentLookAt.current.lerp(targetLookTargetCache, 0.15);
         camera.lookAt(currentLookAt.current);
       }
     }
@@ -265,9 +271,13 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
       {/* 3D Canvas */}
       <Canvas
         shadows={false}
+        dpr={settings.preset === 'low' ? [0.5, 0.75] : [0.5, 2]}
+        gl={{ antialias: settings.preset !== 'low' }}
         camera={{ position: [0, 2.0, 14.5], fov: 60 }}
         onClick={handleMiss}
       >
+        <AdaptiveDpr pixelated />
+        <AdaptiveEvents />
         <color attach="background" args={['#14141a']} />
         <fog attach="fog" args={['#14141a', 8, 25]} />
 
