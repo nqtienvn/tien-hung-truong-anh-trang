@@ -58,7 +58,8 @@ export const PlayerCharacter: React.FC = () => {
       const spawnZ = activeGallery?.id === "gallery-sculptures" ? -12 : 12;
       playerRef.current.position.set(0, baseY, spawnZ);
     }
-  }, [baseY, activeGallery?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeGallery?.id]);
 
   // Lắng nghe bàn phím di chuyển
   useEffect(() => {

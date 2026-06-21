@@ -202,6 +202,14 @@ const LobbyPlayer: React.FC = () => {
   const rightVec = useRef(new THREE.Vector3()).current;
   const moveDir = useRef(new THREE.Vector3()).current;
 
+  // Thiết lập vị trí spawn ban đầu khi mount sảnh
+  useEffect(() => {
+    if (playerRef.current) {
+      playerRef.current.position.set(0, baseY, -5);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Xử lý teleport
   useEffect(() => {
     if (teleportTarget && playerRef.current) {
@@ -452,7 +460,7 @@ const LobbyPlayer: React.FC = () => {
   const skinProps = { color: skinColor, roughness: 0.6, metalness: 0.0 };
 
   return (
-    <group ref={playerRef} name="lobby-player" position={[0, baseY, -5]}>
+    <group ref={playerRef} name="lobby-player">
       {isPawn ? (
         <group scale={1.6}>
           <mesh position={[0, 0.7, 0]}>
