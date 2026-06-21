@@ -36,6 +36,10 @@ export interface DoorState {
   targetRoom: string;
 }
 
+export interface RoomState {
+  isOpen: boolean;
+}
+
 // Thông tin phòng đang được tải động
 export interface LoadedRoom {
   galleryId: string;
@@ -73,6 +77,7 @@ interface MuseumContextType {
 
   // ═══ Door & Room State ═══
   doorStates: Record<string, DoorState>;
+  roomStates: Record<string, RoomState>;
   loadedRooms: LoadedRoom[];
   currentRoom: string; // 'lobby' hoặc gallery ID
   setCurrentRoom: (room: string) => void;
@@ -101,6 +106,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // ═══ Door & Room State ═══
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
+  const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
+    'gallery-paintings': { isOpen: true },
+    'gallery-sculptures': { isOpen: true }
+  });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
   const [doorClosingAlert, setDoorClosingAlert] = useState<{ doorId: string; teleportTo: string; countdownMs: number } | null>(null);
@@ -240,12 +249,42 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }));
       setDoorClosingAlert(null);
 
-      // Teleport về phòng được chỉ định (hoặc sảnh mặc định)
-      const target = data.teleportTo || 'lobby';
-      const spawn = SPAWN_POINTS[target] || SPAWN_POINTS['lobby'];
-      setTeleportTarget(spawn);
-      setCurrentRoom(target);
-      console.log(`[TELEPORT] Di chuyển người chơi về phòng "${target}" tại tọa độ Z = ${spawn.z}`);
+      // CHỈ teleport nếu người chơi đang ở phòng bị ảnh hưởng bởi cánh cửa đóng đó
+      setCurrentRoom((prevRoom) => {
+        let shouldTeleport = false;
+        if (data.doorId === 'door-room1') {
+          shouldTeleport = prevRoom === 'gallery-paintings' || prevRoom === 'gallery-sculptures';
+        } else if (data.doorId === 'door-room2') {
+          shouldTeleport = prevRoom === 'gallery-sculptures';
+        }
+
+        if (shouldTeleport) {
+          const target = data.teleportTo || 'lobby';
+          const spawn = SPAWN_POINTS[target] || SPAWN_POINTS['lobby'];
+          setTeleportTarget(spawn);
+          console.log(`[TELEPORT] Cửa "${data.doorId}" đóng. Di chuyển người chơi về phòng "${target}" tại tọa độ Z = ${spawn.z}`);
+          return target;
+        }
+        return prevRoom;
+      });
+    });
+
+    // ── Room Events ──
+    newSocket.on('room-states', (states: Record<string, RoomState>) => {
+      setRoomStates(states);
+    });
+
+    newSocket.on('room-closed', (data: { roomId: string; teleportTo: string }) => {
+      setCurrentRoom((prevRoom) => {
+        if (prevRoom === data.roomId) {
+          const target = data.teleportTo || 'lobby';
+          const spawn = SPAWN_POINTS[target] || SPAWN_POINTS['lobby'];
+          setTeleportTarget(spawn);
+          console.log(`[TELEPORT] Phòng "${data.roomId}" bị tắt. Di chuyển người chơi về phòng "${target}" tại tọa độ Z = ${spawn.z}`);
+          return target;
+        }
+        return prevRoom;
+      });
     });
 
     // ── Multiplayer Events ──
@@ -319,7 +358,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [socket, nickname, activeGallery]);
 
-  // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình không phải 'low'
+  // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình không phải 'low' và phòng đó đang bật
   useEffect(() => {
     if (settings.preset === 'low') return;
 
@@ -330,9 +369,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!idleCallback) return;
 
     const idleId = idleCallback(() => {
-      loadRoom('gallery-paintings');
-      loadRoom('gallery-sculptures');
-      console.log('[PRELOAD] [MEDIUM-PRESET] Bắt đầu tải trước ngầm các phòng triển lãm.');
+      if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
+      if (roomStates['gallery-sculptures']?.isOpen) loadRoom('gallery-sculptures');
+      console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 
     const cancelCallback = typeof window !== 'undefined'
@@ -344,9 +383,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         cancelCallback(idleId);
       }
     };
-  }, [settings.preset, loadRoom]);
+  }, [settings.preset, roomStates, loadRoom]);
 
-  // Nếu chuyển đổi cấu hình sang 'low', dỡ bỏ ngay những phòng đang đóng để giải phóng bộ nhớ GPU
+  // Nếu chuyển đổi cấu hình sang 'low', dỡ bỏ ngay những phòng đang tắt hoặc đóng để giải phóng bộ nhớ GPU
   useEffect(() => {
     if (settings.preset === 'low') {
       const allOpenTargets = Object.values(doorStates)
@@ -354,32 +393,50 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .map(s => s.targetRoom);
 
       setLoadedRooms(prev => {
-        const filtered = prev.filter(room => allOpenTargets.includes(room.galleryId));
+        const filtered = prev.filter(room => roomStates[room.galleryId]?.isOpen && allOpenTargets.includes(room.galleryId));
         if (filtered.length !== prev.length) {
-          console.log('[ROOM-UNLOADED] [PRESET-SWITCH] Đã dỡ các phòng đóng để tiết kiệm tài nguyên ở Preset Thấp.');
+          console.log('[ROOM-UNLOADED] [PRESET-SWITCH] Đã dỡ các phòng đóng/tắt để tiết kiệm tài nguyên ở Preset Thấp.');
         }
         return filtered;
       });
     }
-  }, [settings.preset, doorStates]);
+  }, [settings.preset, doorStates, roomStates]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // TỰ ĐỘNG TẢI/DỠ PHÒNG KHI CỬA MỞ/ĐÓNG
+  // TỰ ĐỘNG TẢI/DỠ PHÒNG KHI PHÒNG BẬT/TẮT VÀ CỬA MỞ/ĐÓNG
   // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
-    for (const [doorId, state] of Object.entries(doorStates)) {
-      if (state.isOpen && state.targetRoom) {
-        loadRoom(state.targetRoom);
+    // 1. Tải phòng động theo trạng thái Bật/Tắt của phòng
+    for (const [galleryId, rState] of Object.entries(roomStates)) {
+      if (rState.isOpen) {
+        // Tải phòng khi bật
+        const isDoorOpenOrPreloaded = settings.preset !== 'low' || Object.values(doorStates).some(
+          d => d.targetRoom === galleryId && d.isOpen
+        );
+        if (isDoorOpenOrPreloaded) {
+          loadRoom(galleryId);
+        }
+      } else {
+        // Dỡ phòng khi tắt ngay lập tức
+        unloadRoom(galleryId);
+      }
+    }
+
+    // 2. Tải/Dỡ phòng khi cửa mở/đóng đối với preset 'low'
+    for (const [doorId, dState] of Object.entries(doorStates)) {
+      if (dState.isOpen && dState.targetRoom) {
+        if (roomStates[dState.targetRoom]?.isOpen) {
+          loadRoom(dState.targetRoom);
+        }
       }
 
-      // Đối với preset 'low', tự động dỡ phòng khi đóng cửa để giải phóng tài nguyên GPU
-      if (!state.isOpen && state.targetRoom === '' && settings.preset === 'low') {
+      if (!dState.isOpen && dState.targetRoom === '' && settings.preset === 'low') {
         const allOpenTargets = Object.values(doorStates)
           .filter(s => s.isOpen)
           .map(s => s.targetRoom);
 
         setLoadedRooms(prev => prev.filter(room => {
-          if (!allOpenTargets.includes(room.galleryId)) {
+          if (!roomStates[room.galleryId]?.isOpen || !allOpenTargets.includes(room.galleryId)) {
             console.log(`[ROOM-UNLOADED] [LOW-PRESET] Phòng "${room.galleryId}" đã được dỡ bỏ khi đóng cửa.`);
             return false;
           }
@@ -387,7 +444,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }));
       }
     }
-  }, [doorStates, loadRoom, settings.preset]);
+  }, [doorStates, roomStates, loadRoom, unloadRoom, settings.preset]);
 
   return (
     <MuseumContext.Provider
@@ -421,6 +478,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // Door & Room
         doorStates,
+        roomStates,
         loadedRooms,
         currentRoom,
         setCurrentRoom,

@@ -524,6 +524,7 @@ export default function LobbyPage() {
     settings,
     setActiveGallery,
     doorStates,
+    roomStates,
     loadedRooms,
     doorClosingAlert,
     currentRoom,
@@ -604,10 +605,12 @@ export default function LobbyPage() {
                   const offset = ROOM_OFFSETS[room.galleryId];
                   if (!offset) return null;
 
-                  // Xác định xem phòng này có đang mở/visible không dựa trên trạng thái cửa
-                  const isVisible = Object.values(doorStates).some(
+                  // Xác định xem phòng này có đang mở/visible không dựa trên trạng thái phòng và cửa
+                  const isRoomEnabled = roomStates[room.galleryId]?.isOpen;
+                  const isDoorOpen = Object.values(doorStates).some(
                     (d) => d.targetRoom === room.galleryId && d.isOpen
                   );
+                  const isVisible = isRoomEnabled && isDoorOpen;
 
                   return (
                     <DynamicRoom

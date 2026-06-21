@@ -19,6 +19,15 @@ const waitingQueues = {};
 const doorStates = {};
 const closingTimers = {};
 
+// ═══════════════════════════════════════════════════════════════════════════
+// TRẠNG THÁI PHÒNG TRIỂN LÃM (Room States) — Admin điều khiển bật/tắt (mở/đóng)
+// Cấu trúc: { [roomId]: { isOpen: boolean } }
+// ═══════════════════════════════════════════════════════════════════════════
+const roomStates = {
+  'gallery-paintings': { isOpen: true },
+  'gallery-sculptures': { isOpen: true }
+};
+
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
 const DOOR_CLOSE_COUNTDOWN_MS = 5000;
 
@@ -82,6 +91,8 @@ io.on('connection', (socket) => {
 
   // Gửi trạng thái cửa hiện tại cho client mới kết nối
   socket.emit('door-states', doorStates);
+  // Gửi trạng thái phòng hiện tại cho client mới kết nối
+  socket.emit('room-states', roomStates);
 
   // 1. Khi người chơi tham gia phòng
   socket.on('join-room', (data) => {
@@ -159,6 +170,15 @@ io.on('connection', (socket) => {
     user.z = data.z;
     user.yaw = data.yaw;
 
+    // Cập nhật galleryId thời gian thực dựa vào tọa độ z để server biết user đang ở phòng nào
+    if (data.z <= 8.0) {
+      user.galleryId = 'lobby';
+    } else if (data.z > 8.0 && data.z <= 58.0) {
+      user.galleryId = 'gallery-paintings';
+    } else if (data.z > 58.0 && data.z <= 108.0) {
+      user.galleryId = 'gallery-sculptures';
+    }
+
     const socketRoom = getSocketRoom(user.galleryId);
     // Phát sóng tọa độ mới cho những người dùng khác trong phòng
     socket.to(socketRoom).emit('user-moved', user);
@@ -187,7 +207,23 @@ io.on('connection', (socket) => {
   // ═══════════════════════════════════════════════════════════════════════════
   socket.on('admin:open-door', (data) => {
     const { doorId, targetRoom } = data;
-    console.log(`[ADMIN] Mở cửa "${doorId}" → phòng "${targetRoom}"`);
+    console.log(`[ADMIN] Yêu cầu mở cửa "${doorId}" → phòng "${targetRoom}"`);
+
+    // Kiểm tra điều kiện mở cửa: Cả 2 phòng liên quan đều phải đang bật (mở)
+    // Sảnh (lobby) mặc định luôn bật.
+    let canOpen = true;
+    if (doorId === 'door-room1') {
+      canOpen = roomStates['gallery-paintings']?.isOpen;
+    } else if (doorId === 'door-room2') {
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+    } else if (doorId === 'door-room3') {
+      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-paintings']?.isOpen;
+    }
+
+    if (!canOpen) {
+      socket.emit('admin:error', { message: 'Chỉ được mở cửa khi cả hai phòng liên quan đều đang bật!' });
+      return;
+    }
 
     // Hủy timer đóng cửa nếu có
     if (closingTimers[doorId]) {
@@ -250,10 +286,47 @@ io.on('connection', (socket) => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 6. ADMIN: LẤY TRẠNG THÁI CỬA (Get all door states)
+  // 6. ADMIN: LẤY TRẠNG THÁI CỬA VÀ PHÒNG
   // ═══════════════════════════════════════════════════════════════════════════
   socket.on('admin:get-door-status', () => {
     socket.emit('door-states', doorStates);
+    socket.emit('room-states', roomStates);
+  });
+
+  socket.on('admin:toggle-room', (data) => {
+    const { roomId, isOpen } = data;
+    console.log(`[ADMIN] Yêu cầu chuyển phòng "${roomId}" sang: ${isOpen ? 'Bật' : 'Tắt'}`);
+
+    if (!isOpen) {
+      // Ràng buộc: Tất cả các cửa liên quan trực tiếp đến phòng này phải đang đóng
+      const relatedDoors = [];
+      if (roomId === 'gallery-paintings') {
+        relatedDoors.push('door-room1', 'door-room2', 'door-room3');
+      } else if (roomId === 'gallery-sculptures') {
+        relatedDoors.push('door-room2', 'door-room3');
+      }
+
+      const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
+      if (isAnyDoorOpen) {
+        socket.emit('admin:error', { message: 'Không thể tắt phòng khi cửa liên quan vẫn đang mở!' });
+        return;
+      }
+    }
+
+    roomStates[roomId] = { isOpen };
+
+    // Phát sóng trạng thái mới cho toàn bộ client
+    io.emit('room-states', roomStates);
+
+    // Nếu tắt phòng, thực hiện gửi yêu cầu teleport cho những ai đang ở trong phòng bị tắt
+    if (!isOpen) {
+      let teleportTo = 'lobby';
+      if (roomId === 'gallery-sculptures') {
+        teleportTo = 'gallery-paintings';
+      }
+      io.emit('room-closed', { roomId, teleportTo });
+      console.log(`[ADMIN] Đã phát lệnh teleport người chơi khỏi phòng bị tắt "${roomId}" về "${teleportTo}".`);
+    }
   });
 
   // 7. Khi người chơi ngắt kết nối
