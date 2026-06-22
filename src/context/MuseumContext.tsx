@@ -40,6 +40,12 @@ export interface RoomState {
   isOpen: boolean;
 }
 
+export interface RoomClosingAlert {
+  roomId: string;
+  teleportTo: string;
+  countdownMs: number;
+}
+
 // Thông tin phòng đang được tải động
 export interface LoadedRoom {
   galleryId: string;
@@ -82,6 +88,7 @@ interface MuseumContextType {
   currentRoom: string; // 'lobby' hoặc gallery ID
   setCurrentRoom: (room: string) => void;
   doorClosingAlert: { doorId: string; teleportTo: string; countdownMs: number } | null;
+  roomClosingAlert: RoomClosingAlert | null;
   teleportTarget: { x: number; y: number; z: number } | null;
   clearTeleport: () => void;
 }
@@ -113,6 +120,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
   const [doorClosingAlert, setDoorClosingAlert] = useState<{ doorId: string; teleportTo: string; countdownMs: number } | null>(null);
+  const [roomClosingAlert, setRoomClosingAlert] = useState<RoomClosingAlert | null>(null);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
 
   const clearTeleport = useCallback(() => setTeleportTarget(null), []);
@@ -242,31 +250,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setTimeout(() => setDoorClosingAlert(null), data.countdownMs + 500);
     });
 
-    newSocket.on('door-closed', (data: { doorId: string; teleportTo: string }) => {
+    newSocket.on('door-closed', (data: { doorId: string }) => {
       setDoorStates(prev => ({
         ...prev,
         [data.doorId]: { isOpen: false, targetRoom: '' },
       }));
       setDoorClosingAlert(null);
-
-      // CHỈ teleport nếu người chơi đang ở phòng bị ảnh hưởng bởi cánh cửa đóng đó
-      setCurrentRoom((prevRoom) => {
-        let shouldTeleport = false;
-        if (data.doorId === 'door-room1') {
-          shouldTeleport = prevRoom === 'gallery-paintings' || prevRoom === 'gallery-sculptures';
-        } else if (data.doorId === 'door-room2') {
-          shouldTeleport = prevRoom === 'gallery-sculptures';
-        }
-
-        if (shouldTeleport) {
-          const target = data.teleportTo || 'lobby';
-          const spawn = SPAWN_POINTS[target] || SPAWN_POINTS['lobby'];
-          setTeleportTarget(spawn);
-          console.log(`[TELEPORT] Cửa "${data.doorId}" đóng. Di chuyển người chơi về phòng "${target}" tại tọa độ Z = ${spawn.z}`);
-          return target;
-        }
-        return prevRoom;
-      });
+      console.log(`[DOOR] Cửa "${data.doorId}" đã đóng.`);
     });
 
     // ── Room Events ──
@@ -274,7 +264,14 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setRoomStates(states);
     });
 
+    newSocket.on('room-closing', (data: RoomClosingAlert) => {
+      setRoomClosingAlert(data);
+      // Tự động clear alert sau countdown
+      setTimeout(() => setRoomClosingAlert(null), data.countdownMs + 500);
+    });
+
     newSocket.on('room-closed', (data: { roomId: string; teleportTo: string }) => {
+      setRoomClosingAlert(null);
       setCurrentRoom((prevRoom) => {
         if (prevRoom === data.roomId) {
           const target = data.teleportTo || 'lobby';
@@ -483,6 +480,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         currentRoom,
         setCurrentRoom,
         doorClosingAlert,
+        roomClosingAlert,
         teleportTarget,
         clearTeleport,
       }}

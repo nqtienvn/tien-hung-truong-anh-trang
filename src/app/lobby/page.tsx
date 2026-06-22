@@ -534,7 +534,7 @@ export default function LobbyPage() {
     doorStates,
     roomStates,
     loadedRooms,
-    doorClosingAlert,
+    roomClosingAlert,
     currentRoom,
     socket,
     updatePreset,
@@ -684,19 +684,19 @@ export default function LobbyPage() {
         </header>
       )}
 
-      {/* ═══ CẢNH BÁO ĐÓNG CỬA (Door Closing Alert) ═══ */}
-      {doorClosingAlert && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 animate-pulse">
-          <div className="bg-red-950/90 border-2 border-red-500/60 text-red-200 px-6 py-4 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-3">
-            <AlertTriangle size={24} className="text-red-400 flex-shrink-0" />
+      {/* ═══ CẢNH BÁO TẮT PHÒNG (Room Closing Alert) ═══ */}
+      {roomClosingAlert && currentRoom === roomClosingAlert.roomId && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+          <div className="bg-red-950/95 border-2 border-red-500/80 text-red-200 px-6 py-4 rounded-2xl backdrop-blur-xl shadow-2xl flex items-center gap-3 max-w-sm">
+            <AlertTriangle size={24} className="text-red-400 flex-shrink-0 animate-pulse" />
             <div>
               <p className="font-bold text-sm">
-                {language === 'vi' ? '⚠️ Cửa sắp đóng!' : '⚠️ Door closing!'}
+                {language === 'vi' ? '⚠️ PHÒNG SẮP TẮT!' : '⚠️ ROOM CLOSING!'}
               </p>
-              <p className="text-xs text-red-300 mt-0.5">
+              <p className="text-xs text-red-300 mt-1 leading-relaxed">
                 {language === 'vi'
-                  ? `Bạn sẽ được teleport về sảnh trong ${Math.ceil(doorClosingAlert.countdownMs / 1000)} giây...`
-                  : `You will be teleported to lobby in ${Math.ceil(doorClosingAlert.countdownMs / 1000)} seconds...`}
+                  ? `Vui lòng di chuyển ra khỏi phòng! Bạn sẽ bị tự động dịch chuyển trong ${Math.ceil(roomClosingAlert.countdownMs / 1000)} giây...`
+                  : `Please leave this room! You will be automatically teleported in ${Math.ceil(roomClosingAlert.countdownMs / 1000)} seconds...`}
               </p>
             </div>
           </div>
