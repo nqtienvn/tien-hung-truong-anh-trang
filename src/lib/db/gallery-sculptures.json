@@ -1,0 +1,101 @@
+{
+  "galleries": [
+    {
+      "id": "gallery-sculptures",
+      "name": "Cổ Vật Điêu Khắc & Điêu Khắc Hiện Đại",
+      "description": "Không gian triển lãm mô hình điêu khắc 3D tương tác đa chiều.",
+      "scene_asset_url": "",
+      "is_active": true,
+      "room_width": 24,
+      "room_length": 50,
+      "room_height": 6,
+      "floor_color": "#4e3629",
+      "wall_color": "#8a1923",
+      "wainscoting_color": "#eae5dc",
+      "floor_type": "wood"
+    }
+  ],
+  "exhibits": [
+    {
+      "id": "sculpture-torusknot",
+      "gallery_id": "gallery-sculptures",
+      "title": {
+        "vi": "Vòng Xoắn Hoàng Kim",
+        "en": "The Golden Torus"
+      },
+      "author": {
+        "vi": "Nghệ sĩ Độc bản",
+        "en": "Procedural Sculptor"
+      },
+      "description": {
+        "vi": "Một cấu trúc điêu khắc kim loại trừu tượng với các vòng thắt vô tận mạ vàng bóng. Tác phẩm tượng trưng cho vòng lặp vô hạn của thời gian và không gian trong nghệ thuật hiện đại.",
+        "en": "An abstract metallic sculpture featuring infinite golden loops. It symbolizes the infinite loops of space and time in modern spatial art."
+      },
+      "model_3d_url": "procedural-torusknot",
+      "thumbnail_url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 1.4,
+      "coordinate_z": -8.0,
+      "rotation_x": 0.0,
+      "rotation_y": 0.0,
+      "rotation_z": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
+    },
+    {
+      "id": "sculpture-octahedron",
+      "gallery_id": "gallery-sculptures",
+      "title": {
+        "vi": "Tinh Thể Đa Diện",
+        "en": "Crystalline Octahedron"
+      },
+      "author": {
+        "vi": "Nhóm Thiết kế Không gian",
+        "en": "Spatial Design Lab"
+      },
+      "description": {
+        "vi": "Một khối bát diện tinh thể với khả năng khúc xạ ánh sáng đa sắc. Khi tương tác, các mặt tinh thể sẽ phản chiếu ánh sáng môi trường tạo ra những vệt sắc cầu vồng sinh động.",
+        "en": "A crystalline octahedral sculpture with multi-spectral light refraction. When interacted with, the crystal faces reflect surrounding light to create vivid rainbow flares."
+      },
+      "model_3d_url": "procedural-octahedron",
+      "thumbnail_url": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 1.4,
+      "coordinate_z": -20.0,
+      "rotation_x": 0.0,
+      "rotation_y": 0.78539,
+      "rotation_z": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
+    },
+    {
+      "id": "sculpture-helix",
+      "gallery_id": "gallery-sculptures",
+      "title": {
+        "vi": "Mầm Sống Sinh Học",
+        "en": "Bronze Bio-Helix"
+      },
+      "author": {
+        "vi": "Nhà điêu khắc Cổ đại",
+        "en": "Ancient Futurist"
+      },
+      "description": {
+        "vi": "Tượng đồng dạng chuỗi xoắn kép mô tả cấu trúc di truyền học của sự sống sinh học cổ đại. Bề mặt tượng được xử lý chất liệu đồng cổ phong hóa thời gian.",
+        "en": "A bronze double-helix sculpture depicting the genetic structure of ancient biological life. The surface is textured with aged, weathered bronze patina."
+      },
+      "model_3d_url": "procedural-helix",
+      "thumbnail_url": "https://images.unsplash.com/photo-1605721911519-3dfeb3be25e7?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 0.0,
+      "coordinate_y": 1.4,
+      "coordinate_z": -14.0,
+      "rotation_x": 0.0,
+      "rotation_y": 0.0,
+      "rotation_z": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
+    }
+  ]
+}

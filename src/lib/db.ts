@@ -47,27 +47,79 @@ interface DatabaseSchema {
   exhibits: Exhibit[];
 }
 
-const DB_PATH = path.join(process.cwd(), 'src', 'lib', 'db.json');
+const DB_DIR = path.join(process.cwd(), 'src', 'lib', 'db');
+const DB_PATH_LEGACY = path.join(process.cwd(), 'src', 'lib', 'db.json');
 
 // Đọc dữ liệu từ file JSON
 function readDb(): DatabaseSchema {
   try {
-    if (!fs.existsSync(DB_PATH)) {
-      // Nếu file chưa tồn tại (đề phòng), trả về schema trống
-      return { galleries: [], exhibits: [] };
+    const galleries: Gallery[] = [];
+    const exhibits: Exhibit[] = [];
+
+    // Nếu thư mục db tồn tại, đọc từ tất cả các file .json trong thư mục đó
+    if (fs.existsSync(DB_DIR)) {
+      const files = fs.readdirSync(DB_DIR).filter(f => f.endsWith('.json'));
+      if (files.length > 0) {
+        for (const file of files) {
+          const filePath = path.join(DB_DIR, file);
+          const content = fs.readFileSync(filePath, 'utf-8');
+          const data = JSON.parse(content) as DatabaseSchema;
+          if (data.galleries) galleries.push(...data.galleries);
+          if (data.exhibits) exhibits.push(...data.exhibits);
+        }
+        return { galleries, exhibits };
+      }
     }
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(data) as DatabaseSchema;
+
+    // Fallback sang file legacy db.json nếu chưa cấu hình thư mục db
+    if (fs.existsSync(DB_PATH_LEGACY)) {
+      const data = fs.readFileSync(DB_PATH_LEGACY, 'utf-8');
+      return JSON.parse(data) as DatabaseSchema;
+    }
+
+    return { galleries: [], exhibits: [] };
   } catch (error) {
     console.error('Lỗi đọc cơ sở dữ liệu:', error);
     return { galleries: [], exhibits: [] };
   }
 }
 
-// Ghi dữ liệu vào file JSON
+// Ghi dữ liệu vào các file JSON tương ứng trong thư mục db
 function writeDb(data: DatabaseSchema): boolean {
   try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true });
+    }
+
+    // Gom nhóm dữ liệu theo gallery_id
+    const groupedData: Record<string, DatabaseSchema> = {};
+
+    // Khởi tạo nhóm từ danh sách galleries
+    for (const gallery of data.galleries) {
+      groupedData[gallery.id] = {
+        galleries: [gallery],
+        exhibits: []
+      };
+    }
+
+    // Chia các exhibits vào nhóm tương ứng
+    for (const exhibit of data.exhibits) {
+      const gId = exhibit.gallery_id;
+      if (!groupedData[gId]) {
+        groupedData[gId] = {
+          galleries: [],
+          exhibits: []
+        };
+      }
+      groupedData[gId].exhibits.push(exhibit);
+    }
+
+    // Ghi từng nhóm ra file JSON riêng
+    for (const [gId, content] of Object.entries(groupedData)) {
+      const filePath = path.join(DB_DIR, `${gId}.json`);
+      fs.writeFileSync(filePath, JSON.stringify(content, null, 2), 'utf-8');
+    }
+
     return true;
   } catch (error) {
     console.error('Lỗi ghi cơ sở dữ liệu:', error);
