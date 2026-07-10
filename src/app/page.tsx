@@ -171,7 +171,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCC_hh3d34wdzjzqhFpCpfo_EbdCst6ktWreBQogw577k2YyEUSN4Mx6oqkomdQ3pwMcwN10o1kW7iewEdEKaZhTah8o-2L9Pjluz9imprWkCKKRWF03PEHcxRvfMjXg4UVMqJ4mV1vaV_9j9vZQrSPdHRjeGXzzpCB6i9nRF1CJgyUg4Eo5ftLbl6ult057rpX88lIcnvFmX0S5hdxIaMPLNDDOjcx1NLRbcKPIHc0calxo0E4aUN81QchEwoixeCmNbDsxgl-qh0")',
+                    'url("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -180,14 +180,13 @@ export default function Home() {
                   Phòng 01
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Khởi nguồn Trao đổi &amp; Quyền lực Tiền tệ
+                  Bao Cấp Việt Nam (1976-1985)
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá những hình thái sơ khai của thương mại và sự ra đời
-                  của các công cụ đo lường giá trị đầu tiên.
+                  Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh mối và giải đáp câu đố thời kỳ trước Đổi mới.
                 </p>
                 <Link
-                  href="/gallery/gallery-paintings"
+                  href="/gallery/gallery-subsidy"
                   className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
                 >
                   Vào phòng
@@ -204,7 +203,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBlIiV8Wmlpprxt79Nw5wJlhBZgXlfbRrGbPN8OIKLl5TvoEILXi3b3WaQRwEvTxjXLkaHdzn9vfsJYpvlTzMyv6swvFtgOuC3wkPqQnOkFKLXOjhl5ouRUvtg7bYiCYbXX5J-irM6v6dzSV82HZ2xcElhuy0_nlh87Wy0bMvkc3MYqk9DEy-TqenAgsJhp7uEPBwTN7Hl9Vv1Yqry9LWGl2jQzVcETsN2fF-ULApfpkKngxexSHiI2_mAltipCBhgjgaXZcXgeTd0")',
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCC_hh3d34wdzjzqhFpCpfo_EbdCst6ktWreBQogw577k2YyEUSN4Mx6oqkomdQ3pwMcwN10o1kW7iewEdEKaZhTah8o-2L9Pjluz9imprWkCKKRWF03PEHcxRvfMjXg4UVMqJ4mV1vaV_9j9vZQrSPdHRjeGXzzpCB6i9nRF1CJgyUg4Eo5ftLbl6ult057rpX88lIcnvFmX0S5hdxIaMPLNDDOjcx1NLRbcKPIHc0calxo0E4aUN81QchEwoixeCmNbDsxgl-qh0")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -212,15 +211,14 @@ export default function Home() {
                 <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
                   Phòng 02
                 </span>
-                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Cỗ máy Thị trường &amp; Bí mật Tư bản
+                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
+                  Khởi nguồn Trao đổi &amp; Tiền tệ
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và
-                  những quy luật ngầm điều hành thương mại toàn cầu.
+                  Khám phá những hình thái sơ khai của thương mại và các bức tranh sơn dầu cổ điển thế giới.
                 </p>
                 <Link
-                  href="/gallery/gallery-sculptures"
+                  href="/gallery/gallery-paintings"
                   className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
                 >
                   Vào phòng
@@ -237,7 +235,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD1KCNyN5dt90QPfAeh1T1W6Rg0xEHEsBQAX3ju6xrJtnEhBsOM3Lv3Igc2PPSF0YDswcqUEWc0FnBb1eD_B7ZrGD3gDM5lVVjKRK6MJdNlxZnQBiGUCvWOMQBxS0mu5526JTThbMajX3nyTfyTTrKVLdZxpLzC-SbGVFlKt4o2b3Vfq23X3hqMujOem9a4UyWzJDcLRGVRzuAjacoOC_JZsFktMIiMeiqYYegpHuf6-2CbYioX50eNS5gcvzwPgZ1TtGIBTlKw-0Q")',
+                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBlIiV8Wmlpprxt79Nw5wJlhBZgXlfbRrGbPN8OIKLl5TvoEILXi3b3WaQRwEvTxjXLkaHdzn9vfsJYpvlTzMyv6swvFtgOuC3wkPqQnOkFKLXOjhl5ouRUvtg7bYiCYbXX5J-irM6v6dzSV82HZ2xcElhuy0_nlh87Wy0bMvkc3MYqk9DEy-TqenAgsJhp7uEPBwTN7Hl9Vv1Yqry9LWGl2jQzVcETsN2fF-ULApfpkKngxexSHiI2_mAltipCBhgjgaXZcXgeTd0")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -245,12 +243,11 @@ export default function Home() {
                 <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
                   Phòng 03
                 </span>
-                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Giới hạn Tư bản &amp; Bài toán Độc quyền
+                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
+                  Cỗ máy Thị trường &amp; Tư bản
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Nhìn nhận những cuộc khủng hoảng, bong bóng tài chính và hệ
-                  lụy của sự tập trung quyền lực kinh tế.
+                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và những quy luật ngầm điều hành kinh tế.
                 </p>
                 <Link
                   href="/gallery/gallery-ceramics"

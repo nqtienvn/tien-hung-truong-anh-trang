@@ -8,9 +8,10 @@ import { Shield, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkle
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
-  { doorId: 'door-room1', targetRoom: 'gallery-paintings', label: 'Phòng 01: Khởi nguồn', color: 'amber' },
-  { doorId: 'door-room2', targetRoom: 'gallery-sculptures', label: 'Phòng 02: Thị trường', color: 'cyan' },
-  { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Phòng 03: Giới hạn', color: 'emerald' },
+  { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Phòng 01: Bao cấp', color: 'amber' },
+  { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Phòng 02: Hội họa', color: 'cyan' },
+  { doorId: 'door-room3', targetRoom: 'gallery-sculptures', label: 'Phòng 03: Điêu khắc', color: 'emerald' },
+  { doorId: 'door-room4', targetRoom: 'gallery-ceramics', label: 'Phòng 04: Gốm sứ', color: 'rose' },
 ];
 
 interface DoorState {
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
 
   // ═══ Room Control State ═══
   const [roomStates, setRoomStates] = useState<Record<string, { isOpen: boolean }>>({
+    'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
     'gallery-sculptures': { isOpen: true },
     'gallery-ceramics': { isOpen: true }
@@ -103,10 +105,12 @@ export default function AdminDashboard() {
     // Ràng buộc kiểm tra trước khi mở cửa
     let canOpen = true;
     if (doorId === 'door-room1') {
-      canOpen = roomStates['gallery-paintings']?.isOpen;
+      canOpen = roomStates['gallery-subsidy']?.isOpen;
     } else if (doorId === 'door-room2') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+      canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+    } else if (doorId === 'door-room4') {
       canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     }
 
@@ -126,8 +130,10 @@ export default function AdminDashboard() {
     // Xác định phòng giữ lại để teleport người chơi khi đóng cửa phòng cũ
     let teleportTo = 'lobby';
     if (doorId === 'door-room2') {
-      teleportTo = 'gallery-paintings';
+      teleportTo = 'gallery-subsidy';
     } else if (doorId === 'door-room3') {
+      teleportTo = 'gallery-paintings';
+    } else if (doorId === 'door-room4') {
       teleportTo = 'gallery-sculptures';
     }
 
@@ -140,12 +146,14 @@ export default function AdminDashboard() {
     // Ràng buộc kiểm tra trước khi tắt phòng: Các cửa liên quan phải đóng
     if (currentOpen) {
       const relatedDoors = [];
-      if (roomId === 'gallery-paintings') {
+      if (roomId === 'gallery-subsidy') {
         relatedDoors.push('door-room1', 'door-room2');
-      } else if (roomId === 'gallery-sculptures') {
+      } else if (roomId === 'gallery-paintings') {
         relatedDoors.push('door-room2', 'door-room3');
+      } else if (roomId === 'gallery-sculptures') {
+        relatedDoors.push('door-room3', 'door-room4');
       } else if (roomId === 'gallery-ceramics') {
-        relatedDoors.push('door-room3');
+        relatedDoors.push('door-room4');
       }
 
       const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
@@ -329,19 +337,21 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 gap-3">
               {[
-                { id: 'gallery-paintings', name: 'Phòng 01: Khởi nguồn', desc: 'Trưng bày bộ sưu tập tranh hội họa 2D' },
-                { id: 'gallery-sculptures', name: 'Phòng 02: Thị trường', desc: 'Trưng bày các mô hình tượng điêu khắc 3D' },
-                { id: 'gallery-ceramics', name: 'Phòng 03: Giới hạn', desc: 'Không gian trưng bày gốm sứ & hành trình hội nhập kinh tế' },
+                { id: 'gallery-subsidy', name: 'Phòng 01: Bao Cấp Việt Nam', desc: 'Thời kỳ kinh tế bao cấp (1976-1985)' },
+                { id: 'gallery-paintings', name: 'Phòng 02: Tranh Hội Họa', desc: 'Trưng bày bộ sưu tập tranh hội họa 2D' },
+                { id: 'gallery-sculptures', name: 'Phòng 03: Điêu Khắc 3D', desc: 'Trưng bày các mô hình tượng điêu khắc 3D' },
+                { id: 'gallery-ceramics', name: 'Phòng 04: Gốm Sứ Hội Nhập', desc: 'Không gian trưng bày gốm sứ & hành trình hội nhập kinh tế' },
               ].map((room) => {
                 const isRoomOpen = roomStates[room.id]?.isOpen ?? true;
                 const isLoading = roomLoading === room.id;
                 
-                // Ràng buộc tắt phòng: Cửa liên quan phải đóng
-                const relatedDoors = room.id === 'gallery-paintings' 
+                const relatedDoors = room.id === 'gallery-subsidy'
                   ? ['door-room1', 'door-room2']
+                  : room.id === 'gallery-paintings'
+                  ? ['door-room2', 'door-room3']
                   : room.id === 'gallery-sculptures'
-                    ? ['door-room2', 'door-room3']
-                    : ['door-room3'];
+                  ? ['door-room3', 'door-room4']
+                  : ['door-room4'];
                 const hasOpenDoor = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
 
                 return (
@@ -404,11 +414,13 @@ export default function AdminDashboard() {
                 // Ràng buộc mở cửa: các phòng liên quan phải bật
                 let isPrereqMet = true;
                 if (config.doorId === 'door-room1') {
-                  isPrereqMet = roomStates['gallery-paintings']?.isOpen;
+                  isPrereqMet = roomStates['gallery-subsidy']?.isOpen || false;
                 } else if (config.doorId === 'door-room2') {
-                  isPrereqMet = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+                  isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
                 } else if (config.doorId === 'door-room3') {
-                  isPrereqMet = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
+                  isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen) || false;
+                } else if (config.doorId === 'door-room4') {
+                  isPrereqMet = (roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
                 }
 
                 return (

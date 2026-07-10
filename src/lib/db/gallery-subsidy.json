@@ -1,0 +1,183 @@
+{
+  "galleries": [
+    {
+      "id": "gallery-subsidy",
+      "name": "Bao Cấp Việt Nam (1976-1985)",
+      "description": "Thời kỳ bao cấp với cơ chế kế hoạch hóa tập trung trước đổi mới.",
+      "scene_asset_url": "",
+      "is_active": true,
+      "room_width": 24,
+      "room_length": 46,
+      "room_height": 8,
+      "floor_color": "#601118",
+      "wall_color": "#eae5dc",
+      "wainscoting_color": "#f8fafc",
+      "floor_type": "carpet",
+      "rope_barriers_config": "[{\"xOffset\":0,\"zOffset\":-3.2},{\"xOffset\":0,\"zOffset\":0},{\"xOffset\":0,\"zOffset\":2.7},{\"xOffset\":0,\"zOffset\":-2.7},{\"xOffset\":0,\"zOffset\":0},{\"xOffset\":0,\"zOffset\":3.1}]"
+    }
+  ],
+  "exhibits": [
+    {
+      "id": "exhibit-coupon",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "Tem phiếu lương thực",
+        "en": "Food Coupons"
+      },
+      "author": {
+        "vi": "Nhà nước ban hành",
+        "en": "State Issued"
+      },
+      "description": {
+        "vi": "Tem phiếu là công cụ phân phối hàng hóa thiết yếu thời bao cấp theo định mức. Muốn mua gạo phải có cả tiền mặt và tem phiếu.",
+        "en": "Food coupons were tools to distribute essential goods under quota during the subsidy period. Both cash and coupons were required."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": -11.75,
+      "coordinate_y": 2.85,
+      "coordinate_z": -18.35,
+      "rotation_x": 0,
+      "rotation_y": 1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 2.75,
+      "scale_z": 0.1
+    },
+    {
+      "id": "exhibit-ricebook",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "Sổ gạo gia đình",
+        "en": "Family Rice Booklet"
+      },
+      "author": {
+        "vi": "Mẫu số lương thực",
+        "en": "Food Registry Office"
+      },
+      "description": {
+        "vi": "Sổ đăng ký lương thực gia đình quy định số lượng gạo được nhận theo số nhân khẩu trong hộ gia đình do Nhà nước quy định.",
+        "en": "Family food registry booklet regulating the amount of rice received according to the number of members in the household as specified by the State."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": -11.75,
+      "coordinate_y": 2.85,
+      "coordinate_z": -5,
+      "rotation_x": 0,
+      "rotation_y": 1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 2.75,
+      "scale_z": 0.1
+    },
+    {
+      "id": "exhibit-factory",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "Kế hoạch nhà máy",
+        "en": "Factory Production Plan"
+      },
+      "author": {
+        "vi": "Xí nghiệp quốc doanh",
+        "en": "State-Owned Enterprise"
+      },
+      "description": {
+        "vi": "Văn bản chỉ tiêu sản xuất năm 1983 của nhà máy. Tất cả các mục tiêu, sản lượng đều do Nhà nước giao phó theo kế hoạch tập trung.",
+        "en": "The 1983 factory production targets. All objectives and output were assigned by the State in a centralized planning system."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": -11.75,
+      "coordinate_y": 2.75,
+      "coordinate_z": 7.6,
+      "rotation_x": 0,
+      "rotation_y": 1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 2.75,
+      "scale_z": 0.1
+    },
+    {
+      "id": "exhibit-priceboard",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "Bảng giá mậu dịch",
+        "en": "State Store Price List"
+      },
+      "author": {
+        "vi": "Sở Thương nghiệp",
+        "en": "Department of Trade"
+      },
+      "description": {
+        "vi": "Bảng giá các mặt hàng thiết yếu niêm yết tại cửa hàng lương thực nhà nước năm 1983. Mức giá được cố định bởi Nhà nước.",
+        "en": "Price list of essential goods posted at the state food store in 1983. Prices were fixed strictly by the State."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 11.75,
+      "coordinate_y": 2.85,
+      "coordinate_z": -17.7,
+      "rotation_x": 0,
+      "rotation_y": -1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 2.75,
+      "scale_z": 0.1
+    },
+    {
+      "id": "exhibit-shop",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "Cửa hàng mậu dịch",
+        "en": "State-Run Store"
+      },
+      "author": {
+        "vi": "Mậu dịch viên",
+        "en": "State Shop Assistant"
+      },
+      "description": {
+        "vi": "Cửa hàng mậu dịch quốc doanh - nơi phân phối độc quyền các nhu yếu phẩm. Tình trạng khan hiếm và xếp hàng dài là nét đặc trưng.",
+        "en": "State-run store - the exclusive distributor of essential supplies. Long queues and persistent shortages were typical features."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 11.75,
+      "coordinate_y": 2.85,
+      "coordinate_z": -5,
+      "rotation_x": 0,
+      "rotation_y": -1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 2.7,
+      "scale_z": 0.1
+    },
+    {
+      "id": "exhibit-witness",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "Ký ức thời bao cấp",
+        "en": "Subsidy Era Memoirs"
+      },
+      "author": {
+        "vi": "Góc nhân chứng",
+        "en": "Witness Corner"
+      },
+      "description": {
+        "vi": "Kể lại cuộc sống thường nhật dựa trên chế độ phân phối tem phiếu, tiết kiệm từng bữa ăn và sự tự giác hợp tác của cộng đồng.",
+        "en": "Recalling daily life under the coupon system, saving every meal, and the voluntary cooperation of the community."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "https://images.unsplash.com/photo-1473177134435-4eb84fc76076?w=800&auto=format&fit=crop&q=80",
+      "coordinate_x": 11.75,
+      "coordinate_y": 2.8,
+      "coordinate_z": 8.3,
+      "rotation_x": 0,
+      "rotation_y": -1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 2.75,
+      "scale_z": 0.1
+    }
+  ]
+}

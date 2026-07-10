@@ -18,6 +18,7 @@ export async function PATCH(
       wall_color: body.wall_color,
       wainscoting_color: body.wainscoting_color,
       floor_type: body.floor_type,
+      rope_barriers_config: body.rope_barriers_config,
     };
     
     // Loại bỏ các trường undefined

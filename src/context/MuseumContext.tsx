@@ -62,6 +62,8 @@ interface MuseumContextType {
   setNickname: (name: string) => void;
   selectedExhibit: Exhibit | null;
   setSelectedExhibit: (exhibit: Exhibit | null) => void;
+  exhibitModalMode: 'game' | 'info';
+  setExhibitModalMode: (mode: 'game' | 'info') => void;
   activeGallery: Gallery | null;
   setActiveGallery: (gallery: Gallery | null) => void;
   audioPlaying: boolean;
@@ -106,6 +108,13 @@ interface MuseumContextType {
   initializeGame: () => void;
   swapEvents: (idx1: number, idx2: number) => void;
   checkOrder: () => void;
+
+  // --- Gameplay ---
+  cluesCollected: string[];
+  roomOneCompleted: boolean;
+  addClue: (clueId: string) => void;
+  setRoomOneCompleted: (completed: boolean) => void;
+  resetRoomOne: () => void;
 }
 
 export interface GameEvent {
@@ -124,6 +133,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [language, setLanguage] = useState<'vi' | 'en'>('vi');
   const [nickname, setNickname] = useState<string>('');
   const [selectedExhibit, setSelectedExhibit] = useState<Exhibit | null>(null);
+  const [exhibitModalMode, setExhibitModalMode] = useState<'game' | 'info'>('game');
   const [activeGallery, setActiveGallery] = useState<Gallery | null>(null);
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [otherUsers, setOtherUsers] = useState<MultiplayerUser[]>([]);
@@ -139,6 +149,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // ═══ Door & Room State ═══
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
+    'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
     'gallery-sculptures': { isOpen: true },
     'gallery-ceramics': { isOpen: true }
@@ -167,6 +178,82 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       localStorage.setItem('museum_has_played_game', val ? 'true' : 'false');
     }
   }, []);
+
+  // --- Gameplay States ---
+  const [cluesCollected, setCluesCollected] = useState<string[]>([]);
+  const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
+
+  // Sync gameplay progress theo từng người chơi (nickname)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!nickname) {
+      setCluesCollected([]);
+      setRoomOneCompleted(false);
+      return;
+    }
+
+    const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
+    const savedProgress = localStorage.getItem(progressKey);
+
+    if (!savedProgress) {
+      setCluesCollected([]);
+      setRoomOneCompleted(false);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedProgress) as {
+        cluesCollected?: string[];
+        roomOneCompleted?: boolean;
+      };
+      setCluesCollected(Array.isArray(parsed.cluesCollected) ? parsed.cluesCollected : []);
+      setRoomOneCompleted(Boolean(parsed.roomOneCompleted));
+    } catch (e) {
+      console.error('Lỗi phân tích tiến trình Sổ điều tra:', e);
+      setCluesCollected([]);
+      setRoomOneCompleted(false);
+    }
+  }, [nickname]);
+
+  const addClue = useCallback((clueId: string) => {
+    setCluesCollected((prev) => {
+      if (prev.includes(clueId)) return prev;
+      const updated = [...prev, clueId];
+      if (typeof window !== 'undefined' && nickname) {
+        const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
+        localStorage.setItem(progressKey, JSON.stringify({
+          cluesCollected: updated,
+          roomOneCompleted,
+        }));
+      }
+      return updated;
+    });
+  }, [nickname, roomOneCompleted]);
+
+  const handleSetRoomOneCompleted = useCallback((completed: boolean) => {
+    setRoomOneCompleted(completed);
+    if (typeof window !== 'undefined' && nickname) {
+      const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
+      localStorage.setItem(progressKey, JSON.stringify({
+        cluesCollected,
+        roomOneCompleted: completed,
+      }));
+    }
+  }, [cluesCollected, nickname]);
+
+  const resetRoomOne = useCallback(() => {
+    setCluesCollected([]);
+    setRoomOneCompleted(false);
+    if (typeof window !== 'undefined') {
+      if (nickname) {
+        localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
+      }
+      // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
+      localStorage.removeItem('cluesCollected');
+      localStorage.removeItem('roomOneCompleted');
+    }
+  }, [nickname]);
 
   const clearTeleport = useCallback(() => setTeleportTarget(null), []);
 
@@ -514,13 +601,14 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (settings.preset === 'low') return;
 
-    const idleCallback = typeof window !== 'undefined' 
-      ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000))) 
+    const idleCallback = typeof window !== 'undefined'
+      ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000)))
       : null;
-    
+
     if (!idleCallback) return;
 
     const idleId = idleCallback(() => {
+      if (roomStates['gallery-subsidy']?.isOpen) loadRoom('gallery-subsidy');
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-sculptures']?.isOpen) loadRoom('gallery-sculptures');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
@@ -608,6 +696,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setNickname,
         selectedExhibit,
         setSelectedExhibit,
+        exhibitModalMode,
+        setExhibitModalMode,
         activeGallery,
         setActiveGallery,
         audioPlaying,
@@ -652,6 +742,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         initializeGame,
         swapEvents,
         checkOrder,
+
+        // --- Gameplay ---
+        cluesCollected,
+        roomOneCompleted,
+        addClue,
+        setRoomOneCompleted: handleSetRoomOneCompleted,
+        resetRoomOne,
       }}
     >
       {children}

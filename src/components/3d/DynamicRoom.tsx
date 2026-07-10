@@ -22,24 +22,30 @@ interface DynamicRoomProps {
 }
 
 // Bản đồ offset cho mỗi phòng (Gallery ID → Z offset từ sảnh)
-// Phòng 1 đặt ngay sau tường sau sảnh (Z = 8.0 → offset +23)
-// Phòng 2 offset thêm 35m tiếp
+// Mỗi phòng dài 46 đơn vị. Phòng 1 bắt đầu ngay Z=8 (sau tường sảnh):
+//   center = 8 + 46/2 = 31  →  offset = 31, spans Z 8..54
+// Phòng 2: bắt đầu Z=54  →  center = 54 + 23 = 77,  spans Z 54..100
+// Phòng 3: bắt đầu Z=100 →  center = 100 + 23 = 123, spans Z 100..146
+// Phòng 4: bắt đầu Z=146 →  center = 146 + 15 = 161, spans Z 146..176
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
-  'gallery-paintings': { z: 33.0, y: 3.0 },    // Phòng 1: Nối từ cầu thang tầng 2 sảnh (Y = 3m, Z spans 8.0 to 58.0)
-  'gallery-sculptures': { z: 83.0, y: 3.0 },   // Phòng 2: Nối tiếp sau phòng 1 (Z spans 58.0 to 108.0)
-  'gallery-ceramics': { z: 123.0, y: 3.0 },    // Phòng 3: Nối tiếp sau phòng 2 (Z spans 108.0 to 138.0)
+  'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
+  'gallery-paintings': { z: 77.0, y: 3.0 },    // Phòng 2: Hội họa   (Z 54 → 100)
+  'gallery-sculptures': { z: 123.0, y: 3.0 },  // Phòng 3: Điêu khắc (Z 100 → 146)
+  'gallery-ceramics': { z: 161.0, y: 3.0 },    // Phòng 4: Gốm sứ    (Z 146 → 176)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
 export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
-  'gallery-paintings': [0, 3.0, 10.0],    // Spawn gần cửa vào phòng 1 (vừa qua cửa Z=8)
-  'gallery-sculptures': [0, 3.0, 60.0],   // Spawn gần cửa vào phòng 2 (vừa qua cửa Z=58)
-  'gallery-ceramics': [0, 3.0, 110.0],    // Spawn gần cửa vào phòng 3 (vừa qua cửa Z=108)
-  'lobby': [0, 0, -5.0],                  // Spawn giữa sảnh
+  'gallery-subsidy': [0, 3.0, 10.0],           // Spawn gần cửa vào phòng 1 (Z=10)
+  'gallery-paintings': [0, 3.0, 56.0],          // Spawn gần cửa vào phòng 2 (Z=56)
+  'gallery-sculptures': [0, 3.0, 102.0],         // Spawn gần cửa vào phòng 3 (Z=102)
+  'gallery-ceramics': [0, 3.0, 148.0],          // Spawn gần cửa vào phòng 4 (Z=148)
+  'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh
 };
 
 export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
   const { galleryId, exhibits, gallery } = room;
+  console.log(`[DynamicRoom] Render room ${galleryId}, exhibits count: ${exhibits?.length || 0}, isVisible: ${isVisible}`);
 
   // Build custom settings từ gallery data
   const customSettings = gallery ? {

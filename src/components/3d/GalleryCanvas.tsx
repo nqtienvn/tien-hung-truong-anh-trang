@@ -42,21 +42,41 @@ const CameraLerpController: React.FC = () => {
   const targetCamPosCache = useRef(new THREE.Vector3()).current;
   const targetLookTargetCache = useRef(new THREE.Vector3()).current;
 
-  // Xử lý sự kiện nhấn giữ chuột và kéo để xoay camera (Click & Drag)
+  // Xử lý sự kiện nhấn giữ chuột trái và kéo để xoay camera (Click & Drag)
   useEffect(() => {
     const canvas = gl.domElement;
 
-    const handleMouseDown = () => {
+    const isInsideCanvas = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      );
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      // Chỉ bắt thao tác chuột trái trong vùng canvas 3D.
+      if (e.button !== 0 || selectedExhibit || !isInsideCanvas(e)) return;
       isMouseDown.current = true;
     };
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       isMouseDown.current = false;
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      // Chỉ xoay camera khi đang giữ chuột trái và không ở chế độ Inspect
-      if (!isMouseDown.current || selectedExhibit) return;
+    const handlePointerMove = (e: PointerEvent) => {
+      // Nếu pointerdown bị object 3D/R3F/overlay nuốt mất, vẫn nhận biết bằng buttons.
+      const isLeftButtonHeld = (e.buttons & 1) === 1;
+
+      // Chỉ xoay camera khi đang giữ chuột trái trong canvas và không ở chế độ Inspect.
+      if (selectedExhibit || !isLeftButtonHeld || !isInsideCanvas(e)) {
+        if (!isLeftButtonHeld) isMouseDown.current = false;
+        return;
+      }
+
+      isMouseDown.current = true;
 
       const sensitivity = 0.003; // Tốc độ xoay camera mượt mà
       theta.current -= e.movementX * sensitivity;
@@ -68,14 +88,16 @@ const CameraLerpController: React.FC = () => {
       phi.current = Math.max(minPhi, Math.min(maxPhi, phi.current));
     };
 
-    canvas.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
 
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
     };
   }, [gl, selectedExhibit]);
 

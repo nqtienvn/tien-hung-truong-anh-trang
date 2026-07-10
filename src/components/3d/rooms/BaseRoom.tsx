@@ -15,6 +15,7 @@ export interface BaseRoomProps {
   };
   isVisible?: boolean;
   showPilasters?: boolean;
+  onRopeClick?: (ropeIndex: number) => void;
   children?: React.ReactNode;
 }
 

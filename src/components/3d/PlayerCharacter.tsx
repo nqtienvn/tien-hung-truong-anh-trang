@@ -68,24 +68,37 @@ export const PlayerCharacter: React.FC = () => {
 
   // Lắng nghe bàn phím di chuyển
   useEffect(() => {
+    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd'> = {
+      KeyW: 'w',
+      KeyA: 'a',
+      KeyS: 's',
+      KeyD: 'd',
+      ArrowUp: 'w',
+      ArrowLeft: 'a',
+      ArrowDown: 's',
+      ArrowRight: 'd',
+    };
+
+    const shouldIgnoreKeyboard = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      if (!el) return false;
+      const tagName = el.tagName.toLowerCase();
+      return tagName === 'input' || tagName === 'textarea' || el.isContentEditable;
+    };
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      const code = e.code;
-      if (code === "KeyW" || code === "ArrowUp") keysPressed.current.w = true;
-      if (code === "KeyS" || code === "ArrowDown") keysPressed.current.s = true;
-      if (code === "KeyA" || code === "ArrowLeft") keysPressed.current.a = true;
-      if (code === "KeyD" || code === "ArrowRight")
-        keysPressed.current.d = true;
+      if (shouldIgnoreKeyboard(e.target)) return;
+      const key = movementKeyMap[e.code];
+      if (!key) return;
+      e.preventDefault();
+      keysPressed.current[key] = true;
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      const code = e.code;
-      if (code === "KeyW" || code === "ArrowUp") keysPressed.current.w = false;
-      if (code === "KeyS" || code === "ArrowDown")
-        keysPressed.current.s = false;
-      if (code === "KeyA" || code === "ArrowLeft")
-        keysPressed.current.a = false;
-      if (code === "KeyD" || code === "ArrowRight")
-        keysPressed.current.d = false;
+      const key = movementKeyMap[e.code];
+      if (!key) return;
+      e.preventDefault();
+      keysPressed.current[key] = false;
     };
 
     window.addEventListener("keydown", handleKeyDown);
