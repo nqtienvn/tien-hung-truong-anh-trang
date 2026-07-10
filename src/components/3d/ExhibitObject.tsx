@@ -19,7 +19,9 @@ const PaintingComponent: React.FC<{
   setSelectedExhibit: (e: Exhibit | null) => void;
   language: 'vi' | 'en';
   isVisible?: boolean;
-}> = ({ exhibit, isSelected, hovered, setHovered, setSelectedExhibit, language, isVisible = true }) => {
+  isNear: boolean;
+  groupRef: React.RefObject<THREE.Group | null>;
+}> = ({ exhibit, isSelected, hovered, setHovered, setSelectedExhibit, language, isVisible = true, isNear, groupRef }) => {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
   const matRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -61,15 +63,16 @@ const PaintingComponent: React.FC<{
     <group>
       {/* Group meshes: hiển thị/ẩn dựa trên isVisible */}
       <group 
+        ref={groupRef}
         position={[exhibit.coordinate_x, exhibit.coordinate_y, exhibit.coordinate_z]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
         onClick={(e) => {
-          if (!isVisible) return;
+          if (!isVisible || !isNear) return;
           e.stopPropagation();
           setSelectedExhibit(exhibit);
         }}
         onPointerOver={(e) => {
-          if (!isVisible) return;
+          if (!isVisible || !isNear) return;
           e.stopPropagation();
           setHovered(true);
         }}
@@ -93,27 +96,32 @@ const PaintingComponent: React.FC<{
         </mesh>
 
         {/* 3. Tấm nhãn tên tác phẩm nhỏ bên dưới */}
-        <group position={[0, -(exhibit.scale_y / 2) - 0.3, 0.08]}>
-          <mesh>
-            <planeGeometry args={[1.2, 0.4]} />
-            <meshStandardMaterial color="#fff" roughness={0.1} />
-          </mesh>
-          <Html 
-            position={[0, 0, 0.01]} 
-            center 
-            distanceFactor={8}
-            className="pointer-events-none select-none text-center"
-          >
-            <div className="w-[120px] bg-white text-black p-1 rounded border border-gray-400 font-sans shadow-lg">
-              <p className="text-[10px] font-bold truncate leading-tight">
-                {language === 'vi' ? exhibit.title.vi : exhibit.title.en}
-              </p>
-              <p className="text-[8px] text-gray-500 truncate leading-tight">
-                {language === 'vi' ? exhibit.author.vi : exhibit.author.en}
-              </p>
-            </div>
-          </Html>
-        </group>
+        {isNear && (
+          <group position={[0, -(exhibit.scale_y / 2) - 0.45, 0.08]}>
+            <mesh>
+              <planeGeometry args={[1.8, 0.65]} />
+              <meshStandardMaterial color="#fff" roughness={0.1} />
+            </mesh>
+            <Html 
+              position={[0, 0, 0.01]} 
+              center 
+              distanceFactor={6.5}
+              className="pointer-events-none select-none text-center"
+            >
+              <div className="w-[160px] bg-white text-black p-2 rounded border border-gray-400 font-sans shadow-lg flex flex-col items-center gap-0.5">
+                <p className="text-[12px] font-bold truncate leading-tight w-full text-center">
+                  {language === 'vi' ? exhibit.title.vi : exhibit.title.en}
+                </p>
+                <p className="text-[10px] text-gray-500 truncate leading-tight w-full text-center">
+                  {language === 'vi' ? exhibit.author.vi : exhibit.author.en}
+                </p>
+                <div className="mt-1.5 w-full bg-amber-500 text-slate-950 font-extrabold text-[10px] py-1 rounded text-center uppercase tracking-wider">
+                  {language === 'vi' ? 'Xem chi tiết' : 'View Details'}
+                </div>
+              </div>
+            </Html>
+          </group>
+        )}
       </group>
 
       {/* Đèn spotlight: luôn trong scene graph để tránh recompile shader, chỉ đổi cường độ */}
@@ -144,20 +152,23 @@ const SculptureComponent: React.FC<{
   language: 'vi' | 'en';
   meshRef: React.RefObject<THREE.Group | null>;
   isVisible?: boolean;
-}> = ({ exhibit, isSelected, hovered, setHovered, setSelectedExhibit, language, meshRef, isVisible = true }) => {
+  isNear: boolean;
+  groupRef: React.RefObject<THREE.Group | null>;
+}> = ({ exhibit, isSelected, hovered, setHovered, setSelectedExhibit, language, meshRef, isVisible = true, isNear, groupRef }) => {
   return (
     <group>
       {/* Group meshes: hiển thị/ẩn dựa trên isVisible */}
       <group 
+        ref={groupRef}
         position={[exhibit.coordinate_x, exhibit.coordinate_y, exhibit.coordinate_z]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
         onClick={(e) => {
-          if (!isVisible) return;
+          if (!isVisible || !isNear) return;
           e.stopPropagation();
           setSelectedExhibit(exhibit);
         }}
         onPointerOver={(e) => {
-          if (!isVisible) return;
+          if (!isVisible || !isNear) return;
           e.stopPropagation();
           setHovered(true);
         }}
@@ -242,21 +253,26 @@ const SculptureComponent: React.FC<{
         </mesh>
 
         {/* Nhãn tên hiện vật */}
-        <Html 
-          position={[0, -0.65, 0]} 
-          center 
-          distanceFactor={6}
-          className="pointer-events-none select-none text-center"
-        >
-          <div className="w-[120px] bg-slate-900/90 text-white p-1 rounded border border-slate-700 font-sans shadow-2xl backdrop-blur-sm">
-            <p className="text-[10px] font-bold truncate leading-tight text-amber-400">
-              {language === 'vi' ? exhibit.title.vi : exhibit.title.en}
-            </p>
-            <p className="text-[8px] text-slate-400 truncate leading-tight">
-              {language === 'vi' ? exhibit.author.vi : exhibit.author.en}
-            </p>
-          </div>
-        </Html>
+        {isNear && (
+          <Html 
+            position={[0, -0.8, 0]} 
+            center 
+            distanceFactor={5.0}
+            className="pointer-events-none select-none text-center"
+          >
+            <div className="w-[160px] bg-slate-900/90 text-white p-2 rounded border border-slate-700 font-sans shadow-2xl backdrop-blur-sm flex flex-col items-center gap-0.5">
+              <p className="text-[12px] font-bold truncate leading-tight text-amber-400 w-full text-center">
+                {language === 'vi' ? exhibit.title.vi : exhibit.title.en}
+              </p>
+              <p className="text-[10px] text-slate-400 truncate leading-tight w-full text-center">
+                {language === 'vi' ? exhibit.author.vi : exhibit.author.en}
+              </p>
+              <div className="mt-1.5 w-full bg-amber-500 text-slate-950 font-extrabold text-[10px] py-1 rounded text-center uppercase tracking-wider">
+                {language === 'vi' ? 'Xem chi tiết' : 'View Details'}
+              </div>
+            </div>
+          </Html>
+        )}
       </group>
 
       {/* Đèn spotlight rọi tượng: luôn trong scene graph để tránh recompilation, chỉ đổi intensity, loại bỏ để tránh lag */}
@@ -283,6 +299,11 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({ exhibit, isVisible
   const meshRef = useRef<THREE.Group>(null);
   const isSelected = selectedExhibit?.id === exhibit.id;
 
+  const groupRef = useRef<THREE.Group>(null);
+  const [isNear, setIsNear] = useState(false);
+  const worldPos = useRef(new THREE.Vector3()).current;
+  const playerPos = useRef(new THREE.Vector3()).current;
+
   // Xoay các tượng điêu khắc 3D tự động để tạo chuyển động sinh động
   useFrame((state) => {
     if (isVisible && meshRef.current && exhibit.model_3d_url) {
@@ -292,15 +313,29 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({ exhibit, isVisible
         meshRef.current.position.y = exhibit.coordinate_y + Math.sin(state.clock.getElapsedTime() * 1.5) * 0.1;
       }
     }
+
+    // Tính khoảng cách đến nhân vật người chơi để hiển thị nút Xem chi tiết
+    if (isVisible && groupRef.current) {
+      const player = state.scene.getObjectByName('player-character') || state.scene.getObjectByName('lobby-player');
+      if (player) {
+        groupRef.current.getWorldPosition(worldPos);
+        player.getWorldPosition(playerPos);
+        const dist = worldPos.distanceTo(playerPos);
+        const near = dist < 5.0; // Khoảng cách 5 mét
+        if (near !== isNear) {
+          setIsNear(near);
+        }
+      }
+    }
   });
 
   // Thay đổi con trỏ chuột khi hover vào vật thể tương tác
   useEffect(() => {
-    document.body.style.cursor = (hovered && isVisible) ? 'pointer' : 'auto';
+    document.body.style.cursor = (hovered && isVisible && isNear) ? 'pointer' : 'auto';
     return () => {
       document.body.style.cursor = 'auto';
     };
-  }, [hovered, isVisible]);
+  }, [hovered, isVisible, isNear]);
 
   if (exhibit.model_3d_url) {
     return (
@@ -313,6 +348,8 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({ exhibit, isVisible
         language={language}
         meshRef={meshRef}
         isVisible={isVisible}
+        isNear={isNear}
+        groupRef={groupRef}
       />
     );
   } else {
@@ -325,6 +362,8 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({ exhibit, isVisible
         setSelectedExhibit={setSelectedExhibit}
         language={language}
         isVisible={isVisible}
+        isNear={isNear}
+        groupRef={groupRef}
       />
     );
   }

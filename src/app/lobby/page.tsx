@@ -12,6 +12,7 @@ import { DynamicRoom, ROOM_OFFSETS } from '@/components/3d/DynamicRoom';
 import { MultiplayerAvatars } from '@/components/3d/MultiplayerAvatars';
 import { ArrowLeft, AlertTriangle, Settings } from 'lucide-react';
 import { ExhibitModal } from '@/components/ui/ExhibitModal';
+import MiniGameModal from '@/components/ui/MiniGameModal';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CÁC HẰNG SỐ CỦA SẢNH
@@ -40,7 +41,7 @@ const DOOR_CONFIGS = [
   },
   {
     doorId: 'door-room3',
-    targetRoom: 'gallery-paintings', // Placeholder cửa cuối phòng 2
+    targetRoom: 'gallery-ceramics',
     position: [0, 3.0, 108.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
     label: 'Phòng 03: Giới hạn',
@@ -68,6 +69,11 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 
   // Phòng 2 (gallery-sculptures) — Z từ 58.0 đến 108.0, Y = 3.0
   if (z > 58.0 && z <= 108.0) {
+    return 3.0;
+  }
+
+  // Phòng 3 (gallery-ceramics) — Z từ 108.0 đến 138.0, Y = 3.0
+  if (z > 108.0 && z <= 138.0) {
     return 3.0;
   }
 
@@ -143,6 +149,13 @@ const LobbyCameraController: React.FC = () => {
       maxX = 11.5;
       minZ = 58.2;
       maxZ = 107.8;
+    }
+    // Room 3 (gallery-ceramics): Z spans 108.0 to 138.0, W = 30 -> X from -15 to 15
+    else if (pz > 108.0 && pz <= 138.0) {
+      minX = -14.5;
+      maxX = 14.5;
+      minZ = 108.2;
+      maxZ = 137.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -302,6 +315,21 @@ const LobbyPlayer: React.FC = () => {
         return false;
       }
 
+      // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 108.0 -> 138.0) ──
+      if (z > 108.0 && z <= 138.0) {
+        // Kiểm tra xem phòng 3 có đang mở không
+        const isRoom3Open = doorStates['door-room3']?.isOpen;
+        if (!isRoom3Open) return true;
+
+        // Biên giới tường bên (rộng 30m)
+        if (x < -14.7 || x > 14.7) return true;
+
+        // Tường sau phòng 3 (Z = 138.0)
+        if (z > 137.3) return true;
+
+        return false;
+      }
+
       return false;
     },
     [doorStates]
@@ -395,6 +423,8 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-paintings');
     } else if (curPos.z > 58.0 && curPos.z <= 108.0) {
       setCurrentRoom('gallery-sculptures');
+    } else if (curPos.z > 108.0 && curPos.z <= 138.0) {
+      setCurrentRoom('gallery-ceramics');
     }
 
     // Arm/Leg swing
@@ -539,6 +569,7 @@ export default function LobbyPage() {
     socket,
     updatePreset,
     updateSettings,
+    miniGameOpen,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
@@ -880,6 +911,7 @@ export default function LobbyPage() {
       
       {/* ═══ MODAL CHI TIẾT HIỆN VẬT (Exhibit Modal) ═══ */}
       <ExhibitModal />
+      {miniGameOpen && <MiniGameModal />}
     </div>
   );
 }

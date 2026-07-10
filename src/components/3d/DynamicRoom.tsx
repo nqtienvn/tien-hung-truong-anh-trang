@@ -27,12 +27,14 @@ interface DynamicRoomProps {
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-paintings': { z: 33.0, y: 3.0 },    // Phòng 1: Nối từ cầu thang tầng 2 sảnh (Y = 3m, Z spans 8.0 to 58.0)
   'gallery-sculptures': { z: 83.0, y: 3.0 },   // Phòng 2: Nối tiếp sau phòng 1 (Z spans 58.0 to 108.0)
+  'gallery-ceramics': { z: 123.0, y: 3.0 },    // Phòng 3: Nối tiếp sau phòng 2 (Z spans 108.0 to 138.0)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
 export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-paintings': [0, 3.0, 10.0],    // Spawn gần cửa vào phòng 1 (vừa qua cửa Z=8)
   'gallery-sculptures': [0, 3.0, 60.0],   // Spawn gần cửa vào phòng 2 (vừa qua cửa Z=58)
+  'gallery-ceramics': [0, 3.0, 110.0],    // Spawn gần cửa vào phòng 3 (vừa qua cửa Z=108)
   'lobby': [0, 0, -5.0],                  // Spawn giữa sảnh
 };
 

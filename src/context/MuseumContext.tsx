@@ -27,6 +27,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'lobby': { x: 0, y: 0, z: -5.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 10.0 },
   'gallery-sculptures': { x: 0, y: 3.0, z: 60.0 },
+  'gallery-ceramics': { x: 0, y: 3.0, z: 110.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -139,7 +140,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
     'gallery-paintings': { isOpen: true },
-    'gallery-sculptures': { isOpen: true }
+    'gallery-sculptures': { isOpen: true },
+    'gallery-ceramics': { isOpen: true }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
@@ -521,6 +523,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const idleId = idleCallback(() => {
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-sculptures']?.isOpen) loadRoom('gallery-sculptures');
+      if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 
