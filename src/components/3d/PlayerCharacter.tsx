@@ -55,7 +55,12 @@ export const PlayerCharacter: React.FC = () => {
   // Thiết lập vị trí ban đầu (Spawn Point linh hoạt dựa trên phòng người chơi bấm vào)
   useEffect(() => {
     if (playerRef.current) {
-      const spawnZ = activeGallery?.id === "gallery-sculptures" ? -12 : 12;
+      let spawnZ = 12;
+      if (activeGallery?.id === "gallery-sculptures") {
+        spawnZ = -12;
+      } else if (activeGallery?.id === "gallery-market-economy") {
+        spawnZ = -72; // Đầu phòng thứ nhất (Z chạy từ -75 đến 75)
+      }
       playerRef.current.position.set(0, baseY, spawnZ);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

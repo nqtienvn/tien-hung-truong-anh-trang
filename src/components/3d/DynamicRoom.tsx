@@ -28,7 +28,7 @@ export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-paintings': { z: 33.0, y: 3.0 },    // Phòng 1: Nối từ cầu thang tầng 2 sảnh (Y = 3m, Z spans 8.0 to 58.0)
   'gallery-sculptures': { z: 83.0, y: 3.0 },   // Phòng 2: Nối tiếp sau phòng 1 (Z spans 58.0 to 108.0)
   'gallery-three': { z: 133.0, y: 3.0 },       // Phòng 3: Nối tiếp sau phòng 2 (Z spans 108.0 to 158.0)
-  'gallery-market-economy': { z: 183.0, y: 3.0 }, // Phòng 4: Nối tiếp sau phòng 3 (Z spans 158.0 to 208.0)
+  'gallery-market-economy': { z: 233.0, y: 3.0 }, // Phòng 4: Nối tiếp sau phòng 3 (Z spans 158.0 to 308.0)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng

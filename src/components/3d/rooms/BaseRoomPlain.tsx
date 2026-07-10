@@ -117,6 +117,22 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
 }) => {
   const { activeGallery, setSelectedExhibit } = useMuseum();
 
+
+  // Đọc cấu hình động hoặc fallback về mặc định
+  const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
+  const roomLength = customSettings?.room_length ?? activeGallery?.room_length ?? 30;
+  const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
+  const floorColor = customSettings?.floor_color ?? activeGallery?.floor_color ?? '#4e3629';
+  const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
+  const floorType = customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood';
+
+  // Tính toán kích thước trần vòm và giếng trời
+  const skylightWidth = Math.min(roomWidth * 0.4, 5);
+  const sideWidth = (roomWidth - skylightWidth) / 2;
+  const panelWidth = sideWidth / Math.cos(Math.PI / 12);
+  const leftPanelX = -(skylightWidth / 2 + sideWidth / 2);
+  const rightPanelX = skylightWidth / 2 + sideWidth / 2;
+  const panelHeightY = roomHeight - 0.6;
   const handleExhibitClick = (
     e: any, 
     item: typeof FIRST_ROOM_EXHIBITS[0], 
@@ -162,24 +178,6 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
       scale_z: 1
     });
   };
-
-
-  // Đọc cấu hình động hoặc fallback về mặc định
-  const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
-  const roomLength = customSettings?.room_length ?? activeGallery?.room_length ?? 30;
-  const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
-  const floorColor = customSettings?.floor_color ?? activeGallery?.floor_color ?? '#4e3629';
-  const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
-  const floorType = customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood';
-
-  // Tính toán kích thước trần vòm và giếng trời
-  const skylightWidth = Math.min(roomWidth * 0.4, 5);
-  const sideWidth = (roomWidth - skylightWidth) / 2;
-  const panelWidth = sideWidth / Math.cos(Math.PI / 12);
-  const leftPanelX = -(skylightWidth / 2 + sideWidth / 2);
-  const rightPanelX = skylightWidth / 2 + sideWidth / 2;
-  const panelHeightY = roomHeight - 0.6;
-
   return (
     <group>
       {/* Hộp chứa meshes, được ẩn/hiện tức thì mà không unmount để tránh lag WebGL */}
