@@ -25,7 +25,9 @@ const closingTimers = {};
 // ═══════════════════════════════════════════════════════════════════════════
 const roomStates = {
   'gallery-paintings': { isOpen: true },
-  'gallery-sculptures': { isOpen: true }
+  'gallery-sculptures': { isOpen: true },
+  'gallery-three': { isOpen: true },
+  'gallery-market-economy': { isOpen: true }
 };
 
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
@@ -177,6 +179,10 @@ io.on('connection', (socket) => {
       user.galleryId = 'gallery-paintings';
     } else if (data.z > 58.0 && data.z <= 108.0) {
       user.galleryId = 'gallery-sculptures';
+    } else if (data.z > 108.0 && data.z <= 158.0) {
+      user.galleryId = 'gallery-three';
+    } else if (data.z > 158.0 && data.z <= 208.0) {
+      user.galleryId = 'gallery-market-economy';
     }
 
     const socketRoom = getSocketRoom(user.galleryId);
@@ -217,7 +223,9 @@ io.on('connection', (socket) => {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-paintings']?.isOpen;
+      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-three']?.isOpen;
+    } else if (doorId === 'door-room4') {
+      canOpen = roomStates['gallery-three']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
     if (!canOpen) {
@@ -294,9 +302,13 @@ io.on('connection', (socket) => {
     // 1. Ràng buộc: Tất cả các cửa liên quan trực tiếp đến phòng này phải đang đóng
     const relatedDoors = [];
     if (roomId === 'gallery-paintings') {
-      relatedDoors.push('door-room1', 'door-room2', 'door-room3');
+      relatedDoors.push('door-room1', 'door-room2', 'door-room3', 'door-room4');
     } else if (roomId === 'gallery-sculptures') {
-      relatedDoors.push('door-room2', 'door-room3');
+      relatedDoors.push('door-room2', 'door-room3', 'door-room4');
+    } else if (roomId === 'gallery-three') {
+      relatedDoors.push('door-room3', 'door-room4');
+    } else if (roomId === 'gallery-market-economy') {
+      relatedDoors.push('door-room4');
     }
 
     const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
@@ -309,6 +321,10 @@ io.on('connection', (socket) => {
     let teleportTo = 'lobby';
     if (roomId === 'gallery-sculptures') {
       teleportTo = 'gallery-paintings';
+    } else if (roomId === 'gallery-three') {
+      teleportTo = 'gallery-sculptures';
+    } else if (roomId === 'gallery-market-economy') {
+      teleportTo = 'gallery-three';
     }
 
     // Đếm số người hiện đang ở trong phòng bị tắt

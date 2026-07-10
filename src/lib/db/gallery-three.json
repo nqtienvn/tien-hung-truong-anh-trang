@@ -1,0 +1,19 @@
+{
+  "galleries": [
+    {
+      "id": "gallery-three",
+      "name": "Giới Hạn & Thử Thách",
+      "description": "Không gian trưng bày các thách thức và bài học kinh nghiệm trong quá trình đổi mới.",
+      "scene_asset_url": "",
+      "is_active": true,
+      "room_width": 24,
+      "room_length": 50,
+      "room_height": 6,
+      "floor_color": "#2c1d11",
+      "wall_color": "#5c1d13",
+      "wainscoting_color": "#eae5dc",
+      "floor_type": "wood"
+    }
+  ],
+  "exhibits": []
+}

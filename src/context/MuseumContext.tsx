@@ -26,6 +26,8 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'lobby': { x: 0, y: 0, z: -5.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 10.0 },
   'gallery-sculptures': { x: 0, y: 3.0, z: 60.0 },
+  'gallery-three': { x: 0, y: 3.0, z: 110.0 },
+  'gallery-market-economy': { x: 0, y: 3.0, z: 160.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -115,7 +117,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
     'gallery-paintings': { isOpen: true },
-    'gallery-sculptures': { isOpen: true }
+    'gallery-sculptures': { isOpen: true },
+    'gallery-three': { isOpen: true },
+    'gallery-market-economy': { isOpen: true }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
@@ -359,15 +363,17 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (settings.preset === 'low') return;
 
-    const idleCallback = typeof window !== 'undefined' 
-      ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000))) 
+    const idleCallback = typeof window !== 'undefined'
+      ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000)))
       : null;
-    
+
     if (!idleCallback) return;
 
     const idleId = idleCallback(() => {
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-sculptures']?.isOpen) loadRoom('gallery-sculptures');
+      if (roomStates['gallery-three']?.isOpen) loadRoom('gallery-three');
+      if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 

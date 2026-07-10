@@ -50,19 +50,19 @@ export const ExhibitModal: React.FC = () => {
   return (
     <div className="absolute right-4 top-20 bottom-20 w-[350px] sm:w-[400px] z-50 flex flex-col pointer-events-auto">
       <div className="flex-1 bg-slate-950/80 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-100 transition-all duration-300">
-        
+
         {/* Ảnh xem trước ở đầu Modal */}
         <div className="relative h-48 w-full bg-slate-900 border-b border-slate-800">
-          <img 
-            src={selectedExhibit.thumbnail_url} 
+          <img
+            src={selectedExhibit.thumbnail_url}
             alt={titleText}
             className="w-full h-full object-cover opacity-90"
           />
           {/* Lớp phủ dốc (Gradient Overlay) */}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
-          
+
           {/* Nút đóng */}
-          <button 
+          <button
             onClick={() => setSelectedExhibit(null)}
             className="absolute top-4 right-4 bg-slate-900/80 hover:bg-slate-800/80 text-slate-300 hover:text-white p-2 rounded-full border border-slate-700/50 backdrop-blur-sm transition-colors cursor-pointer"
           >
@@ -77,7 +77,7 @@ export const ExhibitModal: React.FC = () => {
 
         {/* Nội dung chi tiết */}
         <div className="flex-1 p-6 overflow-y-auto space-y-5 custom-scrollbar">
-          
+
           {/* Tiêu đề & Tác giả */}
           <div>
             <h2 className="text-2xl font-bold tracking-tight text-white leading-tight mb-1">
@@ -98,13 +98,13 @@ export const ExhibitModal: React.FC = () => {
               {language === 'vi' ? 'Ngôn ngữ thuyết minh' : 'Guide Language'}
             </span>
             <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-              <button 
+              <button
                 onClick={() => setLanguage('vi')}
                 className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer ${language === 'vi' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
               >
                 VI
               </button>
-              <button 
+              <button
                 onClick={() => setLanguage('en')}
                 className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer ${language === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
               >
@@ -135,10 +135,10 @@ export const ExhibitModal: React.FC = () => {
                 {formatTime(audioProgress)} / {formatTime(audioDuration)}
               </span>
             </div>
-            
+
             {/* Thanh tiến trình */}
             <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative">
-              <div 
+              <div
                 className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
                 style={{ width: `${(audioProgress / audioDuration) * 100}%` }}
               />

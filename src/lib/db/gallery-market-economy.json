@@ -1,0 +1,19 @@
+{
+  "galleries": [
+    {
+      "id": "gallery-market-economy",
+      "name": "Kinh Tế Thị Trường Định Hướng XHCN",
+      "description": "Không gian trưng bày các đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam (1996 - Nay).",
+      "scene_asset_url": "",
+      "is_active": true,
+      "room_width": 24,
+      "room_length": 50,
+      "room_height": 6,
+      "floor_color": "#f8fafc",
+      "wall_color": "#f1f5f9",
+      "wainscoting_color": "#cbd5e1",
+      "floor_type": "marble"
+    }
+  ],
+  "exhibits": []
+}

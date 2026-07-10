@@ -17,7 +17,7 @@ export interface BaseRoomProps {
   children?: React.ReactNode;
 }
 
-export const BaseRoom: React.FC<BaseRoomProps> = ({ 
+export const BaseRoomPlain: React.FC<BaseRoomProps> = ({ 
   galleryId, 
   customSettings, 
   isVisible = true,
@@ -31,7 +31,6 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
   const floorColor = customSettings?.floor_color ?? activeGallery?.floor_color ?? '#4e3629';
   const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
-  const wainscotingColor = customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#eae5dc';
   const floorType = customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood';
 
   // Tính toán kích thước trần vòm và giếng trời
@@ -151,7 +150,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
 
-        {/* 3. BỨC TƯỜNG & PHÀO CHÂN TƯỜNG (Dynamic Walls & Wainscoting) */}
+        {/* 3. BỨC TƯỜNG (Dynamic Walls) */}
         {/* Tường trái */}
         <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, roomHeight, 0.2]} />
@@ -204,101 +203,6 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
 
-        {/* Ốp gỗ chân tường (Wainscoting) màu kem sáng cao 1.2m */}
-        {/* Wainscoting tường trái */}
-        <mesh position={[-roomWidth / 2 + 0.112, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[roomLength, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
-        </mesh>
-        <mesh position={[-roomWidth / 2 + 0.124, 1.2, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[roomLength, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
-        </mesh>
-
-        {/* Wainscoting tường phải */}
-        <mesh position={[roomWidth / 2 - 0.112, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <boxGeometry args={[roomLength, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
-        </mesh>
-        <mesh position={[roomWidth / 2 - 0.124, 1.2, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <boxGeometry args={[roomLength, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
-        </mesh>
-
-        {/* Wainscoting tường trước bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1.056), 0.6, -roomLength / 2 + 0.112]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
-        </mesh>
-        <mesh position={[-(roomWidth / 4 + 1.056), 1.2, -roomLength / 2 + 0.124]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
-        </mesh>
-        {/* Wainscoting tường trước bên phải */}
-        <mesh position={[roomWidth / 4 + 1.056, 0.6, -roomLength / 2 + 0.112]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
-        </mesh>
-        <mesh position={[roomWidth / 4 + 1.056, 1.2, -roomLength / 2 + 0.124]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
-        </mesh>
-
-        {/* Wainscoting tường sau bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1.056), 0.6, roomLength / 2 - 0.112]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
-        </mesh>
-        <mesh position={[-(roomWidth / 4 + 1.056), 1.2, roomLength / 2 - 0.124]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
-        </mesh>
-        {/* Wainscoting tường sau bên phải */}
-        <mesh position={[roomWidth / 4 + 1.056, 0.6, roomLength / 2 - 0.112]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
-        </mesh>
-        <mesh position={[roomWidth / 4 + 1.056, 1.2, roomLength / 2 - 0.124]}>
-          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
-        </mesh>
-
-        {/* Các cột trang trí ốp tường (Pilasters) giả lập thạch cao trắng kem dọc hai bên */}
-        {Array.from({ length: 6 }).map((_, idx) => {
-          const zPos = -roomLength / 2 + 2.5 + idx * ((roomLength - 5) / 5);
-          // Bỏ qua cột ở vị trí vách ngăn hành lang (Z = -3, Z = 3) hoặc vách ngăn phụ (Z = 13) để tránh va chạm hình ảnh
-          if (Math.abs(zPos - 3) < 2 || Math.abs(zPos + 3) < 2 || Math.abs(zPos - 13) < 2) return null;
-
-          return (
-            <group key={`pilasters-${idx}`}>
-              {/* Cột trái */}
-              <mesh position={[-roomWidth / 2 + 0.13, roomHeight / 2, zPos]}>
-                <boxGeometry args={[0.1, roomHeight, 0.4]} />
-                <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
-              </mesh>
-              {/* Cột phải */}
-              <mesh position={[roomWidth / 2 - 0.13, roomHeight / 2, zPos]}>
-                <boxGeometry args={[0.1, roomHeight, 0.4]} />
-                <meshStandardMaterial color={wainscotingColor} roughness={0.8} />
-              </mesh>
-            </group>
-          );
-        })}
-
-        {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - MESHES ONLY */}
-        {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
-          <group key={`hall-light-mesh-${idx}`} position={[0, roomHeight - 1.0, zPos]}>
-            <mesh>
-              <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
-              <meshStandardMaterial color="#334155" metalness={0.8} />
-            </mesh>
-            <mesh position={[0, -0.06, 0]}>
-              <sphereGeometry args={[0.08, 16, 16]} />
-              <meshBasicMaterial color="#fff" />
-            </mesh>
-          </group>
-        ))}
-
         {/* Render các phần tử riêng biệt của phòng con */}
         {children}
       </group>
@@ -317,4 +221,4 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   );
 };
 
-export default BaseRoom;
+export default BaseRoomPlain;
