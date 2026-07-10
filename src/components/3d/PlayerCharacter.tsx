@@ -158,15 +158,7 @@ export const PlayerCharacter: React.FC = () => {
         }
       }
 
-      // 2. Va chạm với 5 bệ đỡ mô hình trong phòng đầu tiên (Z từ -75 đến -50)
-      const modelZPositions = [-71.0, -67.0, -63.0, -59.0, -55.0];
-      for (const pZ of modelZPositions) {
-        const dx = x - 0;
-        const dz = z - pZ;
-        if (Math.sqrt(dx * dx + dz * dz) < 0.65) {
-          return true;
-        }
-      }
+
     }
 
     return false;

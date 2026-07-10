@@ -367,21 +367,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {/* Exhibits & Models inside the first room of gallery-market-economy */}
         {galleryId === 'gallery-market-economy' && FIRST_ROOM_EXHIBITS.map((item, idx) => (
           <group key={`first-room-item-${idx}`}>
-            {/* Bệ đỡ mô hình 3D */}
-            <mesh 
-              position={[0, 0.5, item.z]}
-              onClick={(e) => handleExhibitClick(e, item, idx, 'model')}
-              onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
-              onPointerOut={() => { document.body.style.cursor = 'auto'; }}
-            >
-              <cylinderGeometry args={[0.42, 0.52, 1.0, 16]} />
-              <meshStandardMaterial color="#2d3748" metalness={0.8} roughness={0.2} />
-            </mesh>
-            <FloatingModel 
-              type={item.modelType} 
-              z={item.z} 
-              onClick={(e) => handleExhibitClick(e, item, idx, 'model')}
-            />
+
 
             {/* Ảnh tường Trái */}
             <group 
