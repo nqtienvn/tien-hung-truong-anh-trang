@@ -137,6 +137,32 @@ export const PlayerCharacter: React.FC = () => {
       }
     }
 
+    // ── COLLISIONS FOR ROOM 4 (gallery-market-economy) ──
+    if (galleryId === 'gallery-market-economy') {
+      const roomLength = activeGallery?.room_length ?? 50;
+      const zPositions = [];
+      for (let i = 1; i <= 5; i++) {
+        zPositions.push(-roomLength / 2 + i * (roomLength / 6));
+      }
+      for (const pZ of zPositions) {
+        if (z > pZ - 0.35 && z < pZ + 0.35) {
+          // Lối đi mở rộng 4m ở chính giữa (-2.0 đến 2.0). Bị chặn nếu nằm ở hai bên.
+          if (x < -2.0 || x > 2.0) {
+            return true;
+          }
+        }
+      }
+
+      // 2. Va chạm với 5 bệ đỡ mô hình trong phòng đầu tiên (Z từ -75 đến -50)
+      const modelZPositions = [-71.0, -67.0, -63.0, -59.0, -55.0];
+      for (const pZ of modelZPositions) {
+        const dx = x - 0;
+        const dz = z - pZ;
+        if (Math.sqrt(dx * dx + dz * dz) < 0.65) {
+          return true;
+        }
+      }
+    }
 
     return false;
   };

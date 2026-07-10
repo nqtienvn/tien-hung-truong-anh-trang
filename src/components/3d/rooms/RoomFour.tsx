@@ -96,6 +96,8 @@ const Zone2BalanceScale: React.FC<ZoneProps> = () => null;
 // ═══════════════════════════════════════════════════════════════════════════
 
 
+
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN — RoomFour Component
 // ═══════════════════════════════════════════════════════════════════════════
@@ -105,7 +107,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
 
   const modifiedSettings = {
     room_width: customSettings?.room_width ?? activeGallery?.room_width ?? 12,
-    room_length: customSettings?.room_length ?? activeGallery?.room_length ?? 50,
+    room_length: customSettings?.room_length ?? activeGallery?.room_length ?? 72,
     room_height: roomHeight,
     floor_color: customSettings?.floor_color ?? activeGallery?.floor_color ?? '#1e293b',
     wall_color: customSettings?.wall_color ?? activeGallery?.wall_color ?? '#0f172a',
@@ -256,6 +258,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       <ambientLight intensity={entranceLight} />
       <directionalLight position={[5, 10, 5]} intensity={0.55} />
       <pointLight position={[0, roomHeight - 1, 0]} intensity={isVisible ? 2.8 : 0} distance={38} color="#ffffff" />
+
+
 
 
 
