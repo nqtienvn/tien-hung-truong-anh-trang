@@ -14,6 +14,7 @@ export interface BaseRoomProps {
     floor_type: 'wood' | 'marble' | 'carpet';
   };
   isVisible?: boolean;
+  showPilasters?: boolean;
   children?: React.ReactNode;
 }
 
@@ -21,6 +22,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   galleryId, 
   customSettings, 
   isVisible = true,
+  showPilasters = true,
   children 
 }) => {
   const { activeGallery } = useMuseum();
@@ -34,13 +36,8 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   const wainscotingColor = customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#eae5dc';
   const floorType = customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood';
 
-  // Tính toán kích thước trần vòm và giếng trời
+  // Kích thước giếng trời
   const skylightWidth = Math.min(roomWidth * 0.4, 5);
-  const sideWidth = (roomWidth - skylightWidth) / 2;
-  const panelWidth = sideWidth / Math.cos(Math.PI / 12);
-  const leftPanelX = -(skylightWidth / 2 + sideWidth / 2);
-  const rightPanelX = skylightWidth / 2 + sideWidth / 2;
-  const panelHeightY = roomHeight - 0.6;
 
   return (
     <group>
@@ -98,22 +95,14 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
           </mesh>
         )}
 
-        {/* 2. TRẦN NHÀ HÌNH VÒM & GIẾNG TRỜI (Vaulted Ceiling & Glass Skylight) */}
-        {/* Tấm trần vòm nghiêng bên trái */}
-        <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]}>
-          <boxGeometry args={[panelWidth, 0.1, roomLength]} />
+        {/* 2. TRẦN NHÀ PHẲNG & GIẾNG TRỜI (Flat Ceiling & Glass Skylight) */}
+        {/* Tấm trần phẳng toàn phòng */}
+        <mesh position={[0, roomHeight, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[roomWidth, roomLength]} />
           <meshStandardMaterial 
             color="#eae5dc" 
             roughness={0.8}
-          />
-        </mesh>
-
-        {/* Tấm trần vòm nghiêng bên phải */}
-        <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]}>
-          <boxGeometry args={[panelWidth, 0.1, roomLength]} />
-          <meshStandardMaterial 
-            color="#eae5dc"
-            roughness={0.8}
+            side={THREE.DoubleSide}
           />
         </mesh>
 
@@ -263,8 +252,8 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
 
-        {/* Các cột trang trí ốp tường (Pilasters) giả lập thạch cao trắng kem dọc hai bên */}
-        {Array.from({ length: 6 }).map((_, idx) => {
+        {/* Các cột trang trí ốp tường (Pilasters) — ẩn nếu showPilasters=false */}
+        {showPilasters && Array.from({ length: 6 }).map((_, idx) => {
           const zPos = -roomLength / 2 + 2.5 + idx * ((roomLength - 5) / 5);
           // Bỏ qua cột ở vị trí vách ngăn hành lang (Z = -3, Z = 3) hoặc vách ngăn phụ (Z = 13) để tránh va chạm hình ảnh
           if (Math.abs(zPos - 3) < 2 || Math.abs(zPos + 3) < 2 || Math.abs(zPos - 13) < 2) return null;

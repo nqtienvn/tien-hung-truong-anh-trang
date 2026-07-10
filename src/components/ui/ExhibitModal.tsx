@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { X, Play, Pause, Globe, User, BookOpen, Volume2 } from 'lucide-react';
+import { X, Play, Pause, Globe, User, BookOpen, Volume2, Gamepad2 } from 'lucide-react';
 import { useMuseum } from '@/context/MuseumContext';
 
 export const ExhibitModal: React.FC = () => {
-  const { selectedExhibit, setSelectedExhibit, language, setLanguage, audioPlaying, setAudioPlaying } = useMuseum();
+  const { 
+    selectedExhibit, 
+    setSelectedExhibit, 
+    language, 
+    setLanguage, 
+    audioPlaying, 
+    setAudioPlaying,
+    setMiniGameOpen,
+    hasPlayed,
+    gameState,
+    initializeGame
+  } = useMuseum();
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(150); // 2 phút 30 giây mặc định
 
@@ -117,53 +128,51 @@ export const ExhibitModal: React.FC = () => {
           <div className="space-y-2">
             <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
               <BookOpen size={14} />
-              {language === 'vi' ? 'Thuyết minh tác phẩm' : 'Explanatory Note'}
+              {selectedExhibit.id === 'vn-back-right'
+                ? (language === 'vi' ? 'Luật chơi' : 'Rules of the Game')
+                : (language === 'vi' ? 'Thuyết minh tác phẩm' : 'Explanatory Note')}
             </span>
             <p className="text-sm text-slate-300 leading-relaxed font-sans text-justify bg-slate-900/20 p-3 rounded-xl border border-slate-900">
               {descriptionText}
             </p>
           </div>
 
-          {/* Audio Guide (Thuyết minh giọng nói giả lập) */}
-          <div className="bg-gradient-to-br from-amber-500/10 to-transparent p-4 rounded-xl border border-amber-500/20 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1.5">
-                <Volume2 size={14} />
-                AUDIO GUIDE
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {formatTime(audioProgress)} / {formatTime(audioDuration)}
-              </span>
+          {/* Nút chơi game cho hiện vật WTO */}
+          {selectedExhibit.id === 'vn-back-right' && (
+            <div className="bg-gradient-to-br from-cyan-500/10 to-transparent p-4 rounded-xl border border-cyan-500/25 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5">
+                  <Gamepad2 size={14} />
+                  {language === 'vi' ? 'DÒNG CHẢY LỊCH SỬ' : 'HISTORY FLOW'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-normal">
+                {language === 'vi' 
+                  ? 'Kiểm tra trí nhớ của bạn qua trò chơi lật thẻ bài về các dấu mốc hội nhập WTO & thế giới.' 
+                  : 'Test your memory with our card matching game about Vietnam\'s integration milestones.'}
+              </p>
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    // Chỉ khởi tạo game mới khi game ở trạng thái nhàn rỗi ban đầu
+                    if (gameState === 'idle') {
+                      initializeGame();
+                    }
+                    setMiniGameOpen(true);
+                    setSelectedExhibit(null); // Đóng modal chi tiết
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-6 rounded-xl font-bold text-xs transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer shadow-lg shadow-cyan-500/20"
+                >
+                  <Gamepad2 size={14} fill="currentColor" />
+                  {gameState === 'playing' 
+                    ? (language === 'vi' ? 'TIẾP TỤC CHƠI' : 'RESUME GAME')
+                    : (gameState === 'won' || gameState === 'lost'
+                      ? (language === 'vi' ? 'XEM KẾT QUẢ' : 'VIEW RESULTS')
+                      : (language === 'vi' ? 'BẮT ĐẦU CHƠI GAME' : 'START GAME'))}
+                </button>
+              </div>
             </div>
-            
-            {/* Thanh tiến trình */}
-            <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative">
-              <div 
-                className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
-                style={{ width: `${(audioProgress / audioDuration) * 100}%` }}
-              />
-            </div>
-
-            {/* Điều khiển audio */}
-            <div className="flex justify-center">
-              <button
-                onClick={() => setAudioPlaying(!audioPlaying)}
-                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2 px-6 rounded-full font-bold text-xs transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20"
-              >
-                {audioPlaying ? (
-                  <>
-                    <Pause size={14} fill="currentColor" />
-                    {language === 'vi' ? 'TẠM DỪNG BÀI NGHE' : 'PAUSE AUDIO'}
-                  </>
-                ) : (
-                  <>
-                    <Play size={14} fill="currentColor" />
-                    {language === 'vi' ? 'NGHE THUYẾT MINH' : 'PLAY AUDIO GUIDE'}
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          )}
 
         </div>
       </div>

@@ -253,7 +253,7 @@ export default function Home() {
                   lụy của sự tập trung quyền lực kinh tế.
                 </p>
                 <Link
-                  href="/gallery/gallery-sculptures"
+                  href="/gallery/gallery-ceramics"
                   className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
                 >
                   Vào phòng

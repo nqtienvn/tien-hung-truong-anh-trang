@@ -6,6 +6,7 @@ import { useMuseum } from '@/context/MuseumContext';
 import { Gallery, Exhibit } from '@/lib/db';
 import GalleryCanvas from '@/components/3d/GalleryCanvas';
 import ExhibitModal from '@/components/ui/ExhibitModal';
+import MiniGameModal from '@/components/ui/MiniGameModal';
 import { Users, MessageSquare, ArrowLeft, SendHorizontal, Settings } from 'lucide-react';
 
 interface ChatMessage {
@@ -36,7 +37,8 @@ export default function GalleryPage({ params }: PageProps) {
     isAdmitted,
     settings,
     updateSettings,
-    updatePreset
+    updatePreset,
+    miniGameOpen
   } = useMuseum();
 
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
@@ -343,6 +345,7 @@ export default function GalleryPage({ params }: PageProps) {
 
       {/* 4. MODAL THUYẾT MINH HIỆN VẬT (Z-INDEX: 50) */}
       {nickname && !inQueue && isAdmitted && <ExhibitModal />}
+      {nickname && !inQueue && isAdmitted && miniGameOpen && <MiniGameModal />}
 
       {/* 5. MÀN HÌNH HÀNG CHỜ KHI PHÒNG ĐẦY (QUEUE OVERLAY) */}
       {nickname && inQueue && (

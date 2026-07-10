@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
 
@@ -19,6 +19,7 @@ export interface MultiplayerUser {
   z: number;
   yaw: number;
   galleryId: string;
+  status?: string;
 }
 
 // Vị trí spawn của các phòng trưng bày
@@ -91,6 +92,29 @@ interface MuseumContextType {
   roomClosingAlert: RoomClosingAlert | null;
   teleportTarget: { x: number; y: number; z: number } | null;
   clearTeleport: () => void;
+  miniGameOpen: boolean;
+  setMiniGameOpen: (open: boolean) => void;
+  leaderboard: Array<{ nickname: string; score: number; time: string }>;
+  hasPlayed: boolean;
+  setHasPlayed: (played: boolean) => void;
+  gameState: 'idle' | 'playing' | 'won' | 'lost';
+  orderedEvents: GameEvent[];
+  score: number;
+  timeLeft: number;
+  lastCheckResults: boolean[] | null;
+  initializeGame: () => void;
+  swapEvents: (idx1: number, idx2: number) => void;
+  checkOrder: () => void;
+}
+
+export interface GameEvent {
+  id: string;
+  year: string;
+  sortOrder: number;
+  titleVi: string;
+  titleEn: string;
+  iconId: number;
+  color: string;
 }
 
 const MuseumContext = createContext<MuseumContextType | undefined>(undefined);
@@ -122,8 +146,126 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [doorClosingAlert, setDoorClosingAlert] = useState<{ doorId: string; teleportTo: string; countdownMs: number } | null>(null);
   const [roomClosingAlert, setRoomClosingAlert] = useState<RoomClosingAlert | null>(null);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [miniGameOpen, setMiniGameOpen] = useState<boolean>(false);
+  const [leaderboard, setLeaderboard] = useState<Array<{ nickname: string; score: number; time: string }>>([]);
+  const [hasPlayed, setHasPlayedState] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const played = localStorage.getItem('museum_has_played_game');
+      if (played === 'true') {
+        setHasPlayedState(true);
+      }
+    }
+  }, []);
+
+  const setHasPlayed = useCallback((val: boolean) => {
+    setHasPlayedState(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('museum_has_played_game', val ? 'true' : 'false');
+    }
+  }, []);
 
   const clearTeleport = useCallback(() => setTeleportTarget(null), []);
+
+  // --- Game State ---
+  const [gameState, setGameState] = useState<'idle' | 'playing' | 'won' | 'lost'>('idle');
+  const [orderedEvents, setOrderedEvents] = useState<GameEvent[]>([]);
+  const [score, setScore] = useState(1000);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [lastCheckResults, setLastCheckResults] = useState<boolean[] | null>(null);
+
+  const HISTORY_EVENTS = useMemo(() => [
+    { id: 'vn-left-1', year: '1986', sortOrder: 0, titleVi: 'Đại hội VI - Đổi mới', titleEn: '6th Party Congress - Doi Moi', iconId: 1, color: '#fbbf24' },
+    { id: 'vn-left-2', year: '1988', sortOrder: 1, titleVi: 'Khoán 10', titleEn: 'Resolution 10 (Khoan 10)', iconId: 2, color: '#ec4899' },
+    { id: 'vn-left-3', year: '1989', sortOrder: 2, titleVi: 'Việt Nam rút quân khỏi Campuchia', titleEn: 'Withdrawal from Cambodia', iconId: 4, color: '#3b82f6' },
+    { id: 'vn-right-1', year: '1989', sortOrder: 3, titleVi: 'Việt Nam trở thành nước xuất khẩu gạo', titleEn: 'VN becomes a major rice exporter', iconId: 3, color: '#10b981' },
+    { id: 'vn-back-left', year: '1991', sortOrder: 4, titleVi: 'Liên Xô tan rã', titleEn: 'Soviet Union dissolution', iconId: 5, color: '#a855f7' },
+    { id: 'vn-right-2', year: '03/02/1994', sortOrder: 5, titleVi: 'Hoa Kỳ bãi bỏ cấm vận', titleEn: 'US lifts trade embargo', iconId: 6, color: '#06b6d4' },
+    { id: 'vn-right-3', year: '11/07/1995', sortOrder: 6, titleVi: 'Bình thường hóa quan hệ Việt Nam – Hoa Kỳ', titleEn: 'Normalization of US-VN relations', iconId: 1, color: '#f59e0b' },
+    { id: 'vn-door-left', year: '28/07/1995', sortOrder: 7, titleVi: 'Việt Nam gia nhập ASEAN', titleEn: 'VN joins ASEAN', iconId: 3, color: '#ef4444' },
+    { id: 'vn-door-right', year: '24/10/1995', sortOrder: 8, titleVi: 'Nhật thực toàn phần tại Việt Nam', titleEn: 'Total solar eclipse in Vietnam', iconId: 6, color: '#6366f1' }
+  ], []);
+
+  const orderedEventsRef = React.useRef(orderedEvents);
+  useEffect(() => {
+    orderedEventsRef.current = orderedEvents;
+  }, [orderedEvents]);
+
+  // Khởi tạo game mới và trộn 9 ô ngẫu nhiên
+  const initializeGame = useCallback(() => {
+    let shuffled = [...HISTORY_EVENTS];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    setOrderedEvents(shuffled);
+    setScore(0); // Bắt đầu từ 0 điểm
+    setTimeLeft(180); // 3 phút = 180 giây
+    setGameState('playing');
+    setLastCheckResults(null);
+    socket?.emit('update-status', 'playing-game');
+  }, [socket, HISTORY_EVENTS]);
+
+  // Bộ đếm thời gian chạy nền
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Tính điểm dựa trên số ô đúng khi hết giờ
+          const currentEvents = orderedEventsRef.current;
+          const correctCount = currentEvents.filter((event, idx) => event.sortOrder === idx).length;
+          const finalScore = correctCount * 10;
+          
+          setScore(finalScore);
+          setGameState('lost');
+          socket?.emit('submit-score', { score: finalScore });
+          socket?.emit('update-status', '');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameState, socket]);
+
+  // Tráo đổi vị trí giữa 2 ô sự kiện
+  const swapEvents = useCallback((idx1: number, idx2: number) => {
+    setOrderedEvents((prev) => {
+      const copy = [...prev];
+      const temp = copy[idx1];
+      copy[idx1] = copy[idx2];
+      copy[idx2] = temp;
+      return copy;
+    });
+    setLastCheckResults(null); // Reset kết quả check trước đó khi người chơi thay đổi vị trí
+  }, []);
+
+  // Xác nhận kiểm tra thứ tự
+  const checkOrder = useCallback(() => {
+    const results = orderedEvents.map((event, idx) => event.sortOrder === idx);
+    setLastCheckResults(results);
+
+    const correctCount = results.filter(r => r === true).length;
+    
+    if (correctCount === 9) {
+      // Đúng hết cả 9 câu -> 100 điểm
+      setScore(100);
+      setGameState('won');
+      socket?.emit('submit-score', { score: 100 });
+      socket?.emit('update-status', '');
+    } else {
+      // Không đúng hết -> mỗi câu đúng được 10 điểm
+      const currentScore = correctCount * 10;
+      setScore(currentScore);
+      // Phạt trừ 5 giây cho mỗi lần check sai thứ tự
+      setTimeLeft((prev) => Math.max(0, prev - 5));
+    }
+  }, [orderedEvents, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
     preset: 'medium',
@@ -329,6 +471,17 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       delete otherUsersPositions.current[userId];
     });
 
+    newSocket.on('user-status-updated', (data: { id: string; status: string }) => {
+      setOtherUsers(prev => prev.map(u => u.id === data.id ? { ...u, status: data.status } : u));
+      if (otherUsersPositions.current[data.id]) {
+        otherUsersPositions.current[data.id].status = data.status;
+      }
+    });
+
+    newSocket.on('leaderboard-updated', (board: Array<{ nickname: string; score: number; time: string }>) => {
+      setLeaderboard(board);
+    });
+
     setSocket(newSocket);
 
     return () => {
@@ -483,6 +636,19 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         roomClosingAlert,
         teleportTarget,
         clearTeleport,
+        miniGameOpen,
+        setMiniGameOpen,
+        leaderboard,
+        hasPlayed,
+        setHasPlayed,
+        gameState,
+        orderedEvents,
+        score,
+        timeLeft,
+        lastCheckResults,
+        initializeGame,
+        swapEvents,
+        checkOrder,
       }}
     >
       {children}

@@ -22,14 +22,31 @@ const PaintingComponent: React.FC<{
 }> = ({ exhibit, isSelected, hovered, setHovered, setSelectedExhibit, language, isVisible = true }) => {
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
+  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+
+  // Force material update khi texture load xong
+  useEffect(() => {
+    if (!matRef.current) return;
+    if (texture && !textureError) {
+      matRef.current.map = texture;
+      matRef.current.color.set('#ffffff');
+    } else {
+      matRef.current.map = null;
+      matRef.current.color.set('#1a1a1a');
+    }
+    matRef.current.needsUpdate = true;
+  }, [texture, textureError]);
 
   useEffect(() => {
     if (!exhibit.thumbnail_url) return;
     
     const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
     loader.load(
       exhibit.thumbnail_url,
       (loadedTexture) => {
+        loadedTexture.colorSpace = THREE.SRGBColorSpace;
+        loadedTexture.needsUpdate = true;
         setTexture(loadedTexture);
       },
       undefined,
@@ -72,17 +89,7 @@ const PaintingComponent: React.FC<{
         {/* 2. Mặt tranh */}
         <mesh position={[0, 0, 0.08]}>
           <planeGeometry args={[exhibit.scale_x, exhibit.scale_y]} />
-          {texture && !textureError ? (
-            <meshStandardMaterial 
-              map={texture} 
-              roughness={0.5}
-            />
-          ) : (
-            <meshStandardMaterial 
-              color="#2a2e33" 
-              roughness={0.8}
-            />
-          )}
+          <meshBasicMaterial ref={matRef} color="#1a1a1a" side={THREE.DoubleSide} />
         </mesh>
 
         {/* 3. Tấm nhãn tên tác phẩm nhỏ bên dưới */}

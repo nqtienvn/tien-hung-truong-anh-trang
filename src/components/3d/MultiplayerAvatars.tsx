@@ -193,8 +193,13 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
         position={[0, 1.8, 0]}
         center
         distanceFactor={8}
-        className="pointer-events-none select-none text-center"
+        className="pointer-events-none select-none text-center flex flex-col items-center gap-1"
       >
+        {user.status === 'playing-game' && (
+          <div className="bg-amber-500/95 text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full border border-amber-300 shadow-md animate-pulse">
+            🎮 ĐANG CHƠI GAME
+          </div>
+        )}
         <div className="bg-cyan-500/90 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded shadow-lg whitespace-nowrap border border-cyan-300">
           {user.nickname}
         </div>

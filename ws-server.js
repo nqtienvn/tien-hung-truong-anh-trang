@@ -1,5 +1,7 @@
 const http = require('http');
 const { Server } = require('socket.io');
+const fs = require('fs');
+const path = require('path');
 
 // Giới hạn số người tham quan đồng thời tối đa trong một phòng
 const MAX_USERS_PER_ROOM = 30;
@@ -11,6 +13,18 @@ const activeUsers = {};
 // Lưu trữ danh sách socket ID xếp hàng chờ cho từng phòng
 // Cấu trúc: { [socketRoom]: [socketId1, socketId2, ...] }
 const waitingQueues = {};
+
+// Lưu trữ bảng xếp hạng game gốm sứ trong file/bộ nhớ
+const LEADERBOARD_FILE = path.join(__dirname, 'leaderboard.json');
+let leaderboard = [];
+try {
+  if (fs.existsSync(LEADERBOARD_FILE)) {
+    leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, 'utf8'));
+    console.log(`[LEADERBOARD] Đã tải ${leaderboard.length} kỷ lục từ file.`);
+  }
+} catch (e) {
+  console.error('Lỗi đọc file leaderboard.json:', e);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TRẠNG THÁI CỬA PHÒNG (Door States) — Admin điều khiển mở/đóng
@@ -93,6 +107,44 @@ io.on('connection', (socket) => {
   socket.emit('door-states', doorStates);
   // Gửi trạng thái phòng hiện tại cho client mới kết nối
   socket.emit('room-states', roomStates);
+  // Gửi bảng xếp hạng hiện tại cho client
+  socket.emit('leaderboard-updated', leaderboard);
+
+  // Lắng nghe sự kiện cập nhật trạng thái chơi game của user
+  socket.on('update-status', (status) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+    
+    user.status = status;
+    const socketRoom = getSocketRoom(user.galleryId);
+    
+    // Broadcast trạng thái mới cho toàn bộ người chơi trong phòng
+    io.to(socketRoom).emit('user-status-updated', { id: socket.id, status });
+    console.log(`[STATUS-UPDATE] ${user.nickname} (${socket.id}) cập nhật trạng thái: "${status}"`);
+  });
+
+  // Lắng nghe gửi điểm số lên bảng xếp hạng
+  socket.on('submit-score', (data) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+
+    // Thêm điểm vào danh sách
+    leaderboard.push({
+      nickname: user.nickname,
+      score: data.score,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+
+    // Sắp xếp giảm dần và giữ lại top 10
+    leaderboard.sort((a, b) => b.score - a.score);
+    if (leaderboard.length > 10) {
+      leaderboard.splice(10);
+    }
+
+    // Phát sóng bảng xếp hạng mới nhất cho mọi người
+    io.emit('leaderboard-updated', leaderboard);
+    console.log(`[LEADERBOARD] ${user.nickname} gửi điểm: ${data.score}. Bảng xếp hạng đã cập nhật.`);
+  });
 
   // 1. Khi người chơi tham gia phòng
   socket.on('join-room', (data) => {
@@ -125,7 +177,8 @@ io.on('connection', (socket) => {
       x: x || 0,
       y: y || 1.7,
       z: z || 5,
-      yaw: yaw || 0
+      yaw: yaw || 0,
+      status: ''
     };
 
     if (activeInRoom.length < MAX_USERS_PER_ROOM) {

@@ -279,7 +279,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
         <AdaptiveDpr pixelated />
         <AdaptiveEvents />
         <color attach="background" args={['#14141a']} />
-        <fog attach="fog" args={['#14141a', 8, 25]} />
+        <fog attach="fog" args={['#14141a', 15, 60]} />
 
         {/* Ánh sáng chung (tăng độ sáng) */}
         <ambientLight intensity={0.8} />

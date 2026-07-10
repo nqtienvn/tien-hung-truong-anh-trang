@@ -92,50 +92,43 @@ export const PlayerCharacter: React.FC = () => {
     };
   }, []);
 
-  // Kiểm tra va chạm với các vật thể trong phòng (Hành lang rẽ chữ S)
+  // Kiểm tra va chạm với các vật thể trong phòng — chỉ áp dụng đúng theo galleryId
   const checkCollision = (x: number, z: number): boolean => {
-    // 1. Tường ngăn tại Z = 3.0 (phía Paintings): Cổng mở ở bên trái X từ -5.0 đến -2.0
-    // Chặn di chuyển nếu Z nằm trong khoảng [2.7, 3.3] và X nằm ngoài khoảng cổng mở
-    if (z > 2.7 && z < 3.3) {
-      if (x < -5.0 || x > -2.0) {
-        return true;
+    const galleryId = activeGallery?.id;
+
+    // ── Phòng 1: gallery-paintings ──────────────────────────────────────────
+    if (galleryId === 'gallery-paintings') {
+      // 1. Tường ngăn tại Z = 3.0: Cổng mở X từ -5.0 đến -2.0
+      if (z > 2.7 && z < 3.3) {
+        if (x < -5.0 || x > -2.0) return true;
+      }
+
+      // 2. Vách ngăn phụ tại Z = 13.0
+      if (x > -6.3 && x < 6.3 && z > 12.6 && z < 13.4) return true;
+
+      // 3. Ghế băng tại Z = 8.0 và Z = 18.0
+      if (x > -2.3 && x < 2.3 && z > 7.3 && z < 8.7) return true;
+      if (x > -2.3 && x < 2.3 && z > 17.3 && z < 18.7) return true;
+    }
+
+    // ── Phòng 2: gallery-sculptures ─────────────────────────────────────────
+    if (galleryId === 'gallery-sculptures') {
+      // 1. Tường ngăn tại Z = -3.0: Cổng mở X từ 2.0 đến 5.0
+      if (z > -3.3 && z < -2.7) {
+        if (x < 2.0 || x > 5.0) return true;
+      }
+
+      // 2. Bệ đỡ tượng tại Z = -8.0, -14.0, -20.0
+      const pedestalsZ = [-8.0, -14.0, -20.0];
+      const collisionRadius = 1.0;
+      for (const pZ of pedestalsZ) {
+        const dx = x;
+        const dz = z - pZ;
+        if (Math.sqrt(dx * dx + dz * dz) < collisionRadius) return true;
       }
     }
 
-    // 2. Tường ngăn tại Z = -3.0 (phía Sculptures): Cổng mở ở bên phải X từ 2.0 đến 5.0
-    // Chặn di chuyển nếu Z nằm trong khoảng [-3.3, -2.7] và X nằm ngoài khoảng cổng mở
-    if (z > -3.3 && z < -2.7) {
-      if (x < 2.0 || x > 5.0) {
-        return true;
-      }
-    }
-
-    // 3. Vách ngăn phụ phòng tranh tại Z = 13.0 (rộng 12m, X từ -6.0 đến 6.0)
-    // Chặn di chuyển nếu X từ -6.3 đến 6.3 và Z từ 12.6 đến 13.4
-    if (x > -6.3 && x < 6.3 && z > 12.6 && z < 13.4) {
-      return true;
-    }
-
-    // 4. Ghế băng trong phòng tranh tại Z = 8.0 và Z = 18.0
-    // Với buffer va chạm: X từ -2.3 đến 2.3, Z từ 7.3 đến 8.7 và từ 17.3 đến 18.7
-    if (x > -2.3 && x < 2.3 && z > 7.3 && z < 8.7) {
-      return true;
-    }
-    if (x > -2.3 && x < 2.3 && z > 17.3 && z < 18.7) {
-      return true;
-    }
-
-    // 5. Bệ đỡ tượng trong phòng tượng tại Z = -8.0, -14.0, -20.0
-    // Kích thước bệ là 1.0m x 1.0m. Bán kính va chạm là 1.0m
-    const pedestalsZ = [-8.0, -14.0, -20.0];
-    const collisionRadius = 1.0;
-    for (const pZ of pedestalsZ) {
-      const dx = x - 0;
-      const dz = z - pZ;
-      if (Math.sqrt(dx * dx + dz * dz) < collisionRadius) {
-        return true;
-      }
-    }
+    // ── Phòng 3: gallery-ceramics — hoàn toàn trống, không vật cản ──────────
 
     return false;
   };
