@@ -1456,7 +1456,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
       </group>
 
       {/* NPC speech bubble (HTML overlay) */}
-      {showBubble && (
+      {showBubble ? (
         <Html position={[0, 1.8, 0]} center distanceFactor={8} className="pointer-events-none select-none">
           <div 
             className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
@@ -1471,6 +1471,19 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
             <p className="text-xs font-bold leading-normal text-slate-200 text-center">
               {isVi ? infoVi : infoEn}
             </p>
+          </div>
+        </Html>
+      ) : (
+        <Html position={[0, 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+          <div 
+            className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none"
+            style={{ 
+              borderColor: color, 
+              color: color,
+              boxShadow: `0 0 12px ${color}30`
+            }}
+          >
+            !
           </div>
         </Html>
       )}
@@ -1651,7 +1664,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[0]}
           />
           <ZoneNPC 
-            position={[0, 0, -35.5]}
+            position={[3.6, 0, -37.5]}
+            rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Sở hữu)"
             nameEn="Economist (Ownership & Sectors)"
             infoVi="Nền kinh tế Việt Nam có nhiều thành phần (Nhà nước, tư nhân, FDI) cùng hợp tác, bình đẳng và cạnh tranh lành mạnh."
@@ -1674,7 +1688,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[1]}
           />
           <ZoneNPC 
-            position={[0, 0, -10.5]}
+            position={[2.5, 0, -12.5]}
+            rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Thị trường)"
             nameEn="Economist (Market Mechanism)"
             infoVi="Giá cả hàng hóa và dịch vụ được quyết định bởi quy luật cung - cầu khách quan, không còn bị áp đặt hành chính."
@@ -1697,7 +1712,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[2]}
           />
           <ZoneNPC 
-            position={[0, 0, 14.5]}
+            position={[2.5, 0, 12.5]}
+            rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Nhà nước)"
             nameEn="Economist (State Regulation)"
             infoVi="Nhà nước quản lý vĩ mô bằng pháp luật (Luật DN, Thuế), đầu tư hạ tầng thiết yếu (EVN, Cao tốc) để giữ ổn định kinh tế."
@@ -1720,7 +1736,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[3]}
           />
           <ZoneNPC 
-            position={[0, 0, 39.5]}
+            position={[2.5, 0, 37.5]}
+            rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (An sinh)"
             nameEn="Economist (Social Welfare)"
             infoVi="Phát triển kinh tế đi đôi với công bằng xã hội. Người nghèo, vùng sâu được hỗ trợ bảo hiểm y tế, giáo dục và cứu trợ."
@@ -1743,7 +1760,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[4]}
           />
           <ZoneNPC 
-            position={[0, 0, 64.5]}
+            position={[2.5, 0, 62.5]}
+            rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Hội nhập)"
             nameEn="Economist (Global Integration)"
             infoVi="Việt Nam chủ động tham gia WTO, ASEAN và ký kết các hiệp định tự do thương mại để thu hút FDI chất lượng cao từ Intel, Samsung."
