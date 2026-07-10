@@ -237,10 +237,10 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
 
       {/* Thought-provoking popup */}
       {showGuide ? (
-        <Html position={[0, 2.1, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+        <Html position={[0, 2.1, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
           <div
             className="w-[300px] bg-slate-950/97 border border-violet-500/40 px-5 py-4 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
-            style={{ boxShadow: '0 0 32px #a78bfa40' }}
+            style={{ boxShadow: '0 0 32px #a78bfa40', zIndex: 9999, position: 'relative' }}
           >
             <span className="text-[8px] bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2 py-0.5 rounded font-bold tracking-widest block w-max mx-auto mb-3 uppercase">
               Nguyễn Minh Tâm
@@ -249,11 +249,10 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
               {sentences.map((s, i) => (
                 <p
                   key={i}
-                  className={`text-[10px] leading-relaxed ${
-                    i === 2
+                  className={`text-[10px] leading-relaxed ${i === 2
                       ? 'text-violet-300 font-bold italic text-center pt-1 border-t border-violet-500/20'
                       : 'text-slate-300'
-                  }`}
+                    }`}
                 >
                   {i < 2 && <span className="text-violet-400 font-bold mr-1">{i === 0 ? '🤔' : '💭'}</span>}
                   {s}

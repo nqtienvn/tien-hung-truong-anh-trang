@@ -1379,7 +1379,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 
   const handleNpcClick = (e: any) => {
     e.stopPropagation();
-    setForceShow(true);
+    setForceShow(prev => !prev);
   };
 
   const handlePointerOver = (e: any) => {
@@ -1457,10 +1457,10 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 
       {/* NPC speech bubble (HTML overlay) */}
       {showBubble ? (
-        <Html position={[0, 1.8, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+        <Html position={[0, 1.8, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
           <div
             className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
-            style={{ borderColor: `${color}40` }}
+            style={{ borderColor: `${color}40`, zIndex: 9999, position: 'relative' }}
           >
             <span
               className="text-[9px] border px-2 py-0.5 rounded font-bold tracking-wider block w-max mx-auto mb-1.5 uppercase"
@@ -1664,12 +1664,12 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[0]}
           />
           <ZoneNPC
-            position={[3.6, 0, -37.5]}
+            position={[3.5, 0.05, -38]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Sở hữu)"
             nameEn="Economist (Ownership & Sectors)"
-            infoVi="Nền kinh tế Việt Nam có nhiều thành phần (Nhà nước, tư nhân, FDI) cùng hợp tác, bình đẳng và cạnh tranh lành mạnh."
-            infoEn="Vietnam's economy comprises multiple sectors (State, Private, FDI) cooperating and competing on an equal playing field."
+            infoVi="Trong nền kinh tế Việt Nam hiện nay tồn tại nhiều loại hình doanh nghiệp: Doanh nghiệp Nhà nước · Doanh nghiệp tư nhân · Doanh nghiệp có vốn đầu tư nước ngoài. Các doanh nghiệp này cùng cạnh tranh và cùng phát triển."
+            infoEn="Vietnam's current economy includes multiple enterprise types: State-owned enterprises · Private enterprises · Foreign-invested enterprises. These entities compete and grow together."
             language={language}
             color="#ef4444"
             isVisible={isVisible}
@@ -1688,7 +1688,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[1]}
           />
           <ZoneNPC
-            position={[2.5, 0, -12.5]}
+            position={[2.4, 0.05, -14]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Thị trường)"
             nameEn="Economist (Market Mechanism)"
@@ -1712,7 +1712,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[2]}
           />
           <ZoneNPC
-            position={[2.5, 0, 12.5]}
+            position={[2.4, 0.05, 12.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Nhà nước)"
             nameEn="Economist (State Regulation)"
@@ -1736,12 +1736,12 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[3]}
           />
           <ZoneNPC
-            position={[2.5, 0, 37.5]}
+            position={[2.4, 0.05, 37.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (An sinh)"
             nameEn="Economist (Social Welfare)"
-            infoVi="Phát triển kinh tế đi đôi với công bằng xã hội. Người nghèo, vùng sâu được hỗ trợ bảo hiểm y tế, giáo dục và cứu trợ."
-            infoEn="Economic growth is paired with social justice, providing healthcare, education, and disaster relief for the needy."
+            infoVi="Mục tiêu của Việt Nam không chỉ là tăng trưởng kinh tế. Mà còn hướng tới nâng cao chất lượng cuộc sống và bảo đảm cơ hội phát triển cho mọi người."
+            infoEn="Vietnam's goal is not merely economic growth — it also aims to improve quality of life and ensure equal development opportunities for everyone."
             language={language}
             color="#f97316"
             isVisible={isVisible}
@@ -1760,12 +1760,12 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[4]}
           />
           <ZoneNPC
-            position={[2.5, 0, 62.5]}
+            position={[2.4, 0.05, 62.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Hội nhập)"
             nameEn="Economist (Global Integration)"
-            infoVi="Việt Nam chủ động tham gia WTO, ASEAN và ký kết các hiệp định tự do thương mại để thu hút FDI chất lượng cao từ Intel, Samsung."
-            infoEn="Vietnam actively joins WTO, ASEAN, and FTAs to integrate globally and attract top FDI partners like Intel and Samsung."
+            infoVi="Việt Nam chủ động hợp tác với các quốc gia trên thế giới. Thu hút đầu tư. Mở rộng xuất khẩu. Nâng cao năng lực cạnh tranh."
+            infoEn="Vietnam proactively cooperates with countries worldwide — attracting investment, expanding exports, and enhancing its competitive capacity."
             language={language}
             color="#3b82f6"
             isVisible={isVisible}
