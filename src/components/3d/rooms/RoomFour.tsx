@@ -1912,7 +1912,75 @@ interface ZoneNPCProps {
   isVisible: boolean;
   activeIntensity: number;
   onClick?: (e: any) => void;
+  textureUrl?: string;
 }
+
+const NPCStandee: React.FC<{ url: string; color: string }> = ({ url, color }) => {
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  const [textureError, setTextureError] = useState(false);
+
+  useEffect(() => {
+    if (!url) return;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      url,
+      (loadedTexture) => {
+        setTexture(loadedTexture);
+      },
+      undefined,
+      (err) => {
+        console.warn('Lỗi tải texture ronaldo:', url, err);
+        setTextureError(true);
+      }
+    );
+  }, [url]);
+
+  return (
+    <group position={[0, 0.9, 0]}>
+      {/* Glow frame (Center) */}
+      <mesh position={[0, 0, 0]}>
+        <planeGeometry args={[1.28, 1.88]} />
+        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
+      </mesh>
+      {/* Inner Support Plate (Center) */}
+      <mesh position={[0, 0, 0]}>
+        <boxGeometry args={[1.24, 1.84, 0.03]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Front Face (+Z) */}
+      <mesh position={[0, 0, 0.016]} rotation={[0, 0, 0]}>
+        <planeGeometry args={[1.2, 1.8]} />
+        {texture && !textureError ? (
+          <meshBasicMaterial map={texture} side={THREE.FrontSide} toneMapped={false} />
+        ) : (
+          <meshStandardMaterial color="#1e293b" side={THREE.FrontSide} />
+        )}
+      </mesh>
+
+      {/* Back Face (-Z) */}
+      <mesh position={[0, 0, -0.016]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[1.2, 1.8]} />
+        {texture && !textureError ? (
+          <meshBasicMaterial map={texture} side={THREE.FrontSide} toneMapped={false} />
+        ) : (
+          <meshStandardMaterial color="#1e293b" side={THREE.FrontSide} />
+        )}
+      </mesh>
+
+      {/* Metal pole */}
+      <mesh position={[0, -0.9, 0]}>
+        <cylinderGeometry args={[0.06, 0.06, 0.3, 16]} />
+        <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.1} />
+      </mesh>
+      {/* Round stand base */}
+      <mesh position={[0, -1.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.5, 0.5, 0.04, 24]} />
+        <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.2} />
+      </mesh>
+    </group>
+  );
+};
 
 const ZoneNPC: React.FC<ZoneNPCProps> = ({
   position,
@@ -1925,7 +1993,8 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
   color = '#22d3ee',
   isVisible,
   activeIntensity,
-  onClick
+  onClick,
+  textureUrl
 }) => {
   const isVi = language === 'vi';
   const [forceShow, setForceShow] = useState(false);
@@ -1973,44 +2042,48 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
         <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.15 + activeIntensity * 0.75} />
       </mesh>
 
-      {/* 3D Body Representation (Matching the exact look & feel of NPC Expert) */}
-      <group scale={1.5}>
-        {/* Head */}
-        <mesh position={[0, 0.7, 0]}>
-          <sphereGeometry args={[0.2, 24, 24]} />
-          <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
-        </mesh>
+      {/* Representation */}
+      {textureUrl ? (
+        <NPCStandee url={textureUrl} color={color} />
+      ) : (
+        <group scale={1.5}>
+          {/* Head */}
+          <mesh position={[0, 0.7, 0]}>
+            <sphereGeometry args={[0.2, 24, 24]} />
+            <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
+          </mesh>
 
-        {/* Visor / Eyes */}
-        <mesh position={[0, 0.74, -0.17]}>
-          <boxGeometry args={[0.25, 0.05, 0.08]} />
-          <meshBasicMaterial color="#22d3ee" />
-        </mesh>
+          {/* Visor / Eyes */}
+          <mesh position={[0, 0.74, -0.17]}>
+            <boxGeometry args={[0.25, 0.05, 0.08]} />
+            <meshBasicMaterial color="#22d3ee" />
+          </mesh>
 
-        {/* Torso */}
-        <mesh position={[0, 0.28, 0]}>
-          <capsuleGeometry args={[0.16, 0.28, 8, 16]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-        </mesh>
+          {/* Torso */}
+          <mesh position={[0, 0.28, 0]}>
+            <capsuleGeometry args={[0.16, 0.28, 8, 16]} />
+            <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
+          </mesh>
 
-        {/* Left hand */}
-        <mesh position={[-0.2, 0.38, 0]}>
-          <sphereGeometry args={[0.06, 12, 12]} />
-          <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
-        </mesh>
+          {/* Left hand */}
+          <mesh position={[-0.2, 0.38, 0]}>
+            <sphereGeometry args={[0.06, 12, 12]} />
+            <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
+          </mesh>
 
-        {/* Right hand */}
-        <mesh position={[0.2, 0.38, 0]}>
-          <sphereGeometry args={[0.06, 12, 12]} />
-          <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
-        </mesh>
+          {/* Right hand */}
+          <mesh position={[0.2, 0.38, 0]}>
+            <sphereGeometry args={[0.06, 12, 12]} />
+            <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
+          </mesh>
 
-        {/* Base Cylinder connection */}
-        <mesh position={[0, -0.15, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.3, 12]} />
-          <meshStandardMaterial color="#0f172a" metalness={0.8} />
-        </mesh>
-      </group>
+          {/* Base Cylinder connection */}
+          <mesh position={[0, -0.15, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.3, 12]} />
+            <meshStandardMaterial color="#0f172a" metalness={0.8} />
+          </mesh>
+        </group>
+      )}
 
       {/* NPC speech bubble (HTML overlay) */}
       {showBubble ? (
@@ -2378,6 +2451,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
           color="#10b981"
           isVisible={isVisible}
           activeIntensity={zoneIntensities[5]}
+          textureUrl="/images/room4/ronaldo.jpg"
           onClick={() => {
             window.dispatchEvent(new CustomEvent('openSummaryMinigame'));
           }}
