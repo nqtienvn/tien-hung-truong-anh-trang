@@ -2,10 +2,20 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { Html, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoomPlain, BaseRoomProps } from './BaseRoomPlain';
+
+const PaintingMesh: React.FC<{ url: string }> = ({ url }) => {
+  const texture = useTexture(url);
+  return (
+    <mesh position={[0, 0, 0.06]}>
+      <planeGeometry args={[3.0, 2.0]} />
+      <meshBasicMaterial map={texture} toneMapped={false} />
+    </mesh>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -62,8 +72,6 @@ const ZONE_ABS_OFFSET = 233.0;
 
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ZONE PROPS SHARED INTERFACE
-// ═══════════════════════════════════════════════════════════════════════════
 interface ZoneProps {
   onZoneClick: (zoneId: number) => void;
   isActive: boolean;
@@ -71,9 +79,57 @@ interface ZoneProps {
   intensity: number;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ZONE 1 — Đa Thành Phần Kinh Tế (3 Cylinder Pedestals + Floating Logos)
-// ═══════════════════════════════════════════════════════════════════════════
+const ZONE1_EXHIBITS = [
+  {
+    id: "zone1-painting-1",
+    side: "left",
+    x: -8.9,
+    z: -5.5, // Absolute Z = -43.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Kinh tế cá thể, tiểu chủ",
+    titleEn: "Individual & Household Economy",
+    descVi: "Kinh tế cá thể, tiểu chủ. Bên cạnh các tập đoàn lớn, hàng triệu hộ kinh doanh cá thể, tiểu thương tại các chợ truyền thống và cửa hàng bán lẻ vẫn đóng vai trò là \"mạch máu\" phân phối hàng hóa len lỏi đến từng khu dân cư, giải quyết việc làm cho lượng lớn lao động tự do.",
+    descEn: "Individual and small household businesses. Alongside large enterprises, millions of business households and small merchants in traditional markets and retail stores serve as vital distribution veins, providing livelihood for a vast number of workers.",
+    imageUrl: "/images/room4/zone1/tro-tt-vs-sieu-thi.jpg"
+  },
+  {
+    id: "zone1-painting-2",
+    side: "left",
+    x: -8.9,
+    z: 5.5, // Absolute Z = -32.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Kinh tế tập thể (Hợp tác xã)",
+    titleEn: "Collective Economy (Cooperatives)",
+    descVi: "Kinh tế tập thể (Hợp tác xã). Mô hình hợp tác xã kiểu mới không còn gò bó như thời bao cấp. Các hộ nông dân hiện nay liên kết lại để ứng dụng công nghệ cao, đạt chuẩn VietGAP/GlobalGAP, tạo ra sản lượng lớn và tăng sức mạnh đàm phán với các hệ thống siêu thị.",
+    descEn: "Collective economy (Cooperatives). Modern cooperative models have evolved past the rigid subsidies era. Farming households now unite to deploy high-tech cultivation, meeting VietGAP/GlobalGAP standards, yielding mass volume, and boosting bargaining power with major supermarket chains.",
+    imageUrl: "/images/room4/zone1/rau.jpg"
+  },
+  {
+    id: "zone1-painting-3",
+    side: "right",
+    x: 8.9,
+    z: -5.5, // Absolute Z = -43.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Khởi nghiệp (Startups)",
+    titleEn: "Innovative Startups (Startups)",
+    descVi: "Khởi nghiệp đổi mới sáng tạo (Startups). Sự vươn lên của các \"kỳ lân\" công nghệ (như MoMo, VNG) minh chứng cho một môi trường kinh tế năng động, nơi trí tuệ và sự sáng tạo của khối kinh tế tư nhân được khuyến khích phát triển mạnh mẽ.",
+    descEn: "Innovative Startups. The rise of home-grown technology unicorns (such as MoMo, VNG) exemplifies a dynamic economic climate where intellectual property and private sector creativity are highly fostered and motivated to flourish.",
+    imageUrl: "/images/room4/zone1/coworking.png"
+  },
+  {
+    id: "zone1-painting-4",
+    side: "right",
+    x: 8.9,
+    z: 5.5, // Absolute Z = -32.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Sự liên kết chuỗi cung ứng",
+    titleEn: "Supply Chain Linkage",
+    descVi: "Sự liên kết chuỗi cung ứng. Các thành phần kinh tế không hoạt động độc lập mà đan xen lẫn nhau. Các doanh nghiệp tư nhân vừa và nhỏ của Việt Nam đang ngày càng tham gia sâu hơn vào chuỗi cung ứng phụ trợ cho các tập đoàn FDI (như sản xuất linh kiện cho Samsung, Toyota).",
+    descEn: "Supply chain linkage. Economic sectors do not function in isolation but are deeply interwoven. Vietnam's small and medium private enterprises are increasingly integrating into the supporting supply chains of multinational FDI corporations (such as component manufacturing for Samsung, Toyota).",
+    imageUrl: "/images/room4/zone1/fdi-lao-dong.jpg"
+  }
+];
+
 const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
   const { setSelectedExhibit } = useMuseum();
   const logo1Ref = useRef<THREE.Group>(null);
@@ -105,6 +161,29 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
 
   const handlePointerOut = () => {
     document.body.style.cursor = 'auto';
+  };
+
+  const handlePaintingClick = (e: any, item: typeof ZONE1_EXHIBITS[0]) => {
+    e.stopPropagation();
+    onZoneClick(1);
+    setSelectedExhibit({
+      id: item.id,
+      gallery_id: "gallery-market-economy",
+      title: { vi: item.titleVi, en: item.titleEn },
+      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
+      description: { vi: item.descVi, en: item.descEn },
+      model_3d_url: "",
+      thumbnail_url: item.imageUrl,
+      coordinate_x: item.x,
+      coordinate_y: 2.3,
+      coordinate_z: -37.5 + item.z,
+      rotation_x: 0,
+      rotation_y: item.rotation[1],
+      rotation_z: 0,
+      scale_x: 1,
+      scale_y: 1,
+      scale_z: 1
+    });
   };
 
   const isVi = language === 'vi';
@@ -317,6 +396,41 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           </div>
         </Html>
       </group>
+
+      {/* ── Wall Paintings for Zone 1 ── */}
+      {ZONE1_EXHIBITS.map((item, idx) => (
+        <group
+          key={item.id}
+          position={[item.x, 2.3, item.z]}
+          rotation={item.rotation as any}
+          onClick={(e) => handlePaintingClick(e, item)}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          {/* Wood Frame */}
+          <mesh>
+            <boxGeometry args={[3.2, 2.2, 0.1]} />
+            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <PaintingMesh url={item.imageUrl} />
+
+          {/* Description Plate */}
+          <mesh position={[0, -1.4, 0.02]}>
+            <planeGeometry args={[1.8, 0.75]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
+          </mesh>
+          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
+            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
+              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                {language === 'vi' ? item.titleVi : item.titleEn}
+              </h4>
+              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
+                {language === 'vi' ? item.descVi : item.descEn}
+              </p>
+            </div>
+          </Html>
+        </group>
+      ))}
     </group>
   );
 };
@@ -324,6 +438,58 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
 // ═══════════════════════════════════════════════════════════════════════════
 // ZONE 2 — Cơ Chế Thị Trường (Balance Scale + Click-to-tilt items)
 // ═══════════════════════════════════════════════════════════════════════════
+
+const ZONE2_EXHIBITS = [
+  {
+    id: "zone2-painting-1",
+    side: "left",
+    x: -8.9,
+    z: -5.5, // Absolute Z = -18.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Thị trường vốn minh bạch",
+    titleEn: "Transparent Capital Market",
+    descVi: "Thị trường vốn minh bạch. Sự hình thành và phát triển của Thị trường Chứng khoán Việt Nam (VN-Index) là minh chứng rõ nét cho việc huy động vốn theo nguyên tắc thị trường, nơi các nhà đầu tư tự do mua bán cổ phần dựa trên kỳ vọng và năng lực của doanh nghiệp.",
+    descEn: "Transparent capital market. The establishment and development of the Vietnam Stock Market (VN-Index) is a clear demonstration of market-based capital mobilization, where investors trade shares freely based on corporate performance and expectations.",
+    imageUrl: "/images/room4/zone2/zone2-1.jpg"
+  },
+  {
+    id: "zone2-painting-2",
+    side: "left",
+    x: -8.9,
+    z: 5.5, // Absolute Z = -7.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Cạnh tranh lành mạnh",
+    titleEn: "Fair Market Competition",
+    descVi: "Cạnh tranh mang lại lợi ích cho người tiêu dùng. Trên thị trường tự do, các doanh nghiệp phải liên tục tung ra các chương trình khuyến mãi, cải thiện dịch vụ giao hàng và chăm sóc khách hàng để giành thị phần. Sự cạnh tranh khốc liệt này giúp người tiêu dùng được hưởng lợi về giá và chất lượng.",
+    descEn: "Competition benefits consumers. In a free market, businesses constantly launch promotions, improve deliveries, and elevate customer care to win market share. This fierce rivalry ensures consumers receive better prices and higher quality.",
+    imageUrl: "/images/room4/zone2/zone2-2.png"
+  },
+  {
+    id: "zone2-painting-3",
+    side: "right",
+    x: 8.9,
+    z: -5.5, // Absolute Z = -18.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Liên thông giá trị toàn cầu",
+    titleEn: "Global Value Integration",
+    descVi: "Sự liên thông với thị trường thế giới. Giá xăng dầu tại Việt Nam được điều chỉnh định kỳ dựa trên biến động của giá dầu thô toàn cầu. Điều này phản ánh rõ sự tôn trọng quy luật giá trị và quy luật cung cầu, thay vì Nhà nước bao cấp bù lỗ như trước đây.",
+    descEn: "Integration with global markets. Gasoline prices in Vietnam are adjusted periodically based on global crude oil fluctuations. This reflects clear respect for the law of value and supply/demand, replacing historical state subsidy systems.",
+    imageUrl: "/images/room4/zone2/zone2-3.jpg"
+  },
+  {
+    id: "zone2-painting-4",
+    side: "right",
+    x: 8.9,
+    z: 5.5, // Absolute Z = -7.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Phá vỡ thế độc quyền",
+    titleEn: "Breaking Telecom Monopoly",
+    descVi: "Phá vỡ thế độc quyền. Lĩnh vực viễn thông là ví dụ điển hình về việc mở cửa thị trường. Sự cạnh tranh giữa Viettel, VNPT, MobiFone... đã làm giá cước viễn thông và Internet tại Việt Nam giảm sâu, trở thành một trong những quốc gia có chi phí tiếp cận Internet rẻ nhất thế giới.",
+    descEn: "Breaking monopoly. Telecommunications is a prime example of market opening. Competition among Viettel, VNPT, MobiFone, etc., has driven telecom and internet fees down, making Vietnam one of the cheapest countries globally for internet access.",
+    imageUrl: "/images/room4/zone2/zone2-4.jpg"
+  }
+];
+
 const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
   const { setSelectedExhibit } = useMuseum();
   const scaleRef = useRef<THREE.Group>(null);
@@ -431,6 +597,29 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 
   const handlePointerOut = () => {
     document.body.style.cursor = 'auto';
+  };
+
+  const handlePaintingClick = (e: any, item: typeof ZONE2_EXHIBITS[0]) => {
+    e.stopPropagation();
+    onZoneClick(2);
+    setSelectedExhibit({
+      id: item.id,
+      gallery_id: "gallery-market-economy",
+      title: { vi: item.titleVi, en: item.titleEn },
+      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
+      description: { vi: item.descVi, en: item.descEn },
+      model_3d_url: "",
+      thumbnail_url: item.imageUrl,
+      coordinate_x: item.x,
+      coordinate_y: 2.3,
+      coordinate_z: -12.5 + item.z,
+      rotation_x: 0,
+      rotation_y: item.rotation[1],
+      rotation_z: 0,
+      scale_x: 1,
+      scale_y: 1,
+      scale_z: 1
+    });
   };
 
   const isVi = language === 'vi';
@@ -553,6 +742,41 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           </div>
         </Html>
       </group>
+
+      {/* ── Wall Paintings for Zone 2 ── */}
+      {ZONE2_EXHIBITS.map((item, idx) => (
+        <group
+          key={item.id}
+          position={[item.x, 2.3, item.z]}
+          rotation={item.rotation as any}
+          onClick={(e) => handlePaintingClick(e, item)}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          {/* Wood Frame */}
+          <mesh>
+            <boxGeometry args={[3.2, 2.2, 0.1]} />
+            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <PaintingMesh url={item.imageUrl} />
+
+          {/* Description Plate */}
+          <mesh position={[0, -1.4, 0.02]}>
+            <planeGeometry args={[1.8, 0.75]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
+          </mesh>
+          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
+            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
+              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                {language === 'vi' ? item.titleVi : item.titleEn}
+              </h4>
+              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
+                {language === 'vi' ? item.descVi : item.descEn}
+              </p>
+            </div>
+          </Html>
+        </group>
+      ))}
     </group>
   );
 };
@@ -560,6 +784,57 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 // ═══════════════════════════════════════════════════════════════════════════
 // ZONE 3 — Nhà Nước Quản Lý (Diorama + Force Field Dome)
 // ═══════════════════════════════════════════════════════════════════════════
+const ZONE3_EXHIBITS = [
+  {
+    id: "zone3-painting-1",
+    side: "left",
+    x: -8.9,
+    z: -5.5, // Absolute Z = 7.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Ổn định kinh tế vĩ mô",
+    titleEn: "Macroeconomic Stability",
+    descVi: "Ổn định kinh tế vĩ mô. Bằng các công cụ chính sách tiền tệ (điều chỉnh lãi suất, tỷ giá), Ngân hàng Nhà nước đóng vai trò \"nhạc trưởng\" trong việc kiểm soát lạm phát, giữ giá trị đồng tiền và bảo đảm an toàn cho toàn bộ hệ thống ngân hàng thương mại.",
+    descEn: "Monetary policy tools. The State Bank of Vietnam controls inflation, maintains currency value, and secures the commercial banking system.",
+    imageUrl: "/images/room4/zone3/zone3-1.jpg"
+  },
+  {
+    id: "zone3-painting-2",
+    side: "left",
+    x: -8.9,
+    z: 5.5, // Absolute Z = 18.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Dự trữ quốc gia & Bình ổn giá",
+    titleEn: "National Reserves & Price Stabilization",
+    descVi: "Dự trữ quốc gia và Bình ổn giá. Khi thị trường gặp cú sốc (do thiên tai, dịch bệnh, đứt gãy chuỗi cung ứng), Nhà nước sẽ tung hàng hóa từ các kho dự trữ (như gạo, xăng dầu, vật tư y tế) để bình ổn giá cả, không để xảy ra tình trạng đầu cơ, găm hàng.",
+    descEn: "Stabilizing commodities. During market shocks, the State releases goods from reserves (rice, fuel, medical supplies) to prevent speculation.",
+    imageUrl: "/images/room4/zone3/zone3-2.jpg"
+  },
+  {
+    id: "zone3-painting-3",
+    side: "right",
+    x: 8.9,
+    z: -5.5, // Absolute Z = 7.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Chính phủ kiến tạo",
+    titleEn: "Enabling Government",
+    descVi: "Hội nghị đối thoại giữa Chính phủ và cộng đồng doanh nghiệp. Thay vì can thiệp trực tiếp vào kinh doanh, Nhà nước liên tục cải cách thủ tục hành chính, cắt giảm giấy phép con, hỗ trợ miễn giảm thuế và khoanh nợ trong những giai đoạn khó khăn (như đại dịch COVID-19) để tạo môi trường kinh doanh thuận lợi nhất.",
+    descEn: "Dialogue and reforms. The State simplifies procedures, cuts sub-licenses, and reschedules debt to foster a supportive business climate.",
+    imageUrl: "/images/room4/zone3/zone3-3.jpg"
+  },
+  {
+    id: "zone3-painting-4",
+    side: "right",
+    x: 8.9,
+    z: 5.5, // Absolute Z = 18.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Quy hoạch chiến lược dài hạn",
+    titleEn: "Long-term Strategic Planning",
+    descVi: "Bản đồ quy hoạch vùng Đồng bằng sông Cửu Long thích ứng với biến đổi khí hậu. Thị trường thường chỉ nhìn vào lợi nhuận ngắn hạn. Vì vậy, Nhà nước phải đóng vai trò lập quy hoạch dài hạn, phân bổ nguồn lực quốc gia cho các vùng kinh tế trọng điểm, đồng thời đầu tư vào các dự án chống biến đổi khí hậu để bảo đảm phát triển bền vững.",
+    descEn: "Long-term planning. The State guides national resources and climate adaptation investments for sustainable future development.",
+    imageUrl: "/images/room4/zone3/zone3-4.jpg"
+  }
+];
+
 const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
   const { setSelectedExhibit } = useMuseum();
   const car1Ref = useRef<THREE.Mesh>(null);
@@ -646,6 +921,29 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
 
   const handlePointerOut = () => {
     document.body.style.cursor = 'auto';
+  };
+
+  const handlePaintingClick = (e: any, item: typeof ZONE3_EXHIBITS[0]) => {
+    e.stopPropagation();
+    onZoneClick(3);
+    setSelectedExhibit({
+      id: item.id,
+      gallery_id: "gallery-market-economy",
+      title: { vi: item.titleVi, en: item.titleEn },
+      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
+      description: { vi: item.descVi, en: item.descEn },
+      model_3d_url: "",
+      thumbnail_url: item.imageUrl,
+      coordinate_x: item.x,
+      coordinate_y: 2.3,
+      coordinate_z: 12.5 + item.z,
+      rotation_x: 0,
+      rotation_y: item.rotation[1],
+      rotation_z: 0,
+      scale_x: 1,
+      scale_y: 1,
+      scale_z: 1
+    });
   };
 
   const isVi = language === 'vi';
@@ -836,6 +1134,41 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
           </div>
         </Html>
       </group>
+
+      {/* ── Wall Paintings for Zone 3 ── */}
+      {ZONE3_EXHIBITS.map((item, idx) => (
+        <group
+          key={item.id}
+          position={[item.x, 2.3, item.z]}
+          rotation={item.rotation as any}
+          onClick={(e) => handlePaintingClick(e, item)}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          {/* Wood Frame */}
+          <mesh>
+            <boxGeometry args={[3.2, 2.2, 0.1]} />
+            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <PaintingMesh url={item.imageUrl} />
+
+          {/* Description Plate */}
+          <mesh position={[0, -1.4, 0.02]}>
+            <planeGeometry args={[1.8, 0.75]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
+          </mesh>
+          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
+            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
+              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                {language === 'vi' ? item.titleVi : item.titleEn}
+              </h4>
+              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
+                {language === 'vi' ? item.descVi : item.descEn}
+              </p>
+            </div>
+          </Html>
+        </group>
+      ))}
     </group>
   );
 };
@@ -844,6 +1177,57 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
 // ═══════════════════════════════════════════════════════════════════════════
 // ZONE 4 — Công Bằng Xã Hội (Light Tree + Picture Frames)
 // ═══════════════════════════════════════════════════════════════════════════
+const ZONE4_EXHIBITS = [
+  {
+    id: "zone4-painting-1",
+    side: "left",
+    x: -8.9,
+    z: -5.5, // Absolute Z = 32.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Chương trình Nông thôn mới",
+    titleEn: "National New Rural Program",
+    descVi: "Chương trình Mục tiêu quốc gia Nông thôn mới. Nguồn lực từ tăng trưởng kinh tế được phân bổ để hiện đại hóa bộ mặt nông thôn: xây dựng điện, đường, trường, trạm. Kéo gần khoảng cách phát triển và mức sống giữa khu vực thành thị và nông thôn.",
+    descEn: "Resources from economic growth are allocated to modernize rural areas: building electricity, roads, schools, and medical stations.",
+    imageUrl: "/images/room4/zone4/zone4-1.jpg"
+  },
+  {
+    id: "zone4-painting-2",
+    side: "left",
+    x: -8.9,
+    z: 5.5, // Absolute Z = 43.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Nhà ở xã hội",
+    titleEn: "Social Housing Policy",
+    descVi: "Chính sách an cư cho người lao động. Để người công nhân tạo ra của cải không bị bỏ lại phía sau, Nhà nước đưa ra các gói tín dụng ưu đãi và quy hoạch quỹ đất để phát triển nhà ở xã hội, giúp người thu nhập thấp có cơ hội sở hữu nhà ở an toàn.",
+    descEn: "Preferential credit packages and land planning for social housing help low-income earners own safe houses.",
+    imageUrl: "/images/room4/zone4/zone4-2.png"
+  },
+  {
+    id: "zone4-painting-3",
+    side: "right",
+    x: 8.9,
+    z: -5.5, // Absolute Z = 32.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Phổ cập giáo dục & công nghệ",
+    titleEn: "Universal Education & Tech",
+    descVi: "Trẻ em vùng miền núi, hải đảo đang sử dụng máy tính bảng để học tập. Công bằng xã hội không chỉ là chia đều của cải, mà quan trọng hơn là \"bình đẳng về cơ hội\". Việc đầu tư cáp quang internet đến vùng sâu vùng xa và các chính sách miễn giảm học phí giúp mọi trẻ em đều có cơ hội tiếp cận tri thức.",
+    descEn: "Universal Education and Technology. Investing in fiber optics to remote areas and tuition exemptions ensures every child has access to knowledge.",
+    imageUrl: "/images/room4/zone4/zone4-3.jpg"
+  },
+  {
+    id: "zone4-painting-4",
+    side: "right",
+    x: 8.9,
+    z: 5.5, // Absolute Z = 43.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Chăm lo người yếu thế & có công",
+    titleEn: "Caring for the Disadvantaged",
+    descVi: "Cán bộ y tế thăm khám cho Mẹ Việt Nam Anh hùng và người khuyết tật. Một nền kinh tế thị trường nhân văn là nền kinh tế có mạng lưới an sinh xã hội vững chắc. Hàng năm, ngân sách quốc gia luôn dành một phần lớn để chi trả trợ cấp, chăm sóc y tế cho người có công, người cao tuổi neo đơn và người khuyết tật.",
+    descEn: "A humane market economy has a solid social safety net, allocating national budget for subsidies and medical care.",
+    imageUrl: "/images/room4/zone4/zone4-4.jpg"
+  }
+];
+
 const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
   const { setSelectedExhibit } = useMuseum();
   const leaf1Ref = useRef<THREE.Mesh>(null);
@@ -911,6 +1295,29 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 
   const handlePointerOut = () => {
     document.body.style.cursor = 'auto';
+  };
+
+  const handlePaintingClick = (e: any, item: typeof ZONE4_EXHIBITS[0]) => {
+    e.stopPropagation();
+    onZoneClick(4);
+    setSelectedExhibit({
+      id: item.id,
+      gallery_id: "gallery-market-economy",
+      title: { vi: item.titleVi, en: item.titleEn },
+      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
+      description: { vi: item.descVi, en: item.descEn },
+      model_3d_url: "",
+      thumbnail_url: item.imageUrl,
+      coordinate_x: item.x,
+      coordinate_y: 2.3,
+      coordinate_z: 37.5 + item.z,
+      rotation_x: 0,
+      rotation_y: item.rotation[1],
+      rotation_z: 0,
+      scale_x: 1,
+      scale_y: 1,
+      scale_z: 1
+    });
   };
 
   const isVi = language === 'vi';
@@ -1077,6 +1484,41 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           </div>
         </Html>
       </group>
+
+      {/* ── Wall Paintings for Zone 4 ── */}
+      {ZONE4_EXHIBITS.map((item, idx) => (
+        <group
+          key={item.id}
+          position={[item.x, 2.3, item.z]}
+          rotation={item.rotation as any}
+          onClick={(e) => handlePaintingClick(e, item)}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          {/* Wood Frame */}
+          <mesh>
+            <boxGeometry args={[3.2, 2.2, 0.1]} />
+            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <PaintingMesh url={item.imageUrl} />
+
+          {/* Description Plate */}
+          <mesh position={[0, -1.4, 0.02]}>
+            <planeGeometry args={[1.8, 0.75]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
+          </mesh>
+          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
+            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
+              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                {language === 'vi' ? item.titleVi : item.titleEn}
+              </h4>
+              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
+                {language === 'vi' ? item.descVi : item.descEn}
+              </p>
+            </div>
+          </Html>
+        </group>
+      ))}
     </group>
   );
 };
@@ -1085,6 +1527,57 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 // ═══════════════════════════════════════════════════════════════════════════
 // ZONE 5 — Hội Nhập Quốc Tế (Holographic Globe + Orbit Lines + Mini Port)
 // ═══════════════════════════════════════════════════════════════════════════
+const ZONE5_EXHIBITS = [
+  {
+    id: "zone5-painting-1",
+    side: "left",
+    x: -8.9,
+    z: -5.5, // Absolute Z = 57.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Mạng lưới FTA toàn cầu",
+    titleEn: "Global FTA Network",
+    descVi: "Mạng lưới FTA phủ rộng toàn cầu. Việt Nam đã ký kết 16 hiệp định thương mại tự do (bao gồm các hiệp định thế hệ mới như EVFTA, CPTPP), mở toang cánh cửa đưa hàng hóa Việt Nam tiến vào các thị trường khó tính nhất với mức thuế suất ưu đãi, tạo lợi thế cạnh tranh khổng lồ.",
+    descEn: "Vietnam signed 16 FTAs (including new-generation ones like EVFTA, CPTPP), opening gates for exports with preferential tariffs.",
+    imageUrl: "/images/room4/zone5/zone5-1.jpg"
+  },
+  {
+    id: "zone5-painting-2",
+    side: "left",
+    x: -8.9,
+    z: 5.5, // Absolute Z = 68.0
+    rotation: [0, Math.PI / 2, 0],
+    titleVi: "Nông sản chinh phục thế giới",
+    titleEn: "Agriculture Conquers Markets",
+    descVi: "Nông nghiệp chinh phục thế giới. Hội nhập giúp nông sản Việt Nam không chỉ quẩn quanh trong \"ao làng\". Từ gạo, cà phê, hồ tiêu cho đến thủy sản, các sản phẩm nông nghiệp Việt Nam nay đã đáp ứng các tiêu chuẩn khắt khe nhất (FDA, EU) và xuất khẩu thu về hàng chục tỷ USD mỗi năm.",
+    descEn: "Vietnamese rice, coffee, pepper, and seafood meet international standards (FDA, EU) for exports, generating billions USD annually.",
+    imageUrl: "/images/room4/zone5/zone5-2.jpg"
+  },
+  {
+    id: "zone5-painting-3",
+    side: "right",
+    x: 8.9,
+    z: -5.5, // Absolute Z = 57.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Giao lưu văn hóa & Du lịch",
+    titleEn: "Tourism & Cultural Exchange",
+    descVi: "Mở cửa biên giới, giao lưu văn hóa. Du khách quốc tế tấp nập đi thuyền tại Vịnh Hạ Long, Phố cổ Hội An. Việc miễn thị thực và quảng bá văn hóa giúp Việt Nam trở thành điểm đến hấp dẫn trên bản đồ du lịch thế giới, mang lại nguồn thu ngoại tệ lớn.",
+    descEn: "International tourism at Ha Long and Hoi An. Visa exemptions and cultural promotion draw foreign travelers and currencies.",
+    imageUrl: "/images/room4/zone5/zone5-3.jpg"
+  },
+  {
+    id: "zone5-painting-4",
+    side: "right",
+    x: 8.9,
+    z: 5.5, // Absolute Z = 68.0
+    rotation: [0, -Math.PI / 2, 0],
+    titleVi: "Xuất khẩu dịch vụ số",
+    titleEn: "Digital Services Export",
+    descVi: "Xuất khẩu dịch vụ số và nguồn nhân lực. Hội nhập không chỉ dừng lại ở xuất khẩu hàng hóa vật lý. Lực lượng lao động Việt Nam (đặc biệt là ngành IT, lập trình phần mềm) đang trực tiếp tham gia vào các dự án công nghệ toàn cầu, đưa trí tuệ Việt vươn ra thế giới.",
+    descEn: "Domestic IT talent and developers participating directly in global tech projects, bringing digital service exports to the world.",
+    imageUrl: "/images/room4/zone5/zone5-4.jpg"
+  }
+];
+
 const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
   const { setSelectedExhibit } = useMuseum();
   const globeRef = useRef<THREE.Mesh>(null);
@@ -1169,6 +1662,29 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
 
   const handlePointerOut = () => {
     document.body.style.cursor = 'auto';
+  };
+
+  const handlePaintingClick = (e: any, item: typeof ZONE5_EXHIBITS[0]) => {
+    e.stopPropagation();
+    onZoneClick(5);
+    setSelectedExhibit({
+      id: item.id,
+      gallery_id: "gallery-market-economy",
+      title: { vi: item.titleVi, en: item.titleEn },
+      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
+      description: { vi: item.descVi, en: item.descEn },
+      model_3d_url: "",
+      thumbnail_url: item.imageUrl,
+      coordinate_x: item.x,
+      coordinate_y: 2.3,
+      coordinate_z: 62.5 + item.z,
+      rotation_x: 0,
+      rotation_y: item.rotation[1],
+      rotation_z: 0,
+      scale_x: 1,
+      scale_y: 1,
+      scale_z: 1
+    });
   };
 
   const isVi = language === 'vi';
@@ -1338,6 +1854,41 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
           </div>
         </Html>
       </group>
+
+      {/* ── Wall Paintings for Zone 5 ── */}
+      {ZONE5_EXHIBITS.map((item, idx) => (
+        <group
+          key={item.id}
+          position={[item.x, 2.3, item.z]}
+          rotation={item.rotation as any}
+          onClick={(e) => handlePaintingClick(e, item)}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          {/* Wood Frame */}
+          <mesh>
+            <boxGeometry args={[3.2, 2.2, 0.1]} />
+            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <PaintingMesh url={item.imageUrl} />
+
+          {/* Description Plate */}
+          <mesh position={[0, -1.4, 0.02]}>
+            <planeGeometry args={[1.8, 0.75]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
+          </mesh>
+          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
+            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
+              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                {language === 'vi' ? item.titleVi : item.titleEn}
+              </h4>
+              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
+                {language === 'vi' ? item.descVi : item.descEn}
+              </p>
+            </div>
+          </Html>
+        </group>
+      ))}
     </group>
   );
 };
