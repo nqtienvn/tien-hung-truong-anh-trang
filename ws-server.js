@@ -127,7 +127,9 @@ io.on('connection', (socket) => {
       x: x || 0,
       y: y || 1.7,
       z: z || 5,
-      yaw: yaw || 0
+      yaw: yaw || 0,
+      score: 0,
+      timeSpent: 9999
     };
 
     if (activeInRoom.length < MAX_USERS_PER_ROOM) {
@@ -188,6 +190,18 @@ io.on('connection', (socket) => {
     const socketRoom = getSocketRoom(user.galleryId);
     // Phát sóng tọa độ mới cho những người dùng khác trong phòng
     socket.to(socketRoom).emit('user-moved', user);
+  });
+
+  // 2.5. Khi người chơi hoàn thành minigame và cập nhật điểm số
+  socket.on('update-score', (data) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+    user.score = data.score;
+    user.timeSpent = data.timeSpent !== undefined ? data.timeSpent : 9999;
+    const socketRoom = getSocketRoom(user.galleryId);
+    const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
+    io.to(socketRoom).emit('users-list', usersInRoom);
+    console.log(`[SCORE] ${user.nickname} (${socket.id}) cập nhật điểm: ${user.score}, thời gian: ${user.timeSpent}s`);
   });
 
   // 3. Khi người chơi gửi tin nhắn Chat

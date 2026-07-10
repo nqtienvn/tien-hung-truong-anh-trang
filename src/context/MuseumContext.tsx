@@ -19,6 +19,8 @@ export interface MultiplayerUser {
   z: number;
   yaw: number;
   galleryId: string;
+  score?: number;
+  timeSpent?: number;
 }
 
 // Vị trí spawn của các phòng trưng bày

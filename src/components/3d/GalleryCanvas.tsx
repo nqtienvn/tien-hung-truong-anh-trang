@@ -287,9 +287,9 @@ const CameraLerpController: React.FC = () => {
 };
 
 export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryId }) => {
-  const { selectedExhibit, setSelectedExhibit, nickname, settings, language } = useMuseum();
+  const { selectedExhibit, setSelectedExhibit, nickname, settings, language, socket, otherUsers } = useMuseum();
   const containerRef = useRef<HTMLDivElement>(null);
-
+ 
   // ── Summary Minigame state (lives here in DOM-land, not inside Canvas) ──
   const [mgOpen, setMgOpen] = useState(false);
   const [mgStep, setMgStep] = useState<'rules' | 'game' | 'complete'>('rules');
@@ -298,32 +298,103 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
   const [mgDragOver, setMgDragOver] = useState<string | null>(null);
   const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | null>(null);
 
+  // Timer states
+  const [mgStartTime, setMgStartTime] = useState<number | null>(null);
+  const [mgTimeSpent, setMgTimeSpent] = useState<number>(9999);
+  const [mgLiveTime, setMgLiveTime] = useState(0);
+
+  // Live timer effect
+  useEffect(() => {
+    if (mgStep !== 'game' || !mgStartTime) {
+      setMgLiveTime(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setMgLiveTime(Math.round((Date.now() - mgStartTime) / 1000));
+    }, 500);
+    return () => clearInterval(interval);
+  }, [mgStep, mgStartTime]);
+
+  // Load played status on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const played = localStorage.getItem('minigame_played_gallery_four') === 'true';
+      if (played) {
+        const savedScore = localStorage.getItem('minigame_score_gallery_four');
+        const savedTime = localStorage.getItem('minigame_time_gallery_four');
+        if (savedScore) {
+          const parsedScore = parseInt(savedScore, 10);
+          const parsedTime = savedTime ? parseInt(savedTime, 10) : 9999;
+          setMgScore(parsedScore);
+          setMgTimeSpent(parsedTime);
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: parsedScore, timeSpent: parsedTime });
+          }
+        }
+      }
+    }
+  }, [socket]);
+
   // Listen for CustomEvent from RoomFour
   useEffect(() => {
     const handler = () => {
       setMgOpen(true);
-      setMgStep('rules');
-      setMgIndex(0);
-      setMgScore(0);
-      setMgFeedback(null);
+      if (typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true') {
+        setMgStep('complete');
+        const savedScore = localStorage.getItem('minigame_score_gallery_four');
+        const savedTime = localStorage.getItem('minigame_time_gallery_four');
+        if (savedScore) {
+          const parsedScore = parseInt(savedScore, 10);
+          const parsedTime = savedTime ? parseInt(savedTime, 10) : 9999;
+          setMgScore(parsedScore);
+          setMgTimeSpent(parsedTime);
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: parsedScore, timeSpent: parsedTime });
+          }
+        }
+      } else {
+        setMgStep('rules');
+        setMgIndex(0);
+        setMgScore(0);
+        setMgFeedback(null);
+        setMgStartTime(null);
+        setMgTimeSpent(9999);
+      }
     };
     window.addEventListener('openSummaryMinigame', handler);
     return () => window.removeEventListener('openSummaryMinigame', handler);
-  }, []);
+  }, [socket]);
 
   const handleMgAnswer = (catId: string) => {
     if (mgFeedback !== null) return;
     const correct = MG_SITUATIONS[mgIndex].category;
+    let nextScore = mgScore;
     if (catId === correct) {
       setMgFeedback('correct');
-      setMgScore(prev => prev + 5);
+      setMgScore(prev => {
+        nextScore = prev + 5;
+        return nextScore;
+      });
     } else {
       setMgFeedback('incorrect');
     }
     setTimeout(() => {
       setMgFeedback(null);
-      if (mgIndex < MG_SITUATIONS.length - 1) setMgIndex(prev => prev + 1);
-      else setMgStep('complete');
+      if (mgIndex < MG_SITUATIONS.length - 1) {
+        setMgIndex(prev => prev + 1);
+      } else {
+        setMgStep('complete');
+        const elapsed = mgStartTime ? Math.round((Date.now() - mgStartTime) / 1000) : 9999;
+        setMgTimeSpent(elapsed);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('minigame_played_gallery_four', 'true');
+          localStorage.setItem('minigame_score_gallery_four', nextScore.toString());
+          localStorage.setItem('minigame_time_gallery_four', elapsed.toString());
+        }
+        if (socket && socket.connected) {
+          socket.emit('update-score', { score: nextScore, timeSpent: elapsed });
+        }
+      }
     }, 1200);
   };
 
@@ -439,7 +510,13 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                   ))}
                 </div>
                 <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Mỗi câu đúng: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>+5</span> điểm &nbsp;·&nbsp; Tổng tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>100</span> điểm</p>
-                <button onClick={() => setMgStep('game')} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}>
+                <button 
+                  onClick={() => {
+                    setMgStep('game');
+                    setMgStartTime(Date.now());
+                  }} 
+                  style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
+                >
                   🚀 Bắt đầu chơi
                 </button>
               </div>
@@ -455,8 +532,10 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                       <div style={{ height: '100%', width: `${((mgIndex + 1) / MG_SITUATIONS.length) * 100}%`, background: 'linear-gradient(to right, #10b981, #34d399)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
                     </div>
                   </div>
-                  <div style={{ background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
-                    Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 100
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
+                    <span>⏱️ <span style={{ fontFamily: 'monospace', fontSize: '15px' }}>{mgLiveTime}</span>s</span>
+                    <div style={{ width: '1px', height: '12px', background: '#334155' }} />
+                    <span>Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 100</span>
                   </div>
                 </div>
 
@@ -522,23 +601,81 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
             )}
 
             {/* COMPLETE */}
-            {mgStep === 'complete' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
-                <span style={{ fontSize: '64px' }}>🏆</span>
-                <div>
-                  <h4 style={{ fontWeight: 900, fontSize: '24px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
-                  <p style={{ fontWeight: 800, fontSize: '16px', color: '#10b981' }}>Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '22px' }}>{mgScore}</span> / 100 điểm</p>
-                </div>
-                <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.75, background: 'rgba(2,6,23,0.6)', padding: '20px 24px', borderRadius: '14px', border: '1px solid #1e293b', textAlign: 'left' }}>
-                  &ldquo;Qua chuyến tham quan, chúng ta đã chứng kiến đầy đủ 5 đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam: đa dạng thành phần kinh tế, vận hành theo cơ chế thị trường, dưới sự điều tiết của Nhà nước, gắn với công bằng xã hội và chủ động hội nhập quốc tế.&rdquo;
-                </p>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <button onClick={() => { setMgStep('rules'); setMgIndex(0); setMgScore(0); setMgFeedback(null); }} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f59e0b', fontWeight: 700, padding: '12px 28px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer' }}>🔄 Chơi lại</button>
-                  <button onClick={() => setMgOpen(false)} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 32px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
-                </div>
-              </div>
-            )}
+            {mgStep === 'complete' && (() => {
+              const allPlayerScores = [
+                { nickname: nickname || (language === 'vi' ? 'Bạn' : 'You'), score: mgScore, timeSpent: mgTimeSpent, isMe: true },
+                ...otherUsers.map(u => ({ nickname: u.nickname, score: u.score || 0, timeSpent: u.timeSpent || 9999, isMe: false }))
+              ].sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.timeSpent - b.timeSpent; // Nhanh hơn (ít giây hơn) xếp trên
+              });
 
+              return (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', maxWidth: '640px', margin: '0 auto', textAlign: 'center', width: '100%' }}>
+                  <span style={{ fontSize: '56px' }}>🏆</span>
+                  <div>
+                    <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
+                    <p style={{ fontWeight: 850, fontSize: '15px', color: '#10b981' }}>
+                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 100 điểm &nbsp;·&nbsp; Thời gian: <span style={{ fontFamily: 'monospace', fontSize: '18px' }}>{mgTimeSpent === 9999 ? 'N/A' : `${mgTimeSpent}s`}</span>
+                    </p>
+                  </div>
+
+                  {/* Leaderboard Table Container */}
+                  <div style={{ width: '100%', background: 'rgba(15,23,42,0.4)', border: '1px solid #1e293b', borderRadius: '16px', overflow: 'hidden' }}>
+                    <div style={{ background: '#0f172a', padding: '12px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span>Hạng / Người chơi</span>
+                      <div style={{ display: 'flex', gap: '40px' }}>
+                        <span style={{ width: '80px', textAlign: 'right' }}>Thời gian</span>
+                        <span style={{ width: '80px', textAlign: 'right' }}>Điểm số</span>
+                      </div>
+                    </div>
+                    <div style={{ maxHeight: '180px', overflowY: 'auto', padding: '4px 0' }}>
+                      {allPlayerScores.map((p, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px',
+                            background: p.isMe ? 'rgba(16,185,129,0.1)' : 'transparent',
+                            borderBottom: idx < allPlayerScores.length - 1 ? '1px solid rgba(30,41,59,0.5)' : 'none',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
+                              fontSize: '10px', fontWeight: 900,
+                              background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
+                              color: idx < 3 ? '#020617' : '#475569',
+                              border: idx >= 3 ? '1px solid #334155' : 'none'
+                            }}>
+                              {idx + 1}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: p.isMe ? 900 : 600, color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.nickname} {p.isMe && <span style={{ fontSize: '9px', background: '#10b981', color: '#020617', padding: '1px 5px', borderRadius: '4px', marginLeft: '6px', fontWeight: 900 }}>BẠN</span>}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '40px', fontFamily: 'monospace', fontSize: '13px', fontWeight: 800 }}>
+                            <span style={{ width: '80px', textAlign: 'right', color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.timeSpent === 9999 ? '—' : `${p.timeSpent}s`}
+                            </span>
+                            <span style={{ width: '80px', textAlign: 'right', color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.score}đ
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.6, margin: 0, fontStyle: 'italic', maxWidth: '500px' }}>
+                    &ldquo;Qua chuyến tham quan, chúng ta đã chứng kiến đầy đủ 5 đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam.&rdquo;
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <button onClick={() => setMgOpen(false)} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
