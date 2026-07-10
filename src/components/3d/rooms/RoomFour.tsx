@@ -112,7 +112,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
   return (
     <group position={[0, 0, -37.5]}>
       {/* ── Pedestal 1: Viettel (State-owned) ── */}
-      <group 
+      <group
         position={[-2.2, 0, 0]}
         onClick={(e) => {
           e.stopPropagation();
@@ -127,7 +127,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
               en: "Represents the State-owned Economy Sector, playing a leading role in driving high-tech and digital infrastructure."
             },
             model_3d_url: "",
-            thumbnail_url: "https://images.unsplash.com/photo-1562408590-e32931084e23?w=800",
+            thumbnail_url: "/images/room4/viettel.jpg",
             coordinate_x: -2.2,
             coordinate_y: 1.0,
             coordinate_z: -37.5,
@@ -146,7 +146,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           <meshBasicMaterial color="#ef4444" transparent opacity={0.2 + intensity * 0.8} />
         </mesh>
         {/* Base Cylinder */}
-        <mesh 
+        <mesh
           position={[0, 0.5, 0]}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -158,7 +158,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           <ringGeometry args={[0.35, 0.4, 16]} />
           <meshBasicMaterial color="#ef4444" transparent opacity={intensity} />
         </mesh>
-        
+
         {/* Logo Viettel (Orange globe inside green torus ring) */}
         <group ref={logo1Ref} position={[0, 1.25, 0]}>
           {/* Inner Globe */}
@@ -183,7 +183,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
       </group>
 
       {/* ── Pedestal 2: VinFast (Private) ── */}
-      <group 
+      <group
         position={[0, 0, 0]}
         onClick={(e) => {
           e.stopPropagation();
@@ -198,7 +198,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
               en: "Represents the Private Sector, a key engine of growth, pioneering smart electric vehicles globally."
             },
             model_3d_url: "",
-            thumbnail_url: "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800",
+            thumbnail_url: "/images/room4/vinfast.jpg",
             coordinate_x: 0,
             coordinate_y: 1.0,
             coordinate_z: -37.5,
@@ -217,7 +217,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           <meshBasicMaterial color="#38bdf8" transparent opacity={0.2 + intensity * 0.8} />
         </mesh>
         {/* Base Cylinder */}
-        <mesh 
+        <mesh
           position={[0, 0.5, 0]}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -254,7 +254,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
       </group>
 
       {/* ── Pedestal 3: Samsung (FDI) ── */}
-      <group 
+      <group
         position={[2.2, 0, 0]}
         onClick={(e) => {
           e.stopPropagation();
@@ -269,7 +269,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
               en: "Represents the Foreign-Invested Sector (FDI), playing a major role in manufacturing, exports, and high-tech jobs."
             },
             model_3d_url: "",
-            thumbnail_url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800",
+            thumbnail_url: "/images/room4/samsung.jpg",
             coordinate_x: 2.2,
             coordinate_y: 1.0,
             coordinate_z: -37.5,
@@ -288,7 +288,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           <meshBasicMaterial color="#3b82f6" transparent opacity={0.2 + intensity * 0.8} />
         </mesh>
         {/* Base Cylinder */}
-        <mesh 
+        <mesh
           position={[0, 0.5, 0]}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -330,7 +330,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
   const leftPanRef = useRef<THREE.Group>(null);
   const rightPanRef = useRef<THREE.Group>(null);
   const crossbarRef = useRef<THREE.Mesh>(null);
-  
+
   const goldRef = useRef<THREE.Mesh>(null);
   const coffeeRef = useRef<THREE.Mesh>(null);
   const durianRef = useRef<THREE.Mesh>(null);
@@ -339,11 +339,11 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    
+
     // Tilt oscillates when player is close (intensity > 0)
     const maxTilt = 0.28; // radians (about 16 degrees)
     const tilt = Math.sin(time * 1.8) * maxTilt * intensity;
-    
+
     if (crossbarRef.current) {
       crossbarRef.current.rotation.z = tilt;
     }
@@ -386,7 +386,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       const pCoffee = Math.round(70 + Math.sin(time * 2.5) * 15 * intensity);
       const pGold = (85.2 + Math.sin(time * 2.1) * 4.8 * intensity).toFixed(1);
       const pDurian = Math.round(120 + Math.sin(time * 2.7) * 35 * intensity);
-      
+
       // Update state less frequently
       if (Math.round(time * 10) % 5 === 0) {
         setPrices({
@@ -411,7 +411,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
         en: "Prices of goods and services dynamically fluctuate based on market supply, demand, and fair competition."
       },
       model_3d_url: "",
-      thumbnail_url: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800",
+      thumbnail_url: "/images/room4/cho-truyen-thong.jpg",
       coordinate_x: 0,
       coordinate_y: 1.0,
       coordinate_z: -12.5,
@@ -450,13 +450,13 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <boxGeometry args={[1.2, 0.1, 0.6]} />
           <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
         </mesh>
-        
+
         {/* Scale Pillar */}
         <mesh position={[0, 0.8, 0]}>
           <cylinderGeometry args={[0.07, 0.09, 1.5, 16]} />
           <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
         </mesh>
-        
+
         {/* Pivot Cap */}
         <mesh position={[0, 1.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.1, 0.1, 0.22, 16]} />
@@ -501,7 +501,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       {/* ── Floating items with Price Tags ── */}
       {/* 1. Coffee Bean (Left Side) */}
       <group position={[-2.2, 0, 0]}>
-        <mesh 
+        <mesh
           ref={coffeeRef}
           scale={[1.3, 0.8, 0.8]}
           onPointerOver={handlePointerOver}
@@ -520,7 +520,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 
       {/* 2. Gold Bar (Center Top) */}
       <group position={[0, 0, -0.5]}>
-        <mesh 
+        <mesh
           ref={goldRef}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -538,7 +538,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 
       {/* 3. Durian (Right Side) */}
       <group position={[2.2, 0, 0]}>
-        <mesh 
+        <mesh
           ref={durianRef}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -564,10 +564,10 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
   const { setSelectedExhibit } = useMuseum();
   const car1Ref = useRef<THREE.Mesh>(null);
   const car2Ref = useRef<THREE.Mesh>(null);
-  
+
   const turbine1Ref = useRef<THREE.Group>(null);
   const turbine2Ref = useRef<THREE.Group>(null);
-  
+
   const book1Ref = useRef<THREE.Group>(null);
   const book2Ref = useRef<THREE.Group>(null);
   const book3Ref = useRef<THREE.Group>(null);
@@ -578,7 +578,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
     // Animate cars on the expressway
     const carSpeed1 = 0.5;
     const carSpeed2 = 0.35;
-    
+
     if (car1Ref.current) {
       car1Ref.current.position.x = -1.1 + ((time * carSpeed1) % 2.2);
     }
@@ -626,7 +626,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
         en: "The State regulates the economy via legal frameworks and invests in essential infrastructure (electricity, highways) to guide development."
       },
       model_3d_url: "",
-      thumbnail_url: "https://images.unsplash.com/photo-1544984243-ec57ea16fe25?w=800",
+      thumbnail_url: "/images/room4/cao-toc-bac-nam.jpg",
       coordinate_x: 0,
       coordinate_y: 1.0,
       coordinate_z: 12.5,
@@ -684,7 +684,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
             <boxGeometry args={[2.2, 0.008, 0.015]} />
             <meshBasicMaterial color="#eab308" />
           </mesh>
-          
+
           {/* Moving Cars */}
           <mesh ref={car1Ref} position={[0, 0.02, -0.07]}>
             <boxGeometry args={[0.07, 0.04, 0.04]} />
@@ -773,12 +773,12 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
       {/* ── Force Field Dome ── */}
       <mesh position={[0, 0.9, 0]}>
         <sphereGeometry args={[1.25, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshBasicMaterial 
-          color="#06b6d4" 
-          transparent 
-          opacity={0.06 + intensity * 0.14} 
-          wireframe={intensity > 0.3} 
-          side={THREE.DoubleSide} 
+        <meshBasicMaterial
+          color="#06b6d4"
+          transparent
+          opacity={0.06 + intensity * 0.14}
+          wireframe={intensity > 0.3}
+          side={THREE.DoubleSide}
         />
       </mesh>
 
@@ -854,7 +854,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    
+
     // Pulsate the tree canopy spheres (leaves)
     if (leaf1Ref.current) {
       const s = 1.0 + Math.sin(time * 2.0) * 0.05;
@@ -891,7 +891,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
         en: "Tying economic growth with social equity, providing universal health insurance, educational support, and disaster relief."
       },
       model_3d_url: "",
-      thumbnail_url: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800",
+      thumbnail_url: "/images/room4/bao-hiem-y-te.jpg",
       coordinate_x: 0,
       coordinate_y: 1.0,
       coordinate_z: 37.5,
@@ -930,7 +930,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <cylinderGeometry args={[0.08, 0.16, 1.2, 12]} />
           <meshStandardMaterial color="#451a03" roughness={0.9} />
         </mesh>
-        
+
         {/* Glowing canopy spheres */}
         <mesh ref={leaf1Ref} position={[0, 1.35, 0]}>
           <sphereGeometry args={[0.3, 16, 16]} />
@@ -968,9 +968,9 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <cylinderGeometry args={[0.15, 0.2, 1.1, 12]} />
           <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
         </mesh>
-        
+
         {/* Frame border */}
-        <mesh 
+        <mesh
           position={[0, 0.05, 0]}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -1007,9 +1007,9 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <cylinderGeometry args={[0.15, 0.2, 1.1, 12]} />
           <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
         </mesh>
-        
+
         {/* Frame border */}
-        <mesh 
+        <mesh
           position={[0, 0.05, 0]}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -1046,9 +1046,9 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <cylinderGeometry args={[0.15, 0.2, 1.4, 12]} />
           <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
         </mesh>
-        
+
         {/* Frame border */}
-        <mesh 
+        <mesh
           position={[0, 0.05, 0]}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -1089,9 +1089,9 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
   const { setSelectedExhibit } = useMuseum();
   const globeRef = useRef<THREE.Mesh>(null);
   const orbitGroupRef = useRef<THREE.Group>(null);
-  
+
   const truckRef = useRef<THREE.Group>(null);
-  
+
   const logoAseanRef = useRef<THREE.Group>(null);
   const logoWtoRef = useRef<THREE.Group>(null);
   const logoIntelRef = useRef<THREE.Group>(null);
@@ -1186,22 +1186,22 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
         {/* Globe wireframe */}
         <mesh ref={globeRef} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
           <sphereGeometry args={[0.55, 24, 24]} />
-          <meshBasicMaterial 
-            color="#60a5fa" 
-            wireframe 
-            transparent 
-            opacity={0.15 + intensity * 0.35} 
+          <meshBasicMaterial
+            color="#60a5fa"
+            wireframe
+            transparent
+            opacity={0.15 + intensity * 0.35}
           />
         </mesh>
-        
+
         {/* Inner Glowing Core */}
         <mesh>
           <sphereGeometry args={[0.32, 16, 16]} />
-          <meshStandardMaterial 
-            color="#2563eb" 
-            emissive="#3b82f6" 
-            emissiveIntensity={0.6 * intensity} 
-            roughness={0.2} 
+          <meshStandardMaterial
+            color="#2563eb"
+            emissive="#3b82f6"
+            emissiveIntensity={0.6 * intensity}
+            roughness={0.2}
           />
         </mesh>
 
@@ -1236,7 +1236,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
           <boxGeometry args={[1.8, 0.05, 0.7]} />
           <meshStandardMaterial color="#475569" roughness={0.6} />
         </mesh>
-        
+
         {/* Sea Water base */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, -0.45]}>
           <planeGeometry args={[2.0, 0.3]} />
@@ -1403,8 +1403,8 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
   const showBubble = isVisible && (forceShow || activeIntensity > 0.3);
 
   return (
-    <group 
-      position={position} 
+    <group
+      position={position}
       rotation={rotation}
       onClick={handleNpcClick}
       onPointerOver={handlePointerOver}
@@ -1415,7 +1415,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
         <ringGeometry args={[0.62, 0.72, 32]} />
         <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.15 + activeIntensity * 0.75} />
       </mesh>
-      
+
       {/* 3D Body Representation (Matching the exact look & feel of NPC Expert) */}
       <group scale={1.5}>
         {/* Head */}
@@ -1423,31 +1423,31 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
           <sphereGeometry args={[0.2, 24, 24]} />
           <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
         </mesh>
-        
+
         {/* Visor / Eyes */}
         <mesh position={[0, 0.74, -0.17]}>
           <boxGeometry args={[0.25, 0.05, 0.08]} />
           <meshBasicMaterial color="#22d3ee" />
         </mesh>
-        
+
         {/* Torso */}
         <mesh position={[0, 0.28, 0]}>
           <capsuleGeometry args={[0.16, 0.28, 8, 16]} />
           <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
         </mesh>
-        
+
         {/* Left hand */}
         <mesh position={[-0.2, 0.38, 0]}>
           <sphereGeometry args={[0.06, 12, 12]} />
           <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
         </mesh>
-        
+
         {/* Right hand */}
         <mesh position={[0.2, 0.38, 0]}>
           <sphereGeometry args={[0.06, 12, 12]} />
           <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
         </mesh>
-        
+
         {/* Base Cylinder connection */}
         <mesh position={[0, -0.15, 0]}>
           <cylinderGeometry args={[0.1, 0.1, 0.3, 12]} />
@@ -1458,11 +1458,11 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
       {/* NPC speech bubble (HTML overlay) */}
       {showBubble ? (
         <Html position={[0, 1.8, 0]} center distanceFactor={8} className="pointer-events-none select-none">
-          <div 
+          <div
             className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
             style={{ borderColor: `${color}40` }}
           >
-            <span 
+            <span
               className="text-[9px] border px-2 py-0.5 rounded font-bold tracking-wider block w-max mx-auto mb-1.5 uppercase"
               style={{ color, backgroundColor: `${color}10`, borderColor: `${color}20` }}
             >
@@ -1475,10 +1475,10 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
         </Html>
       ) : (
         <Html position={[0, 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
-          <div 
+          <div
             className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none"
-            style={{ 
-              borderColor: color, 
+            style={{
+              borderColor: color,
               color: color,
               boxShadow: `0 0 12px ${color}30`
             }}
@@ -1657,13 +1657,13 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* ── Zone 1 — Đa Thành Phần Kinh Tế ── */}
       {isVisible && (
         <>
-          <Zone1MultiSector 
+          <Zone1MultiSector
             onZoneClick={handleZoneClick}
             isActive={activePedestal === 1}
             language={language}
             intensity={zoneIntensities[0]}
           />
-          <ZoneNPC 
+          <ZoneNPC
             position={[3.6, 0, -37.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Sở hữu)"
@@ -1681,13 +1681,13 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Zone 2 - Co Che Thi Truong -- */}
       {isVisible && (
         <>
-          <Zone2BalanceScale 
+          <Zone2BalanceScale
             onZoneClick={handleZoneClick}
             isActive={activePedestal === 2}
             language={language}
             intensity={zoneIntensities[1]}
           />
-          <ZoneNPC 
+          <ZoneNPC
             position={[2.5, 0, -12.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Thị trường)"
@@ -1705,13 +1705,13 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Zone 3 - Nha Nuoc Quan Ly -- */}
       {isVisible && (
         <>
-          <Zone3StateRegulation 
+          <Zone3StateRegulation
             onZoneClick={handleZoneClick}
             isActive={activePedestal === 3}
             language={language}
             intensity={zoneIntensities[2]}
           />
-          <ZoneNPC 
+          <ZoneNPC
             position={[2.5, 0, 12.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Nhà nước)"
@@ -1729,13 +1729,13 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Zone 4 - Cong Bang Xa Hoi -- */}
       {isVisible && (
         <>
-          <Zone4SocialEquity 
+          <Zone4SocialEquity
             onZoneClick={handleZoneClick}
             isActive={activePedestal === 4}
             language={language}
             intensity={zoneIntensities[3]}
           />
-          <ZoneNPC 
+          <ZoneNPC
             position={[2.5, 0, 37.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (An sinh)"
@@ -1753,13 +1753,13 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Zone 5 - Hoi Nhap Quoc Te -- */}
       {isVisible && (
         <>
-          <Zone5InternationalIntegration 
+          <Zone5InternationalIntegration
             onZoneClick={handleZoneClick}
             isActive={activePedestal === 5}
             language={language}
             intensity={zoneIntensities[4]}
           />
-          <ZoneNPC 
+          <ZoneNPC
             position={[2.5, 0, 62.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Hội nhập)"

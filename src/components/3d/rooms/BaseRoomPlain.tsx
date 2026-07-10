@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
+import { Html, useTexture } from '@react-three/drei';
 import { useMuseum } from '@/context/MuseumContext';
 
 export interface BaseRoomProps {
@@ -19,49 +19,104 @@ export interface BaseRoomProps {
   children?: React.ReactNode;
 }
 
+const PaintingMesh: React.FC<{ url: string }> = ({ url }) => {
+  const texture = useTexture(url);
+  return (
+    <mesh position={[0, 0, 0.06]}>
+      <planeGeometry args={[3.0, 2.0]} />
+      <meshBasicMaterial map={texture} toneMapped={false} />
+    </mesh>
+  );
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // FIRST ROOM EXHIBITS (5 MODELS & 10 PAINTINGS DATA)
 // ═══════════════════════════════════════════════════════════════════════════
 const FIRST_ROOM_EXHIBITS = [
   {
     z: -71,
-    titleVi: "Thành phần Kinh tế Nhà nước",
-    titleEn: "State-owned Economy Sector",
-    descVi: "Giữ vai trò chủ đạo, là công cụ đại diện cho sở hữu toàn dân điều tiết vĩ mô.",
-    descEn: "Plays the leading role, representing public ownership to stabilize the macroeconomy.",
-    modelType: "torus"
+    left: {
+      titleVi: "Kinh tế Nhà nước (Viettel)",
+      titleEn: "State Economy (Viettel)",
+      descVi: "Doanh nghiệp nhà nước giữ vai trò chủ đạo trong nền kinh tế, dẫn dắt hạ tầng quốc gia và phát triển công nghệ cao.",
+      descEn: "State-owned enterprises play a leading role, driving national infrastructure and high-tech development.",
+      imageUrl: "/images/room4/viettel.jpg"
+    },
+    right: {
+      titleVi: "Kinh tế có vốn FDI (Samsung)",
+      titleEn: "Foreign FDI Sector (Samsung)",
+      descVi: "Thành phần kinh tế có vốn đầu tư nước ngoài đóng vai trò quan trọng trong việc thúc đẩy xuất khẩu và tạo việc làm công nghệ cao.",
+      descEn: "Foreign-invested sector plays an important role in boosting exports and generating high-tech employment.",
+      imageUrl: "/images/room4/samsung.jpg"
+    }
   },
   {
     z: -67,
-    titleVi: "Thành phần Kinh tế Tư nhân",
-    titleEn: "Private Economy Sector",
-    descVi: "Động lực quan trọng của nền kinh tế, năng động, bứt phá và đóng góp lớn cho GDP.",
-    descEn: "A key driver of the economy, highly dynamic, and contributing significantly to GDP.",
-    modelType: "box"
+    left: {
+      titleVi: "Kinh tế Tư nhân (VinFast)",
+      titleEn: "Private Economy (VinFast)",
+      descVi: "Kinh tế tư nhân là động lực quan trọng của nền kinh tế thị trường định hướng XHCN, năng động và bứt phá mạnh mẽ.",
+      descEn: "Private economy is a key engine of the socialist-oriented market economy, highly dynamic and growing rapidly.",
+      imageUrl: "/images/room4/vinfast.jpg"
+    },
+    right: {
+      titleVi: "Thương mại Hiện đại (Siêu thị)",
+      titleEn: "Modern Retail (Supermarket)",
+      descVi: "Sự hiện diện đa dạng của các thành phần kinh tế trong hoạt động phân phối bán lẻ hàng tiêu dùng hiện đại.",
+      descEn: "The diverse presence of economic sectors in modern consumer retail distribution networks.",
+      imageUrl: "/images/room4/sieu-thi.jpg"
+    }
   },
   {
     z: -63,
-    titleVi: "Cơ chế Thị trường Tự do",
-    titleEn: "Free Market Mechanism",
-    descVi: "Vận hành theo cung - cầu, giá cả quyết định bởi thị trường cạnh tranh lành mạnh.",
-    descEn: "Operates based on supply and demand, with prices determined by healthy competition.",
-    modelType: "scale"
+    left: {
+      titleVi: "Chợ truyền thống và Cung - Cầu",
+      titleEn: "Traditional Market & Supply-Demand",
+      descVi: "Quy luật cung cầu tự nhiên vận hành cơ chế giá cả hàng hóa linh hoạt, phản ánh đời sống thương mại thường nhật.",
+      descEn: "Natural supply and demand laws drive flexible commodity pricing, reflecting daily commerce.",
+      imageUrl: "/images/room4/cho-truyen-thong.jpg"
+    },
+    right: {
+      titleVi: "An ninh Năng lượng (EVN)",
+      titleEn: "National Energy Security (EVN)",
+      descVi: "Hạ tầng năng lượng công ích được bảo đảm bởi doanh nghiệp nhà nước phục vụ cơ chế sản xuất xã hội.",
+      descEn: "Public energy infrastructure secured by state corporations to fuel the social production mechanism.",
+      imageUrl: "/images/room4/evn.jpg"
+    }
   },
   {
     z: -59,
-    titleVi: "Quản lý và Điều tiết của Nhà nước",
-    titleEn: "State Regulation & Management",
-    descVi: "Xây dựng khung pháp lý, đầu tư hạ tầng thiết yếu và khắc phục khuyết tật thị trường.",
-    descEn: "Enacting legal frameworks, investing in infrastructure, and correcting market failures.",
-    modelType: "cylinder"
+    left: {
+      titleVi: "Hạ tầng huyết mạch (Cao tốc)",
+      titleEn: "Spine Infrastructure (Expressway)",
+      descVi: "Đầu tư công của Nhà nước kiến tạo mạng lưới giao thông cao tốc kết nối vùng kinh tế động lực.",
+      descEn: "State public investments build core highway networks connecting major economic hubs.",
+      imageUrl: "/images/room4/cao-toc-bac-nam.jpg"
+    },
+    right: {
+      titleVi: "Chính sách An sinh Xã hội",
+      titleEn: "Social Welfare Policy (Insurance)",
+      descVi: "Bảo hiểm y tế toàn dân thể hiện định hướng tiến bộ và công bằng, chăm lo sức khỏe nhân dân.",
+      descEn: "Universal healthcare insurance represents socialist progress and equity, caring for all citizens.",
+      imageUrl: "/images/room4/bao-hiem-y-te.jpg"
+    }
   },
   {
     z: -55,
-    titleVi: "Hội nhập Quốc tế sâu rộng",
-    titleEn: "Deep International Integration",
-    descVi: "Mở rộng quan hệ song phương và đa phương, tham gia các chuỗi cung ứng toàn cầu.",
-    descEn: "Expanding bilateral and multilateral relations, participating in global supply chains.",
-    modelType: "globe"
+    left: {
+      titleVi: "Cảng biển Quốc tế",
+      titleEn: "International Seaport",
+      descVi: "Hạ tầng kết nối logistics toàn cầu, cửa ngõ giao thương đường biển thu hút luồng hàng quốc tế.",
+      descEn: "Global logistics infrastructure, maritime trade gateway attracting international shipping lines.",
+      imageUrl: "/images/room4/cang-bien.jpg"
+    },
+    right: {
+      titleVi: "Hội nhập & Container xuất khẩu",
+      titleEn: "Integration & Export Containers",
+      descVi: "Chủ động tham gia sâu rộng vào chuỗi cung ứng toàn cầu và các hiệp định tự do thương mại thế hệ mới.",
+      descEn: "Actively participating and integrating deeply into global supply chains and new-generation free trade agreements.",
+      imageUrl: "/images/room4/container-xuat-khau.jpg"
+    }
   }
 ];
 
@@ -115,8 +170,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
   isVisible = true,
   children 
 }) => {
-  const { activeGallery, setSelectedExhibit } = useMuseum();
-
+  const { activeGallery, setSelectedExhibit, language } = useMuseum();
 
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
@@ -133,6 +187,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
   const leftPanelX = -(skylightWidth / 2 + sideWidth / 2);
   const rightPanelX = skylightWidth / 2 + sideWidth / 2;
   const panelHeightY = roomHeight - 0.6;
+
   const handleExhibitClick = (
     e: any, 
     item: typeof FIRST_ROOM_EXHIBITS[0], 
@@ -144,29 +199,26 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
     const coordX = type === 'model' ? 0 : (side === 'left' ? -roomWidth / 2 : roomWidth / 2);
     const rotY = type === 'model' ? 0 : (side === 'left' ? Math.PI / 2 : -Math.PI / 2);
 
+    const sideKey = side || 'left';
+    const data = (item as any)[sideKey];
+
     setSelectedExhibit({
       id: `${type}-${idx}-${side ?? 'center'}`,
       gallery_id: galleryId,
       title: { 
-        vi: item.titleVi, 
-        en: item.titleEn 
+        vi: data.titleVi, 
+        en: data.titleEn 
       },
       author: { 
         vi: type === 'model' ? "Mô hình 3D" : "Tranh trưng bày", 
         en: type === 'model' ? "3D Model" : "Exhibit Painting" 
       },
       description: { 
-        vi: item.descVi, 
-        en: item.descEn 
+        vi: data.descVi, 
+        en: data.descEn 
       },
       model_3d_url: "",
-      thumbnail_url: type === 'painting' 
-        ? (idx === 0 ? "https://images.unsplash.com/photo-1562408590-e32931084e23?w=800" 
-          : idx === 1 ? "https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800"
-          : idx === 2 ? "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800"
-          : idx === 3 ? "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800"
-          : "https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800")
-        : "",
+      thumbnail_url: data.imageUrl || "",
       coordinate_x: coordX,
       coordinate_y: type === 'model' ? 1.6 : 2.3,
       coordinate_z: item.z,
@@ -178,6 +230,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
       scale_z: 1
     });
   };
+
   return (
     <group>
       {/* Hộp chứa meshes, được ẩn/hiện tức thì mà không unmount để tránh lag WebGL */}
@@ -238,42 +291,37 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {/* Tấm trần vòm nghiêng bên trái */}
         <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]}>
           <boxGeometry args={[panelWidth, 0.1, roomLength]} />
-          <meshStandardMaterial 
-            color="#eae5dc" 
-            roughness={0.8}
-          />
+          <meshStandardMaterial color="#334155" roughness={0.7} />
         </mesh>
 
         {/* Tấm trần vòm nghiêng bên phải */}
         <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]}>
           <boxGeometry args={[panelWidth, 0.1, roomLength]} />
+          <meshStandardMaterial color="#334155" roughness={0.7} />
+        </mesh>
+
+        {/* Giếng trời kính giữa trần */}
+        <mesh position={[0, roomHeight, 0]}>
+          <boxGeometry args={[skylightWidth, 0.08, roomLength]} />
           <meshStandardMaterial 
-            color="#eae5dc"
-            roughness={0.8}
+            color="#38bdf8" 
+            transparent 
+            opacity={0.35} 
+            roughness={0.05} 
+            metalness={0.9} 
           />
         </mesh>
 
-        {/* Trần giếng trời kính (Skylight) ở chính giữa trục dọc hành lang */}
-        <mesh position={[0, roomHeight - 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[skylightWidth, roomLength]} />
-          <meshStandardMaterial 
-            color="#bae6fd" 
-            emissive="#bae6fd"
-            emissiveIntensity={1.5} 
-            transparent
-            opacity={0.8}
-            roughness={0.1}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-
-        {/* Khung sắt giếng trời cổ điển chạy dọc */}
-        {Array.from({ length: 11 }).map((_, i) => (
-          <mesh key={`skylight-grid-${i}`} position={[0, roomHeight - 0.19, -roomLength / 2 + i * (roomLength / 10)]}>
-            <boxGeometry args={[skylightWidth, 0.05, 0.05]} />
-            <meshStandardMaterial color="#1e293b" roughness={0.9} />
-          </mesh>
-        ))}
+        {/* Khung dầm sắt nâng đỡ giếng trời */}
+        {Array.from({ length: Math.round(roomLength / 6) }).map((_, idx) => {
+          const zPos = -roomLength / 2 + (idx * 6) + 3;
+          return (
+            <mesh key={`ceiling-beam-${idx}`} position={[0, roomHeight - 0.05, zPos]}>
+              <boxGeometry args={[skylightWidth + 0.2, 0.1, 0.15]} />
+              <meshStandardMaterial color="#1e293b" roughness={0.9} />
+            </mesh>
+          );
+        })}
         <mesh position={[0, roomHeight - 0.19, 0]}>
           <boxGeometry args={[0.05, 0.05, roomLength]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
@@ -367,13 +415,11 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {/* Exhibits & Models inside the first room of gallery-market-economy */}
         {galleryId === 'gallery-market-economy' && FIRST_ROOM_EXHIBITS.map((item, idx) => (
           <group key={`first-room-item-${idx}`}>
-
-
             {/* Ảnh tường Trái */}
             <group 
               position={[-roomWidth / 2 + 0.1, 2.3, item.z]} 
               rotation={[0, Math.PI / 2, 0]}
-              onClick={(e) => handleExhibitClick(e, item, idx, 'painting')}
+              onClick={(e) => handleExhibitClick(e, item, idx, 'painting', 'left')}
               onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
               onPointerOut={() => { document.body.style.cursor = 'auto'; }}
             >
@@ -381,10 +427,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
                 <boxGeometry args={[3.2, 2.2, 0.1]} />
                 <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
               </mesh>
-              <mesh position={[0, 0, 0.06]}>
-                <planeGeometry args={[3.0, 2.0]} />
-                <meshStandardMaterial color="#0f172a" roughness={0.9} />
-              </mesh>
+              <PaintingMesh url={item.left.imageUrl} />
 
               {/* Bảng nhãn thông tin dán trên tường dưới khung tranh */}
               <mesh position={[0, -1.4, 0.02]}>
@@ -393,11 +436,11 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
               </mesh>
               <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
                 <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-                  <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1">
-                    {item.titleVi}
+                  <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                    {language === 'vi' ? item.left.titleVi : item.left.titleEn}
                   </h4>
-                  <p className="text-[7.5px] leading-normal text-slate-600 font-medium">
-                    {item.descVi}
+                  <p className="text-[7px] leading-normal text-slate-600 font-medium">
+                    {language === 'vi' ? item.left.descVi : item.left.descEn}
                   </p>
                 </div>
               </Html>
@@ -407,7 +450,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
             <group 
               position={[roomWidth / 2 - 0.1, 2.3, item.z]} 
               rotation={[0, -Math.PI / 2, 0]}
-              onClick={(e) => handleExhibitClick(e, item, idx, 'painting')}
+              onClick={(e) => handleExhibitClick(e, item, idx, 'painting', 'right')}
               onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
               onPointerOut={() => { document.body.style.cursor = 'auto'; }}
             >
@@ -415,10 +458,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
                 <boxGeometry args={[3.2, 2.2, 0.1]} />
                 <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
               </mesh>
-              <mesh position={[0, 0, 0.06]}>
-                <planeGeometry args={[3.0, 2.0]} />
-                <meshStandardMaterial color="#0f172a" roughness={0.9} />
-              </mesh>
+              <PaintingMesh url={item.right.imageUrl} />
 
               {/* Bảng nhãn thông tin dán trên tường dưới khung tranh */}
               <mesh position={[0, -1.4, 0.02]}>
@@ -427,18 +467,17 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
               </mesh>
               <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
                 <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-                  <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1">
-                    {item.titleEn}
+                  <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
+                    {language === 'vi' ? item.right.titleVi : item.right.titleEn}
                   </h4>
-                  <p className="text-[7.5px] leading-normal text-slate-600 font-medium">
-                    {item.descEn}
+                  <p className="text-[7px] leading-normal text-slate-600 font-medium">
+                    {language === 'vi' ? item.right.descVi : item.right.descEn}
                   </p>
                 </div>
               </Html>
             </group>
           </group>
         ))}
-
 
         {/* Render các phần tử riêng biệt của phòng con */}
         {children}
