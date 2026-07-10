@@ -1913,6 +1913,7 @@ interface ZoneNPCProps {
   activeIntensity: number;
   onClick?: (e: any) => void;
   textureUrl?: string;
+  autoShowOnProximity?: boolean;
 }
 
 const NPCStandee: React.FC<{ url: string; color: string }> = ({ url, color }) => {
@@ -1994,7 +1995,8 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
   isVisible,
   activeIntensity,
   onClick,
-  textureUrl
+  textureUrl,
+  autoShowOnProximity
 }) => {
   const isVi = language === 'vi';
   const [forceShow, setForceShow] = useState(false);
@@ -2026,7 +2028,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
     }
   }, [forceShow]);
 
-  const showBubble = isVisible && forceShow;
+  const showBubble = isVisible && (forceShow || (autoShowOnProximity && activeIntensity > 0.3));
 
   return (
     <group
@@ -2087,7 +2089,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 
       {/* NPC speech bubble (HTML overlay) */}
       {showBubble ? (
-        <Html position={[0, 1.8, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
+        <Html position={[0, textureUrl ? 2.4 : 1.8, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
           <div
             className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
             style={{ borderColor: `${color}40`, zIndex: 9999, position: 'relative' }}
@@ -2104,7 +2106,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
           </div>
         </Html>
       ) : (
-        <Html position={[0, 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+        <Html position={[0, textureUrl ? 2.2 : 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
           <div
             className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none"
             style={{
@@ -2441,17 +2443,18 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Summary / Exit NPC in the last room -- */}
       {isVisible && (
         <ZoneNPC
-          position={[2.4, 0.05, 87.5]}
+          position={[0, 0.05, 87.5]}
           rotation={[0, 0, 0]}
-          nameVi="Chuyên gia Tổng kết"
+          nameVi="Ronaldo"
           nameEn="Summary Specialist"
-          infoVi="Chúc mừng bạn đã hoàn thành chuyến tham quan phòng trưng bày Kinh tế Thị trường định hướng XHCN! Hãy đi tiếp ra cửa sau để trở về sảnh chính."
-          infoEn="Congratulations on completing your tour of the Socialist-oriented Market Economy gallery! Please proceed to the back door to return to the lobby."
+          infoVi="Chào cậu! Cậu đến chơi minigame hả? Nhanh lên nhé, tôi đang vội. HLV bảo cả đội phải ra sân bay trước 5 giờ chiều...! Với lại cúp vàng thì hình như... có người ở Nam Mỹ cầm hộ rồi."
+          infoEn="Hi there! Are you here to play the minigame? Hurry up, I'm late. The coach said the whole team has to be at the airport before 5 PM... And that World Cup trophy... well, someone in South America is holding it for me."
           language={language}
           color="#10b981"
           isVisible={isVisible}
           activeIntensity={zoneIntensities[5]}
           textureUrl="/images/room4/ronaldo.jpg"
+          autoShowOnProximity={true}
           onClick={() => {
             window.dispatchEvent(new CustomEvent('openSummaryMinigame'));
           }}
