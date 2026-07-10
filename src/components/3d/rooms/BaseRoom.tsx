@@ -14,6 +14,7 @@ export interface BaseRoomProps {
     floor_type: 'wood' | 'marble' | 'carpet';
   };
   isVisible?: boolean;
+  onRopeClick?: (ropeIndex: number) => void;
   children?: React.ReactNode;
 }
 

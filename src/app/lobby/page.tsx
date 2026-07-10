@@ -12,6 +12,8 @@ import { DynamicRoom, ROOM_OFFSETS } from '@/components/3d/DynamicRoom';
 import { MultiplayerAvatars } from '@/components/3d/MultiplayerAvatars';
 import { ArrowLeft, AlertTriangle, Settings } from 'lucide-react';
 import { ExhibitModal } from '@/components/ui/ExhibitModal';
+import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
+import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CÁC HẰNG SỐ CỦA SẢNH
@@ -24,26 +26,34 @@ const LOBBY_H = 12;
 const DOOR_CONFIGS = [
   {
     doorId: 'door-room1',
-    targetRoom: 'gallery-paintings',
+    targetRoom: 'gallery-subsidy',
     // Cửa đặt ở tường sau sảnh, tầng 2 (Y=3, Z=8)
     position: [0, 3.0, 8.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 01: Khởi nguồn',
+    label: 'Phòng 01: Bao cấp',
   },
   {
     doorId: 'door-room2',
-    targetRoom: 'gallery-sculptures',
-    // Cửa đặt ở cuối phòng 1 (Y=3, Z=58) nối sang phòng 2
-    position: [0, 3.0, 58.0] as [number, number, number],
+    targetRoom: 'gallery-paintings',
+    // Cửa đặt ở cuối phòng 1 (Y=3, Z=54) nối sang phòng 2
+    position: [0, 3.0, 54.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Thị trường',
+    label: 'Phòng 02: Hội họa',
   },
   {
     doorId: 'door-room3',
-    targetRoom: 'gallery-paintings', // Placeholder cửa cuối phòng 2
-    position: [0, 3.0, 108.0] as [number, number, number],
+    targetRoom: 'gallery-sculptures',
+    // Cửa đặt ở cuối phòng 2 (Y=3, Z=100) nối sang phòng 3
+    position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Giới hạn',
+    label: 'Phòng 03: Điêu khắc',
+  },
+  {
+    doorId: 'door-room4',
+    targetRoom: 'gallery-subsidy', // Placeholder cửa cuối phòng 3
+    position: [0, 3.0, 146.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 04: Hoàn thành',
   },
 ];
 
@@ -54,20 +64,15 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
   // Sảnh chờ cầu thang
   if (x > -4.0 && x < 4.0) {
     if (z > 2.0 && z <= 7.0) {
-      const stepIndex = Math.floor((z - 2.0) / 0.5);
-      const clampedIndex = Math.max(0, Math.min(9, stepIndex));
-      return (clampedIndex + 1) * 0.3;
+      // Nội suy tuyến tính (smooth slope): từ Z=2.0 (Y=0.0) lên Z=7.0 (Y=3.0)
+      const ratio = (z - 2.0) / 5.0;
+      return ratio * 3.0;
     }
     if (z > 7.0 && z <= 8.5) return 3.0; // Mezzanine
   }
 
-  // Phòng 1 (gallery-paintings) — Z từ 8.0 đến 58.0, Y = 3.0
-  if (z > 8.0 && z <= 58.0) {
-    return 3.0;
-  }
-
-  // Phòng 2 (gallery-sculptures) — Z từ 58.0 đến 108.0, Y = 3.0
-  if (z > 58.0 && z <= 108.0) {
+  // Tất cả các phòng triển lãm Z từ 8.0 đến 146.0 đều nằm trên sàn tầng 2 (Y = 3.0)
+  if (z > 8.0 && z <= 146.0) {
     return 3.0;
   }
 
@@ -89,23 +94,49 @@ const LobbyCameraController: React.FC = () => {
 
   useEffect(() => {
     const canvas = gl.domElement;
-    const handleMouseDown = () => { isMouseDown.current = true; };
-    const handleMouseUp = () => { isMouseDown.current = false; };
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isMouseDown.current) return;
+
+    const isInsideCanvas = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return (
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom
+      );
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.button !== 0 || !isInsideCanvas(e)) return;
+      isMouseDown.current = true;
+    };
+
+    const handlePointerUp = () => {
+      isMouseDown.current = false;
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const isLeftButtonHeld = (e.buttons & 1) === 1;
+      if (!isLeftButtonHeld || !isInsideCanvas(e)) {
+        if (!isLeftButtonHeld) isMouseDown.current = false;
+        return;
+      }
+
+      isMouseDown.current = true;
       const sensitivity = 0.003;
       theta.current -= e.movementX * sensitivity;
       phi.current -= e.movementY * sensitivity;
       phi.current = Math.max(0.3, Math.min(Math.PI / 2 + 0.35, phi.current));
     };
 
-    canvas.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
     };
   }, [gl]);
 
@@ -130,19 +161,12 @@ const LobbyCameraController: React.FC = () => {
     let minZ = -9.4;
     let maxZ = 7.8;
 
-    // Room 1 (gallery-paintings): Z spans 8.0 to 58.0, W = 24 -> X from -12 to 12
-    if (pz > 8.0 && pz <= 58.0) {
+    // Các phòng triển lãm (Phòng 1, 2, 3): Z từ 8.0 đến 146.0, W = 24 -> X từ -12 đến 12
+    if (pz > 8.0 && pz <= 146.0) {
       minX = -11.5;
       maxX = 11.5;
       minZ = 8.2;
-      maxZ = 57.8;
-    }
-    // Room 2 (gallery-sculptures): Z spans 58.0 to 108.0, W = 24 -> X from -12 to 12
-    else if (pz > 58.0 && pz <= 108.0) {
-      minX = -11.5;
-      maxX = 11.5;
-      minZ = 58.2;
-      maxZ = 107.8;
+      maxZ = 145.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -185,8 +209,10 @@ const RoomPrecompiler: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyPlayer: React.FC = () => {
   const playerRef = useRef<THREE.Group>(null);
-  const keys = useRef({ w: false, a: false, s: false, d: false });
+  const keys = useRef({ w: false, a: false, s: false, d: false, e: false, space: false });
   const isMoving = useRef(false);
+  const jumpVelocity = useRef(0);
+  const isJumping = useRef(false);
 
   const leftLegRef = useRef<THREE.Group>(null);
   const rightLegRef = useRef<THREE.Group>(null);
@@ -268,36 +294,96 @@ const LobbyPlayer: React.FC = () => {
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 1 (gallery-paintings: Z 8.0 -> 58.0) ──
-      if (z > 8.0 && z <= 58.0) {
-        // Kiểm tra xem phòng 1 có đang mở không
+      // ── PHÒNG TRIỂN LÃM 1 (gallery-subsidy: Z 8.0 -> 54.0) ──
+      if (z > 8.0 && z <= 54.0) {
         const isRoom1Open = doorStates['door-room1']?.isOpen;
         if (!isRoom1Open) return true;
 
-        // Biên giới tường bên (rộng 24m)
+        // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
 
-        // Tường sau phòng 1 (Z = 58.0) — Cửa nối 2 sang Phòng 2
-        if (z > 57.3) {
+        // 1. Vách ngăn Z = 3.0 local (Global Z = 34.0, độ dày Z: 33.7 -> 34.3)
+        // Khoảng trống đi qua là X từ -5.0 đến -2.0. Chặn các vị trí khác.
+        if (z > 33.7 && z < 34.3) {
+          const inOpening = x > -5.0 && x < -2.0;
+          if (!inOpening) return true;
+        }
+
+        // 2. Vách ngăn Z = 13.0 local (Global Z = 44.0, độ dày Z: 43.7 -> 44.3)
+        // Chặn nếu đi qua tường X từ -6.0 đến 6.0
+        if (z > 43.7 && z < 44.3) {
+          const hitWall = x > -6.0 && x < 6.0;
+          if (hitWall) return true;
+        }
+
+        // 3. Bàn gỗ bày đài Radio cổ (Global Z = 43.55, X: -1.2 -> 1.2, Z: 43.1 -> 44.0)
+        if (z > 43.1 && z < 44.0 && x > -1.2 && x < 1.2) {
+          return true;
+        }
+
+        // 4. Ghế gỗ băng cũ trong phòng (local Z = 8.0 & 18.0 => Global Z = 39.0 & 49.0)
+        // Khi đang nhảy cao hơn mặt ghế thì cho vượt qua.
+        const canJumpOverBench = currentY > 3.75;
+        if (!canJumpOverBench && z > 38.5 && z < 39.5 && x > -1.7 && x < 1.7) {
+          return true;
+        }
+        if (!canJumpOverBench && z > 48.5 && z < 49.5 && x > -1.7 && x < 1.7) {
+          return true;
+        }
+
+        // 5. Dãy ghế ngồi giữa phòng (local Z = -16.5, -10.5, -4.5 => Global Z = 14.5, 20.5, 26.5)
+        const centralBenchZs = [14.5, 20.5, 26.5];
+        for (const benchZ of centralBenchZs) {
+          if (!canJumpOverBench && z > benchZ - 0.65 && z < benchZ + 0.65 && x > -2.15 && x < 2.15) {
+            return true;
+          }
+        }
+
+        // 6. Bàn lọ hoa trang trí: vẫn chặn để không xuyên qua bàn.
+        const decorTables = [
+          { x: -7.2, z: 17.8 },
+          { x: 7.2, z: 23.8 },
+        ];
+        for (const table of decorTables) {
+          const dx = x - table.x;
+          const dz = z - table.z;
+          if (Math.sqrt(dx * dx + dz * dz) < 0.75) {
+            return true;
+          }
+        }
+
+        // Cửa cuối phòng nối sang phòng 2
+        if (z > 53.3) {
           const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor2) return true;
         }
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 2 (gallery-sculptures: Z 58.0 -> 108.0) ──
-      if (z > 58.0 && z <= 108.0) {
-        // Kiểm tra xem phòng 2 có đang mở không
+      // ── PHÒNG TRIỂN LÃM 2 (gallery-paintings: Z 54.0 -> 100.0) ──
+      if (z > 54.0 && z <= 100.0) {
         const isRoom2Open = doorStates['door-room2']?.isOpen;
         if (!isRoom2Open) return true;
 
-        // Biên giới tường bên (rộng 24m)
         if (x < -11.7 || x > 11.7) return true;
 
-        // Tường sau phòng 2 (Z = 108.0) — Cửa 3 (Placeholder)
-        if (z > 107.3) {
+        if (z > 99.3) {
           const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
+        }
+        return false;
+      }
+
+      // ── PHÒNG TRIỂN LÃM 3 (gallery-sculptures: Z 100.0 -> 146.0) ──
+      if (z > 100.0 && z <= 146.0) {
+        const isRoom3Open = doorStates['door-room3']?.isOpen;
+        if (!isRoom3Open) return true;
+
+        if (x < -11.7 || x > 11.7) return true;
+
+        if (z > 145.3) {
+          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor4) return true;
         }
         return false;
       }
@@ -309,23 +395,67 @@ const LobbyPlayer: React.FC = () => {
 
   // Bắt phím WASD
   useEffect(() => {
+    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd' | 'e' | 'space'> = {
+      KeyW: 'w',
+      KeyA: 'a',
+      KeyS: 's',
+      KeyD: 'd',
+      KeyE: 'e',
+      Space: 'space',
+      ArrowUp: 'w',
+      ArrowLeft: 'a',
+      ArrowDown: 's',
+      ArrowRight: 'd',
+    };
+
+    const shouldIgnoreKeyboard = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      if (!el) return false;
+      const tagName = el.tagName.toLowerCase();
+      return tagName === 'input' || tagName === 'textarea' || el.isContentEditable;
+    };
+
     const onKeyDown = (e: KeyboardEvent) => {
-      const k = e.key.toLowerCase();
-      if (k === 'w' || k === 'a' || k === 's' || k === 'd') {
-        keys.current[k as 'w' | 'a' | 's' | 'd'] = true;
+      if (shouldIgnoreKeyboard(e.target)) return;
+      const key = movementKeyMap[e.code];
+      if (!key) return;
+      e.preventDefault();
+
+      if (key === 'space') {
+        if (!isJumping.current) {
+          isJumping.current = true;
+          jumpVelocity.current = 5.2;
+        }
+        keys.current.space = true;
+        return;
       }
+
+      keys.current[key] = true;
     };
     const onKeyUp = (e: KeyboardEvent) => {
-      const k = e.key.toLowerCase();
-      if (k === 'w' || k === 'a' || k === 's' || k === 'd') {
-        keys.current[k as 'w' | 'a' | 's' | 'd'] = false;
-      }
+      const key = movementKeyMap[e.code];
+      if (!key) return;
+      e.preventDefault();
+      keys.current[key] = false;
+    };
+    // Reset tất cả phím khi trang bị mất focus (tránh nhân vật tự di chuyển)
+    const resetAllKeys = () => {
+      keys.current.w = false;
+      keys.current.a = false;
+      keys.current.s = false;
+      keys.current.d = false;
+      keys.current.e = false;
+      keys.current.space = false;
     };
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', resetAllKeys);
+    document.addEventListener('visibilitychange', resetAllKeys);
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', resetAllKeys);
+      document.removeEventListener('visibilitychange', resetAllKeys);
     };
   }, []);
 
@@ -333,7 +463,7 @@ const LobbyPlayer: React.FC = () => {
     if (!playerRef.current) return;
     if (selectedExhibit) return;
 
-    const { w, a, s, d } = keys.current;
+    const { w, a, s, d, e } = keys.current;
     const moving = w || a || s || d;
     isMoving.current = moving;
 
@@ -351,7 +481,7 @@ const LobbyPlayer: React.FC = () => {
       if (a) moveDir.sub(rightVec);
       moveDir.normalize();
 
-      const speed = 4.5;
+      const speed = e ? 7.4 : 4.5;
       const curPos = playerRef.current.position;
       const curGroundY = getLobbyGroundY(curPos.x, curPos.z, doorStates);
 
@@ -379,11 +509,25 @@ const LobbyPlayer: React.FC = () => {
     if (moving && settings.animations) {
       bobY = Math.sin(t * 10) * 0.032;
     }
-    const targetY = curGroundY + baseY + bobY;
-    curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, 0.2);
+    const baseGroundY = curGroundY + baseY;
 
-    // Ngăn chặn chèn chân xuống đất bằng cách kẹp độ cao Y tối thiểu của người chơi
-    const minAllowedY = curGroundY + baseY;
+    if (isJumping.current) {
+      jumpVelocity.current -= 13.5 * delta;
+      curPos.y += jumpVelocity.current * delta;
+
+      if (curPos.y <= baseGroundY) {
+        curPos.y = baseGroundY;
+        jumpVelocity.current = 0;
+        isJumping.current = false;
+      }
+    } else {
+      const targetY = baseGroundY + bobY;
+      // Sử dụng lerp nhanh hơn một chút để giảm trễ nhưng vẫn đảm bảo mượt mà
+      curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, 0.3);
+    }
+
+    // Chỉ kẹp cứng nếu người chơi bị hẫng chân quá sâu (ví dụ > 0.4 đơn vị) dưới sàn thực tế
+    const minAllowedY = curGroundY + baseY - 0.05;
     if (curPos.y < minAllowedY) {
       curPos.y = minAllowedY;
     }
@@ -391,9 +535,11 @@ const LobbyPlayer: React.FC = () => {
     // Cập nhật phòng hiện tại dựa trên vị trí tuần tự trục Z
     if (curPos.z <= 8.0) {
       setCurrentRoom('lobby');
-    } else if (curPos.z > 8.0 && curPos.z <= 58.0) {
+    } else if (curPos.z > 8.0 && curPos.z <= 54.0) {
+      setCurrentRoom('gallery-subsidy');
+    } else if (curPos.z > 54.0 && curPos.z <= 100.0) {
       setCurrentRoom('gallery-paintings');
-    } else if (curPos.z > 58.0 && curPos.z <= 108.0) {
+    } else if (curPos.z > 100.0 && curPos.z <= 146.0) {
       setCurrentRoom('gallery-sculptures');
     }
 
@@ -545,15 +691,22 @@ export default function LobbyPage() {
   const [entered, setEntered] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // Set activeGallery khi enter lobby để Socket kết nối
+  // Sync activeGallery với currentRoom trong sảnh + phòng triển lãm 3D liên tục
   useEffect(() => {
-    if (entered && nickname) {
-      setActiveGallery({ id: 'lobby', name: 'Sảnh Bảo Tàng', description: '', scene_asset_url: '', is_active: true });
-    }
-    return () => {
+    if (!entered || !nickname) {
       setActiveGallery(null);
+      return;
+    }
+    const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
+      'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
+      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
+      'gallery-sculptures': { id: 'gallery-sculptures', name: 'Phòng 03: Điêu khắc thế giới' },
     };
-  }, [entered, nickname, setActiveGallery]);
+    const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
+    setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
+    return () => { setActiveGallery(null); };
+  }, [entered, nickname, currentRoom, setActiveGallery]);
 
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -613,12 +766,8 @@ export default function LobbyPage() {
                   const offset = ROOM_OFFSETS[room.galleryId];
                   if (!offset) return null;
 
-                  // Xác định xem phòng này có đang mở/visible không dựa trên trạng thái phòng và cửa
-                  const isRoomEnabled = roomStates[room.galleryId]?.isOpen;
-                  const isDoorOpen = Object.values(doorStates).some(
-                    (d) => d.targetRoom === room.galleryId && d.isOpen
-                  );
-                  const isVisible = isRoomEnabled && isDoorOpen;
+                  // Xác định xem phòng này có đang mở/visible không dựa trên trạng thái bật/tắt phòng của admin
+                  const isVisible = roomStates[room.galleryId]?.isOpen || false;
 
                   return (
                     <DynamicRoom
@@ -880,6 +1029,12 @@ export default function LobbyPage() {
       
       {/* ═══ MODAL CHI TIẾT HIỆN VẬT (Exhibit Modal) ═══ */}
       <ExhibitModal />
+
+      {/* ═══ SỔ NHIỆM VỤ ĐIỀU TRA PHÒNG BAO CẤP ═══ */}
+      <InvestigationNotebook />
+
+      {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
+      <RoomWelcomeModal />
     </div>
   );
 }

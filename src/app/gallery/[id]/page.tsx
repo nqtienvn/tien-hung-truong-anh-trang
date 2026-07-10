@@ -22,12 +22,12 @@ interface PageProps {
 export default function GalleryPage({ params }: PageProps) {
   const router = useRouter();
   const { id: galleryId } = use(params);
-  
-  const { 
-    nickname, 
+
+  const {
+    nickname,
     setNickname,
-    activeGallery, 
-    setActiveGallery, 
+    activeGallery,
+    setActiveGallery,
     socket,
     otherUsers,
     language,
@@ -60,7 +60,7 @@ export default function GalleryPage({ params }: PageProps) {
   // 1. Tải thông tin phòng triển lãm và các hiện vật
   useEffect(() => {
     setLoading(true);
-    
+
     fetch('/api/galleries')
       .then((res) => res.json())
       .then((galleries: Gallery[]) => {
@@ -93,7 +93,7 @@ export default function GalleryPage({ params }: PageProps) {
       try {
         const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
         const statsUrl = `${wsUrl.replace(/\/$/, '')}/stats?galleryId=${galleryId}`;
-        
+
         const res = await fetch(statsUrl);
         if (!res.ok) throw new Error(`HTTP status ${res.status}`);
         const data = await res.json();
@@ -148,7 +148,7 @@ export default function GalleryPage({ params }: PageProps) {
     };
 
     socket.emit('send-message', msgData);
-    
+
     setChatMessages((prev) => [
       ...prev,
       {
@@ -158,7 +158,7 @@ export default function GalleryPage({ params }: PageProps) {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
-    
+
     setChatInput('');
   };
 
@@ -190,7 +190,7 @@ export default function GalleryPage({ params }: PageProps) {
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-6 rounded-2xl max-w-md shadow-2xl">
           <h2 className="text-lg font-bold mb-2">⚠️ Lỗi không gian</h2>
           <p className="text-sm text-slate-400 mb-4">{error || 'Không tìm thấy phòng trưng bày này.'}</p>
-          <button 
+          <button
             onClick={() => router.push('/')}
             className="bg-[#725b29] text-white font-bold px-5 py-2 rounded-xl text-xs hover:scale-105 active:scale-95 transition-transform cursor-pointer"
           >
@@ -203,7 +203,7 @@ export default function GalleryPage({ params }: PageProps) {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#0a0a0d] flex flex-col">
-      
+
       {/* 1. LỚP CANVAS 3D TRẢI RỘNG TOÀN DIỆN TÍCH (Z-INDEX: 0) */}
       <div className="absolute inset-0 z-0">
         {!inQueue && (nickname ? isAdmitted : true) ? (
@@ -277,7 +277,7 @@ export default function GalleryPage({ params }: PageProps) {
                   <MessageSquare size={14} className="text-cyan-400" />
                   {language === 'vi' ? 'Trò chuyện phòng' : 'Gallery Chat'}
                 </span>
-                <button 
+                <button
                   onClick={() => setChatOpen(false)}
                   className="text-[10px] text-slate-500 hover:text-slate-300 font-bold cursor-pointer"
                 >
@@ -366,7 +366,7 @@ export default function GalleryPage({ params }: PageProps) {
                 {activeGallery.name}
               </h2>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xs mx-auto">
-                {language === 'vi' 
+                {language === 'vi'
                   ? 'Phòng triển lãm hiện đã đầy du khách (Tối đa 30 người). Vui lòng đợi trong giây lát.'
                   : 'The exhibition room is currently full (Max 30 visitors). Please wait a moment.'}
               </p>
@@ -423,7 +423,7 @@ export default function GalleryPage({ params }: PageProps) {
                 {activeGallery.name}
               </h2>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xs mx-auto">
-                {language === 'vi' 
+                {language === 'vi'
                   ? 'Vui lòng điền biệt danh của bạn để bắt đầu tham gia và đồng hành cùng các du khách khác.'
                   : 'Please enter your nickname to start visiting and companion with other visitors.'}
               </p>
@@ -461,8 +461,8 @@ export default function GalleryPage({ params }: PageProps) {
 
               {roomStats && roomStats.activeCount >= roomStats.limit && (
                 <p className="text-[10px] text-amber-500 bg-amber-500/5 p-2 rounded-lg border border-amber-500/10 leading-normal text-left">
-                  ⚠️ {language === 'vi' 
-                    ? 'Phòng hiện đã đầy. Bạn sẽ xếp vào hàng chờ sau khi nhấn tham gia.' 
+                  ⚠️ {language === 'vi'
+                    ? 'Phòng hiện đã đầy. Bạn sẽ xếp vào hàng chờ sau khi nhấn tham gia.'
                     : 'The room is full. You will enter a queue after joining.'}
                 </p>
               )}
@@ -542,15 +542,15 @@ export default function GalleryPage({ params }: PageProps) {
                 <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   {language === 'vi' ? 'Chi tiết cấu hình' : 'Preset Details'}
                 </span>
-                
+
                 <p className="text-[11px] text-slate-300 leading-relaxed min-h-[64px]">
                   {settings.preset === 'low' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '♟️ Hiển thị hình quân cờ đơn giản. 🔒 Tắt đổ bóng. 🚶 Tắt vung tay chân. 👥 Chỉ hiện tối đa 10 người. Đảm bảo hoạt động mượt mà tuyệt đối trên mọi máy yếu.'
                       : '♟️ Pawn mesh. 🔒 Shadows Off. 🚶 Animations Off. 👥 Max 10 players visible. Guaranteed absolute smoothness for low-end mobile/PC devices.'
                   )}
                   {settings.preset === 'medium' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '🚶 Hiển thị hình nhân di chuyển bình thường. ☀️ Bật đổ bóng động sắc nét. 🏃 Bật vung tay chân. 👥 Hiện đầy đủ người chơi. Trải nghiệm đồ họa sống động, mượt mà.'
                       : '🚶 Mannequin mesh. ☀️ Full Dynamic Shadows. 🏃 Limb animations On. 👥 Show all players. Premium and complete 3D interactive experience.'
                   )}

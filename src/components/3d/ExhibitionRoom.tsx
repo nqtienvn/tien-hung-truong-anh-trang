@@ -1,6 +1,7 @@
 import React from 'react';
 import RoomOne from './rooms/RoomOne';
 import RoomTwo from './rooms/RoomTwo';
+import RoomSubsidy from './rooms/RoomSubsidy';
 import BaseRoom from './rooms/BaseRoom';
 
 interface ExhibitionRoomProps {
@@ -15,10 +16,15 @@ interface ExhibitionRoomProps {
     floor_type: 'wood' | 'marble' | 'carpet';
   };
   isVisible?: boolean;
+  onRopeClick?: (ropeIndex: number) => void;
 }
 
 export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = (props) => {
   const { galleryId } = props;
+
+  if (galleryId === 'gallery-subsidy') {
+    return <RoomSubsidy {...props} />;
+  }
 
   if (galleryId === 'gallery-paintings') {
     return <RoomOne {...props} />;

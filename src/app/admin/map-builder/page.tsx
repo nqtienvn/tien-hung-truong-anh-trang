@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
 import { Exhibit, Gallery } from '@/lib/db';
 import { ExhibitionRoom } from '@/components/3d/ExhibitionRoom';
 import { ExhibitObject } from '@/components/3d/ExhibitObject';
@@ -32,6 +32,140 @@ const FLOOR_PRESETS = [
   { name: 'Thảm Đỏ Nhung', value: '#601118' },
   { name: 'Thảm Xanh Rêu', value: '#1e3328' },
 ];
+
+const FreeMapCamera: React.FC<{ roomWidth: number; roomLength: number; roomHeight: number }> = ({
+  roomWidth,
+  roomLength,
+  roomHeight,
+}) => {
+  const { camera, gl } = useThree();
+  const keys = useRef({ w: false, a: false, s: false, d: false, q: false, e: false, shift: false });
+  const yaw = useRef(0);
+  const pitch = useRef(-0.18);
+  const dragging = useRef(false);
+  const lastPointer = useRef({ x: 0, y: 0 });
+  const forward = useRef(new THREE.Vector3()).current;
+  const right = useRef(new THREE.Vector3()).current;
+  const move = useRef(new THREE.Vector3()).current;
+
+  useEffect(() => {
+    camera.position.set(0, Math.min(roomHeight - 0.6, 3.2), Math.min(roomLength / 2 - 3, 9));
+    camera.rotation.order = 'YXZ';
+    camera.rotation.set(pitch.current, yaw.current, 0);
+  }, [camera, roomHeight, roomLength]);
+
+  useEffect(() => {
+    const canvas = gl.domElement;
+
+    const shouldIgnoreKeyboard = (target: EventTarget | null) => {
+      const el = target as HTMLElement | null;
+      if (!el) return false;
+      const tagName = el.tagName.toLowerCase();
+      return tagName === 'input' || tagName === 'textarea' || el.isContentEditable;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (shouldIgnoreKeyboard(e.target)) return;
+      if (e.code === 'KeyW') keys.current.w = true;
+      else if (e.code === 'KeyA') keys.current.a = true;
+      else if (e.code === 'KeyS') keys.current.s = true;
+      else if (e.code === 'KeyD') keys.current.d = true;
+      else if (e.code === 'KeyQ') keys.current.q = true;
+      else if (e.code === 'KeyE') keys.current.e = true;
+      else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.current.shift = true;
+      else return;
+      e.preventDefault();
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'KeyW') keys.current.w = false;
+      else if (e.code === 'KeyA') keys.current.a = false;
+      else if (e.code === 'KeyS') keys.current.s = false;
+      else if (e.code === 'KeyD') keys.current.d = false;
+      else if (e.code === 'KeyQ') keys.current.q = false;
+      else if (e.code === 'KeyE') keys.current.e = false;
+      else if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') keys.current.shift = false;
+      else return;
+      e.preventDefault();
+    };
+
+    const resetKeys = () => {
+      keys.current = { w: false, a: false, s: false, d: false, q: false, e: false, shift: false };
+      dragging.current = false;
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const insideCanvas = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!insideCanvas) return;
+      dragging.current = true;
+      lastPointer.current = { x: e.clientX, y: e.clientY };
+      canvas.setPointerCapture?.(e.pointerId);
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!dragging.current) return;
+      const dx = e.clientX - lastPointer.current.x;
+      const dy = e.clientY - lastPointer.current.y;
+      lastPointer.current = { x: e.clientX, y: e.clientY };
+      yaw.current -= dx * 0.003;
+      pitch.current = THREE.MathUtils.clamp(pitch.current - dy * 0.003, -1.35, 1.25);
+      camera.rotation.set(pitch.current, yaw.current, 0);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      dragging.current = false;
+      canvas.releasePointerCapture?.(e.pointerId);
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', resetKeys);
+    document.addEventListener('visibilitychange', resetKeys);
+    canvas.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', resetKeys);
+      document.removeEventListener('visibilitychange', resetKeys);
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [camera, gl]);
+
+  useFrame((_, delta) => {
+    const k = keys.current;
+    move.set(0, 0, 0);
+    camera.getWorldDirection(forward);
+    forward.y = 0;
+    forward.normalize();
+    right.set(-forward.z, 0, forward.x).normalize();
+
+    if (k.w) move.add(forward);
+    if (k.s) move.sub(forward);
+    if (k.d) move.add(right);
+    if (k.a) move.sub(right);
+    if (k.e) move.y += 1;
+    if (k.q) move.y -= 1;
+
+    if (move.lengthSq() === 0) return;
+    move.normalize().multiplyScalar((k.shift ? 9 : 4.5) * delta);
+    camera.position.add(move);
+
+    const halfW = roomWidth / 2 - 0.4;
+    const halfL = roomLength / 2 - 0.4;
+    camera.position.x = THREE.MathUtils.clamp(camera.position.x, -halfW, halfW);
+    camera.position.z = THREE.MathUtils.clamp(camera.position.z, -halfL, halfL);
+    camera.position.y = THREE.MathUtils.clamp(camera.position.y, 1.2, Math.max(1.4, roomHeight - 0.4));
+  });
+
+  return null;
+};
 
 function MapBuilderContent() {
   const router = useRouter();
@@ -63,8 +197,8 @@ function MapBuilderContent() {
     setLoading(true);
     // Tải thông tin gallery
     Promise.all([
-      fetch('/api/galleries').then(res => res.json()),
-      fetch(`/api/exhibits?galleryId=${galleryId}`).then(res => res.json())
+      fetch('/api/galleries', { cache: 'no-store' }).then(res => res.json()),
+      fetch(`/api/exhibits?galleryId=${galleryId}`, { cache: 'no-store' }).then(res => res.json())
     ])
       .then(([galleries, roomExhibits]: [Gallery[], Exhibit[]]) => {
         const found = galleries.find(g => g.id === galleryId);
@@ -107,7 +241,7 @@ function MapBuilderContent() {
       floor_color: floorColor,
       wall_color: wallColor,
       wainscoting_color: wainscotingColor,
-      floor_type: floorType
+      floor_type: floorType,
     };
 
     try {
@@ -151,7 +285,7 @@ function MapBuilderContent() {
       <div className="flex-1 h-full relative">
         <Canvas
           shadows
-          camera={{ position: [0, 4, 10], fov: 55 }}
+          camera={{ position: [0, Math.min(roomHeight - 0.6, 3.2), Math.min(roomLength / 2 - 3, 9)], fov: 62 }}
         >
           <color attach="background" args={['#14141a']} />
           <fog attach="fog" args={['#14141a', 10, 32]} />
@@ -170,7 +304,7 @@ function MapBuilderContent() {
                   floor_color: floorColor,
                   wall_color: wallColor,
                   wainscoting_color: wainscotingColor,
-                  floor_type: floorType
+                  floor_type: floorType,
                 }}
               />
             )}
@@ -181,12 +315,7 @@ function MapBuilderContent() {
             ))}
           </Suspense>
 
-          <OrbitControls 
-            enableDamping 
-            maxPolarAngle={Math.PI / 2 - 0.05}
-            minDistance={2}
-            maxDistance={25}
-          />
+          <FreeMapCamera roomWidth={roomWidth} roomLength={roomLength} roomHeight={roomHeight} />
         </Canvas>
 
         {/* Info panel */}
@@ -202,7 +331,7 @@ function MapBuilderContent() {
 
         {/* Controls Hint */}
         <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white text-[10px] py-1 px-3 rounded-full pointer-events-none">
-          💡 Click + Kéo chuột trái để xoay phòng | Click + Kéo chuột phải để di chuyển | Cuộn chuột để zoom
+          💡 WASD di chuyển camera | Kéo chuột trái để xoay | Q/E lên xuống | Shift để đi nhanh
         </div>
       </div>
 
@@ -413,6 +542,7 @@ function MapBuilderContent() {
         </div>
 
         <hr className="border-slate-900 mt-auto" />
+
 
         <button
           onClick={handleSaveMap}
