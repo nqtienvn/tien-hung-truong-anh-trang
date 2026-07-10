@@ -21,6 +21,8 @@ export interface Gallery {
   wall_color?: string;
   wainscoting_color?: string;
   floor_type?: 'wood' | 'marble' | 'carpet';
+  // Config riêng từng dây đỏ (JSON array 6 phần tử)
+  rope_barriers_config?: string;
 }
 
 export interface Exhibit {
@@ -64,6 +66,7 @@ function readDb(): DatabaseSchema {
           const filePath = path.join(DB_DIR, file);
           const content = fs.readFileSync(filePath, 'utf-8');
           const data = JSON.parse(content) as DatabaseSchema;
+          console.log(`[DB-LOAD] Đọc file ${file}: ${data.galleries?.length || 0} phòng, ${data.exhibits?.length || 0} hiện vật.`);
           if (data.galleries) galleries.push(...data.galleries);
           if (data.exhibits) exhibits.push(...data.exhibits);
         }
@@ -130,7 +133,10 @@ function writeDb(data: DatabaseSchema): boolean {
 // Memory Cache cho các API đọc (Mô phỏng Redis)
 let dbCache: DatabaseSchema | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 10000; // 10 giây TTL (Time to live) cho mục đích demo
+// Đặt CACHE_TTL = 0 để vô hiệu hóa cache bộ nhớ. 
+// Lý do: Next.js App Router chạy các API routes trên nhiều worker (thread) khác nhau. 
+// Khi PATCH ở worker 1 xóa cache, GET ở worker 2 vẫn giữ cache cũ gây ra hiện tượng không đồng bộ.
+const CACHE_TTL = 0; 
 
 function getCachedDb(): DatabaseSchema {
   const now = Date.now();
