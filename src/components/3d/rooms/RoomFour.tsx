@@ -56,7 +56,7 @@ const CATEGORIES = [
 ];
 
 // Room 4 absolute Z offset from origin
-const ZONE_ABS_OFFSET = 183.0;
+const ZONE_ABS_OFFSET = 233.0;
 
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -74,7 +74,175 @@ interface ZoneProps {
 // ═══════════════════════════════════════════════════════════════════════════
 // ZONE 1 — Đa Thành Phần Kinh Tế (3 Cylinder Pedestals + Floating Logos)
 // ═══════════════════════════════════════════════════════════════════════════
-const Zone1MultiSector: React.FC<ZoneProps> = () => null;
+const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
+  const logo1Ref = useRef<THREE.Group>(null);
+  const logo2Ref = useRef<THREE.Group>(null);
+  const logo3Ref = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    const bounce = Math.sin(time * 2) * 0.08;
+
+    if (logo1Ref.current) {
+      logo1Ref.current.position.y = 1.25 + bounce;
+      logo1Ref.current.rotation.y = time * 0.6;
+    }
+    if (logo2Ref.current) {
+      logo2Ref.current.position.y = 1.25 + bounce;
+      logo2Ref.current.rotation.y = time * 0.6;
+    }
+    if (logo3Ref.current) {
+      logo3Ref.current.position.y = 1.25 + bounce;
+      logo3Ref.current.rotation.y = time * 0.6;
+    }
+  });
+
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    onZoneClick(1);
+  };
+
+  const handlePointerOver = (e: any) => {
+    e.stopPropagation();
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerOut = () => {
+    document.body.style.cursor = 'auto';
+  };
+
+  const isVi = language === 'vi';
+
+  return (
+    <group onClick={handleClick}>
+      {/* ── Pedestal 1: Viettel (State-owned) ── */}
+      <group position={[-2.2, 0, -15]}>
+        {/* Glow ring */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+          <ringGeometry args={[0.5, 0.6, 32]} />
+          <meshBasicMaterial color="#ef4444" transparent opacity={0.2 + intensity * 0.8} />
+        </mesh>
+        {/* Base Cylinder */}
+        <mesh 
+          position={[0, 0.5, 0]}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          <cylinderGeometry args={[0.4, 0.45, 1.0, 16]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.35, 0.4, 16]} />
+          <meshBasicMaterial color="#ef4444" transparent opacity={intensity} />
+        </mesh>
+        
+        {/* Logo Viettel (Orange globe inside green torus ring) */}
+        <group ref={logo1Ref} position={[0, 1.25, 0]}>
+          {/* Inner Globe */}
+          <mesh>
+            <sphereGeometry args={[0.16, 16, 16]} />
+            <meshStandardMaterial color="#ea580c" emissive="#ea580c" emissiveIntensity={0.5 * intensity} roughness={0.1} />
+          </mesh>
+          {/* Outer Torus Ring */}
+          <mesh rotation={[Math.PI / 4, Math.PI / 4, 0]}>
+            <torusGeometry args={[0.22, 0.02, 8, 24]} />
+            <meshStandardMaterial color="#16a34a" emissive="#16a34a" emissiveIntensity={0.5 * intensity} roughness={0.1} />
+          </mesh>
+        </group>
+
+        {/* HTML Label */}
+        <Html position={[0, 1.7, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+          <div className="bg-slate-950/85 border border-red-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
+            <p className="text-[8px] font-black text-red-400 uppercase tracking-wider">Viettel</p>
+            <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế Nhà nước' : 'State Sector'}</p>
+          </div>
+        </Html>
+      </group>
+
+      {/* ── Pedestal 2: VinFast (Private) ── */}
+      <group position={[0, 0, -15]}>
+        {/* Glow ring */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+          <ringGeometry args={[0.5, 0.6, 32]} />
+          <meshBasicMaterial color="#38bdf8" transparent opacity={0.2 + intensity * 0.8} />
+        </mesh>
+        {/* Base Cylinder */}
+        <mesh 
+          position={[0, 0.5, 0]}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          <cylinderGeometry args={[0.4, 0.45, 1.0, 16]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.35, 0.4, 16]} />
+          <meshBasicMaterial color="#38bdf8" transparent opacity={intensity} />
+        </mesh>
+
+        {/* Logo VinFast (Glowing V shape) */}
+        <group ref={logo2Ref} position={[0, 1.25, 0]}>
+          {/* Left Wing */}
+          <mesh position={[-0.08, 0.05, 0]} rotation={[0, 0, -Math.PI / 6]}>
+            <cylinderGeometry args={[0.025, 0.025, 0.24, 8]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8 * intensity} roughness={0.1} />
+          </mesh>
+          {/* Right Wing */}
+          <mesh position={[0.08, 0.05, 0]} rotation={[0, 0, Math.PI / 6]}>
+            <cylinderGeometry args={[0.025, 0.025, 0.24, 8]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8 * intensity} roughness={0.1} />
+          </mesh>
+        </group>
+
+        {/* HTML Label */}
+        <Html position={[0, 1.7, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+          <div className="bg-slate-950/85 border border-sky-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
+            <p className="text-[8px] font-black text-sky-400 uppercase tracking-wider">VinFast</p>
+            <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế Tư nhân' : 'Private Sector'}</p>
+          </div>
+        </Html>
+      </group>
+
+      {/* ── Pedestal 3: Samsung (FDI) ── */}
+      <group position={[2.2, 0, -15]}>
+        {/* Glow ring */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+          <ringGeometry args={[0.5, 0.6, 32]} />
+          <meshBasicMaterial color="#3b82f6" transparent opacity={0.2 + intensity * 0.8} />
+        </mesh>
+        {/* Base Cylinder */}
+        <mesh 
+          position={[0, 0.5, 0]}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        >
+          <cylinderGeometry args={[0.4, 0.45, 1.0, 16]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.35, 0.4, 16]} />
+          <meshBasicMaterial color="#3b82f6" transparent opacity={intensity} />
+        </mesh>
+
+        {/* Logo Samsung (Glowing blue oval) */}
+        <group ref={logo3Ref} position={[0, 1.25, 0]} scale={[1.3, 0.7, 0.4]} rotation={[Math.PI / 8, 0, -Math.PI / 12]}>
+          <mesh>
+            <sphereGeometry args={[0.18, 24, 24]} />
+            <meshStandardMaterial color="#1d4ed8" emissive="#1d4ed8" emissiveIntensity={0.6 * intensity} roughness={0.1} />
+          </mesh>
+        </group>
+
+        {/* HTML Label */}
+        <Html position={[0, 1.7, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+          <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
+            <p className="text-[8px] font-black text-blue-400 uppercase tracking-wider">Samsung</p>
+            <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế FDI' : 'FDI Sector'}</p>
+          </div>
+        </Html>
+      </group>
+    </group>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ZONE 2 — Cơ Chế Thị Trường (Balance Scale + Click-to-tilt items)
@@ -116,7 +284,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
   };
 
   // ── Narrative state (step 0→6) ──
-  const [step, setStep] = useState<number>(0);
+  const [step, setStep] = useState<number>(3);
+
+  // ── Zone 2 Intro state ──
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [npcSubtitles, setNpcSubtitles] = useState<string>('');
   const [activePedestal, setActivePedestal] = useState<number | null>(null);
@@ -141,14 +311,14 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
 
   useFrame((state) => {
     if (!isVisible) return;
-    const player = state.scene.getObjectByName('lobby-player');
+    const player = state.scene.getObjectByName('player-character') || state.scene.getObjectByName('lobby-player');
     if (!player) return;
 
     const absZ = player.position.z;
     const localZ = absZ - ZONE_ABS_OFFSET;
 
-    // Trigger cinematic entry sequence
-    if (absZ > 160.5 && stepRef.current === 0) setStep(1);
+
+
 
     // Entrance ambient lerp
     const entranceTarget = stepRef.current >= 1 ? 0.65 : 0.05;
@@ -259,6 +429,75 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       <directionalLight position={[5, 10, 5]} intensity={0.55} />
       <pointLight position={[0, roomHeight - 1, 0]} intensity={isVisible ? 2.8 : 0} distance={38} color="#ffffff" />
 
+      {/* ── Zone 1 — Đa Thành Phần Kinh Tế ── */}
+      {isVisible && (
+        <Zone1MultiSector 
+          onZoneClick={handleZoneClick}
+          isActive={activePedestal === 1}
+          language={language}
+          intensity={zoneIntensities[0]}
+        />
+      )}
+
+      {/* ── NPC 2D (Hologram Cố Vấn Triển Lãm) gần vách ngăn thứ nhất ── */}
+      {isVisible && (
+        <group
+          position={[-2.2, 1.2, -51.5]}
+          rotation={[0, Math.PI - 0.2, 0]}
+        >
+          {/* Vòng sáng chân đế */}
+          <mesh position={[0, -1.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.35, 0.45, 32]} />
+            <meshBasicMaterial color="#6366f1" toneMapped={false} />
+          </mesh>
+
+          {/* Thân thẻ hologram 2D đứng */}
+          <mesh>
+            <planeGeometry args={[1.0, 1.6]} />
+            <meshStandardMaterial
+              color="#1e1b4b"
+              emissive="#6366f1"
+              emissiveIntensity={0.25}
+              transparent
+              opacity={0.75}
+              roughness={0.1}
+            />
+          </mesh>
+
+          {/* Khung viền phát sáng */}
+          <lineSegments>
+            <edgesGeometry args={[new THREE.PlaneGeometry(1.0, 1.6)]} />
+            <lineBasicMaterial color="#818cf8" linewidth={2} />
+          </lineSegments>
+
+          {/* Nội dung hiển thị HTML dính liền trên tấm hologram */}
+          <Html transform distanceFactor={3.2} position={[0, 0, 0.01]} center>
+            <div className="w-[180px] h-[280px] flex flex-col items-center justify-between p-3 select-none text-center font-sans text-white">
+              <div className="flex flex-col items-center gap-1.5 mt-2">
+                <div className="w-14 h-14 rounded-full border-2 border-indigo-400 bg-indigo-950/80 flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 animate-pulse">
+                  🕵️‍♂️
+                </div>
+                <div className="space-y-0.5">
+                  <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-wider">
+                    Nguyễn Minh Tâm
+                  </h4>
+                  <p className="text-[7px] text-indigo-400 font-bold uppercase tracking-widest">
+                    Thành viên nhóm 7
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-slate-950/85 border border-indigo-500/30 rounded-xl p-2.5 my-2 shadow-inner">
+                <p className="text-[8px] leading-relaxed text-indigo-200 font-semibold">
+                  "Sau Đổi mới và hội nhập, Việt Nam phát triển rất nhanh. Nhưng bạn có biết chúng ta đang đi theo mô hình kinh tế nào?"
+                </p>
+              </div>
+
+            </div>
+          </Html>
+        </group>
+      )}
+
 
 
 
@@ -269,7 +508,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
 
       {/* ── NPC Expert (step ≥ 2) ── */}
       {step >= 2 && (
-        <group position={[0, 0, -12.0]} rotation={[0, Math.PI, 0]}>
+        <group position={[0, 0, -12.0]} rotation={[0, 0, 0]}>
           {/* Glow ring on floor */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.47, 0]}>
             <ringGeometry args={[0.62, 0.72, 32]} />
@@ -317,7 +556,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       )}
 
       {/* ── 2D UI OVERLAYS ── */}
-      {step > 0 && step !== 2 && (
+      {(step === 1 || step === 5 || step === 6) && (
         <Html fullscreen className="pointer-events-none z-50">
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 bg-black/30">
             <div className="w-full max-w-4xl h-[540px] bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 rounded-3xl overflow-hidden flex flex-col items-center justify-center relative shadow-[0_0_80px_rgba(34,211,238,0.12)] pointer-events-auto">
@@ -325,7 +564,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
               <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-8">
 
                 {/* ── Step 1: LED Slideshow ── */}
-                {step === 1 && (
+                {/* {step === 1 && (
                   <div className="w-full h-full flex flex-col items-center justify-between py-6">
                     <span className="text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
                       Đổi mới &amp; Hội nhập Quốc tế
@@ -345,24 +584,12 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
                       }
                     </div>
                   </div>
-                )}
+                )} */}
 
-                {/* ── Step 4: Minigame Intro ── */}
-                {step === 4 && (
-                  <div className="text-center space-y-5 max-w-xl">
-                    <div className="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-full border border-amber-500/20 flex items-center justify-center mx-auto text-xl">🏆</div>
-                    <div className="space-y-1.5">
-                      <h2 className="text-xl font-extrabold text-white">Thử Thách Nhà Hoạch Định Chính Sách</h2>
-                      <p className="text-[11px] text-slate-400 leading-relaxed px-4">Bạn vừa được bổ nhiệm trở thành Chuyên gia Kinh tế. Phân tích 20 tình huống thực tế và xác định chúng phản ánh đặc trưng nào trong 5 đặc trưng cốt lõi.</p>
-                    </div>
-                    <button onClick={handleStartGame} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-slate-950 font-bold px-7 py-2.5 rounded-xl text-xs transition-transform hover:scale-105 cursor-pointer shadow-lg">
-                      Bắt đầu thử thách ngay!
-                    </button>
-                  </div>
-                )}
+
 
                 {/* ── Step 5: Minigame ── */}
-                {step === 5 && (
+                {/* {step === 5 && (
                   <div className="w-full h-full flex flex-col justify-between py-6">
                     <div className="flex justify-between items-center border-b border-slate-800 pb-3 px-6">
                       <span className="text-xs font-bold text-cyan-400 flex items-center gap-1.5 uppercase tracking-wide">
@@ -405,10 +632,10 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
                       })}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* ── Step 6: Game Complete ── */}
-                {step === 6 && (
+                {/* {step === 6 && (
                   <div className="text-center space-y-4 max-w-2xl px-6">
                     <span className="text-4xl">🏆</span>
                     <div className="space-y-1">
@@ -422,7 +649,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
                       🔄 Chơi lại game
                     </button>
                   </div>
-                )}
+                )} */}
 
               </div>
             </div>
