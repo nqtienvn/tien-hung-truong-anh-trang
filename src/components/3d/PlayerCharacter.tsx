@@ -144,10 +144,11 @@ export const PlayerCharacter: React.FC = () => {
 
     // ── COLLISIONS FOR ROOM 4 (gallery-market-economy) ──
     if (galleryId === 'gallery-market-economy') {
-      const roomLength = activeGallery?.room_length ?? 50;
+      const roomLength = activeGallery?.room_length ?? 150;
+      const numPartitions = Math.round(roomLength / 25) - 1;
       const zPositions = [];
-      for (let i = 1; i <= 5; i++) {
-        zPositions.push(-roomLength / 2 + i * (roomLength / 6));
+      for (let i = 1; i <= numPartitions; i++) {
+        zPositions.push(-75 + i * 25);
       }
       for (const pZ of zPositions) {
         if (z > pZ - 0.35 && z < pZ + 0.35) {
@@ -157,8 +158,6 @@ export const PlayerCharacter: React.FC = () => {
           }
         }
       }
-
-
     }
 
     return false;
@@ -196,10 +195,14 @@ export const PlayerCharacter: React.FC = () => {
       let nextZ = currentPos.z + stepZ;
 
       const limitX = (activeGallery?.room_width ?? 12) / 2 - 0.6;
-      const limitZ = (activeGallery?.room_length ?? 30) / 2 - 0.6;
+      const roomLength = activeGallery?.room_length ?? 30;
+      const zOffset = activeGallery?.id === 'gallery-market-economy' ? (roomLength - 150) / 2 : 0;
+      
+      const minZ = -roomLength / 2 + zOffset + 0.6;
+      const maxZ = roomLength / 2 + zOffset - 0.6;
 
       nextX = Math.max(-limitX, Math.min(limitX, nextX));
-      nextZ = Math.max(-limitZ, Math.min(limitZ, nextZ));
+      nextZ = Math.max(minZ, Math.min(maxZ, nextZ));
 
       if (!checkCollision(nextX, currentPos.z)) {
         currentPos.x = nextX;

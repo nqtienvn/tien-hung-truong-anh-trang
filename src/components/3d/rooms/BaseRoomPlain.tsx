@@ -298,6 +298,9 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
   const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
   const floorType = customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood';
 
+  // Tính toán offset dọc theo trục Z nếu phòng dài hơn 150 (ví dụ 175) để giữ mốc spawn bắt đầu tại Z = -75
+  const zOffset = galleryId === 'gallery-market-economy' ? (roomLength - 150) / 2 : 0;
+
   // Tính toán kích thước trần vòm và giếng trời
   const skylightWidth = Math.min(roomWidth * 0.4, 5);
   const sideWidth = (roomWidth - skylightWidth) / 2;
@@ -353,6 +356,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
     <group>
       {/* Hộp chứa meshes, được ẩn/hiện tức thì mà không unmount để tránh lag WebGL */}
       <group visible={isVisible}>
+        <group position={[0, 0, zOffset]}>
         {/* 1. SÀN NHÀ & THẢM TRẢI SÀN (Floor & Center Carpet) */}
         {floorType === 'wood' && (
           <>
@@ -505,10 +509,11 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
+        </group>
 
-        {/* 5 Vách ngăn phân chia thành 6 phòng (chỉ áp dụng cho gallery-market-economy) */}
-        {galleryId === 'gallery-market-economy' && Array.from({ length: 5 }).map((_, i) => {
-          const zPos = -roomLength / 2 + (i + 1) * (roomLength / 6);
+        {/* Vách ngăn phân chia thành các phòng nhỏ (chỉ áp dụng cho gallery-market-economy) */}
+        {galleryId === 'gallery-market-economy' && Array.from({ length: Math.round(roomLength / 25) - 1 }).map((_, i) => {
+          const zPos = -75 + (i + 1) * 25;
           return (
             <group key={`partition-${i}`}>
               {/* Vách ngăn bên trái */}
@@ -610,7 +615,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
       {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
         <pointLight
           key={`hall-light-source-${idx}`}
-          position={[0, roomHeight - 1.0, zPos]}
+          position={[0, roomHeight - 1.0, zPos + zOffset]}
           intensity={isVisible ? 4.5 : 0}
           distance={roomLength * 0.6}
           color="#fff1e0"

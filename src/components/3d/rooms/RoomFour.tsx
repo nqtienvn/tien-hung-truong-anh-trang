@@ -1911,6 +1911,7 @@ interface ZoneNPCProps {
   color?: string;
   isVisible: boolean;
   activeIntensity: number;
+  onClick?: (e: any) => void;
 }
 
 const ZoneNPC: React.FC<ZoneNPCProps> = ({
@@ -1923,14 +1924,19 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
   language,
   color = '#22d3ee',
   isVisible,
-  activeIntensity
+  activeIntensity,
+  onClick
 }) => {
   const isVi = language === 'vi';
   const [forceShow, setForceShow] = useState(false);
 
   const handleNpcClick = (e: any) => {
     e.stopPropagation();
-    setForceShow(prev => !prev);
+    if (onClick) {
+      onClick(e);
+    } else {
+      setForceShow(prev => !prev);
+    }
   };
 
   const handlePointerOver = (e: any) => {
@@ -1951,7 +1957,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
     }
   }, [forceShow]);
 
-  const showBubble = isVisible && (forceShow || activeIntensity > 0.3);
+  const showBubble = isVisible && forceShow;
 
   return (
     <group
@@ -2045,6 +2051,37 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN — RoomFour Component
 // ═══════════════════════════════════════════════════════════════════════════
+const MINIGAME_SITUATIONS = [
+  { text: "Được mùa nhưng thu nhập lại giảm.", category: "market" },
+  { text: "Ít người sử dụng nhưng vẫn được đầu tư.", category: "state" },
+  { text: "Cùng một sản phẩm nhưng có rất nhiều đơn vị cùng cung cấp.", category: "multi_sector" },
+  { text: "Khó khăn về tài chính nhưng vẫn được tiếp cận dịch vụ.", category: "social" },
+  { text: "Một sản phẩm hoàn thành sau nhiều công đoạn ở nhiều quốc gia.", category: "integration" },
+  { text: "Nhu cầu tăng làm giá tăng.", category: "market" },
+  { text: "Không đạt tiêu chuẩn nên không được phép tiếp tục hoạt động.", category: "state" },
+  { text: "Nhiều mô hình cùng tồn tại trong một lĩnh vực.", category: "multi_sector" },
+  { text: "Điều kiện sống khác nhau nhưng cơ hội tiếp cận gần như giống nhau.", category: "social" },
+  { text: "Một đơn hàng phải đi qua nhiều quốc gia mới hoàn thành.", category: "integration" },
+  { text: "Bán chậm nên giá giảm.", category: "market" },
+  { text: "Phải thay đổi để đáp ứng quy định mới.", category: "state" },
+  { text: "Nhiều chủ sở hữu cùng tham gia một lĩnh vực.", category: "multi_sector" },
+  { text: "Không đủ khả năng chi trả nhưng vẫn được hỗ trợ.", category: "social" },
+  { text: "Một sản phẩm được tạo ra bởi nhiều quốc gia.", category: "integration" },
+  { text: "Nguồn cung giảm làm giá tăng.", category: "market" },
+  { text: "Chưa đáp ứng yêu cầu nên phải tạm dừng.", category: "state" },
+  { text: "Nhiều hình thức kinh doanh cùng cạnh tranh.", category: "multi_sector" },
+  { text: "Khoảng cách giữa các nhóm được thu hẹp.", category: "social" },
+  { text: "Một chuỗi sản xuất trải dài qua nhiều quốc gia.", category: "integration" }
+];
+
+const MINIGAME_CATEGORIES = [
+  { id: "market", nameVi: "Cơ chế thị trường", nameEn: "Market Mechanism", icon: "💹", color: "from-emerald-400 to-teal-500 shadow-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+  { id: "state", nameVi: "Vai trò Nhà nước", nameEn: "State Regulation", icon: "🏛️", color: "from-blue-400 to-indigo-500 shadow-blue-500/20 text-blue-300 border-blue-500/30" },
+  { id: "multi_sector", nameVi: "Nhiều thành phần kinh tế", nameEn: "Multi-sector Economy", icon: "🏭", color: "from-purple-400 to-pink-500 shadow-purple-500/20 text-purple-300 border-purple-500/30" },
+  { id: "social", nameVi: "Công bằng xã hội", nameEn: "Social Welfare", icon: "❤️", color: "from-rose-400 to-red-500 shadow-rose-500/20 text-rose-300 border-rose-500/30" },
+  { id: "integration", nameVi: "Hội nhập quốc tế", nameEn: "Global Integration", icon: "🌍", color: "from-cyan-400 to-blue-500 shadow-cyan-500/20 text-cyan-300 border-cyan-500/30" }
+];
+
 export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, isVisible = true }) => {
   const { activeGallery, language } = useMuseum();
   const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
@@ -2073,9 +2110,11 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [answerStatus, setAnswerStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
 
+  // ── Summary NPC Minigame — state lives in GalleryCanvas, bridged via CustomEvent ──
+
   // ── Zone dynamic lighting ──
-  const zoneIntensityRefs = useRef<number[]>([0, 0, 0, 0, 0]);
-  const [zoneIntensities, setZoneIntensities] = useState<number[]>([0, 0, 0, 0, 0]);
+  const zoneIntensityRefs = useRef<number[]>([0, 0, 0, 0, 0, 0]);
+  const [zoneIntensities, setZoneIntensities] = useState<number[]>([0, 0, 0, 0, 0, 0]);
   const entranceLightRef = useRef<number>(0.05);
   const [entranceLight, setEntranceLight] = useState<number>(0.05);
   const frameCounter = useRef<number>(0);
@@ -2083,7 +2122,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
   stepRef.current = step;
 
   // Zone local-Z centers (room local space, offset from ZONE_ABS_OFFSET)
-  const ZONE_LOCAL_Z = [-37.5, -12.5, 12.5, 37.5, 62.5];
+  const ZONE_LOCAL_Z = [-37.5, -12.5, 12.5, 37.5, 62.5, 87.5];
 
   useFrame((state) => {
     if (!isVisible) return;
@@ -2091,7 +2130,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
     if (!player) return;
 
     const absZ = player.position.z;
-    const localZ = absZ - ZONE_ABS_OFFSET;
+    const isLobby = player.name === 'lobby-player';
+    const localZ = isLobby ? absZ - ZONE_ABS_OFFSET : absZ;
 
 
 
@@ -2325,6 +2365,25 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
         </>
       )}
 
+      {/* -- Summary / Exit NPC in the last room -- */}
+      {isVisible && (
+        <ZoneNPC
+          position={[2.4, 0.05, 87.5]}
+          rotation={[0, 0, 0]}
+          nameVi="Chuyên gia Tổng kết"
+          nameEn="Summary Specialist"
+          infoVi="Chúc mừng bạn đã hoàn thành chuyến tham quan phòng trưng bày Kinh tế Thị trường định hướng XHCN! Hãy đi tiếp ra cửa sau để trở về sảnh chính."
+          infoEn="Congratulations on completing your tour of the Socialist-oriented Market Economy gallery! Please proceed to the back door to return to the lobby."
+          language={language}
+          color="#10b981"
+          isVisible={isVisible}
+          activeIntensity={zoneIntensities[5]}
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('openSummaryMinigame'));
+          }}
+        />
+      )}
+
       {/* ── NPC 2D (Hologram Cố Vấn Triển Lãm) gần vách ngăn thứ nhất ── */}
       {isVisible && (
         <group
@@ -2495,6 +2554,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
           </div>
         </Html>
       )}
+      {/* minigame rendered via CustomEvent → GalleryCanvas */}
     </BaseRoomPlain>
   );
 };

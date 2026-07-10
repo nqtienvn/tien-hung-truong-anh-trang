@@ -9,6 +9,37 @@ import { PlayerCharacter } from './PlayerCharacter';
 import { useMuseum } from '@/context/MuseumContext';
 import { Exhibit } from '@/lib/db';
 
+// ── Summary Minigame data (mirrored from RoomFour constants) ──
+const MG_SITUATIONS = [
+  { text: 'Được mùa nhưng thu nhập lại giảm.', category: 'market' },
+  { text: 'Ít người sử dụng nhưng vẫn được đầu tư.', category: 'state' },
+  { text: 'Cùng một sản phẩm nhưng có rất nhiều đơn vị cùng cung cấp.', category: 'multi_sector' },
+  { text: 'Khó khăn về tài chính nhưng vẫn được tiếp cận dịch vụ.', category: 'social' },
+  { text: 'Một sản phẩm hoàn thành sau nhiều công đoạn ở nhiều quốc gia.', category: 'integration' },
+  { text: 'Nhu cầu tăng làm giá tăng.', category: 'market' },
+  { text: 'Không đạt tiêu chuẩn nên không được phép tiếp tục hoạt động.', category: 'state' },
+  { text: 'Nhiều mô hình cùng tồn tại trong một lĩnh vực.', category: 'multi_sector' },
+  { text: 'Điều kiện sống khác nhau nhưng cơ hội tiếp cận gần như giống nhau.', category: 'social' },
+  { text: 'Một đơn hàng phải đi qua nhiều quốc gia mới hoàn thành.', category: 'integration' },
+  { text: 'Bán chậm nên giá giảm.', category: 'market' },
+  { text: 'Phải thay đổi để đáp ứng quy định mới.', category: 'state' },
+  { text: 'Nhiều chủ sở hữu cùng tham gia một lĩnh vực.', category: 'multi_sector' },
+  { text: 'Không đủ khả năng chi trả nhưng vẫn được hỗ trợ.', category: 'social' },
+  { text: 'Một sản phẩm được tạo ra bởi nhiều quốc gia.', category: 'integration' },
+  { text: 'Nguồn cung giảm làm giá tăng.', category: 'market' },
+  { text: 'Chưa đáp ứng yêu cầu nên phải tạm dừng.', category: 'state' },
+  { text: 'Nhiều hình thức kinh doanh cùng cạnh tranh.', category: 'multi_sector' },
+  { text: 'Khoảng cách giữa các nhóm được thu hẹp.', category: 'social' },
+  { text: 'Một chuỗi sản xuất trải dài qua nhiều quốc gia.', category: 'integration' },
+];
+const MG_CATEGORIES = [
+  { id: 'market', nameVi: 'Cơ chế thị trường', nameEn: 'Market Mechanism', icon: '💹' },
+  { id: 'state', nameVi: 'Vai trò Nhà nước', nameEn: 'State Regulation', icon: '🏛️' },
+  { id: 'multi_sector', nameVi: 'Nhiều thành phần kinh tế', nameEn: 'Multi-sector Economy', icon: '🏭' },
+  { id: 'social', nameVi: 'Công bằng xã hội', nameEn: 'Social Welfare', icon: '❤️' },
+  { id: 'integration', nameVi: 'Hội nhập quốc tế', nameEn: 'Global Integration', icon: '🌍' },
+];
+
 interface GalleryCanvasProps {
   exhibits: Exhibit[];
   galleryId: string;
@@ -256,8 +287,45 @@ const CameraLerpController: React.FC = () => {
 };
 
 export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryId }) => {
-  const { selectedExhibit, setSelectedExhibit, nickname, settings } = useMuseum();
+  const { selectedExhibit, setSelectedExhibit, nickname, settings, language } = useMuseum();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // ── Summary Minigame state (lives here in DOM-land, not inside Canvas) ──
+  const [mgOpen, setMgOpen] = useState(false);
+  const [mgStep, setMgStep] = useState<'rules' | 'game' | 'complete'>('rules');
+  const [mgIndex, setMgIndex] = useState(0);
+  const [mgScore, setMgScore] = useState(0);
+  const [mgDragOver, setMgDragOver] = useState<string | null>(null);
+  const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | null>(null);
+
+  // Listen for CustomEvent from RoomFour
+  useEffect(() => {
+    const handler = () => {
+      setMgOpen(true);
+      setMgStep('rules');
+      setMgIndex(0);
+      setMgScore(0);
+      setMgFeedback(null);
+    };
+    window.addEventListener('openSummaryMinigame', handler);
+    return () => window.removeEventListener('openSummaryMinigame', handler);
+  }, []);
+
+  const handleMgAnswer = (catId: string) => {
+    if (mgFeedback !== null) return;
+    const correct = MG_SITUATIONS[mgIndex].category;
+    if (catId === correct) {
+      setMgFeedback('correct');
+      setMgScore(prev => prev + 5);
+    } else {
+      setMgFeedback('incorrect');
+    }
+    setTimeout(() => {
+      setMgFeedback(null);
+      if (mgIndex < MG_SITUATIONS.length - 1) setMgIndex(prev => prev + 1);
+      else setMgStep('complete');
+    }, 1200);
+  };
 
   // Xử lý click ngoài tác phẩm để hủy tiêu điểm phóng to
   const handleMiss = (e: any) => {
@@ -318,13 +386,162 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
       </Canvas>
 
       {/* Hướng dẫn tương tác */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-xs py-1.5 px-4 rounded-full pointer-events-none select-none border border-white/10 text-center flex items-center gap-3">
-        <span>🏃 <b>W-A-S-D</b> để di chuyển</span>
-        <div className="w-px h-3 bg-white/20" />
-        <span>🖱️ <b>Nhấn giữ &amp; Rê chuột</b> để xoay camera</span>
-        <div className="w-px h-3 bg-white/20" />
-        <span>🖼️ <b>Click tranh/tượng</b> để xem thuyết minh</span>
-      </div>
+      {!mgOpen && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-md text-white text-[10px] sm:text-xs py-1.5 px-4 rounded-full pointer-events-none select-none border border-white/10 text-center flex items-center gap-3">
+          <span>🏃 <b>W-A-S-D</b> để di chuyển</span>
+          <div className="w-px h-3 bg-white/20" />
+          <span>🖱️ <b>Nhấn giữ &amp; Rê chuột</b> để xoay camera</span>
+          <div className="w-px h-3 bg-white/20" />
+          <span>🖼️ <b>Click tranh/tượng</b> để xem thuyết minh</span>
+        </div>
+      )}
+
+      {/* ── SUMMARY MINIGAME FULLSCREEN OVERLAY (pure DOM, outside Canvas) ── */}
+      {mgOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 2147483647, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}
+        >
+          {/* Background */}
+          <div style={{ position: 'absolute', inset: 0, background: '#020617' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.10) 0%, transparent 70%)' }} />
+
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '24px 32px', boxSizing: 'border-box' }}>
+
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '16px', marginBottom: '24px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>🏆</span>
+                <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>THỬ THÁCH KINH TẾ ĐỊNH HƯỚNG XHCN</span>
+              </div>
+              <button onClick={() => setMgOpen(false)} style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                ✕ Đóng
+              </button>
+            </div>
+
+            {/* RULES */}
+            {mgStep === 'rules' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
+                <span style={{ fontSize: '56px' }}>🎮</span>
+                <div>
+                  <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>LUẬT CHƠI MINIGAME</h4>
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.7, background: 'rgba(2,6,23,0.6)', padding: '16px 20px', borderRadius: '12px', border: '1px solid #1e293b', textAlign: 'left' }}>
+                    Hệ thống sẽ đưa ra <strong style={{ color: '#fff' }}>20 tình huống thực tế</strong> tương ứng với các đặc trưng kinh tế của Việt Nam.
+                    Nhiệm vụ: <strong style={{ color: '#10b981' }}>kéo (drag)</strong> thẻ tình huống thả vào đúng biểu tượng, hoặc <strong style={{ color: '#10b981' }}>click</strong> thẳng vào ô.
+                  </p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', width: '100%' }}>
+                  {MG_CATEGORIES.map(cat => (
+                    <div key={cat.id} style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid #1e293b', padding: '12px 8px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '24px' }}>{cat.icon}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>{language === 'vi' ? cat.nameVi : cat.nameEn}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Mỗi câu đúng: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>+5</span> điểm &nbsp;·&nbsp; Tổng tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>100</span> điểm</p>
+                <button onClick={() => setMgStep('game')} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}>
+                  🚀 Bắt đầu chơi
+                </button>
+              </div>
+            )}
+
+            {/* GAME */}
+            {mgStep === 'game' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>📝 Tình huống {mgIndex + 1} / {MG_SITUATIONS.length}</span>
+                    <div style={{ flex: 1, height: '4px', background: '#1e293b', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${((mgIndex + 1) / MG_SITUATIONS.length) * 100}%`, background: 'linear-gradient(to right, #10b981, #34d399)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
+                    Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 100
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    draggable={mgFeedback === null}
+                    onDragStart={(e) => e.dataTransfer.setData('text/plain', MG_SITUATIONS[mgIndex].category)}
+                    style={{
+                      maxWidth: '560px', width: '100%', padding: '28px 32px', borderRadius: '18px', border: '1px solid', textAlign: 'center', position: 'relative',
+                      cursor: mgFeedback === null ? 'grab' : 'default', userSelect: 'none', transition: 'all 0.25s ease', boxSizing: 'border-box',
+                      background: mgFeedback === 'correct' ? 'rgba(6,78,59,0.4)' : mgFeedback === 'incorrect' ? 'rgba(69,10,10,0.4)' : 'rgba(2,6,23,0.7)',
+                      borderColor: mgFeedback === 'correct' ? '#10b981' : mgFeedback === 'incorrect' ? '#ef4444' : '#334155',
+                      boxShadow: mgFeedback === 'correct' ? '0 0 40px rgba(16,185,129,0.2)' : mgFeedback === 'incorrect' ? '0 0 40px rgba(239,68,68,0.2)' : '0 8px 40px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', background: '#1e293b', color: '#64748b', border: '1px solid #334155', padding: '2px 10px', borderRadius: '99px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Kéo thẻ này thả vào ô tương ứng bên dưới</span>
+                    <p style={{ fontSize: '16px', fontWeight: 800, color: mgFeedback === 'correct' ? '#6ee7b7' : mgFeedback === 'incorrect' ? '#fca5a5' : '#f1f5f9', lineHeight: 1.6, marginTop: '8px' }}>
+                      &ldquo;{MG_SITUATIONS[mgIndex].text}&rdquo;
+                    </p>
+                    {mgFeedback === 'correct' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +5đ</span>
+                      </div>
+                    )}
+                    {mgFeedback === 'incorrect' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>❌ CHƯA CHÍNH XÁC</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '10px' }}>
+                  <p style={{ textAlign: 'center', fontSize: '10px', color: '#475569', fontStyle: 'italic' }}>(Mẹo: Kéo thả hoặc click trực tiếp vào ô bên dưới)</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                    {MG_CATEGORIES.map(cat => {
+                      const isOver = mgDragOver === cat.id;
+                      return (
+                        <div
+                          key={cat.id}
+                          onDragOver={(e) => { e.preventDefault(); if (mgFeedback === null) setMgDragOver(cat.id); }}
+                          onDragLeave={() => setMgDragOver(null)}
+                          onDrop={(e) => { e.preventDefault(); setMgDragOver(null); handleMgAnswer(cat.id); }}
+                          onClick={() => handleMgAnswer(cat.id)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 8px',
+                            borderRadius: '16px', border: `2px solid ${isOver ? '#10b981' : '#1e293b'}`,
+                            background: isOver ? '#0f2a23' : 'rgba(2,6,23,0.6)', cursor: 'pointer', userSelect: 'none',
+                            transition: 'all 0.15s ease', transform: isOver ? 'scale(1.05)' : 'scale(1)',
+                            boxShadow: isOver ? '0 0 20px rgba(16,185,129,0.3)' : 'none', minHeight: '110px',
+                          }}
+                        >
+                          <span style={{ fontSize: '28px', marginBottom: '8px' }}>{cat.icon}</span>
+                          <span style={{ fontSize: '9px', fontWeight: 800, color: isOver ? '#6ee7b7' : '#94a3b8', textAlign: 'center', lineHeight: 1.3, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                            {language === 'vi' ? cat.nameVi : cat.nameEn}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* COMPLETE */}
+            {mgStep === 'complete' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
+                <span style={{ fontSize: '64px' }}>🏆</span>
+                <div>
+                  <h4 style={{ fontWeight: 900, fontSize: '24px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
+                  <p style={{ fontWeight: 800, fontSize: '16px', color: '#10b981' }}>Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '22px' }}>{mgScore}</span> / 100 điểm</p>
+                </div>
+                <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.75, background: 'rgba(2,6,23,0.6)', padding: '20px 24px', borderRadius: '14px', border: '1px solid #1e293b', textAlign: 'left' }}>
+                  &ldquo;Qua chuyến tham quan, chúng ta đã chứng kiến đầy đủ 5 đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam: đa dạng thành phần kinh tế, vận hành theo cơ chế thị trường, dưới sự điều tiết của Nhà nước, gắn với công bằng xã hội và chủ động hội nhập quốc tế.&rdquo;
+                </p>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <button onClick={() => { setMgStep('rules'); setMgIndex(0); setMgScore(0); setMgFeedback(null); }} style={{ background: '#1e293b', border: '1px solid #334155', color: '#f59e0b', fontWeight: 700, padding: '12px 28px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer' }}>🔄 Chơi lại</button>
+                  <button onClick={() => setMgOpen(false)} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 32px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };
