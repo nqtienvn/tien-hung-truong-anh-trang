@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Html, useTexture } from '@react-three/drei';
@@ -120,9 +120,9 @@ const FIRST_ROOM_EXHIBITS = [
   }
 ];
 
-const FloatingModel: React.FC<{ 
-  type: string; 
-  z: number; 
+const FloatingModel: React.FC<{
+  type: string;
+  z: number;
   onClick?: (e: any) => void;
 }> = ({ type, z, onClick }) => {
   const meshRef = useRef<THREE.Mesh>(null);
@@ -135,9 +135,9 @@ const FloatingModel: React.FC<{
   });
 
   return (
-    <mesh 
-      ref={meshRef} 
-      position={[0, 1.6, z]} 
+    <mesh
+      ref={meshRef}
+      position={[0, 1.6, z]}
       onClick={onClick}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -153,22 +153,141 @@ const FloatingModel: React.FC<{
       {type === 'cylinder' && <cylinderGeometry args={[0.2, 0.2, 0.4, 16]} />}
       {type === 'globe' && <sphereGeometry args={[0.28, 16, 16]} />}
 
-      <meshStandardMaterial 
-        color="#06b6d4" 
-        emissive="#06b6d4" 
-        emissiveIntensity={1.2} 
-        metalness={0.9} 
-        roughness={0.1} 
+      <meshStandardMaterial
+        color="#06b6d4"
+        emissive="#06b6d4"
+        emissiveIntensity={1.2}
+        metalness={0.9}
+        roughness={0.1}
       />
     </mesh>
   );
 };
 
-export const BaseRoomPlain: React.FC<BaseRoomProps> = ({ 
-  galleryId, 
-  customSettings, 
+// ═══════════════════════════════════════════════════════════════════════════
+// SPAWN GUIDE NPC – Nguyễn Minh Tâm (Hướng dẫn viên)
+// ═══════════════════════════════════════════════════════════════════════════
+const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
+  const [showGuide, setShowGuide] = useState(false);
+  const isVi = language === 'vi';
+
+  useEffect(() => {
+    if (!showGuide) return;
+    const timer = setTimeout(() => setShowGuide(false), 30000);
+    return () => clearTimeout(timer);
+  }, [showGuide]);
+
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    setShowGuide(prev => !prev);
+  };
+
+  const sentences = [
+    "Nhiều người cho rằng Việt Nam là nền kinh tế thị trường tư bản chủ nghĩa.",
+    "Một số người khác lại nghĩ Việt Nam vẫn là nền kinh tế kế hoạch hóa tập trung.",
+    "Theo bạn, đâu mới là câu trả lời đúng?",
+  ];
+
+  return (
+    <group
+      position={[0, 0, -62.5]}
+      onClick={handleClick}
+      onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+      onPointerOut={() => { document.body.style.cursor = 'auto'; }}
+    >
+      {/* Glow ring on floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.47, 0]}>
+        <ringGeometry args={[0.62, 0.72, 32]} />
+        <meshBasicMaterial color="#a78bfa" side={THREE.DoubleSide} transparent opacity={0.4} />
+      </mesh>
+
+      {/* NPC Body */}
+      <group scale={1.5}>
+        {/* Head */}
+        <mesh position={[0, 0.7, 0]}>
+          <sphereGeometry args={[0.2, 24, 24]} />
+          <meshStandardMaterial color="#a78bfa" metalness={0.9} roughness={0.1} />
+        </mesh>
+        {/* Visor */}
+        <mesh position={[0, 0.74, -0.17]}>
+          <boxGeometry args={[0.25, 0.05, 0.08]} />
+          <meshBasicMaterial color="#e9d5ff" />
+        </mesh>
+        {/* Torso */}
+        <mesh position={[0, 0.28, 0]}>
+          <capsuleGeometry args={[0.16, 0.28, 8, 16]} />
+          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Left hand */}
+        <mesh position={[-0.2, 0.38, 0]}>
+          <sphereGeometry args={[0.06, 12, 12]} />
+          <meshStandardMaterial color="#a78bfa" metalness={0.9} roughness={0.1} />
+        </mesh>
+        {/* Right hand */}
+        <mesh position={[0.2, 0.38, 0]}>
+          <sphereGeometry args={[0.06, 12, 12]} />
+          <meshStandardMaterial color="#a78bfa" metalness={0.9} roughness={0.1} />
+        </mesh>
+        {/* Base Cylinder */}
+        <mesh position={[0, -0.15, 0]}>
+          <cylinderGeometry args={[0.1, 0.1, 0.3, 12]} />
+          <meshStandardMaterial color="#0f172a" metalness={0.8} />
+        </mesh>
+      </group>
+
+      {/* Thought-provoking popup */}
+      {showGuide ? (
+        <Html position={[0, 2.1, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+          <div
+            className="w-[300px] bg-slate-950/97 border border-violet-500/40 px-5 py-4 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
+            style={{ boxShadow: '0 0 32px #a78bfa40' }}
+          >
+            <span className="text-[8px] bg-violet-500/10 text-violet-300 border border-violet-500/20 px-2 py-0.5 rounded font-bold tracking-widest block w-max mx-auto mb-3 uppercase">
+              Nguyễn Minh Tâm
+            </span>
+            <div className="space-y-2.5">
+              {sentences.map((s, i) => (
+                <p
+                  key={i}
+                  className={`text-[10px] leading-relaxed ${
+                    i === 2
+                      ? 'text-violet-300 font-bold italic text-center pt-1 border-t border-violet-500/20'
+                      : 'text-slate-300'
+                  }`}
+                >
+                  {i < 2 && <span className="text-violet-400 font-bold mr-1">{i === 0 ? '🤔' : '💭'}</span>}
+                  {s}
+                </p>
+              ))}
+            </div>
+            <p className="text-[7px] text-slate-600 text-center mt-3">
+              (Tự động đóng sau 30 giây)
+            </p>
+          </div>
+        </Html>
+      ) : (
+        <Html position={[0, 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+          <div
+            className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none"
+            style={{
+              borderColor: '#a78bfa',
+              color: '#a78bfa',
+              boxShadow: '0 0 12px #a78bfa30'
+            }}
+          >
+            !
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+};
+
+export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
+  galleryId,
+  customSettings,
   isVisible = true,
-  children 
+  children
 }) => {
   const { activeGallery, setSelectedExhibit, language } = useMuseum();
 
@@ -189,10 +308,10 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
   const panelHeightY = roomHeight - 0.6;
 
   const handleExhibitClick = (
-    e: any, 
-    item: typeof FIRST_ROOM_EXHIBITS[0], 
-    idx: number, 
-    type: 'model' | 'painting', 
+    e: any,
+    item: typeof FIRST_ROOM_EXHIBITS[0],
+    idx: number,
+    type: 'model' | 'painting',
     side?: 'left' | 'right'
   ) => {
     e.stopPropagation();
@@ -205,17 +324,17 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
     setSelectedExhibit({
       id: `${type}-${idx}-${side ?? 'center'}`,
       gallery_id: galleryId,
-      title: { 
-        vi: data.titleVi, 
-        en: data.titleEn 
+      title: {
+        vi: data.titleVi,
+        en: data.titleEn
       },
-      author: { 
-        vi: type === 'model' ? "Mô hình 3D" : "Tranh trưng bày", 
-        en: type === 'model' ? "3D Model" : "Exhibit Painting" 
+      author: {
+        vi: type === 'model' ? "Mô hình 3D" : "Tranh trưng bày",
+        en: type === 'model' ? "3D Model" : "Exhibit Painting"
       },
-      description: { 
-        vi: data.descVi, 
-        en: data.descEn 
+      description: {
+        vi: data.descVi,
+        en: data.descEn
       },
       model_3d_url: "",
       thumbnail_url: data.imageUrl || "",
@@ -240,8 +359,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           <>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
               <planeGeometry args={[roomWidth, roomLength]} />
-              <meshStandardMaterial 
-                color={floorColor} 
+              <meshStandardMaterial
+                color={floorColor}
                 roughness={0.4}
                 metalness={0.1}
               />
@@ -254,8 +373,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           <>
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
               <planeGeometry args={[roomWidth, roomLength]} />
-              <meshStandardMaterial 
-                color={floorColor} 
+              <meshStandardMaterial
+                color={floorColor}
                 roughness={0.15}
                 metalness={0.25}
               />
@@ -267,8 +386,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {floorType === 'carpet' && (
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
             <planeGeometry args={[roomWidth, roomLength]} />
-            <meshStandardMaterial 
-              color={floorColor} 
+            <meshStandardMaterial
+              color={floorColor}
               roughness={0.95}
               metalness={0.0}
             />
@@ -279,8 +398,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {floorType !== 'carpet' && (
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
             <planeGeometry args={[Math.min(roomWidth / 2, 6), roomLength]} />
-            <meshStandardMaterial 
-              color="#a29587" 
+            <meshStandardMaterial
+              color="#a29587"
               roughness={0.95}
               metalness={0.0}
             />
@@ -303,12 +422,12 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {/* Giếng trời kính giữa trần */}
         <mesh position={[0, roomHeight, 0]}>
           <boxGeometry args={[skylightWidth, 0.08, roomLength]} />
-          <meshStandardMaterial 
-            color="#38bdf8" 
-            transparent 
-            opacity={0.35} 
-            roughness={0.05} 
-            metalness={0.9} 
+          <meshStandardMaterial
+            color="#38bdf8"
+            transparent
+            opacity={0.35}
+            roughness={0.05}
+            metalness={0.9}
           />
         </mesh>
 
@@ -339,8 +458,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {/* Tường trái */}
         <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, roomHeight, 0.2]} />
-          <meshStandardMaterial 
-            color={wallColor} 
+          <meshStandardMaterial
+            color={wallColor}
             roughness={0.7}
           />
         </mesh>
@@ -348,7 +467,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {/* Tường phải */}
         <mesh position={[roomWidth / 2, roomHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, roomHeight, 0.2]} />
-          <meshStandardMaterial 
+          <meshStandardMaterial
             color={wallColor}
             roughness={0.7}
           />
@@ -416,8 +535,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         {galleryId === 'gallery-market-economy' && FIRST_ROOM_EXHIBITS.map((item, idx) => (
           <group key={`first-room-item-${idx}`}>
             {/* Ảnh tường Trái */}
-            <group 
-              position={[-roomWidth / 2 + 0.1, 2.3, item.z]} 
+            <group
+              position={[-roomWidth / 2 + 0.1, 2.3, item.z]}
               rotation={[0, Math.PI / 2, 0]}
               onClick={(e) => handleExhibitClick(e, item, idx, 'painting', 'left')}
               onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
@@ -447,8 +566,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
             </group>
 
             {/* Ảnh tường Phải */}
-            <group 
-              position={[roomWidth / 2 - 0.1, 2.3, item.z]} 
+            <group
+              position={[roomWidth / 2 - 0.1, 2.3, item.z]}
               rotation={[0, -Math.PI / 2, 0]}
               onClick={(e) => handleExhibitClick(e, item, idx, 'painting', 'right')}
               onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
@@ -479,18 +598,23 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           </group>
         ))}
 
+        {/* Spawn Guide NPC – Nguyễn Minh Tâm (only for gallery-market-economy) */}
+        {galleryId === 'gallery-market-economy' && (
+          <SpawnGuideNPC language={language} />
+        )}
+
         {/* Render các phần tử riêng biệt của phòng con */}
         {children}
       </group>
 
       {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - ÁNH SÁNG THỰC TẾ */}
       {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
-        <pointLight 
+        <pointLight
           key={`hall-light-source-${idx}`}
           position={[0, roomHeight - 1.0, zPos]}
-          intensity={isVisible ? 4.5 : 0} 
-          distance={roomLength * 0.6} 
-          color="#fff1e0" 
+          intensity={isVisible ? 4.5 : 0}
+          distance={roomLength * 0.6}
+          color="#fff1e0"
         />
       ))}
     </group>
