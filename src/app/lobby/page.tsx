@@ -68,11 +68,15 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
   if (z > 8.0 && z <= 130.0) {
     // Phòng 2 (Hội trường / Paintings): 54.0 < Z <= 100.0
     if (z > 54.0 && z <= 100.0) {
-      if (x < -3.4) return 3.0;
-      if (x < -0.2) return 3.3;
-      if (x < 3.0) return 3.6;
-      if (x < 6.2) return 3.9;
-      return 4.2;
+      // Chỉ áp dụng độ cao bậc thang ở khu vực có các tấm bê tông (Z từ 60.0 đến 94.0)
+      if (z >= 60.0 && z <= 94.0) {
+        if (x < -3.4) return 3.0;
+        if (x < -0.2) return 3.3;
+        if (x < 3.0) return 3.6;
+        if (x < 6.2) return 3.9;
+        return 4.2;
+      }
+      return 3.0;
     }
     return 3.0;
   }
@@ -306,7 +310,7 @@ const LobbyPlayer: React.FC = () => {
       const tierY = getTierY(xCol);
       for (const zVal of [...frontChairZs, ...backChairZs]) {
         chairs.push({
-          x: xCol + 0.6,
+          x: xCol + 0.2,
           y: 3.35 + tierY, // Độ cao ngồi = 3.35 (đệm ghế) + độ cao bậc thang
           z: 77.0 + zVal
         });
@@ -471,12 +475,24 @@ const LobbyPlayer: React.FC = () => {
 
         // Chặn các dãy bàn dọc
         for (const rowX of deskXCoords) {
-          // Kiểm tra xem người chơi có đè lên X của hàng bàn ghế không
-          if (x > rowX - 0.4 && x < rowX + 0.9) {
+          // Kiểm tra xem người chơi có đè lên X của hàng bàn ghế không (đã dịch sang trái 0.4m)
+          if (x > rowX - 0.8 && x < rowX + 0.5) {
             // Kiểm tra theo trục dọc Z (Front block & Back block)
             const inFrontBlock = localZ > -15.2 && localZ < -3.8;
             const inBackBlock = localZ > 3.8 && localZ < 15.2;
             if (inFrontBlock || inBackBlock) return true;
+          }
+        }
+
+        // Chặn va chạm của lan can (Railing Collisions) ngăn nhảy qua các bậc thềm
+        const railXCoords = [-3.4, -0.2, 3.0, 6.2];
+        const inFrontRailZ = localZ >= -17.0 && localZ <= -4.5;
+        const inBackRailZ = localZ >= 4.5 && localZ <= 17.0;
+        if (inFrontRailZ || inBackRailZ) {
+          for (const railX of railXCoords) {
+            if (x > railX - 0.2 && x < railX + 0.2) {
+              return true;
+            }
           }
         }
 

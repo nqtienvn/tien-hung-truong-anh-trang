@@ -294,24 +294,59 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
       <group>
         {/* Bậc 2 (Column 2) */}
         <mesh position={[-1.8, 0.15, 0]}>
-          <boxGeometry args={[3.2, 0.3, 30.0]} />
+          <boxGeometry args={[3.2, 0.3, 34.0]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
         {/* Bậc 3 (Column 3) */}
         <mesh position={[1.4, 0.3, 0]}>
-          <boxGeometry args={[3.2, 0.6, 30.0]} />
+          <boxGeometry args={[3.2, 0.6, 34.0]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
         {/* Bậc 4 (Column 4) */}
         <mesh position={[4.6, 0.45, 0]}>
-          <boxGeometry args={[3.2, 0.9, 30.0]} />
+          <boxGeometry args={[3.2, 0.9, 34.0]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
         {/* Bậc 5 (Column 5) */}
         <mesh position={[9.1, 0.6, 0]}>
-          <boxGeometry args={[5.8, 1.2, 30.0]} />
+          <boxGeometry args={[5.8, 1.2, 34.0]} />
           <meshStandardMaterial color="#1e293b" roughness={0.9} />
         </mesh>
+      </group>
+
+      {/* LAN CAN AN TOÀN GIỮA CÁC BẬC THỀM (Glass-Wood Railings) - Để trống lối đi giữa Z: [-4.5, 4.5] */}
+      <group>
+        {[
+          { x: -3.4, tierY: 0.0 },
+          { x: -0.2, tierY: 0.3 },
+          { x: 3.0, tierY: 0.6 },
+          { x: 6.2, tierY: 0.9 },
+        ].map((rail, rIdx) => (
+          <group key={`railing-${rIdx}`} position={[rail.x, rail.tierY, 0]}>
+            {/* Cả 2 phần lan can: Dãy trước (Z: -17.0 -> -4.5) và Dãy sau (Z: 4.5 -> 17.0) */}
+            {[-10.75, 10.75].map((zCenter, sIdx) => (
+              <group key={`sec-${sIdx}`} position={[0, 0, zCenter]}>
+                {/* Tấm kính cường lực bảo vệ trong suốt */}
+                <mesh position={[0, 0.4, 0]}>
+                  <boxGeometry args={[0.02, 0.65, 12.5]} />
+                  <meshStandardMaterial color="#0891b2" transparent opacity={0.25} roughness={0.1} metalness={0.8} />
+                </mesh>
+                {/* Tay vịn bằng gỗ sồi sang trọng */}
+                <mesh position={[0, 0.74, 0]}>
+                  <boxGeometry args={[0.06, 0.04, 12.55]} />
+                  <meshStandardMaterial color="#2d1708" roughness={0.3} />
+                </mesh>
+                {/* Trụ kim loại vững chắc nâng đỡ kính */}
+                {[-6.25, -3.125, 0, 3.125, 6.25].map((zPost, pIdx) => (
+                  <mesh key={`post-${pIdx}`} position={[0, 0.36, zPost]}>
+                    <boxGeometry args={[0.04, 0.72, 0.04]} />
+                    <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
+                  </mesh>
+                ))}
+              </group>
+            ))}
+          </group>
+        ))}
       </group>
 
       {/* ═══ 2. KHU VỰC GHẾ NGỒI ĐẠI BIỂU DỌC PHÒNG (Bố cục bậc thang 60 ghế) ═══ */}
@@ -329,8 +364,8 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
 
           return (
             <group key={`col-${colIndex}`}>
-              {/* BÀN DÃY TRƯỚC (Front block: Z local từ -14.5 đến -4.5, trung tâm -9.5) */}
-              <group position={[xCol, tierY, -9.5]}>
+              {/* BÀN DÃY TRƯỚC (Front block: Dịch trái 0.4m để gần lan can hơn) */}
+              <group position={[xCol - 0.4, tierY, -9.5]}>
                 {/* Che chân bàn vải đỏ */}
                 <mesh position={[0, 0.35, 0]}>
                   <boxGeometry args={[0.5, 0.7, 11.0]} />
@@ -360,8 +395,8 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                 ))}
               </group>
 
-              {/* BÀN DÃY SAU (Back block: Z local từ 4.5 đến 14.5, trung tâm 9.5) */}
-              <group position={[xCol, tierY, 9.5]}>
+              {/* BÀN DÃY SAU (Back block: Dịch trái 0.4m để gần lan can hơn) */}
+              <group position={[xCol - 0.4, tierY, 9.5]}>
                 {/* Che chân bàn vải đỏ */}
                 <mesh position={[0, 0.35, 0]}>
                   <boxGeometry args={[0.5, 0.7, 11.0]} />
@@ -391,14 +426,14 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                 ))}
               </group>
 
-              {/* ═══ ĐẶT GHẾ ĐẠI BIỂU TƯƠNG TÁC (Tích hợp độ cao bậc thang tierY) ═══ */}
+              {/* ═══ ĐẶT GHẾ ĐẠI BIỂU TƯƠNG TÁC (Dịch sang trái localX={xCol + 0.2}) ═══ */}
               {/* Dãy trước */}
               {frontChairZs.map((zChair, idx) => (
-                <DelegateChair key={`chair-front-${idx}`} localX={xCol + 0.6} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
+                <DelegateChair key={`chair-front-${idx}`} localX={xCol + 0.2} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
               ))}
               {/* Dãy sau */}
               {backChairZs.map((zChair, idx) => (
-                <DelegateChair key={`chair-back-${idx}`} localX={xCol + 0.6} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
+                <DelegateChair key={`chair-back-${idx}`} localX={xCol + 0.2} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
               ))}
             </group>
           );
