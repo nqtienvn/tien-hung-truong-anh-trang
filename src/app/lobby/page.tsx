@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useRef, useEffect, useState, useCallback } from 'react';
+import React, { Suspense, useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
@@ -64,8 +64,16 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     if (z > 7.0 && z <= 8.5) return 3.0; // Mezzanine
   }
 
-  // Tất cả các phòng triển lãm Z từ 8.0 đến 130.0 đều nằm trên sàn tầng 2 (Y = 3.0)
+  // Bậc thang và sàn các phòng triển lãm
   if (z > 8.0 && z <= 130.0) {
+    // Phòng 2 (Hội trường / Paintings): 54.0 < Z <= 100.0
+    if (z > 54.0 && z <= 100.0) {
+      if (x < -3.4) return 3.0;
+      if (x < -0.2) return 3.3;
+      if (x < 3.0) return 3.6;
+      if (x < 6.2) return 3.9;
+      return 4.2;
+    }
     return 3.0;
   }
 
@@ -81,12 +89,43 @@ const LobbyCameraController: React.FC = () => {
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
+  const isZooming = useRef(false);
 
   const targetCamPos = useRef(new THREE.Vector3()).current;
   const targetLookAt = useRef(new THREE.Vector3()).current;
 
   useEffect(() => {
     const canvas = gl.domElement;
+
+    // Ngăn chặn menu chuột phải để sử dụng nút RMB làm ống kính Zoom phóng to màn hình
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 2) {
+        isZooming.current = true;
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (e.button === 2) {
+        isZooming.current = false;
+      }
+    };
+
+    // Hỗ trợ phím tắt Z/C cho những máy dùng Touchpad không click chuột phải được dễ dàng
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'KeyZ' || e.code === 'KeyC') {
+        isZooming.current = true;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'KeyZ' || e.code === 'KeyC') {
+        isZooming.current = false;
+      }
+    };
 
     const isInsideCanvas = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -121,11 +160,23 @@ const LobbyCameraController: React.FC = () => {
       phi.current = Math.max(0.3, Math.min(Math.PI / 2 + 0.35, phi.current));
     };
 
+    window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
     window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
     window.addEventListener('pointermove', handlePointerMove);
     return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('pointercancel', handlePointerUp);
@@ -134,6 +185,14 @@ const LobbyCameraController: React.FC = () => {
   }, [gl]);
 
   useFrame((state) => {
+    // Thực hiện hiệu ứng Zoom mềm mại bằng cách thay đổi FOV (ép kiểu PerspectiveCamera)
+    const persCam = camera as THREE.PerspectiveCamera;
+    const targetFov = isZooming.current ? 20 : 65;
+    if (persCam.fov !== undefined && Math.abs(persCam.fov - targetFov) > 0.1) {
+      persCam.fov = THREE.MathUtils.lerp(persCam.fov, targetFov, 0.15);
+      persCam.updateProjectionMatrix();
+    }
+
     const player = state.scene.getObjectByName('lobby-player');
     if (!player) return;
 
@@ -219,7 +278,7 @@ const LobbyPlayer: React.FC = () => {
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -227,6 +286,42 @@ const LobbyPlayer: React.FC = () => {
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
   const moveDir = useRef(new THREE.Vector3()).current;
+
+  // Khởi tạo danh sách 60 ghế ngồi trong Phòng 2 bậc thang để check khoảng cách và tọa độ ngồi
+  const ROOM2_CHAIRS = useMemo(() => {
+    const chairs: Array<{ x: number; y: number; z: number }> = [];
+    const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
+    const frontChairZs = [-14.5, -12.5, -10.5, -8.5, -6.5, -4.5];
+    const backChairZs = [4.5, 6.5, 8.5, 10.5, 12.5, 14.5];
+
+    const getTierY = (xVal: number) => {
+      if (xVal < -3.4) return 0.0;
+      if (xVal < -0.2) return 0.3;
+      if (xVal < 3.0) return 0.6;
+      if (xVal < 6.2) return 0.9;
+      return 1.2;
+    };
+
+    for (const xCol of deskXCoords) {
+      const tierY = getTierY(xCol);
+      for (const zVal of [...frontChairZs, ...backChairZs]) {
+        chairs.push({
+          x: xCol + 0.6,
+          y: 3.35 + tierY, // Độ cao ngồi = 3.35 (đệm ghế) + độ cao bậc thang
+          z: 77.0 + zVal
+        });
+      }
+    }
+    return chairs;
+  }, []);
+
+  const nearestChairRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  const sittingPositionRef = useRef<any>(null);
+  const exitPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  
+  useEffect(() => {
+    sittingPositionRef.current = sittingPosition;
+  }, [sittingPosition]);
 
   // Thiết lập vị trí spawn ban đầu khi mount sảnh
   useEffect(() => {
@@ -367,6 +462,24 @@ const LobbyPlayer: React.FC = () => {
 
         if (x < -11.7 || x > 11.7) return true;
 
+        // Chặn các bàn đại biểu và ghế trong Phòng 2 (X xoay dọc, 5 dãy bàn bậc thang)
+        const localZ = z - 77.0;
+        const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
+        
+        // Chặn bục sân khấu bên trái (local X: -12.0 đến -7.6, local Z: -7.5 đến 7.5)
+        if (x < -7.6 && localZ > -7.5 && localZ < 7.5) return true;
+
+        // Chặn các dãy bàn dọc
+        for (const rowX of deskXCoords) {
+          // Kiểm tra xem người chơi có đè lên X của hàng bàn ghế không
+          if (x > rowX - 0.4 && x < rowX + 0.9) {
+            // Kiểm tra theo trục dọc Z (Front block & Back block)
+            const inFrontBlock = localZ > -15.2 && localZ < -3.8;
+            const inBackBlock = localZ > 3.8 && localZ < 15.2;
+            if (inFrontBlock || inBackBlock) return true;
+          }
+        }
+
         if (z > 99.3) {
           const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
@@ -414,6 +527,30 @@ const LobbyPlayer: React.FC = () => {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (shouldIgnoreKeyboard(e.target)) return;
+
+      if (e.code === 'KeyF') {
+        e.preventDefault();
+        if (sittingPositionRef.current) {
+          // Lưu vị trí dịch chuyển để đứng dậy (trục X dịch sang phải +1.2m)
+          const exitX = sittingPositionRef.current.x + 1.2;
+          const exitZ = sittingPositionRef.current.z;
+          // Tính toán độ cao đứng lên dựa trên vị trí bậc thang tại tọa độ exitX
+          const exitY = getLobbyGroundY(exitX, exitZ, doorStates) + baseY;
+          exitPositionRef.current = { x: exitX, y: exitY, z: exitZ };
+          setSittingPosition(null);
+        } else if (nearestChairRef.current) {
+          // Ngồi xuống ghế: Lấy đúng tọa độ y từ vật thể ghế đã tính độ cao bậc thang
+          setSittingPosition({
+            x: nearestChairRef.current.x,
+            y: nearestChairRef.current.y,
+            z: nearestChairRef.current.z,
+            rotationY: -Math.PI / 2
+          });
+          setSittingPrompt('stand');
+        }
+        return;
+      }
+
       const key = movementKeyMap[e.code];
       if (!key) return;
       e.preventDefault();
@@ -459,6 +596,75 @@ const LobbyPlayer: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
     if (selectedExhibit) return;
+
+    // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
+    if (exitPositionRef.current) {
+      playerRef.current.position.set(exitPositionRef.current.x, exitPositionRef.current.y, exitPositionRef.current.z);
+      exitPositionRef.current = null;
+      return;
+    }
+
+    // Check khoảng cách ghế ngồi và cập nhật sittingPrompt
+    const pPos = playerRef.current.position;
+    if (sittingPosition) {
+      if (sittingPrompt !== 'stand') setSittingPrompt('stand');
+    } else {
+      if (pPos.z > 54.0 && pPos.z <= 100.0) {
+        let minDist = Infinity;
+        let closest: { x: number; y: number; z: number } | null = null;
+        for (const chair of ROOM2_CHAIRS) {
+          const dx = pPos.x - chair.x;
+          const dz = pPos.z - chair.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = chair;
+          }
+        }
+        
+        if (minDist < 1.3) {
+          if (sittingPrompt !== 'sit') setSittingPrompt('sit');
+          nearestChairRef.current = closest;
+        } else {
+          if (sittingPrompt !== null) setSittingPrompt(null);
+          nearestChairRef.current = null;
+        }
+      } else {
+        if (sittingPrompt !== null) setSittingPrompt(null);
+        nearestChairRef.current = null;
+      }
+    }
+
+    if (sittingPosition) {
+      playerRef.current.position.set(sittingPosition.x, sittingPosition.y, sittingPosition.z);
+      if (sittingPosition.rotationY !== undefined) {
+        playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, sittingPosition.rotationY, 0.15);
+      }
+
+      // Xoay chân gập vuông góc 90 độ về phía trước và để tay đặt lên đùi
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI / 2.0;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI / 2.0;
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -Math.PI / 4.0;
+        leftArmRef.current.rotation.z = 0.1;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -Math.PI / 4.0;
+        rightArmRef.current.rotation.z = -0.1;
+      }
+
+      const now = state.clock.getElapsedTime();
+      if (now - lastUpdate.current > 0.05) {
+        socket?.emit('move', {
+          x: sittingPosition.x,
+          y: sittingPosition.y,
+          z: sittingPosition.z,
+          yaw: playerRef.current.rotation.y,
+        });
+        lastUpdate.current = now;
+      }
+      return;
+    }
 
     const { w, a, s, d, e } = keys.current;
     const moving = w || a || s || d;
@@ -683,6 +889,7 @@ export default function LobbyPage() {
     updatePreset,
     updateSettings,
     miniGameOpen,
+    sittingPrompt,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
@@ -1040,6 +1247,23 @@ export default function LobbyPage() {
 
       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
+
+      {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
+      {sittingPrompt && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 bg-slate-950/95 border-2 border-cyan-500/30 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl animate-bounce">
+          <span className="flex h-3.5 w-3.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500"></span>
+          </span>
+          <span className="text-xs font-black tracking-wider text-slate-100 uppercase font-mono">
+            {sittingPrompt === 'sit' ? (
+              language === 'vi' ? 'Ấn F để ngồi' : 'Press F to Sit'
+            ) : (
+              language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
+            )}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

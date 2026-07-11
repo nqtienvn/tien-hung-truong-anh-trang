@@ -116,6 +116,11 @@ interface MuseumContextType {
   addClue: (clueId: string) => void;
   setRoomOneCompleted: (completed: boolean) => void;
   resetRoomOne: () => void;
+
+  sittingPosition: { x: number; y: number; z: number; rotationY?: number } | null;
+  setSittingPosition: (pos: { x: number; y: number; z: number; rotationY?: number } | null) => void;
+  sittingPrompt: 'sit' | 'stand' | null;
+  setSittingPrompt: (prompt: 'sit' | 'stand' | null) => void;
 }
 
 export interface GameEvent {
@@ -183,6 +188,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // --- Gameplay States ---
   const [cluesCollected, setCluesCollected] = useState<string[]>([]);
   const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
+  const [sittingPosition, setSittingPosition] = useState<{ x: number; y: number; z: number; rotationY?: number } | null>(null);
+  const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
 
   // Sync gameplay progress theo từng người chơi (nickname)
   useEffect(() => {
@@ -754,6 +761,11 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addClue,
         setRoomOneCompleted: handleSetRoomOneCompleted,
         resetRoomOne,
+
+        sittingPosition,
+        setSittingPosition,
+        sittingPrompt,
+        setSittingPrompt,
       }}
     >
       {children}
