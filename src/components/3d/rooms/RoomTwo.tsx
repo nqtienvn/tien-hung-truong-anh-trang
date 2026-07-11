@@ -364,8 +364,8 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
 
           return (
             <group key={`col-${colIndex}`}>
-              {/* BÀN DÃY TRƯỚC (Front block: Dịch trái 0.4m để gần lan can hơn) */}
-              <group position={[xCol - 0.4, tierY, -9.5]}>
+              {/* BÀN DÃY TRƯỚC (Front block: Dịch trái 1.0m để sát sạt lan can) */}
+              <group position={[xCol - 1.0, tierY, -9.5]}>
                 {/* Che chân bàn vải đỏ */}
                 <mesh position={[0, 0.35, 0]}>
                   <boxGeometry args={[0.5, 0.7, 11.0]} />
@@ -395,8 +395,8 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                 ))}
               </group>
 
-              {/* BÀN DÃY SAU (Back block: Dịch trái 0.4m để gần lan can hơn) */}
-              <group position={[xCol - 0.4, tierY, 9.5]}>
+              {/* BÀN DÃY SAU (Back block: Dịch trái 1.0m để sát sạt lan can) */}
+              <group position={[xCol - 1.0, tierY, 9.5]}>
                 {/* Che chân bàn vải đỏ */}
                 <mesh position={[0, 0.35, 0]}>
                   <boxGeometry args={[0.5, 0.7, 11.0]} />
@@ -426,14 +426,14 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                 ))}
               </group>
 
-              {/* ═══ ĐẶT GHẾ ĐẠI BIỂU TƯƠNG TÁC (Dịch sang trái localX={xCol + 0.2}) ═══ */}
+              {/* ═══ ĐẶT GHẾ ĐẠI BIỂU TƯƠNG TÁC (Dịch sang trái localX={xCol - 0.4}) ═══ */}
               {/* Dãy trước */}
               {frontChairZs.map((zChair, idx) => (
-                <DelegateChair key={`chair-front-${idx}`} localX={xCol + 0.2} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
+                <DelegateChair key={`chair-front-${idx}`} localX={xCol - 0.4} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
               ))}
               {/* Dãy sau */}
               {backChairZs.map((zChair, idx) => (
-                <DelegateChair key={`chair-back-${idx}`} localX={xCol + 0.2} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
+                <DelegateChair key={`chair-back-${idx}`} localX={xCol - 0.4} localY={tierY} localZ={zChair} rotationY={-Math.PI / 2} />
               ))}
             </group>
           );

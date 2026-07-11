@@ -310,7 +310,7 @@ const LobbyPlayer: React.FC = () => {
       const tierY = getTierY(xCol);
       for (const zVal of [...frontChairZs, ...backChairZs]) {
         chairs.push({
-          x: xCol + 0.2,
+          x: xCol - 0.4,
           y: 3.35 + tierY, // Độ cao ngồi = 3.35 (đệm ghế) + độ cao bậc thang
           z: 77.0 + zVal
         });
@@ -475,8 +475,8 @@ const LobbyPlayer: React.FC = () => {
 
         // Chặn các dãy bàn dọc
         for (const rowX of deskXCoords) {
-          // Kiểm tra xem người chơi có đè lên X của hàng bàn ghế không (đã dịch sang trái 0.4m)
-          if (x > rowX - 0.8 && x < rowX + 0.5) {
+          // Kiểm tra xem người chơi có đè lên X của hàng bàn ghế không (đã dịch sang trái 1.0m)
+          if (x > rowX - 1.4 && x < rowX - 0.1) {
             // Kiểm tra theo trục dọc Z (Front block & Back block)
             const inFrontBlock = localZ > -15.2 && localZ < -3.8;
             const inBackBlock = localZ > 3.8 && localZ < 15.2;
