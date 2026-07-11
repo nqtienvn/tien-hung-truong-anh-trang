@@ -512,27 +512,33 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         </group>
 
         {/* Vách ngăn phân chia thành các phòng nhỏ (chỉ áp dụng cho gallery-market-economy) */}
-        {galleryId === 'gallery-market-economy' && [-50, -35, -20, -5, 10, 25].map((zPos, i) => {
-          return (
-            <group key={`partition-${i}`}>
-              {/* Vách ngăn bên trái */}
-              <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, zPos]}>
-                <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.25]} />
-                <meshStandardMaterial color={wallColor} roughness={0.7} />
-              </mesh>
-              {/* Vách ngăn bên phải */}
-              <mesh position={[roomWidth / 4 + 1, roomHeight / 2, zPos]}>
-                <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.25]} />
-                <meshStandardMaterial color={wallColor} roughness={0.7} />
-              </mesh>
-              {/* Vách ngăn phía trên cửa */}
-              <mesh position={[0, (roomHeight + 4) / 2, zPos]}>
-                <boxGeometry args={[4.0, roomHeight - 4.0, 0.25]} />
-                <meshStandardMaterial color={wallColor} roughness={0.7} />
-              </mesh>
-            </group>
-          );
-        })}
+        {galleryId === 'gallery-market-economy' && (() => {
+          const carpetWidth = Math.min(roomWidth / 2, 6);
+          const partitionWidth = (roomWidth - carpetWidth) / 2;
+          const partitionX = (carpetWidth + partitionWidth) / 2;
+
+          return [-50, -35, -20, -5, 10, 25].map((zPos, i) => {
+            return (
+              <group key={`partition-${i}`}>
+                {/* Vách ngăn bên trái */}
+                <mesh position={[-partitionX, roomHeight / 2, zPos]}>
+                  <boxGeometry args={[partitionWidth, roomHeight, 0.25]} />
+                  <meshStandardMaterial color={wallColor} roughness={0.7} />
+                </mesh>
+                {/* Vách ngăn bên phải */}
+                <mesh position={[partitionX, roomHeight / 2, zPos]}>
+                  <boxGeometry args={[partitionWidth, roomHeight, 0.25]} />
+                  <meshStandardMaterial color={wallColor} roughness={0.7} />
+                </mesh>
+                {/* Vách ngăn phía trên cửa */}
+                <mesh position={[0, (roomHeight + 4) / 2, zPos]}>
+                  <boxGeometry args={[carpetWidth, roomHeight - 4.0, 0.25]} />
+                  <meshStandardMaterial color={wallColor} roughness={0.7} />
+                </mesh>
+              </group>
+            );
+          });
+        })()}
 
         {/* Exhibits & Models inside the first room of gallery-market-economy */}
         {galleryId === 'gallery-market-economy' && FIRST_ROOM_EXHIBITS.map((item, idx) => (

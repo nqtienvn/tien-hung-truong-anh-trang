@@ -147,8 +147,8 @@ export const PlayerCharacter: React.FC = () => {
       const zPositions = [-50, -35, -20, -5, 10, 25];
       for (const pZ of zPositions) {
         if (z > pZ - 0.35 && z < pZ + 0.35) {
-          // Lối đi mở rộng 4m ở chính giữa (-2.0 đến 2.0). Bị chặn nếu nằm ở hai bên.
-          if (x < -2.0 || x > 2.0) {
+          // Lối đi mở rộng 6m ở chính giữa (-3.0 đến 3.0). Bị chặn nếu nằm ở hai bên.
+          if (x < -3.0 || x > 3.0) {
             return true;
           }
         }
