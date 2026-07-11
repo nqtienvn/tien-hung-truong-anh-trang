@@ -297,6 +297,16 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
   const [mgScore, setMgScore] = useState(0);
   const [mgDragOver, setMgDragOver] = useState<string | null>(null);
   const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | null>(null);
+  const [mgQuestions, setMgQuestions] = useState<typeof MG_SITUATIONS>(MG_SITUATIONS);
+
+  const shuffleQuestions = (array: typeof MG_SITUATIONS) => {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
 
   // Timer states
   const [mgStartTime, setMgStartTime] = useState<number | null>(null);
@@ -367,12 +377,12 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
 
   const handleMgAnswer = (catId: string) => {
     if (mgFeedback !== null) return;
-    const correct = MG_SITUATIONS[mgIndex].category;
+    const correct = mgQuestions[mgIndex].category;
     let nextScore = mgScore;
     if (catId === correct) {
       setMgFeedback('correct');
       setMgScore(prev => {
-        nextScore = prev + 5;
+        nextScore = prev + 10;
         return nextScore;
       });
     } else {
@@ -380,7 +390,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
     }
     setTimeout(() => {
       setMgFeedback(null);
-      if (mgIndex < MG_SITUATIONS.length - 1) {
+      if (mgIndex < mgQuestions.length - 1) {
         setMgIndex(prev => prev + 1);
       } else {
         setMgStep('complete');
@@ -509,9 +519,10 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                     </div>
                   ))}
                 </div>
-                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Mỗi câu đúng: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>+5</span> điểm &nbsp;·&nbsp; Tổng tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>100</span> điểm</p>
+                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Mỗi câu đúng: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>+10</span> điểm &nbsp;·&nbsp; Tổng tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
                 <button 
                   onClick={() => {
+                    setMgQuestions(shuffleQuestions(MG_SITUATIONS));
                     setMgStep('game');
                     setMgStartTime(Date.now());
                   }} 
@@ -527,22 +538,22 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>📝 Tình huống {mgIndex + 1} / {MG_SITUATIONS.length}</span>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>📝 Tình huống {mgIndex + 1} / {mgQuestions.length}</span>
                     <div style={{ flex: 1, height: '4px', background: '#1e293b', borderRadius: '99px', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${((mgIndex + 1) / MG_SITUATIONS.length) * 100}%`, background: 'linear-gradient(to right, #10b981, #34d399)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                      <div style={{ height: '100%', width: `${((mgIndex + 1) / mgQuestions.length) * 100}%`, background: 'linear-gradient(to right, #10b981, #34d399)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
                     <span>⏱️ <span style={{ fontFamily: 'monospace', fontSize: '15px' }}>{mgLiveTime}</span>s</span>
                     <div style={{ width: '1px', height: '12px', background: '#334155' }} />
-                    <span>Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 100</span>
+                    <span>Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 200</span>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
                   <div
                     draggable={mgFeedback === null}
-                    onDragStart={(e) => e.dataTransfer.setData('text/plain', MG_SITUATIONS[mgIndex].category)}
+                    onDragStart={(e) => e.dataTransfer.setData('text/plain', mgQuestions[mgIndex].category)}
                     style={{
                       maxWidth: '560px', width: '100%', padding: '28px 32px', borderRadius: '18px', border: '1px solid', textAlign: 'center', position: 'relative',
                       cursor: mgFeedback === null ? 'grab' : 'default', userSelect: 'none', transition: 'all 0.25s ease', boxSizing: 'border-box',
@@ -553,11 +564,11 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                   >
                     <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', background: '#1e293b', color: '#64748b', border: '1px solid #334155', padding: '2px 10px', borderRadius: '99px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Kéo thẻ này thả vào ô tương ứng bên dưới</span>
                     <p style={{ fontSize: '16px', fontWeight: 800, color: mgFeedback === 'correct' ? '#6ee7b7' : mgFeedback === 'incorrect' ? '#fca5a5' : '#f1f5f9', lineHeight: 1.6, marginTop: '8px' }}>
-                      &ldquo;{MG_SITUATIONS[mgIndex].text}&rdquo;
+                      &ldquo;{mgQuestions[mgIndex].text}&rdquo;
                     </p>
                     {mgFeedback === 'correct' && (
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
-                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +5đ</span>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +10đ</span>
                       </div>
                     )}
                     {mgFeedback === 'incorrect' && (
@@ -616,7 +627,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                   <div>
                     <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
                     <p style={{ fontWeight: 850, fontSize: '15px', color: '#10b981' }}>
-                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 100 điểm &nbsp;·&nbsp; Thời gian: <span style={{ fontFamily: 'monospace', fontSize: '18px' }}>{mgTimeSpent === 9999 ? 'N/A' : `${mgTimeSpent}s`}</span>
+                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 200 điểm &nbsp;·&nbsp; Thời gian: <span style={{ fontFamily: 'monospace', fontSize: '18px' }}>{mgTimeSpent === 9999 ? 'N/A' : `${mgTimeSpent}s`}</span>
                     </p>
                   </div>
 

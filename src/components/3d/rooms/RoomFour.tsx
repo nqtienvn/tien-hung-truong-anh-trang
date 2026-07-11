@@ -84,7 +84,7 @@ const ZONE1_EXHIBITS = [
     id: "zone1-painting-1",
     side: "left",
     x: -8.9,
-    z: -5.5, // Absolute Z = -43.0
+    z: -3.75, // Absolute Z = -46.25
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Kinh tế cá thể, tiểu chủ",
     titleEn: "Individual & Household Economy",
@@ -96,7 +96,7 @@ const ZONE1_EXHIBITS = [
     id: "zone1-painting-2",
     side: "left",
     x: -8.9,
-    z: 5.5, // Absolute Z = -32.0
+    z: 3.75, // Absolute Z = -38.75
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Kinh tế tập thể (Hợp tác xã)",
     titleEn: "Collective Economy (Cooperatives)",
@@ -108,7 +108,7 @@ const ZONE1_EXHIBITS = [
     id: "zone1-painting-3",
     side: "right",
     x: 8.9,
-    z: -5.5, // Absolute Z = -43.0
+    z: -3.75, // Absolute Z = -46.25
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Khởi nghiệp (Startups)",
     titleEn: "Innovative Startups (Startups)",
@@ -120,7 +120,7 @@ const ZONE1_EXHIBITS = [
     id: "zone1-painting-4",
     side: "right",
     x: 8.9,
-    z: 5.5, // Absolute Z = -32.0
+    z: 3.75, // Absolute Z = -38.75
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Sự liên kết chuỗi cung ứng",
     titleEn: "Supply Chain Linkage",
@@ -443,7 +443,7 @@ const ZONE2_EXHIBITS = [
     id: "zone2-painting-1",
     side: "left",
     x: -8.9,
-    z: -5.5, // Absolute Z = -18.0
+    z: -3.75, // Absolute Z = -31.25
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Thị trường vốn minh bạch",
     titleEn: "Transparent Capital Market",
@@ -455,7 +455,7 @@ const ZONE2_EXHIBITS = [
     id: "zone2-painting-2",
     side: "left",
     x: -8.9,
-    z: 5.5, // Absolute Z = -7.0
+    z: 3.75, // Absolute Z = -23.75
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Cạnh tranh lành mạnh",
     titleEn: "Fair Market Competition",
@@ -467,7 +467,7 @@ const ZONE2_EXHIBITS = [
     id: "zone2-painting-3",
     side: "right",
     x: 8.9,
-    z: -5.5, // Absolute Z = -18.0
+    z: -3.75, // Absolute Z = -31.25
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Liên thông giá trị toàn cầu",
     titleEn: "Global Value Integration",
@@ -479,7 +479,7 @@ const ZONE2_EXHIBITS = [
     id: "zone2-painting-4",
     side: "right",
     x: 8.9,
-    z: 5.5, // Absolute Z = -7.0
+    z: 3.75, // Absolute Z = -23.75
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Phá vỡ thế độc quyền",
     titleEn: "Breaking Telecom Monopoly",
@@ -788,7 +788,7 @@ const ZONE3_EXHIBITS = [
     id: "zone3-painting-1",
     side: "left",
     x: -8.9,
-    z: -5.5, // Absolute Z = 7.0
+    z: -3.75, // Absolute Z = -16.25
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Ổn định kinh tế vĩ mô",
     titleEn: "Macroeconomic Stability",
@@ -800,7 +800,7 @@ const ZONE3_EXHIBITS = [
     id: "zone3-painting-2",
     side: "left",
     x: -8.9,
-    z: 5.5, // Absolute Z = 18.0
+    z: 3.75, // Absolute Z = -8.75
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Dự trữ quốc gia & Bình ổn giá",
     titleEn: "National Reserves & Price Stabilization",
@@ -812,7 +812,7 @@ const ZONE3_EXHIBITS = [
     id: "zone3-painting-3",
     side: "right",
     x: 8.9,
-    z: -5.5, // Absolute Z = 7.0
+    z: -3.75, // Absolute Z = -16.25
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Chính phủ kiến tạo",
     titleEn: "Enabling Government",
@@ -824,7 +824,7 @@ const ZONE3_EXHIBITS = [
     id: "zone3-painting-4",
     side: "right",
     x: 8.9,
-    z: 5.5, // Absolute Z = 18.0
+    z: 3.75, // Absolute Z = -8.75
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Quy hoạch chiến lược dài hạn",
     titleEn: "Long-term Strategic Planning",
@@ -1181,7 +1181,7 @@ const ZONE4_EXHIBITS = [
     id: "zone4-painting-1",
     side: "left",
     x: -8.9,
-    z: -5.5, // Absolute Z = 32.0
+    z: -3.75, // Absolute Z = -1.25
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Chương trình Nông thôn mới",
     titleEn: "National New Rural Program",
@@ -1193,7 +1193,7 @@ const ZONE4_EXHIBITS = [
     id: "zone4-painting-2",
     side: "left",
     x: -8.9,
-    z: 5.5, // Absolute Z = 43.0
+    z: 3.75, // Absolute Z = 6.25
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Nhà ở xã hội",
     titleEn: "Social Housing Policy",
@@ -1205,7 +1205,7 @@ const ZONE4_EXHIBITS = [
     id: "zone4-painting-3",
     side: "right",
     x: 8.9,
-    z: -5.5, // Absolute Z = 32.0
+    z: -3.75, // Absolute Z = -1.25
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Phổ cập giáo dục & công nghệ",
     titleEn: "Universal Education & Tech",
@@ -1217,7 +1217,7 @@ const ZONE4_EXHIBITS = [
     id: "zone4-painting-4",
     side: "right",
     x: 8.9,
-    z: 5.5, // Absolute Z = 43.0
+    z: 3.75, // Absolute Z = 6.25
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Chăm lo người yếu thế & có công",
     titleEn: "Caring for the Disadvantaged",
@@ -1531,7 +1531,7 @@ const ZONE5_EXHIBITS = [
     id: "zone5-painting-1",
     side: "left",
     x: -8.9,
-    z: -5.5, // Absolute Z = 57.0
+    z: -3.75, // Absolute Z = 13.75
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Mạng lưới FTA toàn cầu",
     titleEn: "Global FTA Network",
@@ -1543,7 +1543,7 @@ const ZONE5_EXHIBITS = [
     id: "zone5-painting-2",
     side: "left",
     x: -8.9,
-    z: 5.5, // Absolute Z = 68.0
+    z: 3.75, // Absolute Z = 21.25
     rotation: [0, Math.PI / 2, 0],
     titleVi: "Nông sản chinh phục thế giới",
     titleEn: "Agriculture Conquers Markets",
@@ -1555,7 +1555,7 @@ const ZONE5_EXHIBITS = [
     id: "zone5-painting-3",
     side: "right",
     x: 8.9,
-    z: -5.5, // Absolute Z = 57.0
+    z: -3.75, // Absolute Z = 13.75
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Giao lưu văn hóa & Du lịch",
     titleEn: "Tourism & Cultural Exchange",
@@ -1567,7 +1567,7 @@ const ZONE5_EXHIBITS = [
     id: "zone5-painting-4",
     side: "right",
     x: 8.9,
-    z: 5.5, // Absolute Z = 68.0
+    z: 3.75, // Absolute Z = 21.25
     rotation: [0, -Math.PI / 2, 0],
     titleVi: "Xuất khẩu dịch vụ số",
     titleEn: "Digital Services Export",
