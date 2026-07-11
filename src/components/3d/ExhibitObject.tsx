@@ -263,38 +263,11 @@ const PaintingComponent: React.FC<{
           />
         </mesh>
 
-        {isNear && (
-          <group position={[0, -(exhibit.scale_y / 2) - 0.45, 0.08]}>
-            <mesh>
-              <planeGeometry args={[1.8, 0.65]} />
-              <meshStandardMaterial color="#fff" roughness={0.1} />
-            </mesh>
-            <Html
-              position={[0, 0, 0.01]}
-              center
-              distanceFactor={6.5}
-              className="pointer-events-none select-none text-center"
-            >
-              <div className="w-[160px] bg-white text-black p-2 rounded border border-gray-400 font-sans shadow-lg flex flex-col items-center gap-0.5">
-                <p className="text-[12px] font-bold truncate leading-tight w-full text-center">
-                  {language === "vi" ? exhibit.title.vi : exhibit.title.en}
-                </p>
-                <p className="text-[10px] text-gray-500 truncate leading-tight w-full text-center">
-                  {language === "vi" ? exhibit.author.vi : exhibit.author.en}
-                </p>
-                <div className="mt-1.5 w-full bg-amber-500 text-slate-950 font-extrabold text-[10px] py-1 rounded text-center uppercase tracking-wider">
-                  {language === "vi" ? "Xem chi tiết" : "View Details"}
-                </div>
-              </div>
-            </Html>
-          </group>
-        )}
-
         <group
-          position={[0, -exhibit.scale_y / 2 - 0.55, 1.42]}
+          position={[0, -exhibit.scale_y / 2 - 0.55, 0.35]}
           rotation={[-Math.PI / 10, 0, 0]}
           onPointerDown={(e) => {
-            if (!isVisible) return;
+            if (!isVisible || !isNear) return;
             e.stopPropagation();
             if (onClick) onClick(exhibit);
             else {
@@ -353,35 +326,62 @@ const PaintingComponent: React.FC<{
               metalness={0.02}
             />
           </mesh>
-          <group ref={hotspotRef} position={[0, 0.02, 0.065]}>
-            <mesh>
-              <circleGeometry args={[0.075, 28]} />
-              <meshBasicMaterial
-                color="#ef4444"
-                transparent
-                opacity={0.9}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
-            <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]}>
-              <ringGeometry args={[0.095, 0.125, 28]} />
-              <meshBasicMaterial
-                color="#f87171"
-                transparent
-                opacity={0.32}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
-            <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]}>
-              <ringGeometry args={[0.13, 0.15, 28]} />
-              <meshBasicMaterial
-                color="#fecaca"
-                transparent
-                opacity={0.16}
-                side={THREE.DoubleSide}
-              />
-            </mesh>
-          </group>
+
+          {/* Nội dung thông tin trên bảng khi đứng gần */}
+          {isNear && (
+            <Html
+              position={[0, 0.02, 0.03]}
+              center
+              transform
+              distanceFactor={2.4}
+              className="pointer-events-none select-none text-center font-sans"
+            >
+              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                  {language === "vi" ? exhibit.title.vi : exhibit.title.en}
+                </p>
+                <p className="text-[8px] text-slate-600 italic truncate leading-none w-full text-center">
+                  {language === "vi" ? exhibit.author.vi : exhibit.author.en}
+                </p>
+                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                  {language === "vi" ? "Nhấp để xem" : "Click to view"}
+                </p>
+              </div>
+            </Html>
+          )}
+
+          {/* Vòng tròn hiệu ứng chỉ hiển thị khi ở xa */}
+          {!isNear && (
+            <group ref={hotspotRef} position={[0, 0.02, 0.065]}>
+              <mesh>
+                <circleGeometry args={[0.075, 28]} />
+                <meshBasicMaterial
+                  color="#ef4444"
+                  transparent
+                  opacity={0.9}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]}>
+                <ringGeometry args={[0.095, 0.125, 28]} />
+                <meshBasicMaterial
+                  color="#f87171"
+                  transparent
+                  opacity={0.32}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+              <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]}>
+                <ringGeometry args={[0.13, 0.15, 28]} />
+                <meshBasicMaterial
+                  color="#fecaca"
+                  transparent
+                  opacity={0.16}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            </group>
+          )}
         </group>
       </group>
 
@@ -539,31 +539,6 @@ const SculptureComponent: React.FC<{
             side={THREE.DoubleSide}
           />
         </mesh>
-
-        {/* Nhãn tên hiện vật: HIỂN THỊ SẴN 3D (Html transform) nghiêng góc 30 độ hướng lên trên như bảng tên đặt tại bệ tượng */}
-        {isNear && (
-          <Html
-            position={[0, -0.58, 0.46]}
-            center
-            transform
-            occlude="blending"
-            rotation={[-Math.PI / 6, 0, 0]}
-            distanceFactor={3.2}
-            className="pointer-events-none select-none text-center"
-          >
-            <div className="w-[160px] bg-slate-900/95 text-white p-2.5 rounded-lg border border-slate-700 font-sans shadow-2xl backdrop-blur-sm flex flex-col items-center gap-0.5 pointer-events-none select-none">
-              <p className="text-[12px] font-bold text-amber-400 leading-tight w-full text-center">
-                {language === "vi" ? exhibit.title.vi : exhibit.title.en}
-              </p>
-              <p className="text-[10px] text-slate-400 mt-1 leading-none font-sans w-full text-center">
-                {language === "vi" ? exhibit.author.vi : exhibit.author.en}
-              </p>
-              <div className="mt-1.5 w-full bg-amber-500 text-slate-950 font-extrabold text-[10px] py-1 rounded text-center uppercase tracking-wider font-mono">
-                {language === "vi" ? "Xem chi tiết" : "View Details"}
-              </div>
-            </div>
-          </Html>
-        )}
       </group>
 
       {/* Đèn spotlight rọi tượng: luôn trong scene graph để tránh recompilation, chỉ đổi intensity, loại bỏ để tránh lag */}
