@@ -296,8 +296,10 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
   const [mgIndex, setMgIndex] = useState(0);
   const [mgScore, setMgScore] = useState(0);
   const [mgDragOver, setMgDragOver] = useState<string | null>(null);
-  const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | null>(null);
+  const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | 'timeout' | null>(null);
   const [mgQuestions, setMgQuestions] = useState<typeof MG_SITUATIONS>(MG_SITUATIONS);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(15);
+  const [mgEarnedPoints, setMgEarnedPoints] = useState<number | null>(null);
 
   const shuffleQuestions = (array: typeof MG_SITUATIONS) => {
     const copy = [...array];
@@ -308,42 +310,59 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
     return copy;
   };
 
-  // Timer states
-  const [mgStartTime, setMgStartTime] = useState<number | null>(null);
-  const [mgTimeSpent, setMgTimeSpent] = useState<number>(9999);
-  const [mgLiveTime, setMgLiveTime] = useState(0);
-
-  // Live timer effect
-  useEffect(() => {
-    if (mgStep !== 'game' || !mgStartTime) {
-      setMgLiveTime(0);
-      return;
-    }
-    const interval = setInterval(() => {
-      setMgLiveTime(Math.round((Date.now() - mgStartTime) / 1000));
-    }, 500);
-    return () => clearInterval(interval);
-  }, [mgStep, mgStartTime]);
-
   // Load played status on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const played = localStorage.getItem('minigame_played_gallery_four') === 'true';
       if (played) {
         const savedScore = localStorage.getItem('minigame_score_gallery_four');
-        const savedTime = localStorage.getItem('minigame_time_gallery_four');
         if (savedScore) {
           const parsedScore = parseInt(savedScore, 10);
-          const parsedTime = savedTime ? parseInt(savedTime, 10) : 9999;
           setMgScore(parsedScore);
-          setMgTimeSpent(parsedTime);
           if (socket && socket.connected) {
-            socket.emit('update-score', { score: parsedScore, timeSpent: parsedTime });
+            socket.emit('update-score', { score: parsedScore, timeSpent: 9999 });
           }
         }
       }
     }
   }, [socket]);
+
+  // Đếm ngược 15s cho mỗi câu hỏi
+  useEffect(() => {
+    if (mgStep !== 'game' || mgFeedback !== null || !mgOpen) {
+      return;
+    }
+
+    if (questionTimeLeft <= 0) {
+      setMgFeedback('timeout');
+      
+      const timerComplete = setTimeout(() => {
+        setMgFeedback(null);
+        setMgEarnedPoints(null);
+        if (mgIndex < mgQuestions.length - 1) {
+          setMgIndex(prev => prev + 1);
+          setQuestionTimeLeft(15);
+        } else {
+          setMgStep('complete');
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('minigame_played_gallery_four', 'true');
+            localStorage.setItem('minigame_score_gallery_four', mgScore.toString());
+          }
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: mgScore, timeSpent: 9999 });
+          }
+        }
+      }, 1200);
+
+      return () => clearTimeout(timerComplete);
+    }
+
+    const interval = setTimeout(() => {
+      setQuestionTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(interval);
+  }, [mgStep, mgFeedback, questionTimeLeft, mgIndex, mgQuestions.length, mgOpen, mgScore, socket]);
 
   // Listen for CustomEvent from RoomFour
   useEffect(() => {
@@ -352,14 +371,11 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
       if (typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true') {
         setMgStep('complete');
         const savedScore = localStorage.getItem('minigame_score_gallery_four');
-        const savedTime = localStorage.getItem('minigame_time_gallery_four');
         if (savedScore) {
           const parsedScore = parseInt(savedScore, 10);
-          const parsedTime = savedTime ? parseInt(savedTime, 10) : 9999;
           setMgScore(parsedScore);
-          setMgTimeSpent(parsedTime);
           if (socket && socket.connected) {
-            socket.emit('update-score', { score: parsedScore, timeSpent: parsedTime });
+            socket.emit('update-score', { score: parsedScore, timeSpent: 9999 });
           }
         }
       } else {
@@ -367,8 +383,8 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
         setMgIndex(0);
         setMgScore(0);
         setMgFeedback(null);
-        setMgStartTime(null);
-        setMgTimeSpent(9999);
+        setQuestionTimeLeft(15);
+        setMgEarnedPoints(null);
       }
     };
     window.addEventListener('openSummaryMinigame', handler);
@@ -376,33 +392,38 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
   }, [socket]);
 
   const handleMgAnswer = (catId: string) => {
-    if (mgFeedback !== null) return;
+    if (mgFeedback !== null || questionTimeLeft <= 0) return;
     const correct = mgQuestions[mgIndex].category;
     let nextScore = mgScore;
+    
+    // Trả lời trước 10s (thời gian đếm ngược còn > 5s) được 10 điểm, còn lại được 5 điểm
+    const points = questionTimeLeft > 5 ? 10 : 5;
+    
     if (catId === correct) {
       setMgFeedback('correct');
+      setMgEarnedPoints(points);
       setMgScore(prev => {
-        nextScore = prev + 10;
+        nextScore = prev + points;
         return nextScore;
       });
     } else {
       setMgFeedback('incorrect');
     }
+    
     setTimeout(() => {
       setMgFeedback(null);
+      setMgEarnedPoints(null);
       if (mgIndex < mgQuestions.length - 1) {
         setMgIndex(prev => prev + 1);
+        setQuestionTimeLeft(15);
       } else {
         setMgStep('complete');
-        const elapsed = mgStartTime ? Math.round((Date.now() - mgStartTime) / 1000) : 9999;
-        setMgTimeSpent(elapsed);
         if (typeof window !== 'undefined') {
           localStorage.setItem('minigame_played_gallery_four', 'true');
           localStorage.setItem('minigame_score_gallery_four', nextScore.toString());
-          localStorage.setItem('minigame_time_gallery_four', elapsed.toString());
         }
         if (socket && socket.connected) {
-          socket.emit('update-score', { score: nextScore, timeSpent: elapsed });
+          socket.emit('update-score', { score: nextScore, timeSpent: 9999 });
         }
       }
     }, 1200);
@@ -495,9 +516,6 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                 <span style={{ fontSize: '20px' }}>🏆</span>
                 <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>THỬ THÁCH KINH TẾ ĐỊNH HƯỚNG XHCN</span>
               </div>
-              <button onClick={() => setMgOpen(false)} style={{ background: '#1e293b', border: '1px solid #334155', color: '#94a3b8', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
-                ✕ Đóng
-              </button>
             </div>
 
             {/* RULES */}
@@ -507,8 +525,10 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                 <div>
                   <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>LUẬT CHƠI MINIGAME</h4>
                   <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.7, background: 'rgba(2,6,23,0.6)', padding: '16px 20px', borderRadius: '12px', border: '1px solid #1e293b', textAlign: 'left' }}>
-                    Hệ thống sẽ đưa ra <strong style={{ color: '#fff' }}>20 tình huống thực tế</strong> tương ứng với các đặc trưng kinh tế của Việt Nam.
-                    Nhiệm vụ: <strong style={{ color: '#10b981' }}>kéo (drag)</strong> thẻ tình huống thả vào đúng biểu tượng, hoặc <strong style={{ color: '#10b981' }}>click</strong> thẳng vào ô.
+                    Hệ thống sẽ đưa ra <strong style={{ color: '#fff' }}>20 tình huống thực tế</strong> tương ứng với các đặc trưng kinh tế của Việt Nam.<br />
+                    • Nhiệm vụ: <strong style={{ color: '#10b981' }}>kéo (drag)</strong> thẻ tình huống thả vào đúng biểu tượng, hoặc <strong style={{ color: '#10b981' }}>click</strong> thẳng vào ô.<br />
+                    • Thời gian đếm ngược cho mỗi câu hỏi là <strong style={{ color: '#eab308' }}>15 giây</strong>.<br />
+                    • Điểm số: Trả lời đúng <strong style={{ color: '#10b981' }}>trước 10 giây</strong> (đồng hồ còn &gt; 5s) được <strong style={{ color: '#10b981' }}>+10 điểm</strong>. Trả lời đúng <strong style={{ color: '#eab308' }}>sau 10 giây</strong> (đồng hồ còn &le; 5s) được <strong style={{ color: '#eab308' }}>+5 điểm</strong>.
                   </p>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', width: '100%' }}>
@@ -519,12 +539,13 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                     </div>
                   ))}
                 </div>
-                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Mỗi câu đúng: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>+10</span> điểm &nbsp;·&nbsp; Tổng tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
+                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Tổng điểm tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
                 <button 
                   onClick={() => {
                     setMgQuestions(shuffleQuestions(MG_SITUATIONS));
                     setMgStep('game');
-                    setMgStartTime(Date.now());
+                    setQuestionTimeLeft(15);
+                    setMgEarnedPoints(null);
                   }} 
                   style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
                 >
@@ -544,7 +565,9 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
-                    <span>⏱️ <span style={{ fontFamily: 'monospace', fontSize: '15px' }}>{mgLiveTime}</span>s</span>
+                    <span style={{ color: questionTimeLeft <= 5 ? '#ef4444' : '#eab308', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      ⏳ Đếm ngược: <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: 900 }}>{questionTimeLeft}</span>s
+                    </span>
                     <div style={{ width: '1px', height: '12px', background: '#334155' }} />
                     <span>Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 200</span>
                   </div>
@@ -557,23 +580,28 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                     style={{
                       maxWidth: '560px', width: '100%', padding: '28px 32px', borderRadius: '18px', border: '1px solid', textAlign: 'center', position: 'relative',
                       cursor: mgFeedback === null ? 'grab' : 'default', userSelect: 'none', transition: 'all 0.25s ease', boxSizing: 'border-box',
-                      background: mgFeedback === 'correct' ? 'rgba(6,78,59,0.4)' : mgFeedback === 'incorrect' ? 'rgba(69,10,10,0.4)' : 'rgba(2,6,23,0.7)',
-                      borderColor: mgFeedback === 'correct' ? '#10b981' : mgFeedback === 'incorrect' ? '#ef4444' : '#334155',
-                      boxShadow: mgFeedback === 'correct' ? '0 0 40px rgba(16,185,129,0.2)' : mgFeedback === 'incorrect' ? '0 0 40px rgba(239,68,68,0.2)' : '0 8px 40px rgba(0,0,0,0.4)',
+                      background: mgFeedback === 'correct' ? 'rgba(6,78,59,0.4)' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? 'rgba(69,10,10,0.4)' : 'rgba(2,6,23,0.7)',
+                      borderColor: mgFeedback === 'correct' ? '#10b981' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '#ef4444' : '#334155',
+                      boxShadow: mgFeedback === 'correct' ? '0 0 40px rgba(16,185,129,0.2)' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '0 0 40px rgba(239,68,68,0.2)' : '0 8px 40px rgba(0,0,0,0.4)',
                     }}
                   >
                     <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', background: '#1e293b', color: '#64748b', border: '1px solid #334155', padding: '2px 10px', borderRadius: '99px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Kéo thẻ này thả vào ô tương ứng bên dưới</span>
-                    <p style={{ fontSize: '16px', fontWeight: 800, color: mgFeedback === 'correct' ? '#6ee7b7' : mgFeedback === 'incorrect' ? '#fca5a5' : '#f1f5f9', lineHeight: 1.6, marginTop: '8px' }}>
+                    <p style={{ fontSize: '16px', fontWeight: 800, color: mgFeedback === 'correct' ? '#6ee7b7' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '#fca5a5' : '#f1f5f9', lineHeight: 1.6, marginTop: '8px' }}>
                       &ldquo;{mgQuestions[mgIndex].text}&rdquo;
                     </p>
                     {mgFeedback === 'correct' && (
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
-                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +10đ</span>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +{mgEarnedPoints || 10}đ</span>
                       </div>
                     )}
                     {mgFeedback === 'incorrect' && (
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
                         <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>❌ CHƯA CHÍNH XÁC</span>
+                      </div>
+                    )}
+                    {mgFeedback === 'timeout' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>⏰ HẾT GIỜ!</span>
                       </div>
                     )}
                   </div>
@@ -614,12 +642,9 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
             {/* COMPLETE */}
             {mgStep === 'complete' && (() => {
               const allPlayerScores = [
-                { nickname: nickname || (language === 'vi' ? 'Bạn' : 'You'), score: mgScore, timeSpent: mgTimeSpent, isMe: true },
-                ...otherUsers.map(u => ({ nickname: u.nickname, score: u.score || 0, timeSpent: u.timeSpent || 9999, isMe: false }))
-              ].sort((a, b) => {
-                if (b.score !== a.score) return b.score - a.score;
-                return a.timeSpent - b.timeSpent; // Nhanh hơn (ít giây hơn) xếp trên
-              });
+                { nickname: nickname || (language === 'vi' ? 'Bạn' : 'You'), score: mgScore, isMe: true },
+                ...otherUsers.map(u => ({ nickname: u.nickname, score: u.score || 0, isMe: false }))
+              ].sort((a, b) => b.score - a.score);
 
               return (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', maxWidth: '640px', margin: '0 auto', textAlign: 'center', width: '100%' }}>
@@ -627,7 +652,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                   <div>
                     <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
                     <p style={{ fontWeight: 850, fontSize: '15px', color: '#10b981' }}>
-                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 200 điểm &nbsp;·&nbsp; Thời gian: <span style={{ fontFamily: 'monospace', fontSize: '18px' }}>{mgTimeSpent === 9999 ? 'N/A' : `${mgTimeSpent}s`}</span>
+                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 200 điểm
                     </p>
                   </div>
 
@@ -636,7 +661,6 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                     <div style={{ background: '#0f172a', padding: '12px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                       <span>Hạng / Người chơi</span>
                       <div style={{ display: 'flex', gap: '40px' }}>
-                        <span style={{ width: '80px', textAlign: 'right' }}>Thời gian</span>
                         <span style={{ width: '80px', textAlign: 'right' }}>Điểm số</span>
                       </div>
                     </div>
@@ -652,12 +676,12 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <span style={{
-                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
-                              fontSize: '10px', fontWeight: 900,
-                              background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
-                              color: idx < 3 ? '#020617' : '#475569',
-                              border: idx >= 3 ? '1px solid #334155' : 'none'
-                            }}>
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
+                                fontSize: '10px', fontWeight: 900,
+                                background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
+                                color: idx < 3 ? '#020617' : '#475569',
+                                border: idx >= 3 ? '1px solid #334155' : 'none'
+                              }}>
                               {idx + 1}
                             </span>
                             <span style={{ fontSize: '12px', fontWeight: p.isMe ? 900 : 600, color: p.isMe ? '#10b981' : '#cbd5e1' }}>
@@ -665,9 +689,6 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                             </span>
                           </div>
                           <div style={{ display: 'flex', gap: '40px', fontFamily: 'monospace', fontSize: '13px', fontWeight: 800 }}>
-                            <span style={{ width: '80px', textAlign: 'right', color: p.isMe ? '#10b981' : '#cbd5e1' }}>
-                              {p.timeSpent === 9999 ? '—' : `${p.timeSpent}s`}
-                            </span>
                             <span style={{ width: '80px', textAlign: 'right', color: p.isMe ? '#10b981' : '#cbd5e1' }}>
                               {p.score}đ
                             </span>
