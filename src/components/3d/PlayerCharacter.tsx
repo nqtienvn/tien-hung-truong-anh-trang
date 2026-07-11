@@ -144,12 +144,7 @@ export const PlayerCharacter: React.FC = () => {
 
     // ── COLLISIONS FOR ROOM 4 (gallery-market-economy) ──
     if (galleryId === 'gallery-market-economy') {
-      const roomLength = activeGallery?.room_length ?? 150;
-      const numPartitions = Math.round(roomLength / 25) - 1;
-      const zPositions = [];
-      for (let i = 1; i <= numPartitions; i++) {
-        zPositions.push(-75 + i * 25);
-      }
+      const zPositions = [-50, -35, -20, -5, 10, 25];
       for (const pZ of zPositions) {
         if (z > pZ - 0.35 && z < pZ + 0.35) {
           // Lối đi mở rộng 4m ở chính giữa (-2.0 đến 2.0). Bị chặn nếu nằm ở hai bên.

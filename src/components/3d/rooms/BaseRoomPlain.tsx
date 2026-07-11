@@ -512,8 +512,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         </group>
 
         {/* Vách ngăn phân chia thành các phòng nhỏ (chỉ áp dụng cho gallery-market-economy) */}
-        {galleryId === 'gallery-market-economy' && Array.from({ length: Math.round(roomLength / 25) - 1 }).map((_, i) => {
-          const zPos = -75 + (i + 1) * 25;
+        {galleryId === 'gallery-market-economy' && [-50, -35, -20, -5, 10, 25].map((zPos, i) => {
           return (
             <group key={`partition-${i}`}>
               {/* Vách ngăn bên trái */}

@@ -176,7 +176,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
       thumbnail_url: item.imageUrl,
       coordinate_x: item.x,
       coordinate_y: 2.3,
-      coordinate_z: -37.5 + item.z,
+      coordinate_z: -42.5 + item.z,
       rotation_x: 0,
       rotation_y: item.rotation[1],
       rotation_z: 0,
@@ -189,7 +189,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, -37.5]}>
+    <group position={[0, 0, -42.5]}>
       {/* ── Pedestal 1: Viettel (State-owned) ── */}
       <group
         position={[-2.2, 0, 0]}
@@ -209,7 +209,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
             thumbnail_url: "/images/room4/viettel.jpg",
             coordinate_x: -2.2,
             coordinate_y: 1.0,
-            coordinate_z: -37.5,
+            coordinate_z: -42.5,
             rotation_x: 0,
             rotation_y: 0,
             rotation_z: 0,
@@ -280,7 +280,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
             thumbnail_url: "/images/room4/vinfast.jpg",
             coordinate_x: 0,
             coordinate_y: 1.0,
-            coordinate_z: -37.5,
+            coordinate_z: -42.5,
             rotation_x: 0,
             rotation_y: 0,
             rotation_z: 0,
@@ -351,7 +351,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
             thumbnail_url: "/images/room4/samsung.jpg",
             coordinate_x: 2.2,
             coordinate_y: 1.0,
-            coordinate_z: -37.5,
+            coordinate_z: -42.5,
             rotation_x: 0,
             rotation_y: 0,
             rotation_z: 0,
@@ -366,7 +366,6 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           <ringGeometry args={[0.5, 0.6, 32]} />
           <meshBasicMaterial color="#3b82f6" transparent opacity={0.2 + intensity * 0.8} />
         </mesh>
-        {/* Base Cylinder */}
         <mesh
           position={[0, 0.5, 0]}
           onPointerOver={handlePointerOver}
@@ -580,7 +579,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       thumbnail_url: "/images/room4/cho-truyen-thong.jpg",
       coordinate_x: 0,
       coordinate_y: 1.0,
-      coordinate_z: -12.5,
+      coordinate_z: -27.5,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -612,7 +611,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       thumbnail_url: item.imageUrl,
       coordinate_x: item.x,
       coordinate_y: 2.3,
-      coordinate_z: -12.5 + item.z,
+      coordinate_z: -27.5 + item.z,
       rotation_x: 0,
       rotation_y: item.rotation[1],
       rotation_z: 0,
@@ -625,7 +624,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, -12.5]} onClick={handleClick}>
+    <group position={[0, 0, -27.5]} onClick={handleClick}>
       {/* Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.5, 1.7, 32]} />
@@ -904,7 +903,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
       thumbnail_url: "/images/room4/cao-toc-bac-nam.jpg",
       coordinate_x: 0,
       coordinate_y: 1.0,
-      coordinate_z: 12.5,
+      coordinate_z: -12.5,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -936,7 +935,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
       thumbnail_url: item.imageUrl,
       coordinate_x: item.x,
       coordinate_y: 2.3,
-      coordinate_z: 12.5 + item.z,
+      coordinate_z: -12.5 + item.z,
       rotation_x: 0,
       rotation_y: item.rotation[1],
       rotation_z: 0,
@@ -949,7 +948,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, 12.5]} onClick={handleClick}>
+    <group position={[0, 0, -12.5]} onClick={handleClick}>
       {/* Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.5, 1.7, 32]} />
@@ -1278,7 +1277,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       thumbnail_url: "/images/room4/bao-hiem-y-te.jpg",
       coordinate_x: 0,
       coordinate_y: 1.0,
-      coordinate_z: 37.5,
+      coordinate_z: 2.5,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -1310,7 +1309,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       thumbnail_url: item.imageUrl,
       coordinate_x: item.x,
       coordinate_y: 2.3,
-      coordinate_z: 37.5 + item.z,
+      coordinate_z: 2.5 + item.z,
       rotation_x: 0,
       rotation_y: item.rotation[1],
       rotation_z: 0,
@@ -1323,7 +1322,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, 37.5]} onClick={handleClick}>
+    <group position={[0, 0, 2.5]} onClick={handleClick}>
       {/* Warm Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.5, 1.7, 32]} />
@@ -1645,7 +1644,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
       thumbnail_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800",
       coordinate_x: 0,
       coordinate_y: 1.0,
-      coordinate_z: 62.5,
+      coordinate_z: 17.5,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -1677,7 +1676,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
       thumbnail_url: item.imageUrl,
       coordinate_x: item.x,
       coordinate_y: 2.3,
-      coordinate_z: 62.5 + item.z,
+      coordinate_z: 17.5 + item.z,
       rotation_x: 0,
       rotation_y: item.rotation[1],
       rotation_z: 0,
@@ -1690,7 +1689,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, 62.5]} onClick={handleClick}>
+    <group position={[0, 0, 17.5]} onClick={handleClick}>
       {/* Blue Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.6, 1.8, 32]} />
@@ -2197,7 +2196,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
   stepRef.current = step;
 
   // Zone local-Z centers (room local space, offset from ZONE_ABS_OFFSET)
-  const ZONE_LOCAL_Z = [-37.5, -12.5, 12.5, 37.5, 62.5, 87.5];
+  const ZONE_LOCAL_Z = [-42.5, -27.5, -12.5, 2.5, 17.5, 32.5];
 
   useFrame((state) => {
     if (!isVisible) return;
@@ -2330,7 +2329,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[0]}
           />
           <ZoneNPC
-            position={[3.5, 0.05, -38]}
+            position={[3.5, 0.05, -42.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Sở hữu)"
             nameEn="Economist (Ownership & Sectors)"
@@ -2354,7 +2353,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[1]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, -14]}
+            position={[2.4, 0.05, -27.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Thị trường)"
             nameEn="Economist (Market Mechanism)"
@@ -2378,7 +2377,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[2]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, 12.5]}
+            position={[2.4, 0.05, -12.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Nhà nước)"
             nameEn="Economist (State Regulation)"
@@ -2402,7 +2401,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[3]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, 37.5]}
+            position={[2.4, 0.05, 2.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (An sinh)"
             nameEn="Economist (Social Welfare)"
@@ -2426,7 +2425,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[4]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, 62.5]}
+            position={[2.4, 0.05, 17.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Hội nhập)"
             nameEn="Economist (Global Integration)"
@@ -2443,7 +2442,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Summary / Exit NPC in the last room -- */}
       {isVisible && (
         <ZoneNPC
-          position={[0, 0.05, 87.5]}
+          position={[0, 0.05, 32.5]}
           rotation={[0, 0, 0]}
           nameVi="Ronaldo"
           nameEn="Summary Specialist"
