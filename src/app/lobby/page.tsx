@@ -43,17 +43,10 @@ const DOOR_CONFIGS = [
   },
   {
     doorId: 'door-room3',
-    targetRoom: 'gallery-sculptures',
+    targetRoom: 'gallery-ceramics',
     position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Điêu khắc',
-  },
-  {
-    doorId: 'door-room4',
-    targetRoom: 'gallery-ceramics',
-    position: [0, 3.0, 146.0] as [number, number, number],
-    rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 04: Gốm sứ',
+    label: 'Phòng 03: Gốm sứ',
   },
 ];
 
@@ -71,8 +64,8 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     if (z > 7.0 && z <= 8.5) return 3.0; // Mezzanine
   }
 
-  // Tất cả các phòng triển lãm Z từ 8.0 đến 176.0 đều nằm trên sàn tầng 2 (Y = 3.0)
-  if (z > 8.0 && z <= 176.0) {
+  // Tất cả các phòng triển lãm Z từ 8.0 đến 130.0 đều nằm trên sàn tầng 2 (Y = 3.0)
+  if (z > 8.0 && z <= 130.0) {
     return 3.0;
   }
 
@@ -161,19 +154,19 @@ const LobbyCameraController: React.FC = () => {
     let minZ = -9.4;
     let maxZ = 7.8;
 
-    // Các phòng triển lãm (Phòng 1, 2, 3): Z từ 8.0 đến 146.0, W = 24 -> X từ -12 đến 12
-    if (pz > 8.0 && pz <= 146.0) {
+    // Các phòng triển lãm (Phòng 1, 2): Z từ 8.0 đến 100.0, W = 24 -> X từ -12 đến 12
+    if (pz > 8.0 && pz <= 100.0) {
       minX = -11.5;
       maxX = 11.5;
       minZ = 8.2;
-      maxZ = 145.8;
+      maxZ = 99.8;
     }
-    // Phòng 04 (gallery-ceramics): Z từ 146.0 đến 176.0, W = 30 -> X từ -15 đến 15
-    else if (pz > 146.0 && pz <= 176.0) {
+    // Phòng 03 (gallery-ceramics): Z từ 100.0 đến 130.0, W = 30 -> X từ -15 đến 15
+    else if (pz > 100.0 && pz <= 130.0) {
       minX = -14.5;
       maxX = 14.5;
-      minZ = 146.2;
-      maxZ = 175.8;
+      minZ = 100.2;
+      maxZ = 129.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -381,28 +374,14 @@ const LobbyPlayer: React.FC = () => {
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 3 (gallery-sculptures: Z 100.0 -> 146.0) ──
-      if (z > 100.0 && z <= 146.0) {
+      // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 100.0 -> 130.0) ──
+      if (z > 100.0 && z <= 130.0) {
         const isRoom3Open = doorStates['door-room3']?.isOpen;
         if (!isRoom3Open) return true;
 
-        if (x < -11.7 || x > 11.7) return true;
-
-        if (z > 145.3) {
-          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor4) return true;
-        }
-        return false;
-      }
-
-      // ── PHÒNG TRIỂN LÃM 4 (gallery-ceramics: Z 146.0 -> 176.0) ──
-      if (z > 146.0 && z <= 176.0) {
-        const isRoom4Open = doorStates['door-room4']?.isOpen;
-        if (!isRoom4Open) return true;
-
         if (x < -14.7 || x > 14.7) return true;
 
-        if (z > 175.3) return true;
+        if (z > 129.3) return true;
         return false;
       }
 
@@ -557,9 +536,7 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-subsidy');
     } else if (curPos.z > 54.0 && curPos.z <= 100.0) {
       setCurrentRoom('gallery-paintings');
-    } else if (curPos.z > 100.0 && curPos.z <= 146.0) {
-      setCurrentRoom('gallery-sculptures');
-    } else if (curPos.z > 146.0 && curPos.z <= 176.0) {
+    } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
       setCurrentRoom('gallery-ceramics');
     }
 
@@ -722,8 +699,7 @@ export default function LobbyPage() {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
-      'gallery-sculptures': { id: 'gallery-sculptures', name: 'Phòng 03: Điêu khắc thế giới' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 04: Gốm sứ hội nhập' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Gốm sứ hội nhập' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });

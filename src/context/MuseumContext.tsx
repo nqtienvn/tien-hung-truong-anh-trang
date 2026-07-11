@@ -27,8 +27,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'lobby': { x: 0, y: 0, z: -5.0 },
   'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
-  'gallery-sculptures': { x: 0, y: 3.0, z: 102.0 },
-  'gallery-ceramics': { x: 0, y: 3.0, z: 148.0 },
+  'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -613,7 +612,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const idleId = idleCallback(() => {
       if (roomStates['gallery-subsidy']?.isOpen) loadRoom('gallery-subsidy');
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
-      if (roomStates['gallery-sculptures']?.isOpen) loadRoom('gallery-sculptures');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
