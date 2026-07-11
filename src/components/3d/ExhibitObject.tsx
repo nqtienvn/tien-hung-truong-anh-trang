@@ -204,74 +204,64 @@ const PaintingComponent: React.FC<{
           <meshBasicMaterial ref={matRef} color="#1a1a1a" side={THREE.DoubleSide} />
         </mesh>
 
-        {isNear && (
-          <group position={[0, -(exhibit.scale_y / 2) - 0.45, 0.08]}>
-            <mesh>
-              <planeGeometry args={[1.8, 0.65]} />
-              <meshStandardMaterial color="#fff" roughness={0.1} />
-            </mesh>
-            <Html position={[0, 0, 0.01]} center distanceFactor={6.5} className="pointer-events-none select-none text-center">
-              <div className="w-[160px] bg-white text-black p-2 rounded border border-gray-400 font-sans shadow-lg flex flex-col items-center gap-0.5">
-                <p className="text-[12px] font-bold truncate leading-tight w-full text-center">
-                  {language === 'vi' ? exhibit.title.vi : exhibit.title.en}
-                </p>
-                <p className="text-[10px] text-gray-500 truncate leading-tight w-full text-center">
-                  {language === 'vi' ? exhibit.author.vi : exhibit.author.en}
-                </p>
-                <div className="mt-1.5 w-full bg-amber-500 text-slate-950 font-extrabold text-[10px] py-1 rounded text-center uppercase tracking-wider">
-                  {language === 'vi' ? 'Xem chi tiết' : 'View Details'}
-                </div>
-              </div>
-            </Html>
-          </group>
-        )}
-
         <group
-          position={[0, -exhibit.scale_y / 2 - 0.55, 1.42]}
-          rotation={[-Math.PI / 10, 0, 0]}
+          position={[0, -exhibit.scale_y / 2 - 0.45, 0.1]}
+          rotation={[0, 0, 0]}
           onPointerDown={(e) => {
-            if (!isVisible) return;
+            if (!isVisible || !isNear) return;
             e.stopPropagation();
             if (onClick) onClick(exhibit);
             else { setExhibitModalMode('info'); setSelectedExhibit(exhibit); }
           }}
         >
-          <mesh position={[0, 0, 0.14]}>
-            <planeGeometry args={[2.25, 1.05]} />
-            <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false} side={THREE.DoubleSide} />
-          </mesh>
-          <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-            <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-          </mesh>
-          <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-            <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-          </mesh>
-          <mesh position={[0, -0.62, -0.28]}>
-            <boxGeometry args={[1.25, 0.08, 0.34]} />
-            <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
-          </mesh>
-          <mesh position={[0, 0, -0.015]}>
-            <boxGeometry args={[1.9, 0.72, 0.05]} />
+          {/* Bảng gỗ nền */}
+          <mesh>
+            <planeGeometry args={[1.8, 0.7]} />
             <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
           </mesh>
-          <mesh position={[0, 0, 0.02]}>
-            <boxGeometry args={[1.74, 0.56, 0.035]} />
+          {/* Viền vàng */}
+          <mesh position={[0, 0, 0.005]}>
+            <planeGeometry args={[1.76, 0.66]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Giấy giả da/kem cổ điển */}
+          <mesh position={[0, 0, 0.01]}>
+            <planeGeometry args={[1.7, 0.6]} />
             <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
           </mesh>
-          <group ref={hotspotRef} position={[0, 0.02, 0.065]}>
+
+          {/* Nội dung thông tin trên bảng */}
+          {isNear && (
+            <Html
+              position={[0, 0, 0.015]}
+              center
+              transform
+              distanceFactor={2.5}
+              className="pointer-events-none select-none text-center"
+            >
+              <div className="w-[150px] text-slate-950 p-1 flex flex-col items-center gap-0.5 select-none font-sans">
+                <p className="text-[9px] font-bold truncate leading-tight w-full text-center text-slate-900">
+                  {language === 'vi' ? exhibit.title.vi : exhibit.title.en}
+                </p>
+                <p className="text-[7.5px] text-slate-700 italic truncate leading-none w-full text-center">
+                  {language === 'vi' ? exhibit.author.vi : exhibit.author.en}
+                </p>
+                <div className="mt-1 w-full bg-amber-600 text-white font-extrabold text-[8px] py-0.5 rounded text-center uppercase tracking-wider">
+                  {language === 'vi' ? 'Xem chi tiết' : 'View Details'}
+                </div>
+              </div>
+            </Html>
+          )}
+
+          {/* Hotspot nhấp nháy góc phải bảng để gây chú ý */}
+          <group ref={hotspotRef} position={[0.7, 0.22, 0.02]}>
             <mesh>
-              <circleGeometry args={[0.075, 28]} />
+              <circleGeometry args={[0.04, 16]} />
               <meshBasicMaterial color="#ef4444" transparent opacity={0.9} side={THREE.DoubleSide} />
             </mesh>
-            <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]}>
-              <ringGeometry args={[0.095, 0.125, 28]} />
+            <mesh position={[0, 0, 0.002]} scale={[1.5, 1.5, 1]}>
+              <ringGeometry args={[0.05, 0.07, 16]} />
               <meshBasicMaterial color="#f87171" transparent opacity={0.32} side={THREE.DoubleSide} />
-            </mesh>
-            <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]}>
-              <ringGeometry args={[0.13, 0.15, 28]} />
-              <meshBasicMaterial color="#fecaca" transparent opacity={0.16} side={THREE.DoubleSide} />
             </mesh>
           </group>
         </group>
@@ -480,7 +470,7 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({ exhibit, isVisible
         groupRef.current.getWorldPosition(worldPos);
         player.getWorldPosition(playerPos);
         const dist = worldPos.distanceTo(playerPos);
-        const near = dist < 5.0; // Khoảng cách 5 mét
+        const near = dist < 4.0; // Khoảng cách 4 mét
         if (near !== isNear) {
           setIsNear(near);
         }

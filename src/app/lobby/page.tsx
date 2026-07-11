@@ -168,12 +168,12 @@ const LobbyCameraController: React.FC = () => {
       minZ = 8.2;
       maxZ = 145.8;
     }
-    // Room 3 (gallery-ceramics): Z spans 108.0 to 138.0, W = 30 -> X from -15 to 15
-    else if (pz > 108.0 && pz <= 138.0) {
+    // Phòng 04 (gallery-ceramics): Z từ 146.0 đến 176.0, W = 30 -> X từ -15 đến 15
+    else if (pz > 146.0 && pz <= 176.0) {
       minX = -14.5;
       maxX = 14.5;
-      minZ = 108.2;
-      maxZ = 137.8;
+      minZ = 146.2;
+      maxZ = 175.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -559,7 +559,7 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-paintings');
     } else if (curPos.z > 100.0 && curPos.z <= 146.0) {
       setCurrentRoom('gallery-sculptures');
-    } else if (curPos.z > 108.0 && curPos.z <= 138.0) {
+    } else if (curPos.z > 146.0 && curPos.z <= 176.0) {
       setCurrentRoom('gallery-ceramics');
     }
 
@@ -723,6 +723,7 @@ export default function LobbyPage() {
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
       'gallery-sculptures': { id: 'gallery-sculptures', name: 'Phòng 03: Điêu khắc thế giới' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 04: Gốm sứ hội nhập' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });

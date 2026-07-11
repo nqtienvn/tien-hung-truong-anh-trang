@@ -25,9 +25,10 @@ export interface MultiplayerUser {
 // Vị trí spawn của các phòng trưng bày
 const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'lobby': { x: 0, y: 0, z: -5.0 },
-  'gallery-paintings': { x: 0, y: 3.0, z: 10.0 },
-  'gallery-sculptures': { x: 0, y: 3.0, z: 60.0 },
-  'gallery-ceramics': { x: 0, y: 3.0, z: 110.0 },
+  'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
+  'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
+  'gallery-sculptures': { x: 0, y: 3.0, z: 102.0 },
+  'gallery-ceramics': { x: 0, y: 3.0, z: 148.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -587,12 +588,14 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!socket || !socket.connected) return;
     if (!nickname || !activeGallery) return;
 
+    const spawn = SPAWN_POINTS[activeGallery.id] || { x: 0, y: 3.0, z: -5.0 };
+
     socket.emit('join-room', {
       nickname,
       galleryId: activeGallery.id,
-      x: localUserPos[0],
+      x: spawn.x,
       y: 0,
-      z: localUserPos[2],
+      z: spawn.z,
       yaw: localUserYaw,
     });
   }, [socket, nickname, activeGallery]);
