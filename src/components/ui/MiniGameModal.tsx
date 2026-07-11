@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Star, Handshake, Compass, Briefcase, Globe, Heart, RotateCcw, Trophy, AlertTriangle, GripVertical, Check, AlertCircle } from 'lucide-react';
+import { X, Star, Handshake, Compass, Briefcase, Globe, Heart, RotateCcw, Trophy, AlertTriangle, GripVertical, Check, AlertCircle, HelpCircle } from 'lucide-react';
 import { useMuseum } from '@/context/MuseumContext';
 
 const CARD_TEMPLATES = [
@@ -29,6 +29,7 @@ export const MiniGameModal: React.FC = () => {
 
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [showConfirm, setShowConfirm] = useState<boolean>(false);
 
   if (!miniGameOpen) return null;
 
@@ -70,18 +71,18 @@ export const MiniGameModal: React.FC = () => {
 
   return (
     <div className="absolute inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 select-none pointer-events-auto">
-      <div className="w-full max-w-[1100px] bg-slate-950/95 border border-slate-800 rounded-3xl p-10 shadow-2xl relative flex flex-col gap-8 overflow-hidden">
+      <div className="w-full max-w-[1100px] bg-slate-950/95 border border-slate-800 rounded-3xl p-6 md:p-8 shadow-2xl relative flex flex-col gap-5 md:gap-6 overflow-hidden">
         
         <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-cyan-500/10 blur-xl pointer-events-none" />
         <div className="absolute -bottom-12 -left-12 w-28 h-28 rounded-full bg-purple-500/10 blur-xl pointer-events-none" />
 
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-850 pb-5 z-10">
+        <div className="flex items-center justify-between border-b border-slate-850 pb-3.5 z-10">
           <div>
             <h2 className="text-xl font-black text-cyan-400 tracking-widest uppercase">
               {language === 'vi' ? 'DÒNG CHẢY LỊCH SỬ' : 'HISTORY FLOW'}
             </h2>
-            <p className="text-sm text-slate-550 font-semibold tracking-wider uppercase">
+            <p className="text-sm text-slate-400 font-semibold tracking-wider uppercase">
               {language === 'vi' ? 'Sắp xếp thứ tự thời gian' : 'Chronological sorting'}
             </p>
           </div>
@@ -95,16 +96,16 @@ export const MiniGameModal: React.FC = () => {
 
         {/* BỐ CỤC CHƠI GAME: 2 CỘT SONG SONG */}
         {gameState === 'playing' && (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 w-full items-stretch z-10 max-h-[70vh] md:max-h-none overflow-y-auto md:overflow-y-visible pr-1">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 w-full items-stretch z-10 max-h-[75vh] md:max-h-none overflow-y-auto md:overflow-y-visible pr-1">
             
             {/* Cột trái: Danh sách sự kiện kéo thả (Chiếm 7/12 chiều rộng) */}
-            <div className="md:col-span-7 flex flex-col justify-center gap-3.5">
-              <div className="flex justify-between text-xs font-bold text-slate-550 uppercase px-4 pb-1.5 border-b border-slate-900">
+            <div className="md:col-span-7 flex flex-col justify-center gap-2">
+              <div className="flex justify-between text-xs font-bold text-slate-400 uppercase px-4 pb-1.5 border-b border-slate-900">
                 <span>{language === 'vi' ? 'Sự kiện lịch sử' : 'Historical Event'}</span>
                 <span>{language === 'vi' ? 'Thứ tự (Sớm → Muộn)' : 'Timeline (Old → New)'}</span>
               </div>
 
-              <div className="flex flex-col gap-2.5 max-h-[500px] overflow-y-auto pr-1.5 custom-scrollbar">
+              <div className="flex flex-col gap-1.5 max-h-none md:max-h-[520px] overflow-y-auto pr-1.5 custom-scrollbar">
                 {orderedEvents.map((event, idx) => {
                   const template = getTemplate(event.iconId);
                   const IconComponent = template.Icon;
@@ -131,14 +132,14 @@ export const MiniGameModal: React.FC = () => {
                       onDragOver={(e) => handleDragOver(e, idx)}
                       onDrop={(e) => handleDrop(e, idx)}
                       onClick={() => handleItemClick(idx)}
-                      className={`flex items-center justify-between py-4 px-5 border rounded-2xl cursor-grab active:cursor-grabbing transition-all ${borderClass}`}
+                      className={`flex items-center justify-between py-1.5 px-4 border rounded-xl cursor-grab active:cursor-grabbing transition-all ${borderClass}`}
                     >
                       {/* Tiêu đề & Icon */}
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="text-slate-500 cursor-move pr-1">
                           <GripVertical size={20} />
                         </div>
-                        <div className="p-2.5 rounded-xl" style={{ backgroundColor: `${template.color}15` }}>
+                        <div className="p-1.5 rounded-lg" style={{ backgroundColor: `${template.color}15` }}>
                           <IconComponent size={22} color={template.color} />
                         </div>
                         <span className="text-sm text-slate-200 font-bold truncate pr-3">
@@ -159,7 +160,7 @@ export const MiniGameModal: React.FC = () => {
                             </span>
                           )
                         )}
-                        <span className="font-mono text-slate-400 text-xs font-black bg-slate-950 px-3.5 py-1.5 rounded-xl border border-slate-900">
+                        <span className="font-mono text-slate-400 text-xs font-black bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-900">
                           #{idx + 1}
                         </span>
                       </div>
@@ -171,7 +172,7 @@ export const MiniGameModal: React.FC = () => {
             </div>
 
             {/* Cột phải: Bảng thông tin & Luật chơi (Chiếm 5/12 chiều rộng) */}
-            <div className="md:col-span-5 flex flex-col justify-between bg-slate-900/40 border border-slate-900/80 p-6 rounded-2xl gap-6">
+            <div className="md:col-span-5 flex flex-col justify-between bg-slate-900/40 border border-slate-900/80 p-5 rounded-2xl gap-4">
               
               {/* Stats Dashboard */}
               <div className="flex flex-col gap-4 text-xs">
@@ -200,19 +201,14 @@ export const MiniGameModal: React.FC = () => {
                 </span>
                 <p className="leading-relaxed text-slate-300">
                   {language === 'vi'
-                    ? 'Kéo thả hoặc nhấn chọn lần lượt 2 ô để tráo đổi vị trí sao cho các sự kiện được xếp từ sớm nhất (trên cùng) đến muộn nhất (dưới cùng). Nhấn nút phía dưới để check kết quả.'
-                    : 'Drag & drop or click 2 cards to swap. Order events from earliest (top) to latest (bottom). Click verify to check.'}
-                </p>
-                <p className="text-[10px] text-rose-400 font-medium">
-                  {language === 'vi'
-                    ? '* Mỗi lượt check sai sẽ bị trừ 5 giây và 60 điểm!'
-                    : '* Each incorrect verification deducts 5s and 60 points!'}
+                    ? 'Kéo thả hoặc nhấn chọn lần lượt 2 ô để tráo đổi vị trí sao cho các sự kiện được xếp từ sớm nhất (trên cùng) đến muộn nhất (dưới cùng). Nhấn nút phía dưới để kết thúc và tính điểm.'
+                    : 'Drag & drop or click 2 cards to swap. Order events from earliest (top) to latest (bottom). Click the button below to finish and calculate score.'}
                 </p>
               </div>
 
               {/* Nút xác nhận kiểm tra */}
               <button
-                onClick={checkOrder}
+                onClick={() => setShowConfirm(true)}
                 className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-3 rounded-2xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/10 flex items-center justify-center gap-2"
               >
                 <Check size={16} strokeWidth={3} />
@@ -368,6 +364,48 @@ export const MiniGameModal: React.FC = () => {
               </div>
             </div>
 
+          </div>
+        )}
+
+        {/* Form xác nhận nộp bài */}
+        {showConfirm && (
+          <div className="absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="w-full max-w-[400px] bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5 text-center relative overflow-hidden">
+              <div className="absolute -top-12 -right-12 w-24 h-24 rounded-full bg-cyan-500/5 blur-xl pointer-events-none" />
+              
+              <div className="w-12 h-12 bg-cyan-500/10 text-cyan-400 rounded-full flex items-center justify-center border border-cyan-500/20 mx-auto">
+                <HelpCircle size={24} />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-white">
+                  {language === 'vi' ? 'XÁC NHẬN NỘP BÀI?' : 'CONFIRM SUBMISSION?'}
+                </h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed max-w-[280px] mx-auto">
+                  {language === 'vi' 
+                    ? 'Bạn có chắc chắn muốn nộp kết quả sắp xếp này? Lượt chơi sẽ kết thúc ngay lập tức.' 
+                    : 'Are you sure you want to submit your timeline? The game will end immediately.'}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 bg-slate-800 hover:bg-slate-750 text-slate-200 py-2.5 rounded-xl font-bold text-xs cursor-pointer transition-colors"
+                >
+                  {language === 'vi' ? 'Hủy' : 'Cancel'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowConfirm(false);
+                    checkOrder();
+                  }}
+                  className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/10"
+                >
+                  {language === 'vi' ? 'Xác nhận' : 'Confirm'}
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

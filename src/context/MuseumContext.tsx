@@ -308,7 +308,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const currentEvents = orderedEventsRef.current;
           const correctCount = currentEvents.filter((event, idx) => event.sortOrder === idx).length;
           const finalScore = correctCount * 10;
-          
+
           setScore(finalScore);
           setGameState('lost');
           socket?.emit('submit-score', { score: finalScore });
@@ -340,20 +340,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLastCheckResults(results);
 
     const correctCount = results.filter(r => r === true).length;
-    
-    if (correctCount === 9) {
-      // Đúng hết cả 9 câu -> 100 điểm
-      setScore(100);
-      setGameState('won');
-      socket?.emit('submit-score', { score: 100 });
-      socket?.emit('update-status', '');
-    } else {
-      // Không đúng hết -> mỗi câu đúng được 10 điểm
-      const currentScore = correctCount * 10;
-      setScore(currentScore);
-      // Phạt trừ 5 giây cho mỗi lần check sai thứ tự
-      setTimeLeft((prev) => Math.max(0, prev - 5));
-    }
+    const finalScore = correctCount === 9 ? 100 : correctCount * 10;
+
+    setScore(finalScore);
+    setGameState('won'); // Kết thúc game và chuyển thẳng sang màn hình kết quả luôn
+    socket?.emit('submit-score', { score: finalScore });
+    socket?.emit('update-status', '');
   }, [orderedEvents, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
