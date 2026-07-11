@@ -5,10 +5,11 @@ import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
 
 export interface GraphicsSettings {
-  preset: 'low' | 'medium';
+  preset: 'ultra-low' | 'low' | 'medium';
   shadows: boolean;
   animations: boolean;
   maxAvatars: number;
+  reducedLights: boolean;
 }
 
 export interface MultiplayerUser {
@@ -361,6 +362,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     shadows: false,
     animations: true,
     maxAvatars: 99,
+    reducedLights: false,
   });
 
   // Load settings from localStorage on mount
@@ -382,11 +384,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const getPresetSettings = (preset: GraphicsSettings['preset']) => {
     switch (preset) {
+      case 'ultra-low':
+        return { shadows: false, animations: false, maxAvatars: 0, reducedLights: true };
       case 'low':
-        return { shadows: false, animations: false, maxAvatars: 10 };
+        return { shadows: false, animations: false, maxAvatars: 10, reducedLights: false };
       case 'medium':
       default:
-        return { shadows: false, animations: true, maxAvatars: 99 };
+        return { shadows: false, animations: true, maxAvatars: 99, reducedLights: false };
     }
   };
 
@@ -599,9 +603,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [socket, nickname, activeGallery]);
 
-  // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình không phải 'low' và phòng đó đang bật
+  // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình là 'medium' và phòng đó đang bật
   useEffect(() => {
-    if (settings.preset === 'low') return;
+    if (settings.preset !== 'medium') return;
 
     const idleCallback = typeof window !== 'undefined'
       ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000)))

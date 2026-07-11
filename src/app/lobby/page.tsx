@@ -725,14 +725,14 @@ export default function LobbyPage() {
           <div className="w-full h-full">
             <Canvas
               shadows={false}
-              dpr={settings.preset === 'low' ? [0.5, 0.75] : [0.5, 2]}
-              gl={{ antialias: settings.preset !== 'low' }}
+              dpr={settings.preset === 'ultra-low' ? [0.3, 0.5] : settings.preset === 'low' ? [0.5, 1.0] : [0.5, 2]}
+              gl={{ antialias: settings.preset === 'medium' }}
               camera={{ position: [0, 3, -2], fov: 65 }}
             >
               <AdaptiveDpr pixelated />
               <AdaptiveEvents />
               <color attach="background" args={['#0d0d12']} />
-              <fog attach="fog" args={['#0d0d12', 30, 120]} />
+              <fog attach="fog" args={['#0d0d12', settings.preset === 'ultra-low' ? 10 : settings.preset === 'low' ? 20 : 30, settings.preset === 'ultra-low' ? 60 : settings.preset === 'low' ? 80 : 120]} />
 
               <Suspense fallback={null}>
                 {/* Sảnh bảo tàng */}
@@ -953,14 +953,15 @@ export default function LobbyPage() {
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                   {language === 'vi' ? 'Mức cấu hình đề xuất' : 'Graphics Quality Preset'}
                 </label>
-                <div className="grid grid-cols-2 gap-2 text-center">
-                  {(['low', 'medium'] as const).map((presetName) => (
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {(['ultra-low', 'low', 'medium'] as const).map((presetName) => (
                     <button
                       key={presetName}
                       type="button"
                       onClick={() => updatePreset(presetName)}
                       className={`text-[10px] font-black py-2.5 px-1 rounded-xl border transition-all cursor-pointer ${settings.preset === presetName ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/10' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-750'}`}
                     >
+                      {presetName === 'ultra-low' && (language === 'vi' ? 'Siêu Thấp' : 'Ultra Low')}
                       {presetName === 'low' && (language === 'vi' ? 'Thấp' : 'Low')}
                       {presetName === 'medium' && (language === 'vi' ? 'Trung Bình' : 'Medium')}
                     </button>
@@ -975,6 +976,11 @@ export default function LobbyPage() {
                 </span>
                 
                 <p className="text-[11px] text-slate-300 leading-relaxed min-h-[64px]">
+                  {settings.preset === 'ultra-low' && (
+                    language === 'vi' 
+                      ? '⚡ Tối ưu tối đa cho máy yếu. 🔦 Tắt toàn bộ đèn điểm (dùng đèn hướng). 📉 Độ phân giải cực thấp. 🚫 Ẩn tất cả người chơi khác. 🌫️ Sương mù gần hơn để giảm tải GPU.'
+                      : '⚡ Maximum optimization for weak devices. 🔦 All point lights disabled (directional only). 📉 Ultra-low resolution. 🚫 Hide all other players. 🌫️ Closer fog for GPU relief.'
+                  )}
                   {settings.preset === 'low' && (
                     language === 'vi' 
                       ? '♟️ Hiển thị hình quân cờ đơn giản. 🔒 Tắt đổ bóng. 🚶 Tắt vung tay chân. 👥 Chỉ hiện tối đa 10 người. Đảm bảo hoạt động mượt mà tuyệt đối trên mọi máy yếu.'

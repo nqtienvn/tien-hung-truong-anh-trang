@@ -26,7 +26,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   showPilasters = true,
   children 
 }) => {
-  const { activeGallery } = useMuseum();
+  const { activeGallery, settings } = useMuseum();
 
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
@@ -294,15 +294,28 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
       </group>
 
       {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - ÁNH SÁNG THỰC TẾ */}
-      {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
-        <pointLight 
-          key={`hall-light-source-${idx}`}
-          position={[0, roomHeight - 1.0, zPos]}
-          intensity={isVisible ? 4.5 : 0} 
-          distance={roomLength * 0.6} 
-          color="#fff1e0" 
+      {/* Ultra-low: chỉ dùng 1 directional light thay vì 5 point lights */}
+      {settings.reducedLights ? (
+        <directionalLight
+          position={[0, roomHeight - 1.0, 0]}
+          intensity={isVisible ? 2.5 : 0}
+          color="#fff1e0"
         />
-      ))}
+      ) : (
+        // Low: 2 point lights đủ sáng. Medium: 5 point lights đầy đủ.
+        (settings.preset === 'low'
+          ? [0, roomLength * 0.35]
+          : [-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4]
+        ).map((zPos, idx) => (
+          <pointLight 
+            key={`hall-light-source-${idx}`}
+            position={[0, roomHeight - 1.0, zPos]}
+            intensity={isVisible ? (settings.preset === 'low' ? 7.0 : 4.5) : 0} 
+            distance={roomLength * (settings.preset === 'low' ? 0.9 : 0.6)} 
+            color="#fff1e0" 
+          />
+        ))
+      )}
     </group>
   );
 };

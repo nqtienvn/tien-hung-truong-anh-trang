@@ -1,5 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
+import { useMuseum } from '@/context/MuseumContext';
 
 /**
  * MuseumLobby - Không gian Sảnh Bảo tàng 3D
@@ -9,6 +10,7 @@ import * as THREE from 'three';
  * Hệ trục: X [-15, 15], Z [-10, 10], Y [0, 12]
  */
 export const MuseumLobby: React.FC = () => {
+  const { settings } = useMuseum();
   const W = 30;   // Chiều rộng (trục X)
   const L = 20;   // Chiều dài (trục Z)
   const H = 12;   // Chiều cao (trục Y)
@@ -637,11 +639,11 @@ export const MuseumLobby: React.FC = () => {
       />
 
       {/* Ánh sáng từ trên xuống (giếng trời) */}
-      <directionalLight position={[0, 12, 0]} intensity={0.5} color="#fff8f0" />
+      <directionalLight position={[0, 12, 0]} intensity={settings.reducedLights ? 1.5 : 0.5} color="#fff8f0" />
 
-      {/* Hàng đèn spotlight gắn trên trần */}
-      {Array.from({ length: 10 }).map((_, i) => {
-        const x = -13 + i * 3;
+      {/* Hàng đèn spotlight gắn trên trần — giảm số lượng theo preset */}
+      {!settings.reducedLights && Array.from({ length: settings.preset === 'low' ? 4 : 10 }).map((_, i) => {
+        const x = settings.preset === 'low' ? (-9 + i * 6) : (-13 + i * 3);
         return (
           <group key={`spotlight-${i}`}>
             {/* Thân đèn */}
@@ -656,16 +658,16 @@ export const MuseumLobby: React.FC = () => {
             </mesh>
             <pointLight
               position={[x, H - 0.6, -2]}
-              intensity={3.5}
-              distance={14}
+              intensity={settings.preset === 'low' ? 5.0 : 3.5}
+              distance={settings.preset === 'low' ? 20 : 14}
               color="#fff1e0"
             />
           </group>
         );
       })}
 
-      {/* Hàng đèn spotlight thứ 2 (giữa sảnh) */}
-      {Array.from({ length: 8 }).map((_, i) => {
+      {/* Hàng đèn spotlight thứ 2 (giữa sảnh) — bỏ hoàn toàn ở low/ultra-low */}
+      {settings.preset === 'medium' && Array.from({ length: 8 }).map((_, i) => {
         const x = -10.5 + i * 3;
         return (
           <group key={`spotlight2-${i}`}>
@@ -687,13 +689,21 @@ export const MuseumLobby: React.FC = () => {
         );
       })}
 
-      {/* Ánh sáng xanh nhạt từ tường kính */}
-      <pointLight position={[-14, 6, 0]} intensity={2.5} distance={22} color="#a8d8ea" />
-      <pointLight position={[-14, 3, -5]} intensity={1.5} distance={15} color="#a8d8ea" />
+      {/* Ánh sáng xanh nhạt từ tường kính — bỏ ở ultra-low */}
+      {!settings.reducedLights && (
+        <>
+          <pointLight position={[-14, 6, 0]} intensity={2.5} distance={22} color="#a8d8ea" />
+          <pointLight position={[-14, 3, -5]} intensity={1.5} distance={15} color="#a8d8ea" />
+        </>
+      )}
 
-      {/* Ánh sáng ấm khu vực lễ tân */}
-      <pointLight position={[10.5, 3.5, -3]} intensity={2.0} distance={10} color="#ffd54f" />
-      <pointLight position={[10.5, 3.5, 0]} intensity={1.5} distance={8} color="#ffd54f" />
+      {/* Ánh sáng ấm khu vực lễ tân — bỏ ở ultra-low */}
+      {!settings.reducedLights && (
+        <>
+          <pointLight position={[10.5, 3.5, -3]} intensity={2.0} distance={10} color="#ffd54f" />
+          <pointLight position={[10.5, 3.5, 0]} intensity={1.5} distance={8} color="#ffd54f" />
+        </>
+      )}
     </group>
   );
 };
