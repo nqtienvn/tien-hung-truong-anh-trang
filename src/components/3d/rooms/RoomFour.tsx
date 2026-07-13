@@ -253,7 +253,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
         </group>
 
         {/* HTML Label */}
-        <Html position={[0, 1.7, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 1.7, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-red-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
             <p className="text-[8px] font-black text-red-400 uppercase tracking-wider">Viettel</p>
             <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế Nhà nước' : 'State Sector'}</p>
@@ -324,7 +324,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
         </group>
 
         {/* HTML Label */}
-        <Html position={[0, 1.7, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 1.7, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-sky-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
             <p className="text-[8px] font-black text-sky-400 uppercase tracking-wider">VinFast</p>
             <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế Tư nhân' : 'Private Sector'}</p>
@@ -388,7 +388,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
         </group>
 
         {/* HTML Label */}
-        <Html position={[0, 1.7, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 1.7, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
             <p className="text-[8px] font-black text-blue-400 uppercase tracking-wider">Samsung</p>
             <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế FDI' : 'FDI Sector'}</p>
@@ -413,21 +413,58 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
           </mesh>
           <PaintingMesh url={item.imageUrl} />
 
-          {/* Description Plate */}
-          <mesh position={[0, -1.4, 0.02]}>
-            <planeGeometry args={[1.8, 0.75]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-          </mesh>
-          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                {language === 'vi' ? item.titleVi : item.titleEn}
-              </h4>
-              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
-                {language === 'vi' ? item.descVi : item.descEn}
-              </p>
-            </div>
-          </Html>
+          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+          <group
+            position={[0, -1.65, 0.35]}
+            rotation={[-Math.PI / 10, 0, 0]}
+          >
+            {/* Trụ chân trái */}
+            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Trụ chân phải */}
+            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Hộp đế gỗ gắn dưới đất */}
+            <mesh position={[0, -0.62, -0.28]}>
+              <boxGeometry args={[1.25, 0.08, 0.34]} />
+              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+            </mesh>
+            {/* Tấm ốp gỗ sau bảng nhãn */}
+            <mesh position={[0, 0, -0.015]}>
+              <boxGeometry args={[1.9, 0.72, 0.05]} />
+              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+            </mesh>
+            {/* Tấm giấy nhãn màu vàng kem sáng */}
+            <mesh position={[0, 0, 0.02]}>
+              <boxGeometry args={[1.74, 0.56, 0.035]} />
+              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+            </mesh>
+
+            <Html
+              position={[0, 0.02, 0.04]}
+              center
+              transform
+              occlude
+              distanceFactor={2.4}
+              className="pointer-events-none select-none text-center font-sans"
+            >
+              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                  {language === 'vi' ? item.titleVi : item.titleEn}
+                </p>
+                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                  {language === 'vi' ? item.descVi : item.descEn}
+                </p>
+                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                </p>
+              </div>
+            </Html>
+          </group>
         </group>
       ))}
     </group>
@@ -698,7 +735,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <sphereGeometry args={[0.18, 16, 16]} />
           <meshStandardMaterial color="#7c2d12" roughness={0.6} />
         </mesh>
-        <Html position={[0, 2.1, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 2.1, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-amber-600/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
             <p className="text-[8px] font-black text-amber-500 uppercase tracking-wider">{isVi ? 'Cà phê' : 'Coffee'}</p>
             <p className="text-[7px] text-slate-200 font-bold">{prices.coffee.toLocaleString()}k {isVi ? 'đ/kg' : 'VND/kg'}</p>
@@ -716,7 +753,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <boxGeometry args={[0.3, 0.12, 0.15]} />
           <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} />
         </mesh>
-        <Html position={[0, 2.55, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 2.55, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-yellow-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
             <p className="text-[8px] font-black text-yellow-400 uppercase tracking-wider">{isVi ? 'Thỏi vàng' : 'Gold Bar'}</p>
             <p className="text-[7px] text-slate-200 font-bold">{prices.gold} {isVi ? 'tr/lượng' : 'M VND/tael'}</p>
@@ -734,7 +771,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           <dodecahedronGeometry args={[0.18, 1]} />
           <meshStandardMaterial color="#84cc16" roughness={0.7} bumpScale={0.1} />
         </mesh>
-        <Html position={[0, 2.1, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 2.1, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-lime-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
             <p className="text-[8px] font-black text-lime-400 uppercase tracking-wider">{isVi ? 'Sầu riêng' : 'Durian'}</p>
             <p className="text-[7px] text-slate-200 font-bold">{prices.durian.toLocaleString()}k {isVi ? 'đ/kg' : 'VND/kg'}</p>
@@ -759,21 +796,58 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           </mesh>
           <PaintingMesh url={item.imageUrl} />
 
-          {/* Description Plate */}
-          <mesh position={[0, -1.4, 0.02]}>
-            <planeGeometry args={[1.8, 0.75]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-          </mesh>
-          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                {language === 'vi' ? item.titleVi : item.titleEn}
-              </h4>
-              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
-                {language === 'vi' ? item.descVi : item.descEn}
-              </p>
-            </div>
-          </Html>
+          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+          <group
+            position={[0, -1.65, 0.35]}
+            rotation={[-Math.PI / 10, 0, 0]}
+          >
+            {/* Trụ chân trái */}
+            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Trụ chân phải */}
+            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Hộp đế gỗ gắn dưới đất */}
+            <mesh position={[0, -0.62, -0.28]}>
+              <boxGeometry args={[1.25, 0.08, 0.34]} />
+              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+            </mesh>
+            {/* Tấm ốp gỗ sau bảng nhãn */}
+            <mesh position={[0, 0, -0.015]}>
+              <boxGeometry args={[1.9, 0.72, 0.05]} />
+              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+            </mesh>
+            {/* Tấm giấy nhãn màu vàng kem sáng */}
+            <mesh position={[0, 0, 0.02]}>
+              <boxGeometry args={[1.74, 0.56, 0.035]} />
+              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+            </mesh>
+
+            <Html
+              position={[0, 0.02, 0.04]}
+              center
+              transform
+              occlude
+              distanceFactor={2.4}
+              className="pointer-events-none select-none text-center font-sans"
+            >
+              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                  {language === 'vi' ? item.titleVi : item.titleEn}
+                </p>
+                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                  {language === 'vi' ? item.descVi : item.descEn}
+                </p>
+                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                </p>
+              </div>
+            </Html>
+          </group>
         </group>
       ))}
     </group>
@@ -1093,7 +1167,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
           <meshStandardMaterial color="#f8fafc" roughness={0.6} />
         </mesh>
         {/* Label */}
-        <Html position={[0, 0.3, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 0.3, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-0.5 rounded text-[6.5px] font-black text-blue-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
             {isVi ? 'Luật Doanh nghiệp' : 'Enterprise Law'}
           </div>
@@ -1110,7 +1184,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
           <boxGeometry args={[0.24, 0.33, 0.05]} />
           <meshStandardMaterial color="#f8fafc" roughness={0.6} />
         </mesh>
-        <Html position={[0, 0.3, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 0.3, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-red-500/30 px-2 py-0.5 rounded text-[6.5px] font-black text-red-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
             {isVi ? 'Luật Thuế' : 'Tax Law'}
           </div>
@@ -1127,7 +1201,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
           <boxGeometry args={[0.28, 0.2, 0.04]} />
           <meshStandardMaterial color="#f8fafc" roughness={0.6} />
         </mesh>
-        <Html position={[0, 0.25, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 0.25, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-amber-600/30 px-2 py-0.5 rounded text-[6.5px] font-black text-amber-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
             {isVi ? 'Hiến pháp' : 'Constitution'}
           </div>
@@ -1151,21 +1225,58 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
           </mesh>
           <PaintingMesh url={item.imageUrl} />
 
-          {/* Description Plate */}
-          <mesh position={[0, -1.4, 0.02]}>
-            <planeGeometry args={[1.8, 0.75]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-          </mesh>
-          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                {language === 'vi' ? item.titleVi : item.titleEn}
-              </h4>
-              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
-                {language === 'vi' ? item.descVi : item.descEn}
-              </p>
-            </div>
-          </Html>
+          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+          <group
+            position={[0, -1.65, 0.35]}
+            rotation={[-Math.PI / 10, 0, 0]}
+          >
+            {/* Trụ chân trái */}
+            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Trụ chân phải */}
+            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Hộp đế gỗ gắn dưới đất */}
+            <mesh position={[0, -0.62, -0.28]}>
+              <boxGeometry args={[1.25, 0.08, 0.34]} />
+              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+            </mesh>
+            {/* Tấm ốp gỗ sau bảng nhãn */}
+            <mesh position={[0, 0, -0.015]}>
+              <boxGeometry args={[1.9, 0.72, 0.05]} />
+              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+            </mesh>
+            {/* Tấm giấy nhãn màu vàng kem sáng */}
+            <mesh position={[0, 0, 0.02]}>
+              <boxGeometry args={[1.74, 0.56, 0.035]} />
+              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+            </mesh>
+
+            <Html
+              position={[0, 0.02, 0.04]}
+              center
+              transform
+              occlude
+              distanceFactor={2.4}
+              className="pointer-events-none select-none text-center font-sans"
+            >
+              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                  {language === 'vi' ? item.titleVi : item.titleEn}
+                </p>
+                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                  {language === 'vi' ? item.descVi : item.descEn}
+                </p>
+                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                </p>
+              </div>
+            </Html>
+          </group>
         </group>
       ))}
     </group>
@@ -1386,7 +1497,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
         </mesh>
 
         {/* Chip card graphic */}
-        <Html transform distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
+        <Html transform occlude distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
           <div className="w-[145px] h-[95px] rounded-lg bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-950 p-2 border border-blue-500/20 text-white flex flex-col justify-between font-sans shadow-inner select-none">
             <div className="flex justify-between items-start">
               <span className="text-[14px]">🏥</span>
@@ -1425,7 +1536,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
         </mesh>
 
         {/* Disaster relief graphic */}
-        <Html transform distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
+        <Html transform occlude distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
           <div className="w-[145px] h-[95px] rounded-lg bg-gradient-to-br from-amber-900 via-orange-900 to-amber-950 p-2 border border-orange-500/20 text-white flex flex-col justify-between font-sans shadow-inner select-none">
             <div className="flex justify-between items-start">
               <span className="text-[14px]">🤝</span>
@@ -1464,7 +1575,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
         </mesh>
 
         {/* Education support graphic */}
-        <Html transform distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
+        <Html transform occlude distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
           <div className="w-[145px] h-[95px] rounded-lg bg-gradient-to-br from-yellow-900 via-amber-800 to-yellow-950 p-2 border border-yellow-500/20 text-white flex flex-col justify-between font-sans shadow-inner select-none">
             <div className="flex justify-between items-start">
               <span className="text-[14px]">☀️</span>
@@ -1501,21 +1612,58 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
           </mesh>
           <PaintingMesh url={item.imageUrl} />
 
-          {/* Description Plate */}
-          <mesh position={[0, -1.4, 0.02]}>
-            <planeGeometry args={[1.8, 0.75]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-          </mesh>
-          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                {language === 'vi' ? item.titleVi : item.titleEn}
-              </h4>
-              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
-                {language === 'vi' ? item.descVi : item.descEn}
-              </p>
-            </div>
-          </Html>
+          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+          <group
+            position={[0, -1.65, 0.35]}
+            rotation={[-Math.PI / 10, 0, 0]}
+          >
+            {/* Trụ chân trái */}
+            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Trụ chân phải */}
+            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Hộp đế gỗ gắn dưới đất */}
+            <mesh position={[0, -0.62, -0.28]}>
+              <boxGeometry args={[1.25, 0.08, 0.34]} />
+              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+            </mesh>
+            {/* Tấm ốp gỗ sau bảng nhãn */}
+            <mesh position={[0, 0, -0.015]}>
+              <boxGeometry args={[1.9, 0.72, 0.05]} />
+              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+            </mesh>
+            {/* Tấm giấy nhãn màu vàng kem sáng */}
+            <mesh position={[0, 0, 0.02]}>
+              <boxGeometry args={[1.74, 0.56, 0.035]} />
+              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+            </mesh>
+
+            <Html
+              position={[0, 0.02, 0.04]}
+              center
+              transform
+              occlude
+              distanceFactor={2.4}
+              className="pointer-events-none select-none text-center font-sans"
+            >
+              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                  {language === 'vi' ? item.titleVi : item.titleEn}
+                </p>
+                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                  {language === 'vi' ? item.descVi : item.descEn}
+                </p>
+                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                </p>
+              </div>
+            </Html>
+          </group>
         </group>
       ))}
     </group>
@@ -1815,7 +1963,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
           <cylinderGeometry args={[0.08, 0.08, 0.005, 16]} />
           <meshBasicMaterial color="#eab308" />
         </mesh>
-        <Html position={[0, 0.24, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 0.24, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-0.5 rounded text-[6px] font-black text-blue-400 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
             ASEAN
           </div>
@@ -1828,7 +1976,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
           <boxGeometry args={[0.26, 0.26, 0.05]} />
           <meshStandardMaterial color="#0f766e" roughness={0.3} />
         </mesh>
-        <Html position={[0, 0.24, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 0.24, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-teal-500/30 px-2 py-0.5 rounded text-[6px] font-black text-teal-400 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
             WTO
           </div>
@@ -1847,7 +1995,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
           <boxGeometry args={[0.2, 0.2, 0.005]} />
           <meshStandardMaterial color="#3b82f6" metalness={0.9} />
         </mesh>
-        <Html position={[0, 0.24, 0]} center distanceFactor={6} className="pointer-events-none select-none">
+        <Html position={[0, 0.24, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
           <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-0.5 rounded text-[6px] font-black text-blue-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
             INTEL (FDI)
           </div>
@@ -1871,21 +2019,58 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
           </mesh>
           <PaintingMesh url={item.imageUrl} />
 
-          {/* Description Plate */}
-          <mesh position={[0, -1.4, 0.02]}>
-            <planeGeometry args={[1.8, 0.75]} />
-            <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-          </mesh>
-          <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-            <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-              <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                {language === 'vi' ? item.titleVi : item.titleEn}
-              </h4>
-              <p className="text-[6.5px] leading-normal text-slate-600 font-medium">
-                {language === 'vi' ? item.descVi : item.descEn}
-              </p>
-            </div>
-          </Html>
+          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+          <group
+            position={[0, -1.65, 0.35]}
+            rotation={[-Math.PI / 10, 0, 0]}
+          >
+            {/* Trụ chân trái */}
+            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Trụ chân phải */}
+            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+            </mesh>
+            {/* Hộp đế gỗ gắn dưới đất */}
+            <mesh position={[0, -0.62, -0.28]}>
+              <boxGeometry args={[1.25, 0.08, 0.34]} />
+              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+            </mesh>
+            {/* Tấm ốp gỗ sau bảng nhãn */}
+            <mesh position={[0, 0, -0.015]}>
+              <boxGeometry args={[1.9, 0.72, 0.05]} />
+              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+            </mesh>
+            {/* Tấm giấy nhãn màu vàng kem sáng */}
+            <mesh position={[0, 0, 0.02]}>
+              <boxGeometry args={[1.74, 0.56, 0.035]} />
+              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+            </mesh>
+
+            <Html
+              position={[0, 0.02, 0.04]}
+              center
+              transform
+              occlude
+              distanceFactor={2.4}
+              className="pointer-events-none select-none text-center font-sans"
+            >
+              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                  {language === 'vi' ? item.titleVi : item.titleEn}
+                </p>
+                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                  {language === 'vi' ? item.descVi : item.descEn}
+                </p>
+                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                </p>
+              </div>
+            </Html>
+          </group>
         </group>
       ))}
     </group>
@@ -2089,7 +2274,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 
       {/* NPC speech bubble (HTML overlay) */}
       {showBubble ? (
-        <Html position={[0, textureUrl ? 2.4 : 1.8, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-auto select-none">
+        <Html position={[0, textureUrl ? 2.4 : 1.8, 0]} center occlude distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-auto select-none">
           <div
             onClick={handleNpcClick}
             className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md cursor-pointer"
@@ -2107,7 +2292,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
           </div>
         </Html>
       ) : (
-        <Html position={[0, textureUrl ? 2.2 : 1.7, 0]} center distanceFactor={8} className="pointer-events-auto select-none">
+        <Html position={[0, textureUrl ? 2.2 : 1.7, 0]} center occlude distanceFactor={8} className="pointer-events-auto select-none">
           <div
             onClick={handleNpcClick}
             className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none cursor-pointer"

@@ -237,7 +237,7 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
 
       {/* Thought-provoking popup */}
       {showGuide ? (
-        <Html position={[0, 2.1, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
+        <Html position={[0, 2.1, 0]} center occlude distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
           <div
             className="w-[300px] bg-slate-950/97 border border-violet-500/40 px-5 py-4 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
             style={{ boxShadow: '0 0 32px #a78bfa40', zIndex: 9999, position: 'relative' }}
@@ -265,7 +265,7 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
           </div>
         </Html>
       ) : (
-        <Html position={[0, 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+        <Html position={[0, 1.7, 0]} center occlude distanceFactor={8} className="pointer-events-none select-none">
           <div
             className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none"
             style={{
@@ -557,21 +557,58 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
               </mesh>
               <PaintingMesh url={item.left.imageUrl} />
 
-              {/* Bảng nhãn thông tin dán trên tường dưới khung tranh */}
-              <mesh position={[0, -1.4, 0.02]}>
-                <planeGeometry args={[1.8, 0.75]} />
-                <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-              </mesh>
-              <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-                <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-                  <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                    {language === 'vi' ? item.left.titleVi : item.left.titleEn}
-                  </h4>
-                  <p className="text-[7px] leading-normal text-slate-600 font-medium">
-                    {language === 'vi' ? item.left.descVi : item.left.descEn}
-                  </p>
-                </div>
-              </Html>
+              {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+              <group
+                position={[0, -1.65, 0.35]}
+                rotation={[-Math.PI / 10, 0, 0]}
+              >
+                {/* Trụ chân trái */}
+                <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+                  <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+                </mesh>
+                {/* Trụ chân phải */}
+                <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+                  <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+                </mesh>
+                {/* Hộp đế gỗ gắn dưới đất */}
+                <mesh position={[0, -0.62, -0.28]}>
+                  <boxGeometry args={[1.25, 0.08, 0.34]} />
+                  <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+                </mesh>
+                {/* Tấm ốp gỗ sau bảng nhãn */}
+                <mesh position={[0, 0, -0.015]}>
+                  <boxGeometry args={[1.9, 0.72, 0.05]} />
+                  <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+                </mesh>
+                {/* Tấm giấy nhãn màu vàng kem sáng */}
+                <mesh position={[0, 0, 0.02]}>
+                  <boxGeometry args={[1.74, 0.56, 0.035]} />
+                  <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+                </mesh>
+
+                <Html
+                  position={[0, 0.02, 0.04]}
+                  center
+                  transform
+                  occlude
+                  distanceFactor={2.4}
+                  className="pointer-events-none select-none text-center font-sans"
+                >
+                  <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                    <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                      {language === 'vi' ? item.left.titleVi : item.left.titleEn}
+                    </p>
+                    <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                      {language === 'vi' ? item.left.descVi : item.left.descEn}
+                    </p>
+                    <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                      {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                    </p>
+                  </div>
+                </Html>
+              </group>
             </group>
 
             {/* Ảnh tường Phải */}
@@ -588,21 +625,58 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
               </mesh>
               <PaintingMesh url={item.right.imageUrl} />
 
-              {/* Bảng nhãn thông tin dán trên tường dưới khung tranh */}
-              <mesh position={[0, -1.4, 0.02]}>
-                <planeGeometry args={[1.8, 0.75]} />
-                <meshStandardMaterial color="#f8fafc" roughness={0.4} metalness={0.1} />
-              </mesh>
-              <Html position={[0, -1.4, 0.03]} center distanceFactor={8}>
-                <div className="w-[160px] bg-slate-50/90 border border-slate-300 p-2 rounded shadow-md select-none text-center">
-                  <h4 className="text-[9px] font-extrabold text-slate-800 uppercase tracking-wide mb-1 leading-tight">
-                    {language === 'vi' ? item.right.titleVi : item.right.titleEn}
-                  </h4>
-                  <p className="text-[7px] leading-normal text-slate-600 font-medium">
-                    {language === 'vi' ? item.right.descVi : item.right.descEn}
-                  </p>
-                </div>
-              </Html>
+              {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
+              <group
+                position={[0, -1.65, 0.35]}
+                rotation={[-Math.PI / 10, 0, 0]}
+              >
+                {/* Trụ chân trái */}
+                <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+                  <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+                </mesh>
+                {/* Trụ chân phải */}
+                <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
+                  <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
+                </mesh>
+                {/* Hộp đế gỗ gắn dưới đất */}
+                <mesh position={[0, -0.62, -0.28]}>
+                  <boxGeometry args={[1.25, 0.08, 0.34]} />
+                  <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
+                </mesh>
+                {/* Tấm ốp gỗ sau bảng nhãn */}
+                <mesh position={[0, 0, -0.015]}>
+                  <boxGeometry args={[1.9, 0.72, 0.05]} />
+                  <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
+                </mesh>
+                {/* Tấm giấy nhãn màu vàng kem sáng */}
+                <mesh position={[0, 0, 0.02]}>
+                  <boxGeometry args={[1.74, 0.56, 0.035]} />
+                  <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
+                </mesh>
+
+                <Html
+                  position={[0, 0.02, 0.04]}
+                  center
+                  transform
+                  occlude
+                  distanceFactor={2.4}
+                  className="pointer-events-none select-none text-center font-sans"
+                >
+                  <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
+                    <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
+                      {language === 'vi' ? item.right.titleVi : item.right.titleEn}
+                    </p>
+                    <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
+                      {language === 'vi' ? item.right.descVi : item.right.descEn}
+                    </p>
+                    <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
+                      {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
+                    </p>
+                  </div>
+                </Html>
+              </group>
             </group>
           </group>
         ))}

@@ -333,6 +333,7 @@ const PaintingComponent: React.FC<{
               position={[0, 0.02, 0.03]}
               center
               transform
+              occlude
               distanceFactor={2.4}
               className="pointer-events-none select-none text-center font-sans"
             >
