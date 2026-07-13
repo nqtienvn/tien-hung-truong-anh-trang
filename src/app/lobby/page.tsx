@@ -89,7 +89,7 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const { doorStates } = useMuseum();
+  const { doorStates, activeGallery } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
@@ -243,7 +243,14 @@ const LobbyCameraController: React.FC = () => {
     // Tính toán độ cao sàn nhà thực tế tại vị trí camera để kẹp độ cao tối thiểu
     const groundYAtCam = getLobbyGroundY(camX, camZ, doorStates);
     const minCamY = groundYAtCam + 0.45;
-    const camY = Math.max(minCamY, Math.min(LOBBY_H + 5, targetHeight + yOff));
+
+    // Giới hạn camera không vượt quá trần nhà để chống nhìn xuyên trần
+    let maxCamY = LOBBY_H - 0.5; // Sảnh mặc định 11.5m
+    if (camZ > 8.0) {
+      const activeRoomHeight = activeGallery?.room_height ?? 6.0;
+      maxCamY = 3.0 + activeRoomHeight - 0.5;
+    }
+    const camY = Math.max(minCamY, Math.min(maxCamY, targetHeight + yOff));
 
     targetCamPos.set(camX, camY, camZ);
 
