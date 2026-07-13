@@ -58,11 +58,11 @@ const closingTimers = {};
 // Cấu trúc: { [roomId]: { isOpen: boolean } }
 // ═══════════════════════════════════════════════════════════════════════════
 const roomStates = {
-  'gallery-subsidy': { isOpen: true },
-  'gallery-paintings': { isOpen: true },
-  'gallery-sculptures': { isOpen: true },
-  'gallery-ceramics': { isOpen: true },
-  'gallery-market-economy': { isOpen: true }
+  'gallery-subsidy': { isOpen: false },
+  'gallery-paintings': { isOpen: false },
+  'gallery-sculptures': { isOpen: false },
+  'gallery-ceramics': { isOpen: false },
+  'gallery-market-economy': { isOpen: false }
 };
 
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)

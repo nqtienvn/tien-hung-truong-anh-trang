@@ -1,4 +1,6 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { ExhibitionRoom } from './ExhibitionRoom';
 import { ExhibitObject } from './ExhibitObject';
 import { LoadedRoom } from '@/context/MuseumContext';
@@ -44,7 +46,34 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
 
 export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
   const { galleryId, exhibits, gallery } = room;
-  console.log(`[DynamicRoom] Render room ${galleryId}, exhibits count: ${exhibits?.length || 0}, isVisible: ${isVisible}`);
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
+  useFrame((state) => {
+    if (!groupRef.current) return;
+
+    if (!isVisible) {
+      if (groupRef.current.visible) groupRef.current.visible = false;
+      return;
+    }
+
+    const player = state.scene.getObjectByName('lobby-player');
+    if (player) {
+      const playerZ = player.position.z;
+      const roomZ = offsetZ;
+      const dist = Math.abs(playerZ - roomZ);
+
+      // Nếu người chơi ở khoảng cách > 75 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
+      // ta ẩn phòng đi để giảm thiểu tối đa số lệnh vẽ (draw calls) và số lượng đỉnh đa giác.
+      const shouldBeVisible = dist < 75.0;
+      if (groupRef.current.visible !== shouldBeVisible) {
+        groupRef.current.visible = shouldBeVisible;
+        console.log(`[LOD-CULLING] Phòng "${galleryId}" chuyển trạng thái visible = ${shouldBeVisible}`);
+      }
+    } else {
+      if (!groupRef.current.visible) groupRef.current.visible = true;
+    }
+  });
 
   // Build custom settings từ gallery data
   const customSettings = gallery ? {
@@ -58,7 +87,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
   } : undefined;
 
   return (
-    <group position={[0, offsetY, offsetZ]}>
+    <group ref={groupRef} position={[0, offsetY, offsetZ]}>
       <Suspense fallback={null}>
         {/* Phòng triển lãm */}
         <ExhibitionRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} />
