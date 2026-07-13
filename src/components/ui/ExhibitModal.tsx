@@ -142,6 +142,18 @@ const GAMEPLAY_DICTIONARY: Record<string, GameplayData> = {
   }
 };
 
+const CERAMIC_EVENTS_MAP: Record<string, { vi: string; en: string }> = {
+  'vn-left-1': { vi: 'Đại hội VI - Đổi mới', en: '6th Party Congress - Doi Moi' },
+  'vn-left-2': { vi: 'Khoán 10', en: 'Resolution 10 (Khoan 10)' },
+  'vn-left-3': { vi: 'Việt Nam rút quân khỏi Campuchia', en: 'Withdrawal from Cambodia' },
+  'vn-right-1': { vi: 'Việt Nam trở thành nước xuất khẩu gạo', en: 'VN becomes a major rice exporter' },
+  'vn-back-left': { vi: 'Liên Xô tan rã', en: 'Soviet Union dissolution' },
+  'vn-right-2': { vi: 'Hoa Kỳ bãi bỏ cấm vận', en: 'US lifts trade embargo' },
+  'vn-right-3': { vi: 'Bình thường hóa quan hệ Việt Nam – Hoa Kỳ', en: 'Normalization of US-VN relations' },
+  'vn-door-left': { vi: 'Việt Nam gia nhập ASEAN', en: 'VN joins ASEAN' },
+  'vn-door-right': { vi: 'Nhật thực toàn phần tại Việt Nam', en: 'Total solar eclipse in Vietnam' }
+};
+
 export const ExhibitModal: React.FC = () => {
   const {
     selectedExhibit,
@@ -157,12 +169,17 @@ export const ExhibitModal: React.FC = () => {
     cluesCollected,
     addClue,
     activeGallery,
-    exhibitModalMode
+    exhibitModalMode,
+    collectedCeramics,
+    addCeramic
   } = useMuseum();
 
   // --- States cho Audio thuyết minh mặc định ---
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(150);
+  // --- States cho phòng gốm sứ (gallery-ceramics) ---
+  const isCeramicsRoom = activeGallery?.id === 'gallery-ceramics';
+  const [ceramicsCountdown, setCeramicsCountdown] = useState(10);
 
   // --- States cho Gameplay Bao cấp (gallery-subsidy) ---
   const isSubsidyRoom = activeGallery?.id === 'gallery-subsidy';
@@ -185,6 +202,10 @@ export const ExhibitModal: React.FC = () => {
       const length = selectedExhibit.id.length * 7 + 80;
       setAudioDuration(length);
 
+      if (isCeramicsRoom) {
+        setCeramicsCountdown(10);
+      }
+
       if (isSubsidyRoom && gameData) {
         if (exhibitModalMode === 'info') {
           setGameState('info');
@@ -205,7 +226,17 @@ export const ExhibitModal: React.FC = () => {
         }
       }
     }
-  }, [selectedExhibit, cluesCollected, isSubsidyRoom, gameData, exhibitModalMode, setAudioPlaying]);
+  }, [selectedExhibit, cluesCollected, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, setAudioPlaying]);
+
+  // Bộ đếm ngược 10 giây cho phòng gốm sứ
+  useEffect(() => {
+    if (isCeramicsRoom && selectedExhibit && !collectedCeramics.includes(selectedExhibit.id) && ceramicsCountdown > 0) {
+      const timer = setTimeout(() => {
+        setCeramicsCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCeramicsRoom, selectedExhibit, collectedCeramics, ceramicsCountdown]);
 
   // Bộ đếm ngược thời gian quan sát hiện vật
   useEffect(() => {
@@ -294,7 +325,6 @@ export const ExhibitModal: React.FC = () => {
 
   const handleCollectClue = () => {
     addClue(selectedExhibit.id);
-    confetti({ particleCount: 50, spread: 60 });
     setSelectedExhibit(null); // Đóng modal sau khi thu thập
   };
   return (
@@ -671,6 +701,42 @@ export const ExhibitModal: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                )}
+
+                {/* Nút thu thập tranh cho phòng gốm sứ */}
+                {activeGallery?.id === 'gallery-ceramics' && selectedExhibit.id !== 'vn-back-right' && (
+                  !collectedCeramics.includes(selectedExhibit.id) ? (
+                    <button
+                      disabled={ceramicsCountdown > 0}
+                      onClick={() => {
+                        addCeramic(selectedExhibit.id);
+                      }}
+                      className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 uppercase font-sans tracking-widest text-xs mt-4 ${
+                        ceramicsCountdown > 0
+                          ? 'bg-slate-850 text-slate-500 cursor-not-allowed border border-slate-800'
+                          : 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer active:scale-95'
+                      }`}
+                    >
+                      <Save size={16} />
+                      {language === 'vi' 
+                        ? (ceramicsCountdown > 0 ? `Thu thập dữ kiện (${ceramicsCountdown}s)` : 'Thu thập dữ kiện') 
+                        : (ceramicsCountdown > 0 ? `Collect Evidence (${ceramicsCountdown}s)` : 'Collect Evidence')}
+                    </button>
+                  ) : (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400 mt-4">
+                      <span className="text-xl">🖼️</span>
+                      <div>
+                        <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">
+                          {language === 'vi' ? 'Đã thu thập dữ kiện' : 'Evidence Collected'}
+                        </span>
+                        <span className="text-xs font-semibold leading-relaxed font-sans">
+                          {language === 'vi' 
+                            ? `Đã lưu: ${CERAMIC_EVENTS_MAP[selectedExhibit.id]?.vi || 'Dữ kiện'}` 
+                            : `Saved: ${CERAMIC_EVENTS_MAP[selectedExhibit.id]?.en || 'Evidence'}`}
+                        </span>
+                      </div>
+                    </div>
+                  )
                 )}
               </>
             )}

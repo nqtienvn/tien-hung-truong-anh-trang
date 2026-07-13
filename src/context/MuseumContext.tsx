@@ -115,6 +115,8 @@ interface MuseumContextType {
   addClue: (clueId: string) => void;
   setRoomOneCompleted: (completed: boolean) => void;
   resetRoomOne: () => void;
+  collectedCeramics: string[];
+  addCeramic: (id: string) => void;
 }
 
 export interface GameEvent {
@@ -182,6 +184,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // --- Gameplay States ---
   const [cluesCollected, setCluesCollected] = useState<string[]>([]);
   const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
+  const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
 
   // Sync gameplay progress theo từng người chơi (nickname)
   useEffect(() => {
@@ -242,16 +245,61 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [cluesCollected, nickname]);
 
+  // Sync Room 3 gameplay progress (collectedCeramics)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!nickname) {
+      setCollectedCeramics([]);
+      return;
+    }
+
+    const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
+    const savedProgress = localStorage.getItem(progressKey);
+
+    if (!savedProgress) {
+      setCollectedCeramics([]);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedProgress) as {
+        collectedCeramics?: string[];
+      };
+      setCollectedCeramics(Array.isArray(parsed.collectedCeramics) ? parsed.collectedCeramics : []);
+    } catch (e) {
+      console.error('Lỗi phân tích tiến trình Room 3:', e);
+      setCollectedCeramics([]);
+    }
+  }, [nickname]);
+
+  const addCeramic = useCallback((ceramicId: string) => {
+    setCollectedCeramics((prev) => {
+      if (prev.includes(ceramicId)) return prev;
+      const updated = [...prev, ceramicId];
+      if (typeof window !== 'undefined' && nickname) {
+        const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
+        localStorage.setItem(progressKey, JSON.stringify({
+          collectedCeramics: updated,
+        }));
+      }
+      return updated;
+    });
+  }, [nickname]);
+
   const resetRoomOne = useCallback(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
+    setCollectedCeramics([]);
     if (typeof window !== 'undefined') {
       if (nickname) {
         localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
+        localStorage.removeItem(`roomThreeProgress:${nickname.trim().toLowerCase()}`);
       }
       // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
+      localStorage.removeItem('collectedCeramics');
     }
   }, [nickname]);
 
@@ -311,7 +359,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
           setScore(finalScore);
           setGameState('lost');
-          socket?.emit('submit-score', { score: finalScore });
+          socket?.emit('submit-score', { score: finalScore, timeSpent: 180 });
           socket?.emit('update-status', '');
           return 0;
         }
@@ -342,11 +390,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const correctCount = results.filter(r => r === true).length;
     const finalScore = correctCount === 9 ? 100 : correctCount * 10;
 
+    const timeSpent = 180 - timeLeft;
+
     setScore(finalScore);
     setGameState('won'); // Kết thúc game và chuyển thẳng sang màn hình kết quả luôn
-    socket?.emit('submit-score', { score: finalScore });
+    socket?.emit('submit-score', { score: finalScore, timeSpent });
     socket?.emit('update-status', '');
-  }, [orderedEvents, socket]);
+  }, [orderedEvents, timeLeft, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
     preset: 'medium',
@@ -741,6 +791,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addClue,
         setRoomOneCompleted: handleSetRoomOneCompleted,
         resetRoomOne,
+        collectedCeramics,
+        addCeramic,
       }}
     >
       {children}

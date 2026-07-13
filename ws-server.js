@@ -134,18 +134,33 @@ io.on('connection', (socket) => {
     leaderboard.push({
       nickname: user.nickname,
       score: data.score,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: data.timeSpent !== undefined ? `${data.timeSpent}s` : '180s'
     });
 
-    // Sắp xếp giảm dần và giữ lại top 10
-    leaderboard.sort((a, b) => b.score - a.score);
+    // Sắp xếp giảm dần theo điểm và tăng dần theo thời gian (giây) làm bài
+    leaderboard.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      const aSec = parseInt(a.time) || 180;
+      const bSec = parseInt(b.time) || 180;
+      return aSec - bSec;
+    });
+
     if (leaderboard.length > 10) {
       leaderboard.splice(10);
     }
 
+    // Ghi bảng xếp hạng mới vào file để lưu trữ lâu dài
+    try {
+      fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2), 'utf8');
+    } catch (e) {
+      console.error('Lỗi khi ghi file leaderboard.json:', e);
+    }
+
     // Phát sóng bảng xếp hạng mới nhất cho mọi người
     io.emit('leaderboard-updated', leaderboard);
-    console.log(`[LEADERBOARD] ${user.nickname} gửi điểm: ${data.score}. Bảng xếp hạng đã cập nhật.`);
+    console.log(`[LEADERBOARD] ${user.nickname} gửi điểm: ${data.score}, thời gian: ${data.timeSpent}s. Bảng xếp hạng đã cập nhật.`);
   });
 
   // 1. Khi người chơi tham gia phòng

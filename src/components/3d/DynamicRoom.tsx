@@ -26,12 +26,12 @@ interface DynamicRoomProps {
 //   center = 8 + 46/2 = 31  →  offset = 31, spans Z 8..54
 // Phòng 2: bắt đầu Z=54  →  center = 54 + 23 = 77,  spans Z 54..100
 // Phòng 3: bắt đầu Z=100 →  center = 100 + 23 = 123, spans Z 100..146
-// Phòng 4: bắt đầu Z=146 →  center = 146 + 15 = 161, spans Z 146..176
+// Phòng 3: bắt đầu Z=146 →  center = 146 + 15 = 161, spans Z 146..176
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
   'gallery-paintings': { z: 77.0, y: 3.0 },    // Phòng 2: Hội họa   (Z 54 → 100)
   'gallery-sculptures': { z: 123.0, y: 3.0 },  // Phòng 3: Điêu khắc (Z 100 → 146)
-  'gallery-ceramics': { z: 161.0, y: 3.0 },    // Phòng 4: Gốm sứ    (Z 146 → 176)
+  'gallery-ceramics': { z: 161.0, y: 3.0 },    // Phòng 3: Gốm sứ    (Z 146 → 176)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
@@ -39,7 +39,7 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-subsidy': [0, 3.0, 10.0],           // Spawn gần cửa vào phòng 1 (Z=10)
   'gallery-paintings': [0, 3.0, 56.0],          // Spawn gần cửa vào phòng 2 (Z=56)
   'gallery-sculptures': [0, 3.0, 102.0],         // Spawn gần cửa vào phòng 3 (Z=102)
-  'gallery-ceramics': [0, 3.0, 148.0],          // Spawn gần cửa vào phòng 4 (Z=148)
+  'gallery-ceramics': [0, 3.0, 148.0],          // Spawn gần cửa vào phòng 3 (Z=148)
   'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh
 };
 

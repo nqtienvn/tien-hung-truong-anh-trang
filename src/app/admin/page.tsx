@@ -11,7 +11,7 @@ const DOOR_CONFIGS = [
   { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Phòng 01: Bao cấp', color: 'amber' },
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Phòng 02: Hội họa', color: 'cyan' },
   { doorId: 'door-room3', targetRoom: 'gallery-sculptures', label: 'Phòng 03: Điêu khắc', color: 'emerald' },
-  { doorId: 'door-room4', targetRoom: 'gallery-ceramics', label: 'Phòng 04: Gốm sứ', color: 'rose' },
+  { doorId: 'door-room4', targetRoom: 'gallery-ceramics', label: 'Phòng 03: Gốm sứ', color: 'rose' },
 ];
 
 interface DoorState {
@@ -340,7 +340,7 @@ export default function AdminDashboard() {
                 { id: 'gallery-subsidy', name: 'Phòng 01: Bao Cấp Việt Nam', desc: 'Thời kỳ kinh tế bao cấp (1976-1985)' },
                 { id: 'gallery-paintings', name: 'Phòng 02: Tranh Hội Họa', desc: 'Trưng bày bộ sưu tập tranh hội họa 2D' },
                 { id: 'gallery-sculptures', name: 'Phòng 03: Điêu Khắc 3D', desc: 'Trưng bày các mô hình tượng điêu khắc 3D' },
-                { id: 'gallery-ceramics', name: 'Phòng 04: Gốm Sứ Hội Nhập', desc: 'Không gian trưng bày gốm sứ & hành trình hội nhập kinh tế' },
+                { id: 'gallery-ceramics', name: 'Phòng 03: Gốm Sứ Hội Nhập', desc: 'Không gian trưng bày gốm sứ & hành trình hội nhập kinh tế' },
               ].map((room) => {
                 const isRoomOpen = roomStates[room.id]?.isOpen ?? true;
                 const isLoading = roomLoading === room.id;

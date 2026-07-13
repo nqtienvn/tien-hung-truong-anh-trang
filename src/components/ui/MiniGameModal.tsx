@@ -152,7 +152,7 @@ export const MiniGameModal: React.FC = () => {
                         {isChecked && (
                           isCorrect ? (
                             <span className="text-xs font-bold font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20 flex items-center gap-1.5">
-                              <Check size={12} strokeWidth={3} /> {event.year}
+                              <Check size={12} strokeWidth={3} />
                             </span>
                           ) : (
                             <span className="text-xs font-bold font-mono text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20 flex items-center gap-1.5">
@@ -178,10 +178,10 @@ export const MiniGameModal: React.FC = () => {
               <div className="flex flex-col gap-4 text-xs">
                 <div className="flex justify-between items-center py-2.5 border-b border-slate-850">
                   <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">
-                    {language === 'vi' ? 'Thời gian' : 'Time Left'}
+                    {language === 'vi' ? 'Thời gian làm bài' : 'Time Spent'}
                   </span>
-                  <span className={`font-mono text-2xl font-black tracking-tight ${timeLeft <= 15 ? 'text-rose-500 animate-pulse' : 'text-slate-200'}`}>
-                    {timeLeft}s
+                  <span className="font-mono text-2xl font-black tracking-tight text-slate-200">
+                    {180 - timeLeft}s
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2.5">
@@ -242,9 +242,16 @@ export const MiniGameModal: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-slate-900/60 border border-slate-900/80 p-3.5 rounded-2xl w-full flex justify-between items-center text-xs">
-                <span className="text-slate-400 font-medium">{language === 'vi' ? 'Điểm của bạn' : 'Final Score'}</span>
-                <span className="font-mono text-xl font-black text-amber-400 tracking-tight">{score}</span>
+              <div className="bg-slate-900/60 border border-slate-900/80 p-3.5 rounded-2xl w-full flex flex-col gap-2.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-medium">{language === 'vi' ? 'Điểm của bạn' : 'Final Score'}</span>
+                  <span className="font-mono text-xl font-black text-amber-400 tracking-tight">{score}</span>
+                </div>
+                <div className="h-px bg-slate-800/80 w-full" />
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-medium">{language === 'vi' ? 'Thời gian làm bài' : 'Time Spent'}</span>
+                  <span className="font-mono text-lg font-bold text-slate-200 tracking-tight">{180 - timeLeft}s</span>
+                </div>
               </div>
 
               <div className="flex gap-2 w-full pt-1">
@@ -315,9 +322,16 @@ export const MiniGameModal: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-slate-900/60 border border-slate-900/80 p-3.5 rounded-2xl w-full flex justify-between items-center text-xs">
-                <span className="text-slate-400 font-medium">{language === 'vi' ? 'Điểm của bạn' : 'Final Score'}</span>
-                <span className="font-mono text-xl font-black text-amber-400 tracking-tight">{score} / 100</span>
+              <div className="bg-slate-900/60 border border-slate-900/80 p-3.5 rounded-2xl w-full flex flex-col gap-2.5 text-xs">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-medium">{language === 'vi' ? 'Điểm của bạn' : 'Final Score'}</span>
+                  <span className="font-mono text-xl font-black text-amber-400 tracking-tight">{score} / 100</span>
+                </div>
+                <div className="h-px bg-slate-800/80 w-full" />
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-medium">{language === 'vi' ? 'Thời gian làm bài' : 'Time Spent'}</span>
+                  <span className="font-mono text-lg font-bold text-slate-200 tracking-tight">180s</span>
+                </div>
               </div>
 
               <div className="flex gap-2 w-full pt-1">
