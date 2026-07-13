@@ -369,11 +369,11 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [orderedEvents, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
-    preset: 'medium',
+    preset: 'ultra-low',
     shadows: false,
-    animations: true,
-    maxAvatars: 99,
-    reducedLights: false,
+    animations: false,
+    maxAvatars: 0,
+    reducedLights: true,
   });
 
   // Load settings from localStorage on mount
