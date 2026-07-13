@@ -47,6 +47,7 @@ export default function GalleryPage({ params }: PageProps) {
 
   // Trạng thái Form Nhập biệt danh tại cổng phòng
   const [inputNickname, setInputNickname] = useState('');
+  const [inputPassword, setInputPassword] = useState('');
   const [inputError, setInputError] = useState('');
   const [roomStats, setRoomStats] = useState<{ activeCount: number; limit: number } | null>(null);
 
@@ -164,11 +165,15 @@ export default function GalleryPage({ params }: PageProps) {
     setChatInput('');
   };
 
-  // Xác nhận tham gia phòng sau khi nhập biệt danh
+  // Xác nhận tham gia phòng sau khi nhập biệt danh và mật khẩu
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputNickname.trim()) {
       setInputError(language === 'vi' ? 'Vui lòng nhập biệt danh của bạn!' : 'Please enter your nickname!');
+      return;
+    }
+    if (inputPassword !== 'sjkc21jdx2k23') {
+      setInputError(language === 'vi' ? 'Mật khẩu phòng không chính xác!' : 'Incorrect room password!');
       return;
     }
     setInputError('');
@@ -444,6 +449,19 @@ export default function GalleryPage({ params }: PageProps) {
                   onChange={(e) => setInputNickname(e.target.value)}
                   placeholder={language === 'vi' ? 'Ví dụ: Nghệ Sĩ Trẻ...' : 'E.g., Explorer...'}
                   maxLength={20}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#725b29]/50 transition-colors text-sm font-semibold"
+                />
+              </div>
+
+              <div className="space-y-1.5 text-left">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  {language === 'vi' ? 'Mật khẩu phòng' : 'Room Password'}
+                </label>
+                <input
+                  type="password"
+                  value={inputPassword}
+                  onChange={(e) => setInputPassword(e.target.value)}
+                  placeholder={language === 'vi' ? 'Nhập mật khẩu phòng...' : 'Enter room password...'}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-[#725b29]/50 transition-colors text-sm font-semibold"
                 />
               </div>
