@@ -258,17 +258,17 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           ))}
         </group>
 
-        {/* Màn hình LED lớn treo 2 bên vách sân khấu trình chiếu nội dung slide */}
-        {[-5.0, 5.0].map((zPos, idx) => (
-          <group key={`led-${idx}`} position={[-1.7, 3.2, zPos]} rotation={[0, idx === 0 ? 0.3 : -0.3, 0]}>
+        {/* Màn hình LED phẳng khổng lồ ốp sát vách gỗ sau sân khấu (trình chiếu slide) ở 2 bên trái phải */}
+        {[-5.25, 5.25].map((zPos, idx) => (
+          <group key={`led-wall-${idx}`} position={[-1.81, 2.7, zPos]} rotation={[0, Math.PI / 2, 0]}>
             {/* Khung viền màn hình */}
             <mesh>
-              <boxGeometry args={[0.1, 2.4, 3.8]} />
+              <boxGeometry args={[4.3, 3.9, 0.03]} />
               <meshStandardMaterial color="#1e293b" roughness={0.8} metalness={0.5} />
             </mesh>
             {/* Tấm nền hiển thị slide */}
-            <mesh position={[0.06, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-              <planeGeometry args={[3.7, 2.3]} />
+            <mesh position={[0, 0, 0.02]}>
+              <planeGeometry args={[4.2, 3.8]} />
               <meshBasicMaterial map={slideTexture || undefined} color={slideTexture ? "#ffffff" : "#0284c7"} />
             </mesh>
           </group>
