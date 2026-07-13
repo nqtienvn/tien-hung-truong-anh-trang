@@ -205,7 +205,12 @@ const LobbyCameraController: React.FC = () => {
     const pz = player.position.z;
     const targetHeight = py + 0.6;
 
-    const idealDist = 5.5;
+    // Khi zoom, thu nhỏ khoảng cách camera về 0 (góc nhìn thứ nhất) để không bị cản bởi đầu nhân vật
+    const idealDist = isZooming.current ? 0.0 : 5.5;
+
+    // Ẩn người chơi nếu camera zoom lại gần (dưới 2 mét) để tránh hiện tượng xuyên mặt/đầu nhân vật
+    const camToPlayerDist = camera.position.distanceTo(player.position);
+    player.visible = !isZooming.current || (camToPlayerDist > 1.8);
 
     const xOff = idealDist * Math.sin(theta.current) * Math.sin(phi.current);
     const yOff = idealDist * Math.cos(phi.current);
@@ -241,7 +246,16 @@ const LobbyCameraController: React.FC = () => {
     const camY = Math.max(minCamY, Math.min(LOBBY_H + 5, targetHeight + yOff));
 
     targetCamPos.set(camX, camY, camZ);
-    targetLookAt.set(px, targetHeight, pz);
+
+    // Khi zoom, hướng nhìn của camera sẽ nhìn thẳng ra phía trước tầm nhìn thay vì nhìn vào đầu nhân vật
+    if (isZooming.current) {
+      const lookAtX = px - 10 * Math.sin(theta.current) * Math.sin(phi.current);
+      const lookAtY = targetHeight - 10 * Math.cos(phi.current);
+      const lookAtZ = pz - 10 * Math.cos(theta.current) * Math.sin(phi.current);
+      targetLookAt.set(lookAtX, lookAtY, lookAtZ);
+    } else {
+      targetLookAt.set(px, targetHeight, pz);
+    }
 
     camera.position.lerp(targetCamPos, 0.12);
     camera.lookAt(targetLookAt);
