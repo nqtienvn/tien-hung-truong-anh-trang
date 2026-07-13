@@ -305,8 +305,8 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           ))}
         </group>
 
-        {/* Màn hình LED phẳng khổng lồ đặt trước cột tường bên cạnh sân khấu (Z local = -11.0m và 11.0m) */}
-        {[-11.0, 11.0].map((zPos, idx) => (
+        {/* Màn hình LED phẳng khổng lồ đặt trước cột tường bên cạnh sân khấu (Z local = -12.5m và 12.5m) */}
+        {[-12.5, 12.5].map((zPos, idx) => (
           <group
             key={`led-wall-${idx}`}
             position={[-1.64, 3.5, zPos]}
