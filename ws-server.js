@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Giới hạn số người tham quan đồng thời tối đa trong một phòng
-const MAX_USERS_PER_ROOM = 30;
+const MAX_USERS_PER_ROOM = 65;
 
 // Lưu trữ thông tin người chơi trực tuyến trong bộ nhớ
 // Cấu trúc: { [socketId]: { id, nickname, galleryId, x, y, z, yaw } }
@@ -13,6 +13,26 @@ const activeUsers = {};
 // Lưu trữ danh sách socket ID xếp hàng chờ cho từng phòng
 // Cấu trúc: { [socketRoom]: [socketId1, socketId2, ...] }
 const waitingQueues = {};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BATCH BROADCAST — Gom vị trí dirty, flush 10Hz thay vì broadcast từng cái
+// Giảm outbound messages từ ~33,000/s → ~6,500/s cho 65 người
+// ═══════════════════════════════════════════════════════════════════════════
+const dirtyUsers = new Set(); // Tập hợp socketId có vị trí thay đổi
+
+setInterval(() => {
+  if (dirtyUsers.size === 0) return;
+  // Gom tất cả user dirty thành 1 mảng
+  const batch = [];
+  for (const sid of dirtyUsers) {
+    if (activeUsers[sid]) batch.push(activeUsers[sid]);
+  }
+  dirtyUsers.clear();
+  if (batch.length > 0) {
+    // Gửi 1 lần duy nhất thay vì N lần riêng lẻ
+    io.to('museum-unified').emit('users-batch-moved', batch);
+  }
+}, 100); // 10Hz flush
 
 // Lưu trữ bảng xếp hạng game gốm sứ trong file/bộ nhớ
 const LEADERBOARD_FILE = path.join(__dirname, 'leaderboard.json');
@@ -98,8 +118,16 @@ const server = http.createServer((req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: '*', // Cho phép kết nối từ mọi client (nhất là localhost:3000)
+    origin: '*',
     methods: ['GET', 'POST']
+  },
+  // Tối ưu cho 65 người — giảm băng thông, tăng độ ổn định
+  pingInterval: 25000,   // 25s thay vì 25s mặc định
+  pingTimeout: 20000,    // 20s timeout
+  transports: ['websocket'], // Bỏ polling, chỉ dùng WebSocket thuần
+  perMessageDeflate: {
+    threshold: 256,      // Nén payload > 256 bytes (batch ~65 users = ~3KB)
+    zlibDeflateOptions: { level: 1 }, // Nén nhanh, ít CPU nhất
   }
 });
 
@@ -241,9 +269,8 @@ io.on('connection', (socket) => {
       user.galleryId = 'gallery-market-economy';
     }
 
-    const socketRoom = getSocketRoom(user.galleryId);
-    // Phát sóng tọa độ mới cho những người dùng khác trong phòng
-    socket.to(socketRoom).emit('user-moved', user);
+    // Đánh dấu user này là dirty — sẽ được batch-broadcast sau 100ms
+    dirtyUsers.add(socket.id);
   });
 
   // 2.5. Khi người chơi hoàn thành minigame và cập nhật điểm số

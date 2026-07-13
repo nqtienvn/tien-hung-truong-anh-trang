@@ -369,11 +369,11 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [orderedEvents, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
-    preset: 'ultra-low',
+    preset: 'low',
     shadows: false,
     animations: false,
-    maxAvatars: 0,
-    reducedLights: true,
+    maxAvatars: 10,    // Chỉ render 10 avatar gần nhất — đủ thấy nhau, không lag GPU
+    reducedLights: false,
   });
 
   // Load settings from localStorage on mount
@@ -568,6 +568,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('user-moved', (user: MultiplayerUser) => {
       otherUsersPositions.current[user.id] = user;
+    });
+
+    // Batch handler — nhận tất cả vị trí thay đổi trong 1 event (10Hz flush từ server)
+    newSocket.on('users-batch-moved', (users: MultiplayerUser[]) => {
+      for (const user of users) {
+        otherUsersPositions.current[user.id] = user;
+      }
     });
 
     newSocket.on('user-left', (userId: string) => {
