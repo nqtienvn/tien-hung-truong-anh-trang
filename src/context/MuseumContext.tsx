@@ -147,6 +147,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [otherUsers, setOtherUsers] = useState<MultiplayerUser[]>([]);
   const otherUsersPositions = React.useRef<Record<string, MultiplayerUser>>({});
+  const hasJoinedRef = React.useRef<boolean>(false);
+  const loadedRoomIdsRef = React.useRef<Set<string>>(new Set());
   const [socket, setSocket] = useState<Socket | null>(null);
   const [localUserPos, setLocalUserPos] = useState<[number, number, number]>([0, 1.7, 5]);
   const [localUserYaw, setLocalUserYaw] = useState<number>(0);
@@ -429,6 +431,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // TẢI PHÒNG ĐỘNG KHI CỬA MỞ (Dynamic Room Loading)
   // ═══════════════════════════════════════════════════════════════════════════
   const loadRoom = useCallback(async (galleryId: string) => {
+    if (loadedRoomIdsRef.current.has(galleryId)) return;
+    loadedRoomIdsRef.current.add(galleryId);
+
     try {
       const [galleriesRes, exhibitsRes] = await Promise.all([
         fetch('/api/galleries'),
@@ -446,11 +451,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return [...prev, { galleryId, exhibits, gallery }];
       });
     } catch (err) {
+      loadedRoomIdsRef.current.delete(galleryId);
       console.error(`[ROOM-LOAD-ERROR] Lỗi tải phòng "${galleryId}":`, err);
     }
   }, []);
 
   const unloadRoom = useCallback((galleryId: string) => {
+    loadedRoomIdsRef.current.delete(galleryId);
     setLoadedRooms(prev => prev.filter(r => r.galleryId !== galleryId));
     console.log(`[ROOM-UNLOADED] Phòng "${galleryId}" đã được dỡ bỏ.`);
   }, []);
@@ -468,6 +475,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect', () => {
       console.log('Đã kết nối Socket.io server:', newSocket.id);
+      hasJoinedRef.current = false;
     });
 
     // ── Door Events ──
@@ -528,6 +536,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         return prevRoom;
       });
+    });
+
+    newSocket.on('admin:teleported-by-force', (data: { targetRoom: string; spawnPos: { x: number; y: number; z: number } }) => {
+      setCurrentRoom(data.targetRoom);
+      setTeleportTarget(data.spawnPos);
+      console.log(`[ADMIN-TELEPORT] Bạn đã bị admin dịch chuyển bắt buộc sang phòng "${data.targetRoom}" tại tọa độ:`, data.spawnPos);
     });
 
     // ── Multiplayer Events ──
@@ -604,22 +618,25 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
-  // Join room khi có nickname + activeGallery
+  // Join room khi có nickname (chỉ join một lần duy nhất lúc khởi động/kết nối)
   useEffect(() => {
     if (!socket || !socket.connected) return;
-    if (!nickname || !activeGallery) return;
+    if (!nickname) return;
+    if (hasJoinedRef.current) return;
 
-    const spawn = SPAWN_POINTS[activeGallery.id] || { x: 0, y: 3.0, z: -5.0 };
+    hasJoinedRef.current = true;
+    const initialRoomId = activeGallery?.id || 'lobby';
+    const spawn = SPAWN_POINTS[initialRoomId] || { x: 0, y: 3.0, z: -5.0 };
 
     socket.emit('join-room', {
       nickname,
-      galleryId: activeGallery.id,
+      galleryId: initialRoomId,
       x: spawn.x,
       y: 0,
       z: spawn.z,
       yaw: localUserYaw,
     });
-  }, [socket, nickname, activeGallery]);
+  }, [socket, nickname, activeGallery?.id]);
 
   // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình là 'medium' và phòng đó đang bật
   useEffect(() => {

@@ -183,6 +183,21 @@ export default function AdminDashboard() {
     adminSocket.emit('admin:toggle-room', { roomId, isOpen: !currentOpen });
   };
 
+  const handleTeleportAll = (targetRoom: string) => {
+    if (!adminSocket) return;
+    const roomName = targetRoom === 'lobby' 
+      ? 'Sảnh chờ' 
+      : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
+      : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
+      : targetRoom === 'gallery-ceramics' ? 'Phòng 03 (Đồ gốm sứ)' 
+      : 'Phòng 04 (Kinh tế thị trường)';
+
+    const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
+    if (window.confirm(confirmMsg)) {
+      adminSocket.emit('admin:teleport-all', { targetRoom });
+    }
+  };
+
   useEffect(() => {
     if (!isAuthorized) return;
 
@@ -403,24 +418,37 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleToggleRoom(roomId, isRoomOpen)}
-            disabled={isLoading || (isRoomOpen && hasOpenDoor)}
-            className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              isRoomOpen
-                ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed'
-                : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
-            }`}
-            title={isRoomOpen && hasOpenDoor ? 'Vui lòng đóng các cửa liên quan trước khi tắt phòng' : ''}
-          >
-            {isLoading ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Power size={12} />
+          <div className="flex items-center gap-2">
+            {isRoomOpen && (
+              <button
+                type="button"
+                onClick={() => handleTeleportAll(roomId)}
+                className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+              >
+                <Compass size={12} />
+                Dịch chuyển mọi người
+              </button>
             )}
-            {isRoomOpen ? 'Tắt phòng' : 'Bật phòng'}
-          </button>
+
+            <button
+              type="button"
+              onClick={() => handleToggleRoom(roomId, isRoomOpen)}
+              disabled={isLoading || (isRoomOpen && hasOpenDoor)}
+              className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                isRoomOpen
+                  ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed'
+                  : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
+              }`}
+              title={isRoomOpen && hasOpenDoor ? 'Vui lòng đóng các cửa liên quan trước khi tắt phòng' : ''}
+            >
+              {isLoading ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Power size={12} />
+              )}
+              {isRoomOpen ? 'Tắt phòng' : 'Bật phòng'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -570,9 +598,19 @@ export default function AdminDashboard() {
                   <p className="text-[10px] text-slate-500 mt-1">Khu vực trung tâm đón tiếp khách tham quan</p>
                 </div>
               </div>
-              <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
-                Mặc định bật
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleTeleportAll('lobby')}
+                  className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+                >
+                  <Compass size={12} />
+                  Dịch chuyển mọi người
+                </button>
+                <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
+                  Mặc định bật
+                </span>
+              </div>
             </div>
 
             {/* 2. CỬA 1 */}

@@ -454,6 +454,42 @@ io.on('connection', (socket) => {
     }
   });
 
+  // 6.5. ADMIN: TELEPORT TOÀN BỘ NGƯỜI CHƠI SANG PHÒNG ĐÍCH
+  socket.on('admin:teleport-all', (data) => {
+    const { targetRoom } = data;
+    console.log(`[ADMIN] Yêu cầu teleport toàn bộ người chơi sang phòng: "${targetRoom}"`);
+
+    // Kiểm tra xem phòng đích có đang bật không
+    if (targetRoom !== 'lobby' && (!roomStates[targetRoom] || !roomStates[targetRoom].isOpen)) {
+      socket.emit('admin:error', { message: 'Không thể dịch chuyển mọi người tới phòng đang tắt!' });
+      return;
+    }
+
+    let spawnPos = { x: 0, y: 0, z: -5.0 }; // lobby mặc định
+    if (targetRoom === 'gallery-subsidy') spawnPos = { x: 0, y: 3.0, z: 10.0 };
+    else if (targetRoom === 'gallery-paintings') spawnPos = { x: 0, y: 3.0, z: 56.0 };
+    else if (targetRoom === 'gallery-ceramics') spawnPos = { x: 0, y: 3.0, z: 102.0 };
+    else if (targetRoom === 'gallery-market-economy') spawnPos = { x: 0, y: 3.0, z: 133.0 };
+
+    let count = 0;
+    Object.keys(activeUsers).forEach(sid => {
+      const u = activeUsers[sid];
+      if (u.galleryId !== targetRoom) {
+        u.galleryId = targetRoom;
+        u.x = spawnPos.x;
+        u.y = spawnPos.y;
+        u.z = spawnPos.z;
+        
+        io.to(sid).emit('admin:teleported-by-force', { targetRoom, spawnPos });
+        count++;
+      }
+    });
+
+    // Cập nhật lại danh sách toàn bộ người chơi cho phòng để đồng bộ client
+    io.emit('users-list', Object.values(activeUsers));
+    console.log(`[ADMIN] Đã ép buộc dịch chuyển ${count} người chơi sang "${targetRoom}"`);
+  });
+
   // 7. Khi người chơi ngắt kết nối
   socket.on('disconnect', () => {
     // A. Nếu người dùng ngắt kết nối khi đang xếp hàng chờ
