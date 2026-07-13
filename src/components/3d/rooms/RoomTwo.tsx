@@ -71,7 +71,7 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
   const roomHeight =
     customSettings?.room_height ?? activeGallery?.room_height ?? 6;
 
-  // Tạo texture trình chiếu slide bài học Lịch sử Đảng / Triết học MLN122 bằng Canvas 2D
+  // Tạo texture trình chiếu slide bài học bằng Canvas 2D
   const slideTexture = useMemo(() => {
     if (typeof window === "undefined") return null;
     const canvas = document.createElement("canvas");
@@ -79,90 +79,38 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
     canvas.height = 768;
     const ctx = canvas.getContext("2d");
     if (ctx) {
-      // Phông nền chuyển sắc đỏ đậm và xanh tối cực sang trọng
-      const grad = ctx.createLinearGradient(0, 0, 1024, 768);
-      grad.addColorStop(0, "#111827");
-      grad.addColorStop(0.5, "#7f1d1d");
-      grad.addColorStop(1, "#111827");
-      ctx.fillStyle = grad;
+      // Phông nền trắng tinh tế
+      ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, 1024, 768);
 
-      // Viền mạ vàng
-      ctx.strokeStyle = "#d4af37";
-      ctx.lineWidth = 10;
-      ctx.strokeRect(15, 15, 994, 738);
-
-      // Các họa tiết tia sáng mờ chéo nghệ thuật
-      ctx.strokeStyle = "rgba(212, 175, 55, 0.08)";
+      // Viền kép đen lịch sự, chuyên nghiệp
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 12;
+      ctx.strokeRect(20, 20, 984, 728);
+      ctx.strokeStyle = "#475569";
       ctx.lineWidth = 2;
-      for (let i = 50; i < 1000; i += 50) {
-        ctx.beginPath();
-        ctx.moveTo(i, 20);
-        ctx.lineTo(i, 748);
-        ctx.stroke();
-      }
+      ctx.strokeRect(32, 32, 960, 704);
 
-      // Tiêu đề trường
-      ctx.fillStyle = "#fef08a";
-      ctx.font = 'bold 24px "Segoe UI", Arial, sans-serif';
+      // Nội dung trích dẫn duy nhất (cỡ chữ siêu lớn, in đậm để nhìn rõ từ cuối phòng)
       ctx.textAlign = "center";
+      ctx.fillStyle = "#000000";
+      ctx.font = 'bold 48px "Segoe UI", Arial, sans-serif';
+      
       ctx.fillText(
-        "ĐẠI HỌC QUỐC GIA TP.HCM — TRƯỜNG ĐẠI HỌC CÔNG NGHỆ THÔNG TIN",
+        "Trong những năm gần đây,",
         512,
-        65,
+        320,
       );
-
-      // Tiêu đề hội nghị chuyên đề
-      ctx.fillStyle = "#ffffff";
-      ctx.font = 'black 48px "Segoe UI", Arial, sans-serif';
-      ctx.fillText("HỘI NGHỊ HỌC TẬP CHUYÊN ĐỀ LÝ LUẬN CHÍNH TRỊ", 512, 190);
-
-      // Tên đề tài khoa học
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = 'bold 32px "Segoe UI", Arial, sans-serif';
       ctx.fillText(
-        "Chủ đề: Hình thái kinh tế - xã hội và con đường đi lên CNXH ở Việt Nam",
+        "giá cả nhiều mặt hàng tăng nhanh,",
         512,
-        280,
+        395,
       );
-      ctx.fillStyle = "#e2e8f0";
-      ctx.font = '24px "Segoe UI", Arial, sans-serif';
       ctx.fillText(
-        "Môn học: Nguyên lý cơ bản của Chủ nghĩa Mác - Lênin (MLN122)",
+        "đời sống nhân dân gặp nhiều khó khăn.",
         512,
-        335,
+        470,
       );
-
-      // Nội dung cốt lõi của bài trình chiếu
-      ctx.textAlign = "left";
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = 'bold 24px "Segoe UI", Arial, sans-serif';
-      ctx.fillText(
-        "• 1. Biện chứng giữa Lực lượng sản xuất và Quan hệ sản xuất",
-        100,
-        430,
-      );
-      ctx.fillText(
-        "• 2. Cơ cấu hạ tầng quyết định kiến trúc thượng tầng xã hội",
-        100,
-        490,
-      );
-      ctx.fillText(
-        "• 3. Sự phát triển các hình thái KT-XH là quá trình lịch sử - tự nhiên",
-        100,
-        550,
-      );
-      ctx.fillText(
-        "• 4. Liên hệ thực tiễn phát triển kinh tế thị trường định hướng XHCN",
-        100,
-        610,
-      );
-
-      // Chữ ký chân trang
-      ctx.textAlign = "right";
-      ctx.fillStyle = "#fef08a";
-      ctx.font = 'italic 20px "Segoe UI", Arial, sans-serif';
-      ctx.fillText("Hội trường Diên Hồng trực tuyến — 2026", 910, 700);
     }
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
