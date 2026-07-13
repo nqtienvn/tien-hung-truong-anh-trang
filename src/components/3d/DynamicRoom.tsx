@@ -30,7 +30,7 @@ export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
   'gallery-paintings': { z: 77.0, y: 3.0 },    // Phòng 2: Hội họa   (Z 54 → 100)
   'gallery-ceramics': { z: 115.0, y: 3.0 },    // Phòng 3: Gốm sứ    (Z 100 → 130)
-  'gallery-market-economy': { z: 187.5, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 245)
+  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 280)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
@@ -38,7 +38,7 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-subsidy': [0, 3.0, 10.0],           // Spawn gần cửa vào phòng 1 (Z=10)
   'gallery-paintings': [0, 3.0, 56.0],          // Spawn gần cửa vào phòng 2 (Z=56)
   'gallery-ceramics': [0, 3.0, 102.0],          // Spawn gần cửa vào phòng 3 (Z=102)
-  'gallery-market-economy': [0, 3.0, 132.0],   // Spawn gần cửa vào phòng 4 (Z=132)
+  'gallery-market-economy': [0, 3.0, 133.0],   // Spawn gần cửa vào phòng 4 (Z=133)
   'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh
 };
 

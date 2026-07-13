@@ -478,34 +478,34 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
 
         {/* --- TƯỜNG TRƯỚC (Front Wall with Doorway) --- */}
         {/* Tường trước bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2]}>
+        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2 + 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường trước bên phải */}
-        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2]}>
+        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2 + 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường trước phía trên cửa */}
-        <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2]}>
+        <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2 + 0.01]}>
           <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
 
         {/* --- TƯỜNG SAU (Back Wall with Doorway) --- */}
         {/* Tường sau bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2]}>
+        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2 - 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường sau bên phải */}
-        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2]}>
+        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2 - 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường sau phía trên cửa */}
-        <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2]}>
+        <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2 - 0.01]}>
           <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>

@@ -31,7 +31,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
   'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
-  'gallery-market-economy': { x: 0, y: 3.0, z: 132.0 },
+  'gallery-market-economy': { x: 0, y: 3.0, z: 133.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
