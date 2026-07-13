@@ -60,6 +60,8 @@ export const PlayerCharacter: React.FC = () => {
         spawnZ = -12;
       } else if (activeGallery?.id === "gallery-ceramics") {
         spawnZ = -10;
+      } else if (activeGallery?.id === "gallery-market-economy") {
+        spawnZ = -55.5; // Điểm bắt đầu cục bộ của Room 4 (Z local chạy từ -57.5 đến 57.5)
       }
       playerRef.current.position.set(0, baseY, spawnZ);
     }
@@ -147,9 +149,26 @@ export const PlayerCharacter: React.FC = () => {
     }
 
     // ── Phòng 3: gallery-ceramics — hoàn toàn trống, không vật cản ──────────
+    if (galleryId === 'gallery-ceramics') {
+      return false;
+    }
+
+    // ── Phòng 4: gallery-market-economy ──────────────────────────────────────
+    if (galleryId === 'gallery-market-economy') {
+      const zPositions = [-50, -35, -20, -5, 10, 25];
+      for (const pZ of zPositions) {
+        if (z > pZ - 0.35 && z < pZ + 0.35) {
+          // Lối đi mở rộng 6m ở chính giữa (-3.0 đến 3.0). Bị chặn nếu nằm ở hai bên.
+          if (x < -3.0 || x > 3.0) {
+            return true;
+          }
+        }
+      }
+    }
 
     return false;
   };
+
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
@@ -182,10 +201,14 @@ export const PlayerCharacter: React.FC = () => {
       let nextZ = currentPos.z + stepZ;
 
       const limitX = (activeGallery?.room_width ?? 12) / 2 - 0.6;
-      const limitZ = (activeGallery?.room_length ?? 30) / 2 - 0.6;
+      const roomLength = activeGallery?.room_length ?? 30;
+      const zOffset = activeGallery?.id === 'gallery-market-economy' ? (roomLength - 150) / 2 : 0;
+      
+      const minZ = -roomLength / 2 + zOffset + 0.6;
+      const maxZ = roomLength / 2 + zOffset - 0.6;
 
       nextX = Math.max(-limitX, Math.min(limitX, nextX));
-      nextZ = Math.max(-limitZ, Math.min(limitZ, nextZ));
+      nextZ = Math.max(minZ, Math.min(maxZ, nextZ));
 
       if (!checkCollision(nextX, currentPos.z)) {
         currentPos.x = nextX;

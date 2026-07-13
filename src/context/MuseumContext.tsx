@@ -21,6 +21,8 @@ export interface MultiplayerUser {
   yaw: number;
   galleryId: string;
   status?: string;
+  score?: number;
+  timeSpent?: number;
 }
 
 // Vị trí spawn của các phòng trưng bày
@@ -29,6 +31,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
   'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
+  'gallery-market-economy': { x: 0, y: 3.0, z: 132.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -158,7 +161,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
     'gallery-sculptures': { isOpen: true },
-    'gallery-ceramics': { isOpen: true }
+    'gallery-ceramics': { isOpen: true },
+    'gallery-market-economy': { isOpen: true }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
@@ -624,6 +628,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (roomStates['gallery-subsidy']?.isOpen) loadRoom('gallery-subsidy');
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
+      if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 

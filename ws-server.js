@@ -41,7 +41,8 @@ const roomStates = {
   'gallery-subsidy': { isOpen: true },
   'gallery-paintings': { isOpen: true },
   'gallery-sculptures': { isOpen: true },
-  'gallery-ceramics': { isOpen: true }
+  'gallery-ceramics': { isOpen: true },
+  'gallery-market-economy': { isOpen: true }
 };
 
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
@@ -180,7 +181,9 @@ io.on('connection', (socket) => {
       y: y || 1.7,
       z: z || 5,
       yaw: yaw || 0,
-      status: ''
+      status: '',
+      score: 0,
+      timeSpent: 9999
     };
 
     if (activeInRoom.length < MAX_USERS_PER_ROOM) {
@@ -232,13 +235,27 @@ io.on('connection', (socket) => {
       user.galleryId = 'gallery-subsidy';
     } else if (data.z > 54.0 && data.z <= 100.0) {
       user.galleryId = 'gallery-paintings';
-    } else if (data.z > 100.0) {
+    } else if (data.z > 100.0 && data.z <= 130.0) {
       user.galleryId = 'gallery-ceramics';
+    } else if (data.z > 130.0 && data.z <= 245.0) {
+      user.galleryId = 'gallery-market-economy';
     }
 
     const socketRoom = getSocketRoom(user.galleryId);
     // Phát sóng tọa độ mới cho những người dùng khác trong phòng
     socket.to(socketRoom).emit('user-moved', user);
+  });
+
+  // 2.5. Khi người chơi hoàn thành minigame và cập nhật điểm số
+  socket.on('update-score', (data) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+    user.score = data.score;
+    user.timeSpent = data.timeSpent !== undefined ? data.timeSpent : 9999;
+    const socketRoom = getSocketRoom(user.galleryId);
+    const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
+    io.to(socketRoom).emit('users-list', usersInRoom);
+    console.log(`[SCORE] ${user.nickname} (${socket.id}) cập nhật điểm: ${user.score}, thời gian: ${user.timeSpent}s`);
   });
 
   // 3. Khi người chơi gửi tin nhắn Chat
@@ -274,9 +291,9 @@ io.on('connection', (socket) => {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
+      canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
     if (!canOpen) {
@@ -356,9 +373,9 @@ io.on('connection', (socket) => {
       relatedDoors.push('door-room1', 'door-room2');
     } else if (roomId === 'gallery-paintings') {
       relatedDoors.push('door-room2', 'door-room3');
-    } else if (roomId === 'gallery-sculptures') {
-      relatedDoors.push('door-room3', 'door-room4');
     } else if (roomId === 'gallery-ceramics') {
+      relatedDoors.push('door-room3', 'door-room4');
+    } else if (roomId === 'gallery-market-economy') {
       relatedDoors.push('door-room4');
     }
 
@@ -372,10 +389,10 @@ io.on('connection', (socket) => {
     let teleportTo = 'lobby';
     if (roomId === 'gallery-paintings') {
       teleportTo = 'gallery-subsidy';
-    } else if (roomId === 'gallery-sculptures') {
-      teleportTo = 'gallery-paintings';
     } else if (roomId === 'gallery-ceramics') {
-      teleportTo = 'gallery-sculptures';
+      teleportTo = 'gallery-paintings';
+    } else if (roomId === 'gallery-market-economy') {
+      teleportTo = 'gallery-ceramics';
     }
 
     // Đếm số người hiện đang ở trong phòng bị tắt

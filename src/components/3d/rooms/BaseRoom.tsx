@@ -31,7 +31,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
   const roomLength = customSettings?.room_length ?? activeGallery?.room_length ?? 30;
-  const roomHeight = customSettings?.room_height ?? activeGallery?.room_height ?? 6;
+  const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
   const floorColor = customSettings?.floor_color ?? activeGallery?.floor_color ?? '#4e3629';
   const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
   const wainscotingColor = customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#eae5dc';

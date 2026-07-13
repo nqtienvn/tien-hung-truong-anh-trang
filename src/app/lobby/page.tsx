@@ -48,6 +48,13 @@ const DOOR_CONFIGS = [
     rotation: [0, Math.PI, 0] as [number, number, number],
     label: 'Phòng 03: Gốm sứ',
   },
+  {
+    doorId: 'door-room4',
+    targetRoom: 'gallery-market-economy',
+    position: [0, 3.0, 130.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 04: Hội nhập',
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -78,6 +85,16 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
       }
       return 3.0;
     }
+    return 3.0;
+  }
+
+  // Phòng 3 (gallery-three) — Z từ 108.0 đến 158.0, Y = 3.0
+  if (z > 108.0 && z <= 158.0) {
+    return 3.0;
+  }
+
+  // Phòng 4 (gallery-market-economy) — Z từ 158.0 đến 208.0, Y = 3.0
+  if (z > 158.0 && z <= 208.0) {
     return 3.0;
   }
 
@@ -235,6 +252,20 @@ const LobbyCameraController: React.FC = () => {
       maxX = 14.5;
       minZ = 100.2;
       maxZ = 129.8;
+    }
+    // Room 3 (gallery-three): Z spans 108.0 to 158.0, W = 24 -> X from -12 to 12
+    else if (pz > 108.0 && pz <= 158.0) {
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = 108.2;
+      maxZ = 157.8;
+    }
+    // Room 4 (gallery-market-economy): Z spans 158.0 to 208.0, W = 24 -> X from -12 to 12
+    else if (pz > 158.0 && pz <= 208.0) {
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = 158.2;
+      maxZ = 207.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -539,7 +570,23 @@ const LobbyPlayer: React.FC = () => {
 
         if (x < -14.7 || x > 14.7) return true;
 
-        if (z > 129.3) return true;
+        if (z > 129.3) {
+          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor4) return true;
+        }
+        return false;
+      }
+
+      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 245.0) ──
+      if (z > 130.0 && z <= 245.0) {
+        const isRoom4Open = doorStates['door-room4']?.isOpen;
+        if (!isRoom4Open) return true;
+
+        // Biên giới tường bên (rộng 18m, X = ±9m)
+        if (x < -8.7 || x > 8.7) return true;
+
+        // Tường sau phòng 4 (Z = 245.0)
+        if (z > 244.3) return true;
         return false;
       }
 
@@ -719,7 +766,7 @@ const LobbyPlayer: React.FC = () => {
       state.camera.getWorldDirection(frontVec);
       frontVec.y = 0;
       frontVec.normalize();
-      
+
       rightVec.set(-frontVec.z, 0, frontVec.x).normalize();
 
       moveDir.set(0, 0, 0);
@@ -789,6 +836,8 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-paintings');
     } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
       setCurrentRoom('gallery-ceramics');
+    } else if (curPos.z > 130.0 && curPos.z <= 245.0) {
+      setCurrentRoom('gallery-market-economy');
     }
 
     // Arm/Leg swing
@@ -989,7 +1038,7 @@ export default function LobbyPage() {
               <Suspense fallback={null}>
                 {/* Sảnh bảo tàng */}
                 <MuseumLobby />
-                
+
                 {/* Nhân vật người chơi */}
                 <LobbyPlayer />
 
@@ -1226,7 +1275,7 @@ export default function LobbyPage() {
                 <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   {language === 'vi' ? 'Chi tiết cấu hình' : 'Preset Details'}
                 </span>
-                
+
                 <p className="text-[11px] text-slate-300 leading-relaxed min-h-[64px]">
                   {settings.preset === 'ultra-low' && (
                     language === 'vi' 
@@ -1234,12 +1283,12 @@ export default function LobbyPage() {
                       : '⚡ Maximum optimization for weak devices. 🔦 All point lights disabled (directional only). 📉 Ultra-low resolution. 🚫 Hide all other players. 🌫️ Closer fog for GPU relief.'
                   )}
                   {settings.preset === 'low' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '♟️ Hiển thị hình quân cờ đơn giản. 🔒 Tắt đổ bóng. 🚶 Tắt vung tay chân. 👥 Chỉ hiện tối đa 10 người. Đảm bảo hoạt động mượt mà tuyệt đối trên mọi máy yếu.'
                       : '♟️ Pawn mesh. 🔒 Shadows Off. 🚶 Animations Off. 👥 Max 10 players visible. Guaranteed absolute smoothness for low-end mobile/PC devices.'
                   )}
                   {settings.preset === 'medium' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '🚶 Hiển thị hình nhân di chuyển bình thường. ☀️ Bật đổ bóng động sắc nét. 🏃 Bật vung tay chân. 👥 Hiện đầy đủ người chơi. Trải nghiệm đồ họa sống động, mượt mà.'
                       : '🚶 Mannequin mesh. ☀️ Full Dynamic Shadows. 🏃 Limb animations On. 👥 Show all players. Premium and complete 3D interactive experience.'
                   )}
@@ -1282,7 +1331,7 @@ export default function LobbyPage() {
           </div>
         </div>
       )}
-      
+
       {/* ═══ MODAL CHI TIẾT HIỆN VẬT (Exhibit Modal) ═══ */}
       <ExhibitModal />
       {miniGameOpen && <MiniGameModal />}
