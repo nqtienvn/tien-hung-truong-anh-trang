@@ -166,6 +166,7 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           <meshStandardMaterial color="#991b1b" roughness={0.9} />
         </mesh>
 
+
         {/* Tường vách phông gỗ phía sau sân khấu (ốp sát tường trái X = -11.9) */}
         <mesh position={[-1.9, 2.7, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[15.0, 5.0, 0.15]} />
@@ -323,26 +324,69 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           { x: 6.2, tierY: 0.9 },
         ].map((rail, rIdx) => (
           <group key={`railing-${rIdx}`} position={[rail.x, rail.tierY, 0]}>
-            {/* Cả 2 phần lan can: Dãy trước (Z: -17.0 -> -4.5) và Dãy sau (Z: 4.5 -> 17.0) */}
-            {[-10.75, 10.75].map((zCenter, sIdx) => (
+            {/* Cả 2 phần lan can: Dãy trước (Z: -14.5 -> -4.5) và Dãy sau (Z: 4.5 -> 14.5) */}
+            {[-9.5, 9.5].map((zCenter, sIdx) => (
               <group key={`sec-${sIdx}`} position={[0, 0, zCenter]}>
                 {/* Tấm kính cường lực bảo vệ trong suốt */}
                 <mesh position={[0, 0.4, 0]}>
-                  <boxGeometry args={[0.02, 0.65, 12.5]} />
+                  <boxGeometry args={[0.02, 0.65, 10.0]} />
                   <meshStandardMaterial color="#0891b2" transparent opacity={0.25} roughness={0.1} metalness={0.8} />
                 </mesh>
                 {/* Tay vịn bằng gỗ sồi sang trọng */}
                 <mesh position={[0, 0.74, 0]}>
-                  <boxGeometry args={[0.06, 0.04, 12.55]} />
+                  <boxGeometry args={[0.06, 0.04, 10.05]} />
                   <meshStandardMaterial color="#2d1708" roughness={0.3} />
                 </mesh>
                 {/* Trụ kim loại vững chắc nâng đỡ kính */}
-                {[-6.25, -3.125, 0, 3.125, 6.25].map((zPost, pIdx) => (
+                {[-5.0, -2.5, 0, 2.5, 5.0].map((zPost, pIdx) => (
                   <mesh key={`post-${pIdx}`} position={[0, 0.36, zPost]}>
                     <boxGeometry args={[0.04, 0.72, 0.04]} />
                     <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
                   </mesh>
                 ))}
+              </group>
+            ))}
+          </group>
+        ))}
+      </group>
+
+      {/* LAN CAN BIÊN AN TOÀN 2 ĐẦU TRÁI PHẢI CỦA BỤC BẬC THANG (Platform End Railings at Z = -17.0 and 17.0) */}
+      <group>
+        {[
+          { xCenter: -1.8, width: 3.2, tierY: 0.3 },
+          { xCenter: 1.4, width: 3.2, tierY: 0.6 },
+          { xCenter: 4.6, width: 3.2, tierY: 0.9 },
+          { xCenter: 9.1, width: 5.8, tierY: 1.2 },
+        ].map((rail, rIdx) => (
+          <group key={`end-rail-${rIdx}`} position={[0, 0, 0]}>
+            {[-17.0, 17.0].map((zPos, sIdx) => (
+              <group key={`end-sec-${sIdx}`} position={[rail.xCenter, rail.tierY, zPos]}>
+                {/* Tấm kính cường lực bảo vệ */}
+                <mesh position={[0, 0.4, 0]}>
+                  <boxGeometry args={[rail.width, 0.65, 0.02]} />
+                  <meshStandardMaterial color="#0891b2" transparent opacity={0.25} roughness={0.1} metalness={0.8} />
+                </mesh>
+                {/* Tay vịn gỗ sồi sẫm màu */}
+                <mesh position={[0, 0.74, 0]}>
+                  <boxGeometry args={[rail.width + 0.02, 0.04, 0.06]} />
+                  <meshStandardMaterial color="#2d1708" roughness={0.3} />
+                </mesh>
+                {/* Trụ đỡ kim loại */}
+                {rail.width > 4.0 ? (
+                  [-2.4, 0, 2.4].map((xPost, pIdx) => (
+                    <mesh key={`post-${pIdx}`} position={[xPost, 0.36, 0]}>
+                      <boxGeometry args={[0.04, 0.72, 0.04]} />
+                      <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
+                    </mesh>
+                  ))
+                ) : (
+                  [-1.2, 1.2].map((xPost, pIdx) => (
+                    <mesh key={`post-${pIdx}`} position={[xPost, 0.36, 0]}>
+                      <boxGeometry args={[0.04, 0.72, 0.04]} />
+                      <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
+                    </mesh>
+                  ))
+                )}
               </group>
             ))}
           </group>

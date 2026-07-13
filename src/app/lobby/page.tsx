@@ -486,14 +486,22 @@ const LobbyPlayer: React.FC = () => {
 
         // Chặn va chạm của lan can (Railing Collisions) ngăn nhảy qua các bậc thềm
         const railXCoords = [-3.4, -0.2, 3.0, 6.2];
-        const inFrontRailZ = localZ >= -17.0 && localZ <= -4.5;
-        const inBackRailZ = localZ >= 4.5 && localZ <= 17.0;
+        const inFrontRailZ = localZ >= -14.5 && localZ <= -4.5;
+        const inBackRailZ = localZ >= 4.5 && localZ <= 14.5;
         if (inFrontRailZ || inBackRailZ) {
           for (const railX of railXCoords) {
             if (x > railX - 0.2 && x < railX + 0.2) {
               return true;
             }
           }
+        }
+
+        // Chặn va chạm ở 2 đầu lan can biên Z (Z global = 60.0 và 94.0) khi đứng trên các bậc (X > -3.4)
+        if (x > -3.4) {
+          // Chặn ở đầu Z = 60.0 (giới hạn an toàn từ 59.6 đến 60.4)
+          if (z >= 59.6 && z <= 60.4) return true;
+          // Chặn ở đầu Z = 94.0 (giới hạn an toàn từ 93.6 đến 94.4)
+          if (z >= 93.6 && z <= 94.4) return true;
         }
 
         if (z > 99.3) {
