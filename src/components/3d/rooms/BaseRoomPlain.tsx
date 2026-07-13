@@ -34,12 +34,12 @@ const PaintingMesh: React.FC<{ url: string }> = ({ url }) => {
 // ═══════════════════════════════════════════════════════════════════════════
 const FIRST_ROOM_EXHIBITS = [
   {
-    z: -55.5,
+    z: -71.0,
     left: {
       titleVi: "Kinh tế Nhà nước (Viettel)",
       titleEn: "State Economy (Viettel)",
-      descVi: "Doanh nghiệp nhà nước giữ vai trò chủ đạo trong nền kinh tế, dẫn dắt hạ tầng quốc gia và phát triển công nghệ cao.",
-      descEn: "State-owned enterprises play a leading role, driving national infrastructure and high-tech development.",
+      descVi: "Doanh nghiệp nhà nước giữ vai trò chủ đạo trong nền kinh tế, dẫn dắt hạ tầng số và công nghệ quốc gia.",
+      descEn: "State-owned enterprises play a leading role, driving digital and technological national infrastructure.",
       imageUrl: "/images/room4/viettel.jpg"
     },
     right: {
@@ -51,7 +51,7 @@ const FIRST_ROOM_EXHIBITS = [
     }
   },
   {
-    z: -52.0,
+    z: -66.5,
     left: {
       titleVi: "Kinh tế Tư nhân (VinFast)",
       titleEn: "Private Economy (VinFast)",
@@ -65,6 +65,57 @@ const FIRST_ROOM_EXHIBITS = [
       descVi: "Sự hiện diện đa dạng của các thành phần kinh tế trong hoạt động phân phối bán lẻ hàng tiêu dùng hiện đại.",
       descEn: "The diverse presence of economic sectors in modern consumer retail distribution networks.",
       imageUrl: "/images/room4/sieu-thi.jpg"
+    }
+  },
+  {
+    z: -62.0,
+    left: {
+      titleVi: "Bảo hiểm y tế (An sinh xã hội)",
+      titleEn: "Health Insurance (Social Security)",
+      descVi: "Hệ thống bảo hiểm y tế toàn dân, bảo đảm an sinh xã hội và hỗ trợ chăm sóc sức khỏe cho mọi người dân.",
+      descEn: "Universal health insurance system, ensuring social security and healthcare support for all citizens.",
+      imageUrl: "/images/room4/bao-hiem-y-te.jpg"
+    },
+    right: {
+      titleVi: "Cảng biển quốc tế (Mở cửa giao thương)",
+      titleEn: "International Port (Open Trade)",
+      descVi: "Cảng biển quốc tế hiện đại, cửa ngõ kết nối giao thương hàng hóa giữa Việt Nam và thế giới.",
+      descEn: "Modern international seaport, the gateway connecting trade between Vietnam and the world.",
+      imageUrl: "/images/room4/cang-bien.jpg"
+    }
+  },
+  {
+    z: -57.5,
+    left: {
+      titleVi: "Cao tốc Bắc – Nam (Đầu tư công)",
+      titleEn: "North-South Expressway (Public Investment)",
+      descVi: "Dự án đầu tư công quy mô lớn, phát triển hạ tầng giao thông huyết mạch, kết nối các vùng kinh tế trọng điểm.",
+      descEn: "Large-scale public investment project, developing traffic infrastructure connecting key economic regions.",
+      imageUrl: "/images/room4/cao-toc-bac-nam.jpg"
+    },
+    right: {
+      titleVi: "Chợ truyền thống (Cơ chế cung cầu)",
+      titleEn: "Traditional Market (Supply & Demand)",
+      descVi: "Mô hình kinh tế hộ gia đình, tiểu thương phản ánh sinh động cơ chế cung - cầu và tiêu dùng đời sống.",
+      descEn: "Household business model reflecting supply, demand, and daily consumer activities.",
+      imageUrl: "/images/room4/cho-truyen-thong.jpg"
+    }
+  },
+  {
+    z: -53.0,
+    left: {
+      titleVi: "Container xuất khẩu (Hội nhập toàn cầu)",
+      titleEn: "Export Container (Global Integration)",
+      descVi: "Hoạt động đóng gói và xuất khẩu hàng hóa ra thị trường quốc tế, thúc đẩy hội nhập toàn cầu.",
+      descEn: "Packaging and exporting goods to international markets, driving global integration.",
+      imageUrl: "/images/room4/container-xuat-khau.jpg"
+    },
+    right: {
+      titleVi: "Tập đoàn Điện lực EVN (An năng lượng)",
+      titleEn: "EVN Electricity Group (Energy Security)",
+      descVi: "Tập đoàn Điện lực Việt Nam, bảo đảm an ninh năng lượng quốc gia, cung cấp nguồn điện ổn định cho sản xuất.",
+      descEn: "Electricity Vietnam Group, ensuring national energy security and stable power supply for production.",
+      imageUrl: "/images/room4/evn.jpg"
     }
   }
 ];

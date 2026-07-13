@@ -52,6 +52,7 @@ const CameraLerpController: React.FC = () => {
     activeGallery,
     nickname,
     settings,
+    miniGameOpen,
   } = useMuseum();
   
   const { camera, gl } = useThree();
@@ -88,6 +89,7 @@ const CameraLerpController: React.FC = () => {
     };
 
     const handlePointerDown = (e: PointerEvent) => {
+      if (miniGameOpen) return;
       // Chỉ bắt thao tác chuột trái trong vùng canvas 3D.
       if (e.button !== 0 || selectedExhibit || !isInsideCanvas(e)) return;
       isMouseDown.current = true;
@@ -98,6 +100,7 @@ const CameraLerpController: React.FC = () => {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (miniGameOpen) return;
       // Nếu pointerdown bị object 3D/R3F/overlay nuốt mất, vẫn nhận biết bằng buttons.
       const isLeftButtonHeld = (e.buttons & 1) === 1;
 
@@ -309,7 +312,7 @@ const CameraLerpController: React.FC = () => {
 };
 
 export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryId }) => {
-  const { selectedExhibit, setSelectedExhibit, nickname, settings, language, socket, otherUsers } = useMuseum();
+  const { selectedExhibit, setSelectedExhibit, nickname, settings, language, socket, otherUsers, setMiniGameOpen } = useMuseum();
   const containerRef = useRef<HTMLDivElement>(null);
  
   // ── Summary Minigame state (lives here in DOM-land, not inside Canvas) ──
@@ -342,7 +345,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
           const parsedScore = parseInt(savedScore, 10);
           setMgScore(parsedScore);
           if (socket && socket.connected) {
-            socket.emit('update-score', { score: parsedScore, timeSpent: 9999 });
+            socket.emit('update-score', { score: parsedScore });
           }
         }
       }
@@ -371,7 +374,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
             localStorage.setItem('minigame_score_gallery_four', mgScore.toString());
           }
           if (socket && socket.connected) {
-            socket.emit('update-score', { score: mgScore, timeSpent: 9999 });
+            socket.emit('update-score', { score: mgScore });
           }
         }
       }, 1200);
@@ -390,6 +393,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
   useEffect(() => {
     const handler = () => {
       setMgOpen(true);
+      setMiniGameOpen(true);
       if (typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true') {
         setMgStep('complete');
         const savedScore = localStorage.getItem('minigame_score_gallery_four');
@@ -397,7 +401,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
           const parsedScore = parseInt(savedScore, 10);
           setMgScore(parsedScore);
           if (socket && socket.connected) {
-            socket.emit('update-score', { score: parsedScore, timeSpent: 9999 });
+            socket.emit('update-score', { score: parsedScore });
           }
         }
       } else {
@@ -411,15 +415,15 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
     };
     window.addEventListener('openSummaryMinigame', handler);
     return () => window.removeEventListener('openSummaryMinigame', handler);
-  }, [socket]);
+  }, [socket, setMiniGameOpen]);
 
   const handleMgAnswer = (catId: string) => {
     if (mgFeedback !== null || questionTimeLeft <= 0) return;
     const correct = mgQuestions[mgIndex].category;
     let nextScore = mgScore;
     
-    // Trả lời trước 10s (thời gian đếm ngược còn > 5s) được 10 điểm, còn lại được 5 điểm
-    const points = questionTimeLeft > 5 ? 10 : 5;
+    // Trả lời trước 10s (thời gian đếm ngược còn >= 5s) được 10 điểm, còn lại được 5 điểm
+    const points = questionTimeLeft >= 5 ? 10 : 5;
     
     if (catId === correct) {
       setMgFeedback('correct');
@@ -445,7 +449,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
           localStorage.setItem('minigame_score_gallery_four', nextScore.toString());
         }
         if (socket && socket.connected) {
-          socket.emit('update-score', { score: nextScore, timeSpent: 9999 });
+          socket.emit('update-score', { score: nextScore });
         }
       }
     }, 1200);
@@ -725,7 +729,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
                   </p>
 
                   <div style={{ display: 'flex', gap: '16px' }}>
-                    <button onClick={() => setMgOpen(false)} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
+                    <button onClick={() => { setMgOpen(false); setMiniGameOpen(false); }} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
                   </div>
                 </div>
               );
