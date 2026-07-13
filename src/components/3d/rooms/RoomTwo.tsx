@@ -314,7 +314,7 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           >
             {/* Khung viền màn hình */}
             <mesh>
-              <boxGeometry args={[6.6, 3.9, 0.03]} />
+              <boxGeometry args={[10.6, 3.9, 0.03]} />
               <meshStandardMaterial
                 color="#1e293b"
                 roughness={0.8}
@@ -323,7 +323,7 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
             </mesh>
             {/* Tấm nền hiển thị slide */}
             <mesh position={[0, 0, 0.02]}>
-              <planeGeometry args={[6.5, 3.8]} />
+              <planeGeometry args={[10.5, 3.8]} />
               <meshBasicMaterial
                 map={slideTexture || undefined}
                 color={slideTexture ? "#ffffff" : "#0284c7"}
