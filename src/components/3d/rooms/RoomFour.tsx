@@ -2002,6 +2002,7 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 
   const handleNpcClick = (e: any) => {
     e.stopPropagation();
+    console.log('[NPC-CLICK] Người chơi click vào NPC:', nameVi);
     if (onClick) {
       onClick(e);
     } else {
@@ -2088,9 +2089,10 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
 
       {/* NPC speech bubble (HTML overlay) */}
       {showBubble ? (
-        <Html position={[0, textureUrl ? 2.4 : 1.8, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-none select-none">
+        <Html position={[0, textureUrl ? 2.4 : 1.8, 0]} center distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-auto select-none">
           <div
-            className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md"
+            onClick={handleNpcClick}
+            className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md cursor-pointer"
             style={{ borderColor: `${color}40`, zIndex: 9999, position: 'relative' }}
           >
             <span
@@ -2105,9 +2107,10 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
           </div>
         </Html>
       ) : (
-        <Html position={[0, textureUrl ? 2.2 : 1.7, 0]} center distanceFactor={8} className="pointer-events-none select-none">
+        <Html position={[0, textureUrl ? 2.2 : 1.7, 0]} center distanceFactor={8} className="pointer-events-auto select-none">
           <div
-            className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none"
+            onClick={handleNpcClick}
+            className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none cursor-pointer"
             style={{
               borderColor: color,
               color: color,
@@ -2460,178 +2463,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
         />
       )}
 
-      {/* ── NPC 2D (Hologram Cố Vấn Triển Lãm) gần vách ngăn thứ nhất ── */}
-      {isVisible && (
-        <group
-          position={[-2.2, 1.2, -48.0]}
-          rotation={[0, Math.PI - 0.2, 0]}
-        >
-          {/* Vòng sáng chân đế */}
-          <mesh position={[0, -1.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.35, 0.45, 32]} />
-            <meshBasicMaterial color="#6366f1" toneMapped={false} />
-          </mesh>
-
-          {/* Thân thẻ hologram 2D đứng */}
-          <mesh>
-            <planeGeometry args={[1.0, 1.6]} />
-            <meshStandardMaterial
-              color="#1e1b4b"
-              emissive="#6366f1"
-              emissiveIntensity={0.25}
-              transparent
-              opacity={0.75}
-              roughness={0.1}
-            />
-          </mesh>
-
-          {/* Khung viền phát sáng */}
-          <lineSegments>
-            <edgesGeometry args={[new THREE.PlaneGeometry(1.0, 1.6)]} />
-            <lineBasicMaterial color="#818cf8" linewidth={2} />
-          </lineSegments>
-
-          {/* Nội dung hiển thị HTML dính liền trên tấm hologram */}
-          <Html transform distanceFactor={3.2} position={[0, 0, 0.01]} center>
-            <div className="w-[180px] h-[280px] flex flex-col items-center justify-between p-3 select-none text-center font-sans text-white">
-              <div className="flex flex-col items-center gap-1.5 mt-2">
-                <div className="w-14 h-14 rounded-full border-2 border-indigo-400 bg-indigo-950/80 flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 animate-pulse">
-                  🕵️‍♂️
-                </div>
-                <div className="space-y-0.5">
-                  <h4 className="text-[10px] font-black text-indigo-300 uppercase tracking-wider">
-                    Nguyễn Minh Tâm
-                  </h4>
-                  <p className="text-[7px] text-indigo-400 font-bold uppercase tracking-widest">
-                    Thành viên nhóm 7
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-slate-950/85 border border-indigo-500/30 rounded-xl p-2.5 my-2 shadow-inner">
-                <p className="text-[8px] leading-relaxed text-indigo-200 font-semibold">
-                  "Sau Đổi mới và hội nhập, Việt Nam phát triển rất nhanh. Nhưng bạn có biết chúng ta đang đi theo mô hình kinh tế nào?"
-                </p>
-              </div>
-
-            </div>
-          </Html>
-        </group>
-      )}
-
-
-
-
-
-
-
-
-
-
-
-      {/* ── 2D UI OVERLAYS ── */}
-      {(step === 1 || step === 5 || step === 6) && (
-        <Html fullscreen className="pointer-events-none z-50">
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none p-4 bg-black/30">
-            <div className="w-full max-w-4xl h-[540px] bg-slate-950/90 backdrop-blur-xl border border-slate-800/80 rounded-3xl overflow-hidden flex flex-col items-center justify-center relative shadow-[0_0_80px_rgba(34,211,238,0.12)] pointer-events-auto">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(15,23,42,0.4)_0%,#030712_100%)] z-0" />
-              <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-8">
-
-                {/* ── Step 1: LED Slideshow ── */}
-                {/* {step === 1 && (
-                  <div className="w-full h-full flex flex-col items-center justify-between py-6">
-                    <span className="text-xs bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-3 py-1 rounded-full font-bold uppercase tracking-wider">
-                      Đổi mới &amp; Hội nhập Quốc tế
-                    </span>
-                    <div className="w-[640px] h-[280px] rounded-2xl overflow-hidden border border-cyan-500/30 relative shadow-2xl">
-                      <img src={SLIDESHOW_IMAGES[currentSlide].url} alt="slideshow" className="w-full h-full object-cover transition-opacity duration-500" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/50 to-transparent p-4 text-center">
-                        <p className="text-sm font-bold text-white tracking-wide">{SLIDESHOW_IMAGES[currentSlide].label}</p>
-                      </div>
-                    </div>
-                    <div className="bg-slate-900/60 backdrop-blur border border-white/10 px-6 py-2.5 rounded-full text-xs font-semibold max-w-2xl text-center">
-                      {currentSlide <= 4
-                        ? <span className="text-slate-200">"Sau Đổi mới và hội nhập quốc tế, Việt Nam phát triển nhanh hơn bao giờ hết."</span>
-                        : currentSlide <= 7
-                          ? <span className="text-amber-400 font-extrabold text-sm">"Nhưng..."</span>
-                          : <span className="text-cyan-400 font-extrabold text-sm">"Việt Nam đang phát triển theo mô hình kinh tế nào?"</span>
-                      }
-                    </div>
-                  </div>
-                )} */}
-
-
-
-                {/* ── Step 5: Minigame ── */}
-                {/* {step === 5 && (
-                  <div className="w-full h-full flex flex-col justify-between py-6">
-                    <div className="flex justify-between items-center border-b border-slate-800 pb-3 px-6">
-                      <span className="text-xs font-bold text-cyan-400 flex items-center gap-1.5 uppercase tracking-wide">
-                        📊 Câu hỏi {gameIndex + 1} / {GAME_SITUATIONS.length}
-                      </span>
-                      <div className="bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg text-xs font-bold text-amber-500">
-                        Điểm: <span className="font-mono font-black">{score} / 100</span>
-                      </div>
-                    </div>
-                    <div className="my-auto max-w-xl mx-auto text-center px-4">
-                      <div className="bg-slate-900/80 border border-slate-800/60 p-5 rounded-2xl shadow-xl space-y-3">
-                        <span className="text-[9px] bg-slate-850 text-slate-400 border border-slate-800 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                          Tình huống thực tế
-                        </span>
-                        <p className="text-base font-bold text-slate-100 leading-relaxed">
-                          "{GAME_SITUATIONS[gameIndex].text}"
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-5 gap-2 px-6">
-                      {CATEGORIES.map((cat) => {
-                        const isSelected = selectedCategory === cat.id;
-                        const isCorrect = cat.id === GAME_SITUATIONS[gameIndex].category;
-                        let btnStyle = "bg-slate-900/80 border-slate-800 text-slate-300 hover:border-slate-700 hover:text-white";
-                        if (answerStatus !== 'idle') {
-                          if (isSelected) btnStyle = isCorrect ? "bg-emerald-500 border-emerald-400 text-slate-950 shadow-md shadow-emerald-500/20" : "bg-rose-500 border-rose-400 text-slate-950";
-                          else if (isCorrect) btnStyle = "bg-emerald-500/20 border-emerald-500/40 text-emerald-400";
-                        }
-                        return (
-                          <button
-                            key={cat.id}
-                            disabled={answerStatus !== 'idle'}
-                            onClick={() => handleSelectCategory(cat.id)}
-                            className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-[9px] font-bold gap-1 cursor-pointer select-none active:scale-95 ${btnStyle}`}
-                          >
-                            <span className="text-lg">{cat.icon}</span>
-                            <span className="text-center leading-tight truncate w-full">{cat.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )} */}
-
-                {/* ── Step 6: Game Complete ── */}
-                {/* {step === 6 && (
-                  <div className="text-center space-y-4 max-w-2xl px-6">
-                    <span className="text-4xl">🏆</span>
-                    <div className="space-y-1">
-                      <h2 className="text-xl font-extrabold text-white">Thử Thách Hoàn Thành!</h2>
-                      <p className="text-xs text-emerald-400 font-bold">Bạn đạt được: {score} / 100 điểm</p>
-                    </div>
-                    <p className="text-[10px] text-slate-400 leading-relaxed text-justify px-4">
-                      "Qua bốn phòng của bảo tàng, chúng ta đã chứng kiến hành trình lịch sử rõ nét: từ nền kinh tế kế hoạch hóa tập trung thời bao cấp nghèo nàn, qua Đổi mới mở cửa bứt phá, rồi đến nền kinh tế thị trường định hướng XHCN. Đây là mô hình phát triển độc đáo để Việt Nam vừa giải phóng sức sản xuất thị trường, vừa đảm bảo phát triển vì con người và công bằng xã hội."
-                    </p>
-                    <button onClick={handleStartGame} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-500 hover:text-amber-400 font-bold px-5 py-2 rounded-lg text-[10px] cursor-pointer active:scale-95">
-                      🔄 Chơi lại game
-                    </button>
-                  </div>
-                )} */}
-
-              </div>
-            </div>
-          </div>
-        </Html>
-      )}
       {/* minigame rendered via CustomEvent → GalleryCanvas */}
-    </BaseRoomPlain>
+    </BaseRoomPlain >
   );
 };
 

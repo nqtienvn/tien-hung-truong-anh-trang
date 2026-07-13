@@ -670,10 +670,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // 1. Tải phòng động theo trạng thái Bật/Tắt của phòng
     for (const [galleryId, rState] of Object.entries(roomStates)) {
       if (rState.isOpen) {
-        // Tải phòng khi bật
-        const isDoorOpenOrPreloaded = (settings.preset !== 'low' && settings.preset !== 'ultra-low') || Object.values(doorStates).some(
-          d => d.targetRoom === galleryId && d.isOpen
-        );
+        // Tải phòng khi bật (hoặc nếu là phòng hiện tại của người chơi)
+        const isDoorOpenOrPreloaded = 
+          galleryId === activeGallery?.id ||
+          (settings.preset !== 'low' && settings.preset !== 'ultra-low') || 
+          Object.values(doorStates).some(
+            d => d.targetRoom === galleryId && d.isOpen
+          );
         if (isDoorOpenOrPreloaded) {
           loadRoom(galleryId);
         }
