@@ -25,10 +25,17 @@ const LEG_MESH_Y = -(LEG_R + LEG_LEN / 2);
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PlayerCharacter: React.FC = () => {
-  const { selectedExhibit, socket, activeGallery, nickname, settings, miniGameOpen } = useMuseum();
+  const {
+    selectedExhibit,
+    socket,
+    activeGallery,
+    nickname,
+    settings,
+    miniGameOpen,
+  } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
 
-  const isPawn = settings.preset === 'low';
+  const isPawn = settings.preset === "low";
   const baseY = isPawn ? 0.24 : 0.472; // Phóng to 1.6x (0.15 * 1.6 và 0.295 * 1.6)
 
   const leftLegRef = useRef<THREE.Group>(null);
@@ -42,6 +49,7 @@ export const PlayerCharacter: React.FC = () => {
     a: false,
     s: false,
     d: false,
+    shift: false,
   });
 
   const lastUpdate = useRef(0);
@@ -70,22 +78,26 @@ export const PlayerCharacter: React.FC = () => {
 
   // Lắng nghe bàn phím di chuyển
   useEffect(() => {
-    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd'> = {
-      KeyW: 'w',
-      KeyA: 'a',
-      KeyS: 's',
-      KeyD: 'd',
-      ArrowUp: 'w',
-      ArrowLeft: 'a',
-      ArrowDown: 's',
-      ArrowRight: 'd',
+    const movementKeyMap: Record<string, "w" | "a" | "s" | "d" | "shift"> = {
+      KeyW: "w",
+      KeyA: "a",
+      KeyS: "s",
+      KeyD: "d",
+      ArrowUp: "w",
+      ArrowLeft: "a",
+      ArrowDown: "s",
+      ArrowRight: "d",
+      ShiftLeft: "shift",
+      ShiftRight: "shift",
     };
 
     const shouldIgnoreKeyboard = (target: EventTarget | null) => {
       const el = target as HTMLElement | null;
       if (!el) return false;
       const tagName = el.tagName.toLowerCase();
-      return tagName === 'input' || tagName === 'textarea' || el.isContentEditable;
+      return (
+        tagName === "input" || tagName === "textarea" || el.isContentEditable
+      );
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -117,7 +129,7 @@ export const PlayerCharacter: React.FC = () => {
     const galleryId = activeGallery?.id;
 
     // ── Phòng 1: gallery-paintings ──────────────────────────────────────────
-    if (galleryId === 'gallery-paintings') {
+    if (galleryId === "gallery-paintings") {
       // 1. Tường ngăn tại Z = 3.0: Cổng mở X từ -5.0 đến -2.0
       if (z > 2.7 && z < 3.3) {
         if (x < -5.0 || x > -2.0) return true;
@@ -132,7 +144,7 @@ export const PlayerCharacter: React.FC = () => {
     }
 
     // ── Phòng 2: gallery-sculptures ─────────────────────────────────────────
-    if (galleryId === 'gallery-sculptures') {
+    if (galleryId === "gallery-sculptures") {
       // 1. Tường ngăn tại Z = -3.0: Cổng mở X từ 2.0 đến 5.0
       if (z > -3.3 && z < -2.7) {
         if (x < 2.0 || x > 5.0) return true;
@@ -149,12 +161,12 @@ export const PlayerCharacter: React.FC = () => {
     }
 
     // ── Phòng 3: gallery-ceramics — hoàn toàn trống, không vật cản ──────────
-    if (galleryId === 'gallery-ceramics') {
+    if (galleryId === "gallery-ceramics") {
       return false;
     }
 
     // ── Phòng 4: gallery-market-economy ──────────────────────────────────────
-    if (galleryId === 'gallery-market-economy') {
+    if (galleryId === "gallery-market-economy") {
       const zPositions = [-50, -35, -20, -5, 10, 25];
       for (const pZ of zPositions) {
         if (z > pZ - 0.35 && z < pZ + 0.35) {
@@ -169,13 +181,12 @@ export const PlayerCharacter: React.FC = () => {
     return false;
   };
 
-
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
     if (selectedExhibit || !nickname || miniGameOpen) return;
 
-    const { w, a, s, d } = keysPressed.current;
+    const { w, a, s, d, shift } = keysPressed.current;
 
     if (w || a || s || d) {
       state.camera.getWorldDirection(frontVec);
@@ -192,7 +203,7 @@ export const PlayerCharacter: React.FC = () => {
 
       moveDirection.normalize();
 
-      const moveSpeed = 4.0;
+      const moveSpeed = shift ? 10.0 : 6.0; // Đi bộ (6.0), chạy nhanh khi nhấn shift (10.0)
       const stepX = moveDirection.x * moveSpeed * delta;
       const stepZ = moveDirection.z * moveSpeed * delta;
 
@@ -202,8 +213,11 @@ export const PlayerCharacter: React.FC = () => {
 
       const limitX = (activeGallery?.room_width ?? 12) / 2 - 0.6;
       const roomLength = activeGallery?.room_length ?? 30;
-      const zOffset = activeGallery?.id === 'gallery-market-economy' ? (roomLength - 150) / 2 : 0;
-      
+      const zOffset =
+        activeGallery?.id === "gallery-market-economy"
+          ? (roomLength - 150) / 2
+          : 0;
+
       const minZ = -roomLength / 2 + zOffset + 0.6;
       const maxZ = roomLength / 2 + zOffset - 0.6;
 
@@ -229,12 +243,11 @@ export const PlayerCharacter: React.FC = () => {
 
     // Chỉ nhún nhảy nhẹ khi di chuyển, đứng yên thì đứng thẳng trên mặt đất (tránh say sóng camera)
     if (isMoving && settings.animations) {
-      playerRef.current.position.y =
-        baseY + Math.sin(t * 10) * 0.032; // Phóng to 1.6x nhún nhảy
+      playerRef.current.position.y = baseY + Math.sin(t * 10) * 0.032; // Phóng to 1.6x nhún nhảy
     } else {
       playerRef.current.position.y = baseY;
     }
-    const swingSpeed = 10;
+    const swingSpeed = shift ? 16 : 11; // Chạy nhanh thì tay chân vung nhanh hơn
     const swingAmp = 0.45;
 
     if (isMoving && settings.animations) {

@@ -344,7 +344,7 @@ const RoomPrecompiler: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyPlayer: React.FC = () => {
   const playerRef = useRef<THREE.Group>(null);
-  const keys = useRef({ w: false, a: false, s: false, d: false, e: false, space: false });
+  const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
   const isMoving = useRef(false);
   const jumpVelocity = useRef(0);
   const isJumping = useRef(false);
@@ -467,8 +467,11 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 1 (gallery-subsidy: Z 8.0 -> 54.0) ──
       if (z > 8.0 && z <= 54.0) {
-        const isRoom1Open = doorStates['door-room1']?.isOpen;
-        if (!isRoom1Open) return true;
+        // Chỉ chặn khi đi lùi về sảnh qua cửa 1 đang đóng
+        if (z < 8.6) {
+          const passingDoor1 = doorStates['door-room1']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor1) return true;
+        }
 
         // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
@@ -533,8 +536,11 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 2 (gallery-paintings: Z 54.0 -> 100.0) ──
       if (z > 54.0 && z <= 100.0) {
-        const isRoom2Open = doorStates['door-room2']?.isOpen;
-        if (!isRoom2Open) return true;
+        // Chỉ chặn khi đi lùi về phòng 1 qua cửa 2 đang đóng
+        if (z < 54.6) {
+          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor2) return true;
+        }
 
         if (x < -11.7 || x > 11.7) return true;
 
@@ -585,8 +591,11 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 100.0 -> 130.0) ──
       if (z > 100.0 && z <= 130.0) {
-        const isRoom3Open = doorStates['door-room3']?.isOpen;
-        if (!isRoom3Open) return true;
+        // Chỉ chặn khi đi lùi về phòng 2 qua cửa 3 đang đóng
+        if (z < 100.6) {
+          const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor3) return true;
+        }
 
         if (x < -14.7 || x > 14.7) return true;
 
@@ -599,8 +608,11 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 245.0) ──
       if (z > 130.0 && z <= 245.0) {
-        const isRoom4Open = doorStates['door-room4']?.isOpen;
-        if (!isRoom4Open) return true;
+        // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
+        if (z < 130.6) {
+          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor4) return true;
+        }
 
         // Biên giới tường bên (rộng 18m, X = ±9m)
         if (x < -8.7 || x > 8.7) return true;
@@ -617,7 +629,7 @@ const LobbyPlayer: React.FC = () => {
 
   // Bắt phím WASD
   useEffect(() => {
-    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd' | 'e' | 'space'> = {
+    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd' | 'e' | 'shift' | 'space'> = {
       KeyW: 'w',
       KeyA: 'a',
       KeyS: 's',
@@ -628,6 +640,8 @@ const LobbyPlayer: React.FC = () => {
       ArrowLeft: 'a',
       ArrowDown: 's',
       ArrowRight: 'd',
+      ShiftLeft: 'shift',
+      ShiftRight: 'shift',
     };
 
     const shouldIgnoreKeyboard = (target: EventTarget | null) => {
@@ -670,7 +684,7 @@ const LobbyPlayer: React.FC = () => {
       if (key === 'space') {
         if (!isJumping.current) {
           isJumping.current = true;
-          jumpVelocity.current = 5.2;
+          jumpVelocity.current = 7.5;
         }
         keys.current.space = true;
         return;
@@ -691,6 +705,7 @@ const LobbyPlayer: React.FC = () => {
       keys.current.s = false;
       keys.current.d = false;
       keys.current.e = false;
+      keys.current.shift = false;
       keys.current.space = false;
     };
     window.addEventListener('keydown', onKeyDown);
@@ -766,7 +781,7 @@ const LobbyPlayer: React.FC = () => {
       }
 
       const now = state.clock.getElapsedTime();
-      if (now - lastUpdate.current > 0.05) {
+      if (now - lastUpdate.current > 0.08) {
         socket?.emit('move', {
           x: sittingPosition.x,
           y: sittingPosition.y,
@@ -778,7 +793,7 @@ const LobbyPlayer: React.FC = () => {
       return;
     }
 
-    const { w, a, s, d, e } = keys.current;
+    const { w, a, s, d, shift } = keys.current;
     const moving = w || a || s || d;
     isMoving.current = moving;
 
@@ -796,7 +811,7 @@ const LobbyPlayer: React.FC = () => {
       if (a) moveDir.sub(rightVec);
       moveDir.normalize();
 
-      const speed = e ? 7.4 : 4.5;
+      const speed = shift ? 10.0 : 6.0;
       const curPos = playerRef.current.position;
       const curGroundY = getLobbyGroundY(curPos.x, curPos.z, doorStates);
 
@@ -822,12 +837,12 @@ const LobbyPlayer: React.FC = () => {
     let bobY = 0;
     const t = state.clock.getElapsedTime();
     if (moving && settings.animations) {
-      bobY = Math.sin(t * 10) * 0.032;
+      bobY = Math.sin(t * (shift ? 16 : 11)) * 0.032;
     }
     const baseGroundY = curGroundY + baseY;
 
     if (isJumping.current) {
-      jumpVelocity.current -= 13.5 * delta;
+      jumpVelocity.current -= 24.0 * delta;
       curPos.y += jumpVelocity.current * delta;
 
       if (curPos.y <= baseGroundY) {
@@ -861,7 +876,7 @@ const LobbyPlayer: React.FC = () => {
     }
 
     // Arm/Leg swing
-    const swingSpeed = 10;
+    const swingSpeed = shift ? 16 : 11;
     const swingAmp = 0.45;
 
     if (moving && settings.animations) {
@@ -888,9 +903,9 @@ const LobbyPlayer: React.FC = () => {
       }
     }
 
-    // Gửi tọa độ qua socket (20Hz)
+    // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
-    if (now - lastUpdate.current > 50) {
+    if (now - lastUpdate.current > 80) {
       if (socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
