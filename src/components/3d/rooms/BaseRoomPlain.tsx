@@ -34,7 +34,7 @@ const PaintingMesh: React.FC<{ url: string }> = ({ url }) => {
 // ═══════════════════════════════════════════════════════════════════════════
 const FIRST_ROOM_EXHIBITS = [
   {
-    z: -71,
+    z: -56.0,
     left: {
       titleVi: "Kinh tế Nhà nước (Viettel)",
       titleEn: "State Economy (Viettel)",
@@ -51,7 +51,7 @@ const FIRST_ROOM_EXHIBITS = [
     }
   },
   {
-    z: -67,
+    z: -51.5,
     left: {
       titleVi: "Kinh tế Tư nhân (VinFast)",
       titleEn: "Private Economy (VinFast)",
@@ -68,7 +68,7 @@ const FIRST_ROOM_EXHIBITS = [
     }
   },
   {
-    z: -63,
+    z: -47.0,
     left: {
       titleVi: "Chợ truyền thống và Cung - Cầu",
       titleEn: "Traditional Market & Supply-Demand",
@@ -85,7 +85,7 @@ const FIRST_ROOM_EXHIBITS = [
     }
   },
   {
-    z: -59,
+    z: -42.5,
     left: {
       titleVi: "Hạ tầng huyết mạch (Cao tốc)",
       titleEn: "Spine Infrastructure (Expressway)",
@@ -102,7 +102,7 @@ const FIRST_ROOM_EXHIBITS = [
     }
   },
   {
-    z: -55,
+    z: -38.0,
     left: {
       titleVi: "Cảng biển Quốc tế",
       titleEn: "International Seaport",
@@ -190,7 +190,7 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
 
   return (
     <group
-      position={[0, 0, -62.5]}
+      position={[0, 0, -54.5]}
       onClick={handleClick}
       onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { document.body.style.cursor = 'auto'; }}
@@ -517,7 +517,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           const partitionWidth = (roomWidth - carpetWidth) / 2;
           const partitionX = (carpetWidth + partitionWidth) / 2;
 
-          return [-50, -35, -20, -5, 10, 25].map((zPos, i) => {
+          return [-35, -20, -5, 10, 25].map((zPos, i) => {
             return (
               <group key={`partition-${i}`}>
                 {/* Vách ngăn bên trái */}

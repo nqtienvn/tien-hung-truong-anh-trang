@@ -88,8 +88,8 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     return 3.0;
   }
 
-  // Phòng 4 (gallery-market-economy) — Z từ 130.0 đến 280.0, Y = 3.0
-  if (z > 130.0 && z <= 280.0) {
+  // Phòng 4 (gallery-market-economy) — Z từ 130.0 đến 245.0, Y = 3.0
+  if (z > 130.0 && z <= 245.0) {
     return 3.0;
   }
 
@@ -248,12 +248,12 @@ const LobbyCameraController: React.FC = () => {
       minZ = 100.2;
       maxZ = 129.8;
     }
-    // Room 4 (gallery-market-economy): Z spans 130.0 to 280.0, W = 18 -> X from -9 to 9
-    else if (pz > 130.0 && pz <= 280.0) {
+    // Room 4 (gallery-market-economy): Z spans 130.0 to 245.0, W = 18 -> X from -9 to 9
+    else if (pz > 130.0 && pz <= 245.0) {
       minX = -8.5;
       maxX = 8.5;
       minZ = 130.2;
-      maxZ = 279.8;
+      maxZ = 244.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));

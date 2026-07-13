@@ -237,7 +237,7 @@ io.on('connection', (socket) => {
       user.galleryId = 'gallery-paintings';
     } else if (data.z > 100.0 && data.z <= 130.0) {
       user.galleryId = 'gallery-ceramics';
-    } else if (data.z > 130.0 && data.z <= 280.0) {
+    } else if (data.z > 130.0 && data.z <= 245.0) {
       user.galleryId = 'gallery-market-economy';
     }
 
