@@ -437,13 +437,6 @@ const LobbyPlayer: React.FC = () => {
         // Quầy lễ tân bên phải
         if (x > 12.0 && x < 15.0 && z > -6.7 && z < 0.7) return true;
 
-        // Cầu thang
-        if (x > -4.0 && x < 4.0 && z > 2.0 && z <= 7.0) {
-          const stepIndex = Math.floor((z - 2.0) / 0.5);
-          const clampedIndex = Math.max(0, Math.min(9, stepIndex));
-          const stairY = clampedIndex * 0.3;
-          if (currentY < stairY - 0.1) return true;
-        }
 
         // Thành cầu thang
         if (z > 1.5 && z <= 8.0) {
