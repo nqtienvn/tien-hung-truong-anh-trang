@@ -251,11 +251,10 @@ io.on('connection', (socket) => {
     const user = activeUsers[socket.id];
     if (!user) return;
     user.score = data.score;
-    user.timeSpent = data.timeSpent !== undefined ? data.timeSpent : 9999;
     const socketRoom = getSocketRoom(user.galleryId);
     const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
     io.to(socketRoom).emit('users-list', usersInRoom);
-    console.log(`[SCORE] ${user.nickname} (${socket.id}) cập nhật điểm: ${user.score}, thời gian: ${user.timeSpent}s`);
+    console.log(`[SCORE] ${user.nickname} (${socket.id}) cập nhật điểm: ${user.score}`);
   });
 
   // 3. Khi người chơi gửi tin nhắn Chat

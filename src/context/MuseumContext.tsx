@@ -643,22 +643,25 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [settings.preset, roomStates, loadRoom]);
 
-  // Nếu chuyển đổi cấu hình sang 'low', dỡ bỏ ngay những phòng đang tắt hoặc đóng để giải phóng bộ nhớ GPU
+  // Nếu chuyển đổi cấu hình sang 'low' / 'ultra-low', dỡ bỏ ngay những phòng đang tắt hoặc đóng để giải phóng bộ nhớ GPU (giữ lại phòng hiện tại)
   useEffect(() => {
-    if (settings.preset === 'low') {
+    if (settings.preset === 'low' || settings.preset === 'ultra-low') {
       const allOpenTargets = Object.values(doorStates)
         .filter(s => s.isOpen)
         .map(s => s.targetRoom);
 
       setLoadedRooms(prev => {
-        const filtered = prev.filter(room => roomStates[room.galleryId]?.isOpen && allOpenTargets.includes(room.galleryId));
+        const filtered = prev.filter(room => 
+          room.galleryId === activeGallery?.id ||
+          (roomStates[room.galleryId]?.isOpen && allOpenTargets.includes(room.galleryId))
+        );
         if (filtered.length !== prev.length) {
           console.log('[ROOM-UNLOADED] [PRESET-SWITCH] Đã dỡ các phòng đóng/tắt để tiết kiệm tài nguyên ở Preset Thấp.');
         }
         return filtered;
       });
     }
-  }, [settings.preset, doorStates, roomStates]);
+  }, [settings.preset, doorStates, roomStates, activeGallery]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // TỰ ĐỘNG TẢI/DỠ PHÒNG KHI PHÒNG BẬT/TẮT VÀ CỬA MỞ/ĐÓNG
@@ -668,7 +671,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     for (const [galleryId, rState] of Object.entries(roomStates)) {
       if (rState.isOpen) {
         // Tải phòng khi bật
-        const isDoorOpenOrPreloaded = settings.preset !== 'low' || Object.values(doorStates).some(
+        const isDoorOpenOrPreloaded = (settings.preset !== 'low' && settings.preset !== 'ultra-low') || Object.values(doorStates).some(
           d => d.targetRoom === galleryId && d.isOpen
         );
         if (isDoorOpenOrPreloaded) {
@@ -680,7 +683,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
 
-    // 2. Tải/Dỡ phòng khi cửa mở/đóng đối với preset 'low'
+    // 2. Tải/Dỡ phòng khi cửa mở/đóng đối với preset 'low' / 'ultra-low'
     for (const [doorId, dState] of Object.entries(doorStates)) {
       if (dState.isOpen && dState.targetRoom) {
         if (roomStates[dState.targetRoom]?.isOpen) {
@@ -688,12 +691,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
       }
 
-      if (!dState.isOpen && dState.targetRoom === '' && settings.preset === 'low') {
+      if (!dState.isOpen && dState.targetRoom === '' && (settings.preset === 'low' || settings.preset === 'ultra-low')) {
         const allOpenTargets = Object.values(doorStates)
           .filter(s => s.isOpen)
           .map(s => s.targetRoom);
 
         setLoadedRooms(prev => prev.filter(room => {
+          if (room.galleryId === activeGallery?.id) return true; // Giữ lại phòng hiện tại
           if (!roomStates[room.galleryId]?.isOpen || !allOpenTargets.includes(room.galleryId)) {
             console.log(`[ROOM-UNLOADED] [LOW-PRESET] Phòng "${room.galleryId}" đã được dỡ bỏ khi đóng cửa.`);
             return false;
@@ -702,7 +706,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }));
       }
     }
-  }, [doorStates, roomStates, loadRoom, unloadRoom, settings.preset]);
+  }, [doorStates, roomStates, loadRoom, unloadRoom, settings.preset, activeGallery]);
 
   return (
     <MuseumContext.Provider

@@ -25,7 +25,7 @@ const LEG_MESH_Y = -(LEG_R + LEG_LEN / 2);
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const PlayerCharacter: React.FC = () => {
-  const { selectedExhibit, socket, activeGallery, nickname, settings } = useMuseum();
+  const { selectedExhibit, socket, activeGallery, nickname, settings, miniGameOpen } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
 
   const isPawn = settings.preset === 'low';
@@ -173,7 +173,7 @@ export const PlayerCharacter: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
-    if (selectedExhibit || !nickname) return;
+    if (selectedExhibit || !nickname || miniGameOpen) return;
 
     const { w, a, s, d } = keysPressed.current;
 
