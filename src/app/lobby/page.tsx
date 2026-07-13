@@ -1015,7 +1015,7 @@ export default function LobbyPage() {
             <Canvas
               shadows={false}
               dpr={settings.preset === 'ultra-low' ? [0.3, 0.5] : settings.preset === 'low' ? [0.5, 1.0] : [0.5, 2]}
-              gl={{ antialias: settings.preset === 'medium' }}
+              gl={{ antialias: settings.preset === 'medium', powerPreference: 'high-performance' }}
               camera={{ position: [0, 3, -2], fov: 65 }}
             >
               <AdaptiveDpr pixelated />
