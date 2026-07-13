@@ -232,7 +232,7 @@ const LobbyCameraController: React.FC = () => {
     };
   }, [gl]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
     // Thực hiện hiệu ứng Zoom mềm mại bằng cách thay đổi FOV (ép kiểu PerspectiveCamera)
     const persCam = camera as THREE.PerspectiveCamera;
     const targetFov = isZooming.current ? 20 : 65;
@@ -260,31 +260,50 @@ const LobbyCameraController: React.FC = () => {
     const yOff = idealDist * Math.cos(phi.current);
     const zOff = idealDist * Math.cos(theta.current) * Math.sin(phi.current);
 
-    // Xác định ranh giới camera dựa trên vị trí người chơi để tránh xuyên tường
+    // Xác định ranh giới camera dựa trên vị trí người chơi và trạng thái các cửa để tránh camera nhìn xuyên qua cửa đóng
+    const isDoor1Open = doorStates['door-room1']?.isOpen || false;
+    const isDoor2Open = doorStates['door-room2']?.isOpen || false;
+    const isDoor3Open = doorStates['door-room3']?.isOpen || false;
+    const isDoor4Open = doorStates['door-room4']?.isOpen || false;
+
     let minX = -LOBBY_W / 2 + 0.5; // -14.5
     let maxX = LOBBY_W / 2 - 0.5;  // 14.5
     let minZ = -9.4;
     let maxZ = 7.8;
 
-    // Các phòng triển lãm (Phòng 1, 2): Z từ 8.0 đến 100.0, W = 24 -> X từ -12 đến 12
-    if (pz > 8.0 && pz <= 100.0) {
+    if (pz <= 8.0) {
+      // Đang ở Sảnh
+      minX = -LOBBY_W / 2 + 0.5;
+      maxX = LOBBY_W / 2 - 0.5;
+      minZ = -9.4;
+      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 244.8 : 129.8) : 99.8) : 53.8) : 7.8;
+    } 
+    else if (pz > 8.0 && pz <= 54.0) {
+      // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
-      minZ = 8.2;
-      maxZ = 99.8;
-    }
-    // Phòng 03 (gallery-ceramics): Z từ 100.0 đến 130.0, W = 30 -> X từ -15 đến 15
+      minZ = isDoor1Open ? -9.4 : 8.2;
+      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 244.8 : 129.8) : 99.8) : 53.8;
+    } 
+    else if (pz > 54.0 && pz <= 100.0) {
+      // Đang ở Phòng 2
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
+      maxZ = isDoor3Open ? (isDoor4Open ? 244.8 : 129.8) : 99.8;
+    } 
     else if (pz > 100.0 && pz <= 130.0) {
+      // Đang ở Phòng 3
       minX = -14.5;
       maxX = 14.5;
-      minZ = 100.2;
-      maxZ = 129.8;
-    }
-    // Room 4 (gallery-market-economy): Z spans 130.0 to 245.0, W = 18 -> X from -9 to 9
+      minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
+      maxZ = isDoor4Open ? 244.8 : 129.8;
+    } 
     else if (pz > 130.0 && pz <= 245.0) {
+      // Đang ở Phòng 4
       minX = -8.5;
       maxX = 8.5;
-      minZ = 130.2;
+      minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
       maxZ = 244.8;
     }
 
@@ -315,7 +334,8 @@ const LobbyCameraController: React.FC = () => {
       targetLookAt.set(px, targetHeight, pz);
     }
 
-    camera.position.lerp(targetCamPos, 0.12);
+    const camAlpha = 1.0 - Math.exp(-8.0 * Math.min(0.1, delta));
+    camera.position.lerp(targetCamPos, camAlpha);
     camera.lookAt(targetLookAt);
   });
 
@@ -808,8 +828,9 @@ const LobbyPlayer: React.FC = () => {
       const curPos = playerRef.current.position;
       const curGroundY = getLobbyGroundY(curPos.x, curPos.z, doorStates);
 
-      const nextX = curPos.x + moveDir.x * speed * delta;
-      const nextZ = curPos.z + moveDir.z * speed * delta;
+      const movementDelta = Math.min(0.04, delta);
+      const nextX = curPos.x + moveDir.x * speed * movementDelta;
+      const nextZ = curPos.z + moveDir.z * speed * movementDelta;
 
       if (!checkCollision(nextX, curPos.z, curGroundY)) {
         curPos.x = nextX;
@@ -821,7 +842,7 @@ const LobbyPlayer: React.FC = () => {
       const targetRot = Math.atan2(moveDir.x, moveDir.z);
       let diff = targetRot - playerRef.current.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      playerRef.current.rotation.y += diff * 12 * delta;
+      playerRef.current.rotation.y += diff * 12 * movementDelta;
     }
 
     const curPos = playerRef.current.position;
@@ -845,8 +866,8 @@ const LobbyPlayer: React.FC = () => {
       }
     } else {
       const targetY = baseGroundY + bobY;
-      // Sử dụng lerp nhanh hơn một chút để giảm trễ nhưng vẫn đảm bảo mượt mà
-      curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, 0.3);
+      const lerpAlphaY = 1.0 - Math.exp(-15.0 * delta);
+      curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, lerpAlphaY);
     }
 
     // Chỉ kẹp cứng nếu người chơi bị hẫng chân quá sâu (ví dụ > 0.4 đơn vị) dưới sàn thực tế
