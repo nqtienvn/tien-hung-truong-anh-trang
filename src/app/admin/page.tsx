@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
-import { Shield, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
+import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
@@ -21,6 +21,10 @@ interface DoorState {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +32,16 @@ export default function AdminDashboard() {
   const [isNew, setIsNew] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Kiểm tra trạng thái xác thực đã lưu
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const auth = sessionStorage.getItem('admin_authorized');
+      if (auth === 'true') {
+        setIsAuthorized(true);
+      }
+    }
+  }, []);
 
   // ═══ Door Control State ═══
   const [adminSocket, setAdminSocket] = useState<Socket | null>(null);
@@ -45,6 +59,8 @@ export default function AdminDashboard() {
 
   // Kết nối Socket.io cho admin
   useEffect(() => {
+    if (!isAuthorized) return;
+
     const socketUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
     const sock = io(socketUrl, {
       transports: ['websocket'],
@@ -97,7 +113,7 @@ export default function AdminDashboard() {
     return () => {
       sock.disconnect();
     };
-  }, []);
+  }, [isAuthorized]);
 
   const handleOpenDoor = (doorId: string, targetRoom: string) => {
     if (!adminSocket) return;
@@ -168,6 +184,8 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    if (!isAuthorized) return;
+
     // Tải toàn bộ galleries và exhibits
     Promise.all([
       fetch('/api/galleries').then(res => res.json()),
@@ -183,7 +201,7 @@ export default function AdminDashboard() {
         setError('Không thể kết nối đến máy chủ.');
         setLoading(false);
       });
-  }, []);
+  }, [isAuthorized]);
 
   const handleEdit = (exhibit: Exhibit) => {
     setEditingExhibit({ ...exhibit });
@@ -407,6 +425,78 @@ export default function AdminDashboard() {
       </div>
     );
   };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === 'sjkc21jdx2k23') {
+      sessionStorage.setItem('admin_authorized', 'true');
+      setIsAuthorized(true);
+      setAuthError('');
+    } else {
+      setAuthError('Mật khẩu không chính xác! Vui lòng thử lại.');
+    }
+  };
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-[#07070a] text-slate-100 flex flex-col justify-center items-center relative overflow-hidden px-4">
+        {/* Background decoration */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+          <div className="absolute top-[20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-amber-500/10 blur-[100px]" />
+          <div className="absolute bottom-[20%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-cyan-500/10 blur-[100px]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-md bg-slate-950/60 border border-slate-900 rounded-3xl p-8 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col items-center gap-4 text-center mb-6">
+            <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+              <Lock size={24} />
+            </div>
+            <div>
+              <h2 className="font-sans font-bold text-lg tracking-wider text-white uppercase">XÁC THỰC QUẢN TRỊ VIÊN</h2>
+              <p className="text-xs text-slate-500 mt-1">Hệ thống yêu cầu mật khẩu để truy cập CMS Quản trị</p>
+            </div>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mật khẩu</label>
+              <input
+                type="password"
+                required
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Nhập mật khẩu truy cập..."
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all placeholder:text-slate-600"
+              />
+            </div>
+
+            {authError && (
+              <p className="text-[11px] text-rose-500 font-semibold bg-rose-500/10 border border-rose-500/15 p-2.5 rounded-lg text-center">
+                ⚠️ {authError}
+              </p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => router.push('/')}
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white py-2.5 rounded-xl text-xs font-bold border border-slate-800 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft size={14} />
+                Quay lại
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.2)] flex items-center justify-center gap-1.5"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
