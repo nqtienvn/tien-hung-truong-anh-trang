@@ -183,17 +183,9 @@ export default function Home() {
                   Bao Cấp Việt Nam (1976-1985)
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh mối và giải đáp câu đố thời kỳ trước Đổi mới.
+                  Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh
+                  mối và giải đáp câu đố thời kỳ trước Đổi mới.
                 </p>
-                <Link
-                  href="/gallery/gallery-subsidy"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
 
@@ -215,17 +207,9 @@ export default function Home() {
                   Khởi nguồn Trao đổi &amp; Tiền tệ
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá những hình thái sơ khai của thương mại và các bức tranh sơn dầu cổ điển thế giới.
+                  Khám phá những hình thái sơ khai của thương mại và các bức
+                  tranh sơn dầu cổ điển thế giới.
                 </p>
-                <Link
-                  href="/gallery/gallery-paintings"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
 
@@ -247,17 +231,9 @@ export default function Home() {
                   Cỗ máy Thị trường &amp; Tư bản
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và những quy luật ngầm điều hành kinh tế.
+                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và
+                  những quy luật ngầm điều hành kinh tế.
                 </p>
-                <Link
-                  href="/gallery/gallery-ceramics"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
 
@@ -282,15 +258,6 @@ export default function Home() {
                   Vị thế của nền kinh tế Việt Nam trong dòng chảy toàn cầu hóa
                   và những thách thức trong kỷ nguyên số.
                 </p>
-                <Link
-                  href="/gallery/gallery-paintings"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
           </div>

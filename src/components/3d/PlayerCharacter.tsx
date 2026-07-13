@@ -275,9 +275,9 @@ export const PlayerCharacter: React.FC = () => {
       }
     }
 
-    // Gửi tọa độ qua socket (8Hz — tối ưu cho 65 người đồng thời)
+    // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
-    if (now - lastUpdate.current > 125) {
+    if (now - lastUpdate.current > 80) {
       if (socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
