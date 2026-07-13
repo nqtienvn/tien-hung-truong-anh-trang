@@ -34,7 +34,7 @@ const PaintingMesh: React.FC<{ url: string }> = ({ url }) => {
 // ═══════════════════════════════════════════════════════════════════════════
 const FIRST_ROOM_EXHIBITS = [
   {
-    z: -56.0,
+    z: -55.5,
     left: {
       titleVi: "Kinh tế Nhà nước (Viettel)",
       titleEn: "State Economy (Viettel)",
@@ -51,7 +51,7 @@ const FIRST_ROOM_EXHIBITS = [
     }
   },
   {
-    z: -51.5,
+    z: -52.0,
     left: {
       titleVi: "Kinh tế Tư nhân (VinFast)",
       titleEn: "Private Economy (VinFast)",
@@ -65,57 +65,6 @@ const FIRST_ROOM_EXHIBITS = [
       descVi: "Sự hiện diện đa dạng của các thành phần kinh tế trong hoạt động phân phối bán lẻ hàng tiêu dùng hiện đại.",
       descEn: "The diverse presence of economic sectors in modern consumer retail distribution networks.",
       imageUrl: "/images/room4/sieu-thi.jpg"
-    }
-  },
-  {
-    z: -47.0,
-    left: {
-      titleVi: "Chợ truyền thống và Cung - Cầu",
-      titleEn: "Traditional Market & Supply-Demand",
-      descVi: "Quy luật cung cầu tự nhiên vận hành cơ chế giá cả hàng hóa linh hoạt, phản ánh đời sống thương mại thường nhật.",
-      descEn: "Natural supply and demand laws drive flexible commodity pricing, reflecting daily commerce.",
-      imageUrl: "/images/room4/cho-truyen-thong.jpg"
-    },
-    right: {
-      titleVi: "An ninh Năng lượng (EVN)",
-      titleEn: "National Energy Security (EVN)",
-      descVi: "Hạ tầng năng lượng công ích được bảo đảm bởi doanh nghiệp nhà nước phục vụ cơ chế sản xuất xã hội.",
-      descEn: "Public energy infrastructure secured by state corporations to fuel the social production mechanism.",
-      imageUrl: "/images/room4/evn.jpg"
-    }
-  },
-  {
-    z: -42.5,
-    left: {
-      titleVi: "Hạ tầng huyết mạch (Cao tốc)",
-      titleEn: "Spine Infrastructure (Expressway)",
-      descVi: "Đầu tư công của Nhà nước kiến tạo mạng lưới giao thông cao tốc kết nối vùng kinh tế động lực.",
-      descEn: "State public investments build core highway networks connecting major economic hubs.",
-      imageUrl: "/images/room4/cao-toc-bac-nam.jpg"
-    },
-    right: {
-      titleVi: "Chính sách An sinh Xã hội",
-      titleEn: "Social Welfare Policy (Insurance)",
-      descVi: "Bảo hiểm y tế toàn dân thể hiện định hướng tiến bộ và công bằng, chăm lo sức khỏe nhân dân.",
-      descEn: "Universal healthcare insurance represents socialist progress and equity, caring for all citizens.",
-      imageUrl: "/images/room4/bao-hiem-y-te.jpg"
-    }
-  },
-  {
-    z: -38.0,
-    left: {
-      titleVi: "Cảng biển Quốc tế",
-      titleEn: "International Seaport",
-      descVi: "Hạ tầng kết nối logistics toàn cầu, cửa ngõ giao thương đường biển thu hút luồng hàng quốc tế.",
-      descEn: "Global logistics infrastructure, maritime trade gateway attracting international shipping lines.",
-      imageUrl: "/images/room4/cang-bien.jpg"
-    },
-    right: {
-      titleVi: "Hội nhập & Container xuất khẩu",
-      titleEn: "Integration & Export Containers",
-      descVi: "Chủ động tham gia sâu rộng vào chuỗi cung ứng toàn cầu và các hiệp định tự do thương mại thế hệ mới.",
-      descEn: "Actively participating and integrating deeply into global supply chains and new-generation free trade agreements.",
-      imageUrl: "/images/room4/container-xuat-khau.jpg"
     }
   }
 ];
@@ -517,7 +466,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           const partitionWidth = (roomWidth - carpetWidth) / 2;
           const partitionX = (carpetWidth + partitionWidth) / 2;
 
-          return [-35, -20, -5, 10, 25].map((zPos, i) => {
+          return [-50, -35, -20, -5, 10, 25].map((zPos, i) => {
             return (
               <group key={`partition-${i}`}>
                 {/* Vách ngăn bên trái */}

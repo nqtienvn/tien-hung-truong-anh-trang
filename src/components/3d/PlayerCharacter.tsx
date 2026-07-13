@@ -155,7 +155,7 @@ export const PlayerCharacter: React.FC = () => {
 
     // ── Phòng 4: gallery-market-economy ──────────────────────────────────────
     if (galleryId === 'gallery-market-economy') {
-      const zPositions = [-35, -20, -5, 10, 25];
+      const zPositions = [-50, -35, -20, -5, 10, 25];
       for (const pZ of zPositions) {
         if (z > pZ - 0.35 && z < pZ + 0.35) {
           // Lối đi mở rộng 6m ở chính giữa (-3.0 đến 3.0). Bị chặn nếu nằm ở hai bên.

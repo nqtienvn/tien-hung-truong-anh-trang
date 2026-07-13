@@ -2463,7 +2463,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* ── NPC 2D (Hologram Cố Vấn Triển Lãm) gần vách ngăn thứ nhất ── */}
       {isVisible && (
         <group
-          position={[-2.2, 1.2, -51.5]}
+          position={[-2.2, 1.2, -48.0]}
           rotation={[0, Math.PI - 0.2, 0]}
         >
           {/* Vòng sáng chân đế */}
