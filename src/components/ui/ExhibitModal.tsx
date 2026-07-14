@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Globe, User, BookOpen, Gamepad2, HelpCircle, Check, AlertTriangle, ArrowRight, Save, Clock, Volume2, Pause, Play } from 'lucide-react';
 import { useMuseum } from '@/context/MuseumContext';
 import confetti from 'canvas-confetti';
@@ -171,7 +171,8 @@ export const ExhibitModal: React.FC = () => {
     exhibitModalMode,
     nickname,
     collectedCeramics,
-    addCeramic
+    addCeramic,
+    roomOneCompleted
   } = useMuseum();
 
   // --- States cho Audio thuyết minh mặc định ---
@@ -196,47 +197,74 @@ export const ExhibitModal: React.FC = () => {
   const [canCollectCurrentClue, setCanCollectCurrentClue] = useState(false);
   const [failedQuizIds, setFailedQuizIds] = useState<string[]>([]);
 
+  // Tải danh sách câu hỏi đã làm sai từ localStorage để lưu trữ vĩnh viễn không bị reset khi load lại trang
   useEffect(() => {
-    setFailedQuizIds([]);
-  }, [nickname]);
-
-  // Reset audio & gameplay states khi thay đổi hiện vật
-  useEffect(() => {
-    setAudioProgress(0);
-    setAudioPlaying(false);
-
-    if (selectedExhibit) {
-      const length = selectedExhibit.id.length * 7 + 80;
-      setAudioDuration(length);
-
-      if (isCeramicsRoom) {
-        setCeramicsCountdown(10);
-      }
-
-      if (isSubsidyRoom && gameData) {
-        if (exhibitModalMode === 'info') {
-          setGameState('info');
-          return;
-        }
-
-        const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
-        const alreadyFailed = failedQuizIds.includes(selectedExhibit.id);
-        if (alreadyCollected || alreadyFailed) {
-          setGameState('info');
-          setCanCollectCurrentClue(false);
-        } else {
-          setGameState(gameData.hasTimer ? 'observe' : 'quiz');
-          setCountdown(gameData.timerDuration);
-          setCurrentQuizIndex(0);
-          setSelectedOption(null);
-          setSelectedOptions([]);
-          setAnswerChecked(false);
-          setIsCorrect(false);
-          setCanCollectCurrentClue(false);
+    if (typeof window !== 'undefined' && nickname) {
+      const saved = localStorage.getItem(`failed_quizzes_${nickname}`);
+      if (saved) {
+        try {
+          setFailedQuizIds(JSON.parse(saved));
+        } catch (e) {
+          console.error(e);
         }
       }
     }
-  }, [selectedExhibit, cluesCollected, failedQuizIds, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, setAudioPlaying]);
+  }, [nickname]);
+
+  const updateFailedQuizIds = (newFailed: string[]) => {
+    setFailedQuizIds(newFailed);
+    if (typeof window !== 'undefined' && nickname) {
+      localStorage.setItem(`failed_quizzes_${nickname}`, JSON.stringify(newFailed));
+    }
+  };
+
+  const lastExhibitIdRef = useRef<string | null>(null);
+
+  // Reset audio & gameplay states chỉ khi thay đổi hiện vật mở lên (tránh reset giữa chừng khi làm bài sai)
+  useEffect(() => {
+    if (!selectedExhibit) {
+      lastExhibitIdRef.current = null;
+      return;
+    }
+
+    // Nếu vẫn là hiện vật cũ đang mở thì không reset lại trạng thái đang làm bài
+    if (selectedExhibit.id === lastExhibitIdRef.current) return;
+    lastExhibitIdRef.current = selectedExhibit.id;
+
+    setAudioProgress(0);
+    setAudioPlaying(false);
+
+    const length = selectedExhibit.id.length * 7 + 80;
+    setAudioDuration(length);
+
+    if (isCeramicsRoom) {
+      setCeramicsCountdown(10);
+    }
+
+    if (isSubsidyRoom && gameData) {
+      if (exhibitModalMode === 'info' || roomOneCompleted) {
+        setGameState('info');
+        setCanCollectCurrentClue(false);
+        return;
+      }
+
+      const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
+      const alreadyFailed = failedQuizIds.includes(selectedExhibit.id);
+      if (alreadyCollected || alreadyFailed) {
+        setGameState('info');
+        setCanCollectCurrentClue(false);
+      } else {
+        setGameState(gameData.hasTimer ? 'observe' : 'quiz');
+        setCountdown(gameData.timerDuration);
+        setCurrentQuizIndex(0);
+        setSelectedOption(null);
+        setSelectedOptions([]);
+        setAnswerChecked(false);
+        setIsCorrect(false);
+        setCanCollectCurrentClue(false);
+      }
+    }
+  }, [selectedExhibit?.id, cluesCollected, failedQuizIds, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, roomOneCompleted]);
 
   // Bộ đếm ngược 10 giây cho phòng gốm sứ
   useEffect(() => {
@@ -340,7 +368,10 @@ export const ExhibitModal: React.FC = () => {
     setCanCollectCurrentClue(correct);
 
     if (!correct && selectedExhibit) {
-      setFailedQuizIds(prev => prev.includes(selectedExhibit.id) ? prev : [...prev, selectedExhibit.id]);
+      const newFailed = failedQuizIds.includes(selectedExhibit.id)
+        ? failedQuizIds
+        : [...failedQuizIds, selectedExhibit.id];
+      updateFailedQuizIds(newFailed);
     }
   };
 
@@ -372,6 +403,9 @@ export const ExhibitModal: React.FC = () => {
             src={selectedExhibit.thumbnail_url}
             alt={titleText}
             className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
+            style={{
+              objectPosition: selectedExhibit.id === 'exhibit-priceboard' ? 'right center' : 'center'
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-slate-950/85 via-slate-950/10 to-transparent" />
 
@@ -441,45 +475,35 @@ export const ExhibitModal: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="space-y-2">
-                      {shuffledOptions.map((opt) => {
-                        const isOptionSelected = currentQuiz.isMulti
-                          ? selectedOptions.includes(opt.originalIndex)
-                          : selectedOption === opt.originalIndex;
+                    {!answerChecked && (
+                      <div className="space-y-2">
+                        {shuffledOptions.map((opt) => {
+                          const isOptionSelected = currentQuiz.isMulti
+                            ? selectedOptions.includes(opt.originalIndex)
+                            : selectedOption === opt.originalIndex;
 
-                        let optStyle = 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-300';
+                          let optStyle = 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-300';
 
-                        if (isOptionSelected) {
-                          optStyle = 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold';
-                        }
-
-                        if (answerChecked) {
-                          const isCorrectOpt = currentQuiz.isMulti
-                            ? (currentQuiz.correctIndex as number[]).includes(opt.originalIndex)
-                            : opt.originalIndex === currentQuiz.correctIndex;
-
-                          if (isCorrectOpt) {
-                            optStyle = 'bg-emerald-500/10 border-emerald-500/60 text-emerald-400 font-semibold';
-                          } else if (isOptionSelected) {
-                            optStyle = 'bg-rose-500/10 border-rose-500/65 text-rose-400';
+                          if (isOptionSelected) {
+                            optStyle = 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold';
                           }
-                        }
 
-                        return (
-                          <button
-                            key={opt.originalIndex}
-                            disabled={answerChecked}
-                            onClick={() => handleSelectOption(opt.originalIndex)}
-                            className={`w-full text-left p-5 rounded-2xl border text-base lg:text-lg leading-relaxed font-sans transition-all cursor-pointer ${optStyle}`}
-                          >
-                            <span className="font-mono font-bold mr-1.5">
-                              {String.fromCharCode(65 + shuffledOptions.findIndex(item => item.originalIndex === opt.originalIndex))}.
-                            </span>
-                            {opt.text}
-                          </button>
-                        );
-                      })}
-                    </div>
+                          return (
+                            <button
+                              key={opt.originalIndex}
+                              disabled={answerChecked}
+                              onClick={() => handleSelectOption(opt.originalIndex)}
+                              className={`w-full text-left p-5 rounded-2xl border text-base lg:text-lg leading-relaxed font-sans transition-all cursor-pointer ${optStyle}`}
+                            >
+                              <span className="font-mono font-bold mr-1.5">
+                                {String.fromCharCode(65 + shuffledOptions.findIndex(item => item.originalIndex === opt.originalIndex))}.
+                              </span>
+                              {opt.text}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
 
                     {!answerChecked ? (
                       <button
@@ -538,46 +562,7 @@ export const ExhibitModal: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Thêm bài phát biểu giọng nói của Góc nhân chứng / Nhà máy */}
-                    {(selectedExhibit.id === 'exhibit-witness' || selectedExhibit.id === 'exhibit-factory') && (
-                      <div className="bg-gradient-to-br from-amber-500/10 to-transparent p-4 rounded-xl border border-amber-500/25 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
-                            <Volume2 size={14} />
-                            HỒ SƠ GHI ÂM TƯ LIỆU
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {formatTime(audioProgress)} / {formatTime(audioDuration)}
-                          </span>
-                        </div>
 
-                        <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative">
-                          <div
-                            className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
-                            style={{ width: `${(audioProgress / audioDuration) * 100}%` }}
-                          />
-                        </div>
-
-                        <div className="flex justify-center">
-                          <button
-                            onClick={() => setAudioPlaying(!audioPlaying)}
-                            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2 px-5 rounded-full font-bold text-[10px] transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20 font-mono"
-                          >
-                            {audioPlaying ? (
-                              <>
-                                <Pause size={12} fill="currentColor" />
-                                TẠM DỪNG
-                              </>
-                            ) : (
-                              <>
-                                <Play size={12} fill="currentColor" />
-                                PHÁT GHI ÂM TƯ LIỆU
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Nút lưu manh mối: chỉ hiện trong luồng chơi/câu hỏi, không hiện khi bấm bệ xem thông tin */}
                     {exhibitModalMode === 'game' && canCollectCurrentClue && (

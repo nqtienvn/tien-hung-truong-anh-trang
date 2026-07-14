@@ -181,12 +181,12 @@ function BuilderContent() {
     // Tự động chọn dây đỏ (6 dây tương ứng với tọa độ)
     const { coordinate_x: x, coordinate_z: z } = exhibit;
     if (x < 0) {
-      if (z < -10) setSelectedRope(0);
-      else if (z < 0) setSelectedRope(1);
+      if (z < -8) setSelectedRope(0);
+      else if (z < 8) setSelectedRope(1);
       else setSelectedRope(2);
     } else {
-      if (z < -10) setSelectedRope(3);
-      else if (z < 0) setSelectedRope(4);
+      if (z < -8) setSelectedRope(3);
+      else if (z < 8) setSelectedRope(4);
       else setSelectedRope(5);
     }
   };
@@ -197,12 +197,12 @@ function BuilderContent() {
     // Tìm exhibit tương ứng với dây đỏ
     const targetExhibit = exhibits.find(e => {
       const { coordinate_x: x, coordinate_z: z } = e;
-      if (ropeIndex === 0) return x < 0 && z < -10;
-      if (ropeIndex === 1) return x < 0 && z >= -10 && z < 0;
-      if (ropeIndex === 2) return x < 0 && z >= 0;
-      if (ropeIndex === 3) return x > 0 && z < -10;
-      if (ropeIndex === 4) return x > 0 && z >= -10 && z < 0;
-      if (ropeIndex === 5) return x > 0 && z >= 0;
+      if (ropeIndex === 0) return x < 0 && z < -8;
+      if (ropeIndex === 1) return x < 0 && z >= -8 && z < 8;
+      if (ropeIndex === 2) return x < 0 && z >= 8;
+      if (ropeIndex === 3) return x > 0 && z < -8;
+      if (ropeIndex === 4) return x > 0 && z >= -8 && z < 8;
+      if (ropeIndex === 5) return x > 0 && z >= 8;
       return false;
     });
     
@@ -224,12 +224,12 @@ function BuilderContent() {
 
   // Vị trí từng dây đỏ riêng biệt (6 dây: left x3, right x3)
   const ROPE_LABELS = [
-    'Trái — đoạn sau (Z ≈ −18)',
-    'Trái — đoạn giữa (Z ≈ −8)',
-    'Trái — đoạn trước (Z ≈ 2)',
-    'Phải — đoạn sau (Z ≈ −18)',
-    'Phải — đoạn giữa (Z ≈ −8)',
-    'Phải — đoạn trước (Z ≈ 2)',
+    'Trái — đoạn sau (Z ≈ −16)',
+    'Trái — đoạn giữa (Z ≈ 0)',
+    'Trái — đoạn trước (Z ≈ 16)',
+    'Phải — đoạn sau (Z ≈ −16)',
+    'Phải — đoạn giữa (Z ≈ 0)',
+    'Phải — đoạn trước (Z ≈ 16)',
   ];
   const DEFAULT_ROPES = Array(6).fill(null).map(() => ({ xOffset: 0, zOffset: 0 }));
   type RopeConfig = { xOffset: number; zOffset: number };

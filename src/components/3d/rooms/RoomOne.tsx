@@ -76,7 +76,7 @@ export const RoomOne: React.FC<RoomOneProps> = ({
   const DEFAULT_ROPE = { xOffset: 0, zOffset: 0 };
   let ropeConfigs: Array<{ xOffset: number; zOffset: number }> = Array(6).fill(DEFAULT_ROPE);
   try {
-    const raw = ropeBarriersConfig ?? activeGallery?.rope_barriers_config;
+    const raw = ropeBarriersConfig ?? (customSettings as any)?.rope_barriers_config ?? activeGallery?.rope_barriers_config;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length === 6) ropeConfigs = parsed;
@@ -99,8 +99,8 @@ export const RoomOne: React.FC<RoomOneProps> = ({
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={overriddenSettings} isVisible={isVisible}>
-      {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = -10.0 & Z = 10.0) */}
-      {[-10.0, 10.0].map((z) => (
+      {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = -12.0 & Z = 12.0) */}
+      {[-12.0, 12.0].map((z) => (
         <group key={z} position={[0, 0, z]}>
           <mesh position={[0, 0.45, 0]}>
             <boxGeometry args={[3.2, 0.08, 0.8]} />
@@ -115,8 +115,8 @@ export const RoomOne: React.FC<RoomOneProps> = ({
         </group>
       ))}
 
-      {/* 4. CỤM GHẾ NGỒI GIỮA PHÒNG - tạo cảm giác phòng triển lãm có điểm nghỉ chân (phân bố đều tại Z = -20.0, Z = 0.0, Z = 20.0) */}
-      {[-20.0, 0.0, 20.0].map((z, index) => (
+      {/* 4. CỤM GHẾ NGỒI GIỮA PHÒNG - tạo cảm giác phòng triển lãm có điểm nghỉ chân (phân bố đều tại Z = -4.0, Z = 4.0) */}
+      {[-4.0, 4.0].map((z, index) => (
         <group key={`central-bench-${z}`} position={[0, 0, z]} rotation={[0, index % 2 === 0 ? 0 : Math.PI, 0]}>
           <mesh position={[0, 0.52, 0]}>
             <boxGeometry args={[4.0, 0.12, 0.82]} />
@@ -141,10 +141,14 @@ export const RoomOne: React.FC<RoomOneProps> = ({
         </group>
       ))}
 
-      {/* 5. BÀN TRANG TRÍ GỌN VỚI LỌ HOA - đặt lệch bên để không cản lối (phân bố đều tại Z = -15.0 và Z = 15.0) */}
+      {/* 5. BÀN TRANG TRÍ GỌN VỚI LỌ HOA - đặt lệch bên để không cản lối (mỗi bên 3 bàn phân bố đều tại Z = -16.0, Z = 0.0, Z = 16.0) */}
       {[
-        { x: -7.2, z: -15.0 },
-        { x: 7.2, z: 15.0 },
+        { x: -7.2, z: -16.0 },
+        { x: -7.2, z: 0.0 },
+        { x: -7.2, z: 16.0 },
+        { x: 7.2, z: -16.0 },
+        { x: 7.2, z: 0.0 },
+        { x: 7.2, z: 16.0 },
       ].map((item, index) => (
         <group key={`decor-table-${index}`} position={[item.x, 0, item.z]}>
           <mesh position={[0, 0.64, 0]}>
@@ -184,12 +188,12 @@ export const RoomOne: React.FC<RoomOneProps> = ({
       ))}
 
       {/* 6. HÀNG RÀO DÂY NHUNG ĐỎ TRƯỚC DÃY TRANH - từng dây có offset riêng */}
-      <VelvetRopeBarrier side="left" zPoints={[-18, -12]} xOffset={ropeConfigs[0].xOffset} zOffset={ropeConfigs[0].zOffset} onClick={() => onRopeClick?.(0)} />
-      <VelvetRopeBarrier side="left" zPoints={[-8, -2]} xOffset={ropeConfigs[1].xOffset} zOffset={ropeConfigs[1].zOffset} onClick={() => onRopeClick?.(1)} />
-      <VelvetRopeBarrier side="left" zPoints={[2, 8]} xOffset={ropeConfigs[2].xOffset} zOffset={ropeConfigs[2].zOffset} onClick={() => onRopeClick?.(2)} />
-      <VelvetRopeBarrier side="right" zPoints={[-18, -12]} xOffset={-ropeConfigs[3].xOffset} zOffset={ropeConfigs[3].zOffset} onClick={() => onRopeClick?.(3)} />
-      <VelvetRopeBarrier side="right" zPoints={[-8, -2]} xOffset={-ropeConfigs[4].xOffset} zOffset={ropeConfigs[4].zOffset} onClick={() => onRopeClick?.(4)} />
-      <VelvetRopeBarrier side="right" zPoints={[2, 8]} xOffset={-ropeConfigs[5].xOffset} zOffset={ropeConfigs[5].zOffset} onClick={() => onRopeClick?.(5)} />
+      <VelvetRopeBarrier side="left" zPoints={[-19, -13]} xOffset={ropeConfigs[0].xOffset} zOffset={ropeConfigs[0].zOffset} onClick={() => onRopeClick?.(0)} />
+      <VelvetRopeBarrier side="left" zPoints={[-3, 3]} xOffset={ropeConfigs[1].xOffset} zOffset={ropeConfigs[1].zOffset} onClick={() => onRopeClick?.(1)} />
+      <VelvetRopeBarrier side="left" zPoints={[13, 19]} xOffset={ropeConfigs[2].xOffset} zOffset={ropeConfigs[2].zOffset} onClick={() => onRopeClick?.(2)} />
+      <VelvetRopeBarrier side="right" zPoints={[-19, -13]} xOffset={-ropeConfigs[3].xOffset} zOffset={ropeConfigs[3].zOffset} onClick={() => onRopeClick?.(3)} />
+      <VelvetRopeBarrier side="right" zPoints={[-3, 3]} xOffset={-ropeConfigs[4].xOffset} zOffset={ropeConfigs[4].zOffset} onClick={() => onRopeClick?.(4)} />
+      <VelvetRopeBarrier side="right" zPoints={[13, 19]} xOffset={-ropeConfigs[5].xOffset} zOffset={ropeConfigs[5].zOffset} onClick={() => onRopeClick?.(5)} />
     </BaseRoom>
   );
 };

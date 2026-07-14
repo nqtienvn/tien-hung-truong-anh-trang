@@ -29,33 +29,33 @@ const GALLERY_CONFIGS: Record<string, {
       {
         icon: <Search size={28} className="text-amber-600" />,
         title: '① Khám phá hiện vật',
-        desc: 'Đi vòng quanh phòng, nhấp vào các hiện vật trên tường để quan sát. Bạn có 20 giây quan sát trước khi trả lời câu hỏi.',
+        desc: 'Đi vòng quanh phòng, nhấp vào các hiện vật trên tường để quan sát, ghi nhớ thông tin lịch sử của chúng.',
       },
       {
         icon: <FileCheck size={28} className="text-amber-600" />,
         title: '② Trả lời câu hỏi lịch sử',
-        desc: 'Sau khi quan sát, trả lời 1–2 câu hỏi ngắn về hiện vật. Trả lời đúng để mở khóa manh mối điều tra.',
+        desc: 'Trả lời các câu hỏi ngắn tương ứng với hiện vật. Trả lời chính xác để thu thập mảnh manh mối ghép vào sổ tay.',
       },
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
         title: '③ Hoàn thiện Sổ điều tra',
-        desc: 'Sau khi thu thập đủ 6 manh mối, mở Sổ điều tra (góc dưới phải). Ghép bằng chứng và đưa ra kết luận cuối phòng.',
+        desc: 'Khi có đủ manh mối, hãy mở Sổ điều tra (nút góc dưới phải) để lắp ráp các bánh răng và bản đúc kết trên Cỗ máy Bao cấp.',
       },
       {
         icon: <DoorOpen size={28} className="text-amber-600" />,
         title: '④ Mở cửa sang phòng tiếp theo',
-        desc: 'Hoàn thành Bảng suy luận chính xác (20/20 điểm) để mở cửa sang Phòng 02: Hội họa cổ điển.',
+        desc: 'Hoàn thành vận hành cỗ máy chính xác và đóng dấu phê duyệt báo cáo để mở khóa cửa sang Phòng 02.',
       },
     ],
     summary: (
       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🔍</span>
-          <span>6 hiện vật cần khám phá</span>
+          <span>6 hiện vật cần giải mã</span>
         </div>
         <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">⏱️</span>
-          <span>20 giây quan sát mỗi vật</span>
+          <span className="text-amber-600 font-bold shrink-0">🧩</span>
+          <span>Lắp bánh răng & đúc kết</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">📒</span>
@@ -63,7 +63,7 @@ const GALLERY_CONFIGS: Record<string, {
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🏆</span>
-          <span>Đạt 20/20 để mở cửa tiếp</span>
+          <span>Đóng dấu phê duyệt để qua cửa</span>
         </div>
       </div>
     ),

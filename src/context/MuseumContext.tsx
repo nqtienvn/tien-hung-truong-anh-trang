@@ -133,6 +133,9 @@ interface MuseumContextType {
   roomOneTotalPlayers: number;
   roomOneCountdownTime: number;
   roomOneState: 'waiting' | 'countdown' | 'started';
+  roomOneStartTimestamp: number | null;
+  roomOneSessionResults: any[] | null;
+  setRoomOneSessionResults: (results: any[] | null) => void;
 
   // --- Welcome Modal Status ---
   welcomeModalOpen: boolean;
@@ -189,6 +192,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomOneTotalPlayers, setRoomOneTotalPlayers] = useState(0);
   const [roomOneCountdownTime, setRoomOneCountdownTime] = useState(0);
   const [roomOneState, setRoomOneState] = useState<'waiting' | 'countdown' | 'started'>('waiting');
+  const [roomOneStartTimestamp, setRoomOneStartTimestamp] = useState<number | null>(null);
+  const [roomOneSessionResults, setRoomOneSessionResults] = useState<any[] | null>(null);
 
   // --- Welcome Modal Status ---
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
@@ -230,9 +235,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const addClue = useCallback((clueId: string) => {
     setCluesCollected((prev) => {
       if (prev.includes(clueId)) return prev;
-      return [...prev, clueId];
+      const updated = [...prev, clueId];
+      if (socket && socket.connected) {
+        socket.emit('room1:update-clues-count', { count: updated.length });
+      }
+      return updated;
     });
-  }, []);
+  }, [socket]);
 
   const handleSetRoomOneCompleted = useCallback((completed: boolean) => {
     setRoomOneCompleted(completed);
@@ -635,12 +644,17 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // ── Room 1 Multiplayer Sync Events ──
-    newSocket.on('room1:state-sync', (data: { roomOneState: 'waiting' | 'countdown' | 'started' }) => {
+    newSocket.on('room1:state-sync', (data: { roomOneState: 'waiting' | 'countdown' | 'started'; roomOneStartTimestamp?: number }) => {
       setRoomOneState(data.roomOneState);
       if (data.roomOneState !== 'started') {
         setRoomOneLocked(true);
       } else {
         setRoomOneLocked(false);
+      }
+      if (data.roomOneStartTimestamp) {
+        setRoomOneStartTimestamp(data.roomOneStartTimestamp);
+      } else {
+        setRoomOneStartTimestamp(null);
       }
     });
 
@@ -663,10 +677,17 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setRoomOneLocked(true);
     });
 
-    newSocket.on('room1:start-game', () => {
+    newSocket.on('room1:start-game', (data?: { roomOneStartTimestamp?: number }) => {
       setRoomOneState('started');
       setRoomOneCountdownTime(0);
       setRoomOneLocked(false);
+      setRoomOneStartTimestamp(data?.roomOneStartTimestamp || Date.now());
+      setRoomOneSessionResults(null);
+    });
+
+    newSocket.on('room1:session-ended', (data: { results: any[] }) => {
+      setRoomOneSessionResults(data.results);
+      setRoomOneCompleted(true);
     });
 
     setSocket(newSocket);
@@ -848,6 +869,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         roomOneTotalPlayers,
         roomOneCountdownTime,
         roomOneState,
+        roomOneStartTimestamp,
+        roomOneSessionResults,
+        setRoomOneSessionResults,
 
         // --- Welcome Modal Status ---
         welcomeModalOpen,
