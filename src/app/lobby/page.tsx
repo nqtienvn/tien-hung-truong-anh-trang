@@ -794,8 +794,8 @@ const LobbyPlayer: React.FC = () => {
         rightArmRef.current.rotation.z = -0.1;
       }
 
-      const now = state.clock.getElapsedTime();
-      if (now - lastUpdate.current > 0.08) {
+      const now = state.clock.getElapsedTime() * 1000;
+      if (now - lastUpdate.current > 80) {
         socket?.emit('move', {
           x: sittingPosition.x,
           y: sittingPosition.y,
