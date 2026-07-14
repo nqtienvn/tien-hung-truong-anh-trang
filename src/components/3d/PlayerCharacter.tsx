@@ -32,6 +32,7 @@ export const PlayerCharacter: React.FC = () => {
     nickname,
     settings,
     miniGameOpen,
+    roomOneLocked,
   } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
 
@@ -164,7 +165,7 @@ export const PlayerCharacter: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
-    if (selectedExhibit || !nickname || miniGameOpen) return;
+    if (selectedExhibit || !nickname || miniGameOpen || roomOneLocked) return;
 
     const { w, a, s, d, shift } = keysPressed.current;
 

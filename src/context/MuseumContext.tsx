@@ -126,6 +126,13 @@ interface MuseumContextType {
 
   collectedCeramics: string[];
   addCeramic: (id: string) => void;
+
+  // --- Room 1 Game Start Synchronizer ---
+  roomOneLocked: boolean;
+  roomOneWaitingPlayers: number;
+  roomOneTotalPlayers: number;
+  roomOneCountdownTime: number;
+  roomOneState: 'waiting' | 'countdown' | 'started';
 }
 
 export interface GameEvent {
@@ -171,6 +178,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
   const [doorClosingAlert, setDoorClosingAlert] = useState<{ doorId: string; teleportTo: string; countdownMs: number } | null>(null);
   const [roomClosingAlert, setRoomClosingAlert] = useState<RoomClosingAlert | null>(null);
+
+  // --- Room 1 Game Start Synchronizer ---
+  const [roomOneLocked, setRoomOneLocked] = useState(false);
+  const [roomOneWaitingPlayers, setRoomOneWaitingPlayers] = useState(0);
+  const [roomOneTotalPlayers, setRoomOneTotalPlayers] = useState(0);
+  const [roomOneCountdownTime, setRoomOneCountdownTime] = useState(0);
+  const [roomOneState, setRoomOneState] = useState<'waiting' | 'countdown' | 'started'>('waiting');
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
   const [miniGameOpen, setMiniGameOpen] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<Array<{ nickname: string; score: number; time: string }>>([]);
@@ -613,6 +627,41 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLeaderboard(board);
     });
 
+    // ── Room 1 Multiplayer Sync Events ──
+    newSocket.on('room1:state-sync', (data: { roomOneState: 'waiting' | 'countdown' | 'started' }) => {
+      setRoomOneState(data.roomOneState);
+      if (data.roomOneState !== 'started') {
+        setRoomOneLocked(true);
+      } else {
+        setRoomOneLocked(false);
+      }
+    });
+
+    newSocket.on('room1:waiting-status', (data: { readyPlayers: number; totalPlayers: number }) => {
+      setRoomOneState('waiting');
+      setRoomOneWaitingPlayers(data.readyPlayers);
+      setRoomOneTotalPlayers(data.totalPlayers);
+      setRoomOneLocked(true);
+    });
+
+    newSocket.on('room1:countdown-start', (data: { duration: number }) => {
+      setRoomOneState('countdown');
+      setRoomOneCountdownTime(data.duration);
+      setRoomOneLocked(true);
+    });
+
+    newSocket.on('room1:countdown-cancelled', () => {
+      setRoomOneState('waiting');
+      setRoomOneCountdownTime(0);
+      setRoomOneLocked(true);
+    });
+
+    newSocket.on('room1:start-game', () => {
+      setRoomOneState('started');
+      setRoomOneCountdownTime(0);
+      setRoomOneLocked(false);
+    });
+
     setSocket(newSocket);
 
     return () => {
@@ -687,6 +736,23 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [roomStates, loadRoom, unloadRoom]);
 
+  // Hiệu ứng đếm ngược Room 1 cục bộ
+  useEffect(() => {
+    if (roomOneState !== 'countdown' || roomOneCountdownTime <= 0) return;
+
+    const timer = setInterval(() => {
+      setRoomOneCountdownTime((t) => {
+        if (t <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [roomOneState, roomOneCountdownTime]);
+
   return (
     <MuseumContext.Provider
       value={{
@@ -755,6 +821,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSittingPrompt,
         collectedCeramics,
         addCeramic,
+
+        // --- Room 1 Game Start Synchronizer ---
+        roomOneLocked,
+        roomOneWaitingPlayers,
+        roomOneTotalPlayers,
+        roomOneCountdownTime,
+        roomOneState,
       }}
     >
       {children}

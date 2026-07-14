@@ -64,6 +64,60 @@ const roomStates = {
   'gallery-market-economy': { isOpen: false }
 };
 
+// Trạng thái đồng bộ của phòng 1
+let roomOneState = 'waiting'; // 'waiting', 'countdown', 'started'
+let roomOneCountdownTimer = null;
+
+const updateRoomOneReadyStatus = () => {
+  // Tìm tất cả user đang ở trong phòng 1
+  const usersInRoomOne = Object.values(activeUsers).filter(
+    u => u.galleryId === 'gallery-subsidy' && u.nickname
+  );
+
+  const totalPlayers = usersInRoomOne.length;
+  const readyPlayers = usersInRoomOne.filter(u => u.room1Ready).length;
+
+  console.log(`[ROOM-1-STATUS] Sẵn sàng: ${readyPlayers}/${totalPlayers}. Trạng thái hiện tại: ${roomOneState}`);
+
+  if (totalPlayers === 0) {
+    // Reset về waiting nếu không còn ai
+    roomOneState = 'waiting';
+    if (roomOneCountdownTimer) {
+      clearTimeout(roomOneCountdownTimer);
+      roomOneCountdownTimer = null;
+    }
+    return;
+  }
+
+  if (roomOneState === 'waiting') {
+    if (readyPlayers >= totalPlayers) {
+      roomOneState = 'countdown';
+      io.to('museum-unified').emit('room1:countdown-start', { duration: 7 });
+      console.log(`[ROOM-1] Bắt đầu đếm ngược 7 giây cho tất cả người chơi.`);
+
+      roomOneCountdownTimer = setTimeout(() => {
+        roomOneState = 'started';
+        io.to('museum-unified').emit('room1:start-game');
+        console.log(`[ROOM-1] Trò chơi đã bắt đầu. Người chơi có thể di chuyển.`);
+        roomOneCountdownTimer = null;
+      }, 7000);
+    } else {
+      io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
+    }
+  } else if (roomOneState === 'countdown') {
+    if (readyPlayers < totalPlayers) {
+      roomOneState = 'waiting';
+      if (roomOneCountdownTimer) {
+        clearTimeout(roomOneCountdownTimer);
+        roomOneCountdownTimer = null;
+      }
+      io.to('museum-unified').emit('room1:countdown-cancelled');
+      io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
+      console.log(`[ROOM-1] Có người chơi mới hoặc ai đó rời đi làm mất trạng thái sẵn sàng. Hủy đếm ngược và quay lại đợi.`);
+    }
+  }
+};
+
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
 const DOOR_CLOSE_COUNTDOWN_MS = 5000;
 
@@ -151,6 +205,14 @@ io.on('connection', (socket) => {
     // Broadcast trạng thái mới cho toàn bộ người chơi trong phòng
     io.to(socketRoom).emit('user-status-updated', { id: socket.id, status });
     console.log(`[STATUS-UPDATE] ${user.nickname} (${socket.id}) cập nhật trạng thái: "${status}"`);
+  });
+
+  socket.on('room1:ready', () => {
+    const user = activeUsers[socket.id];
+    if (!user || user.galleryId !== 'gallery-subsidy') return;
+    user.room1Ready = true;
+    console.log(`[ROOM-1] ${user.nickname} (${socket.id}) đã sẵn sàng khám phá.`);
+    updateRoomOneReadyStatus();
   });
 
   // Lắng nghe gửi điểm số lên bảng xếp hạng
@@ -243,6 +305,12 @@ io.on('connection', (socket) => {
 
       // Phát thông báo cho những người khác trong phòng
       socket.to(socketRoom).emit('user-joined', newUser);
+
+      if (galleryId === 'gallery-subsidy') {
+        newUser.room1Ready = false;
+        socket.emit('room1:state-sync', { roomOneState });
+        updateRoomOneReadyStatus();
+      }
     } else {
       // Phòng đầy -> Đưa vào hàng chờ
       if (!waitingQueues[socketRoom].includes(socket.id)) {
@@ -270,17 +338,35 @@ io.on('connection', (socket) => {
     user.z = data.z;
     user.yaw = data.yaw;
 
+    const oldRoom = user.galleryId;
+    let newRoom = oldRoom;
+
     // Cập nhật galleryId thời gian thực dựa vào tọa độ z để server biết user đang ở phòng nào
     if (data.z <= 8.0) {
-      user.galleryId = 'lobby';
+      newRoom = 'lobby';
     } else if (data.z > 8.0 && data.z <= 54.0) {
-      user.galleryId = 'gallery-subsidy';
+      newRoom = 'gallery-subsidy';
     } else if (data.z > 54.0 && data.z <= 100.0) {
-      user.galleryId = 'gallery-paintings';
+      newRoom = 'gallery-paintings';
     } else if (data.z > 100.0 && data.z <= 130.0) {
-      user.galleryId = 'gallery-ceramics';
+      newRoom = 'gallery-ceramics';
     } else if (data.z > 130.0 && data.z <= 245.0) {
-      user.galleryId = 'gallery-market-economy';
+      newRoom = 'gallery-market-economy';
+    }
+
+    if (newRoom !== oldRoom) {
+      user.galleryId = newRoom;
+      console.log(`[ROOM-CHANGE] ${user.nickname} (${socket.id}) chuyển sang phòng: ${newRoom}`);
+      
+      if (newRoom === 'gallery-subsidy') {
+        user.room1Ready = false;
+        socket.emit('room1:state-sync', { roomOneState });
+        updateRoomOneReadyStatus();
+      }
+      
+      if (oldRoom === 'gallery-subsidy') {
+        updateRoomOneReadyStatus();
+      }
     }
 
     // Đánh dấu user này là dirty — sẽ được batch-broadcast sau 100ms
@@ -532,6 +618,10 @@ io.on('connection', (socket) => {
       
       // Xóa khỏi danh sách active
       delete activeUsers[socket.id];
+
+      if (galleryId === 'gallery-subsidy') {
+        updateRoomOneReadyStatus();
+      }
 
       // C. Tự động duyệt người đầu tiên trong hàng chờ (nếu có)
       if (waitingQueues[socketRoom] && waitingQueues[socketRoom].length > 0) {
