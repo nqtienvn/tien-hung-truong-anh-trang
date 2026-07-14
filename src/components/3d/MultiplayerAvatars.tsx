@@ -38,6 +38,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
   const rightLegRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
+  const nameTagRef = useRef<HTMLDivElement>(null);
 
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472; // Phóng to 1.6x (0.15 * 1.6 và 0.295 * 1.6)
@@ -95,6 +96,15 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
     const dist = groupRef.current.position.distanceTo(lastPos.current);
     isMoving.current = dist > 0.002;
     lastPos.current.copy(groupRef.current.position);
+
+    // Tối ưu hiệu năng: Ẩn nhãn tên của người chơi ở quá xa (15m) để tránh lag reflow trình duyệt
+    if (nameTagRef.current) {
+      const localPlayer = state.scene.getObjectByName('lobby-player');
+      if (localPlayer) {
+        const d = groupRef.current.position.distanceTo(localPlayer.position);
+        nameTagRef.current.style.visibility = d > 15 ? 'hidden' : 'visible';
+      }
+    }
 
     const t = state.clock.getElapsedTime();
     const amp = 0.45,
@@ -247,15 +257,17 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
         position={[0, 1.8, 0]}
         center
         distanceFactor={8}
-        className="pointer-events-none select-none text-center flex flex-col items-center gap-1"
+        className="pointer-events-none select-none"
       >
-        {user.status === 'playing-game' && (
-          <div className="bg-amber-500/95 text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full border border-amber-300 shadow-md animate-pulse">
-            🎮 ĐANG CHƠI GAME
+        <div ref={nameTagRef} className="text-center flex flex-col items-center gap-1">
+          {user.status === 'playing-game' && (
+            <div className="bg-amber-500/95 text-slate-950 text-[8px] font-black px-2 py-0.5 rounded-full border border-amber-300 shadow-md animate-pulse">
+              🎮 ĐANG CHƠI GAME
+            </div>
+          )}
+          <div className="bg-cyan-500/90 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded shadow-lg whitespace-nowrap border border-cyan-300">
+            {user.nickname}
           </div>
-        )}
-        <div className="bg-cyan-500/90 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded shadow-lg whitespace-nowrap border border-cyan-300">
-          {user.nickname}
         </div>
       </Html>
     </group>
@@ -263,11 +275,12 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
 };
 
 export const MultiplayerAvatars: React.FC = () => {
-  const { otherUsers, settings } = useMuseum();
+  const { otherUsers, settings, activeGallery } = useMuseum();
   
-  // Lọc hiển thị giới hạn tối đa N người chơi khác gần nhất/đầu tiên để tránh quá tải card đồ họa
+  // Lọc hiển thị: chỉ vẽ người chơi trong CÙNG PHÒNG và giới hạn số lượng tối đa hiển thị
+  const currentRoomId = activeGallery?.id || 'lobby';
   const visibleUsers = otherUsers
-    .filter((u) => u.nickname !== "")
+    .filter((u) => u.nickname !== "" && (u.galleryId || "lobby") === currentRoomId)
     .slice(0, settings.maxAvatars);
 
   return (
