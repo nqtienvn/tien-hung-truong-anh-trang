@@ -91,9 +91,9 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
       const roomZ = offsetZ;
       const dist = Math.abs(playerZ - roomZ);
 
-      // Nếu người chơi ở khoảng cách > 75 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
+      // Nếu người chơi ở khoảng cách > 48 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
       // ta ẩn phòng đi để giảm thiểu tối đa số lệnh vẽ (draw calls) và số lượng đỉnh đa giác.
-      const shouldBeVisible = dist < 75.0;
+      const shouldBeVisible = dist < 48.0;
       if (groupRef.current.visible !== shouldBeVisible) {
         groupRef.current.visible = shouldBeVisible;
         console.log(`[LOD-CULLING] Phòng "${galleryId}" chuyển trạng thái visible = ${shouldBeVisible}`);

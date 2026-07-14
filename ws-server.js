@@ -91,7 +91,21 @@ const updateRoomOneReadyStatus = () => {
   }
 
   if (roomOneState === 'waiting') {
-    io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
+    if (readyPlayers === totalPlayers && totalPlayers > 0) {
+      roomOneState = 'countdown';
+      io.to('museum-unified').emit('room1:countdown-start', { duration: 5 });
+      console.log(`[ROOM-1] Tự động bắt đầu đếm ngược 5 giây vì tất cả người chơi (${readyPlayers}/${totalPlayers}) đã sẵn sàng.`);
+
+      roomOneCountdownTimer = setTimeout(() => {
+        roomOneState = 'started';
+        roomOneStartTimestamp = Date.now();
+        io.to('museum-unified').emit('room1:start-game', { roomOneStartTimestamp });
+        console.log(`[ROOM-1] Trò chơi tự động bắt đầu. Start time: ${roomOneStartTimestamp}`);
+        roomOneCountdownTimer = null;
+      }, 5000);
+    } else {
+      io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
+    }
   }
 };
 

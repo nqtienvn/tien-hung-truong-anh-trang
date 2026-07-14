@@ -402,7 +402,7 @@ const LobbyPlayer: React.FC = () => {
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -712,7 +712,8 @@ const LobbyPlayer: React.FC = () => {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (shouldIgnoreKeyboard(e.target)) return;
-      if ((roomOneLocked && !roomOneCompleted) || welcomeModalOpen) return;
+      const isRoomOneLocked = playerRef.current && playerRef.current.position.z > 8.0 && playerRef.current.position.z <= 54.0 && roomOneLocked && !roomOneCompleted;
+      if (isRoomOneLocked || welcomeModalOpen) return;
 
       if (e.code === 'KeyF') {
         e.preventDefault();
@@ -782,7 +783,8 @@ const LobbyPlayer: React.FC = () => {
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit || (roomOneLocked && !roomOneCompleted) || welcomeModalOpen) return;
+    const isRoomOneLocked = playerRef.current.position.z > 8.0 && playerRef.current.position.z <= 54.0 && roomOneLocked && !roomOneCompleted;
+    if (selectedExhibit || isRoomOneLocked || welcomeModalOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {

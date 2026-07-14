@@ -132,13 +132,21 @@ export const RoomWelcomeModal: React.FC = () => {
     roomOneWaitingPlayers, 
     roomOneTotalPlayers, 
     roomOneCountdownTime,
-    setWelcomeModalOpen
+    setWelcomeModalOpen,
+    setTeleportTarget
   } = useMuseum();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [hasDismissed, setHasDismissed] = useState(false);
   const [currentGalleryId, setCurrentGalleryId] = useState<string | null>(null);
   const [isWaitingRoomOne, setIsWaitingRoomOne] = useState(false);
+
+  const handleLeaveWaitingRoom = () => {
+    setIsWaitingRoomOne(false);
+    setHasDismissed(true);
+    setVisible(false);
+    setTeleportTarget({ x: 0, y: 0.5, z: -5.0 }); // Dịch chuyển người chơi quay lại vị trí Sảnh chờ
+  };
 
   const config = activeGallery?.id ? GALLERY_CONFIGS[activeGallery.id] : null;
 
@@ -252,6 +260,12 @@ export const RoomWelcomeModal: React.FC = () => {
                 <p className="text-xs text-slate-500 leading-relaxed font-sans max-w-xs mx-auto pt-2">
                   Trò chơi sẽ đồng loạt bắt đầu đếm ngược khi tất cả người chơi trong phòng nhấn nút sẵn sàng.
                 </p>
+                <button
+                  onClick={handleLeaveWaitingRoom}
+                  className="mt-4 px-6 py-2.5 bg-[#e2d5c0] hover:bg-[#d5c5ad] text-[#5c3d1a] font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer font-sans"
+                >
+                  Quay lại Sảnh
+                </button>
               </div>
             </>
           )}

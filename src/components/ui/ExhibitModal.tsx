@@ -398,16 +398,6 @@ export const ExhibitModal: React.FC = () => {
     <div className="absolute inset-x-4 top-16 bottom-16 z-50 flex items-center justify-center pointer-events-none select-none">
       <div className="w-full max-w-7xl h-full bg-slate-950/92 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row text-slate-100 transition-all duration-300 pointer-events-auto">
         {/* Ảnh xem trước lớn bên trái */}
-        <div className="relative h-[38vh] lg:h-full lg:w-[48%] xl:w-[52%] bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0">
-          <img
-            src={selectedExhibit.thumbnail_url}
-            alt={titleText}
-            className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
-            style={{
-              objectPosition: selectedExhibit.id === 'exhibit-priceboard' ? 'right center' : 'center'
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-slate-950/85 via-slate-950/10 to-transparent" />
         <div className="relative h-[38vh] lg:h-full lg:w-[48%] xl:w-[52%] bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0 flex items-center justify-center">
           {(() => {
             const thumbnailUrl = selectedExhibit.id === 'vn-back-right'
@@ -418,6 +408,9 @@ export const ExhibitModal: React.FC = () => {
                 src={thumbnailUrl}
                 alt={titleText}
                 className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
+                style={{
+                  objectPosition: selectedExhibit.id === 'exhibit-priceboard' ? 'right center' : 'center'
+                }}
               />
             ) : (
               <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">

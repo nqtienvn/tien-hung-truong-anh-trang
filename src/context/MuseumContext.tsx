@@ -100,6 +100,7 @@ interface MuseumContextType {
   doorClosingAlert: { doorId: string; teleportTo: string; countdownMs: number } | null;
   roomClosingAlert: RoomClosingAlert | null;
   teleportTarget: { x: number; y: number; z: number } | null;
+  setTeleportTarget: (target: { x: number; y: number; z: number } | null) => void;
   clearTeleport: () => void;
   miniGameOpen: boolean;
   setMiniGameOpen: (open: boolean) => void;
@@ -837,6 +838,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         doorClosingAlert,
         roomClosingAlert,
         teleportTarget,
+        setTeleportTarget,
         clearTeleport,
         miniGameOpen,
         setMiniGameOpen,

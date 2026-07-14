@@ -21,15 +21,15 @@ const VelvetRopeBarrier: React.FC<{
       {adjustedZPoints.map((z) => (
         <group key={`${side}-post-${z}`} position={[x, 0, z]}>
           <mesh position={[0, 0.48, 0]}>
-            <cylinderGeometry args={[0.055, 0.07, 0.96, 18]} />
+            <cylinderGeometry args={[0.055, 0.07, 0.96, 8]} />
             <meshStandardMaterial color={postColor} roughness={0.28} metalness={0.65} />
           </mesh>
           <mesh position={[0, 0.98, 0]}>
-            <sphereGeometry args={[0.13, 18, 18]} />
+            <sphereGeometry args={[0.13, 10, 10]} />
             <meshStandardMaterial color={metalColor} roughness={0.22} metalness={0.85} />
           </mesh>
           <mesh position={[0, 0.06, 0]}>
-            <cylinderGeometry args={[0.22, 0.28, 0.08, 24]} />
+            <cylinderGeometry args={[0.22, 0.28, 0.08, 12]} />
             <meshStandardMaterial color={postColor} roughness={0.35} metalness={0.55} />
           </mesh>
         </group>
@@ -43,12 +43,12 @@ const VelvetRopeBarrier: React.FC<{
         return (
           <group key={`${side}-rope-${z}-${nextZ}`}>
             <mesh position={[x, 0.94, midZ]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.045, 0.045, length, 20]} />
+              <cylinderGeometry args={[0.045, 0.045, length, 8]} />
               <meshStandardMaterial color={ropeColor} roughness={0.55} metalness={0.05} />
             </mesh>
             {/* Dây phụ thấp hơn tạo cảm giác dây nhung có độ dày */}
             <mesh position={[x, 0.82, midZ]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.028, 0.028, length * 0.96, 16]} />
+              <cylinderGeometry args={[0.028, 0.028, length * 0.96, 8]} />
               <meshStandardMaterial color="#7f1d1d" roughness={0.62} metalness={0.03} />
             </mesh>
           </group>
@@ -89,7 +89,7 @@ export const RoomOne: React.FC<RoomOneProps> = ({
 
   const overriddenSettings = {
     room_width: customSettings?.room_width ?? activeGallery?.room_width ?? 24,
-    room_length: customSettings?.room_length ?? activeGallery?.room_length ?? 50,
+    room_length: customSettings?.room_length ?? activeGallery?.room_length ?? 46,
     room_height: roomHeight,
     floor_color: customSettings?.floor_color ?? '#3d2516', // Sàn gỗ tối mộc mạc
     wall_color: wallColor,
@@ -152,24 +152,24 @@ export const RoomOne: React.FC<RoomOneProps> = ({
       ].map((item, index) => (
         <group key={`decor-table-${index}`} position={[item.x, 0, item.z]}>
           <mesh position={[0, 0.64, 0]}>
-            <cylinderGeometry args={[0.42, 0.46, 0.08, 24]} />
+            <cylinderGeometry args={[0.42, 0.46, 0.08, 12]} />
             <meshStandardMaterial color="#4b2a19" roughness={0.42} />
           </mesh>
           <mesh position={[0, 0.32, 0]}>
-            <cylinderGeometry args={[0.055, 0.075, 0.64, 12]} />
+            <cylinderGeometry args={[0.055, 0.075, 0.64, 8]} />
             <meshStandardMaterial color="#2f1a10" roughness={0.55} />
           </mesh>
           <mesh position={[0, 0.05, 0]}>
-            <cylinderGeometry args={[0.28, 0.34, 0.06, 20]} />
+            <cylinderGeometry args={[0.28, 0.34, 0.06, 10]} />
             <meshStandardMaterial color="#2f1a10" roughness={0.55} />
           </mesh>
-
+ 
           <mesh position={[0, 0.82, 0]}>
-            <cylinderGeometry args={[0.09, 0.13, 0.26, 16]} />
+            <cylinderGeometry args={[0.09, 0.13, 0.26, 8]} />
             <meshStandardMaterial color="#8d6e63" roughness={0.5} />
           </mesh>
           <mesh position={[0, 0.98, 0]}>
-            <sphereGeometry args={[0.11, 16, 16]} />
+            <sphereGeometry args={[0.11, 8, 8]} />
             <meshStandardMaterial color="#a1887f" roughness={0.55} />
           </mesh>
           {[-0.09, 0.09].map((x, flowerIndex) => (
