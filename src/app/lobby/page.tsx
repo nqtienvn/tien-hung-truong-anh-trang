@@ -15,6 +15,7 @@ import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
+import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 
 // ── Summary Minigame data (mirrored from RoomFour constants) ──
 const MG_SITUATIONS = [
@@ -75,17 +76,24 @@ const DOOR_CONFIGS = [
   },
   {
     doorId: 'door-room3',
-    targetRoom: 'gallery-ceramics',
+    targetRoom: 'gallery-sculptures',
     position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Gốm sứ',
+    label: 'Phòng 03: Điêu khắc',
   },
   {
     doorId: 'door-room4',
-    targetRoom: 'gallery-market-economy',
-    position: [0, 3.0, 130.0] as [number, number, number],
+    targetRoom: 'gallery-ceramics',
+    position: [0, 3.0, 146.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 04: Hội nhập',
+    label: 'Phòng 04: Gốm sứ',
+  },
+  {
+    doorId: 'door-room5',
+    targetRoom: 'gallery-market-economy',
+    position: [0, 3.0, 176.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 05: Thị trường',
   },
 ];
 
@@ -883,9 +891,11 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-subsidy');
     } else if (curPos.z > 54.0 && curPos.z <= 100.0) {
       setCurrentRoom('gallery-paintings');
-    } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
+    } else if (curPos.z > 100.0 && curPos.z <= 146.0) {
+      setCurrentRoom('gallery-sculptures');
+    } else if (curPos.z > 146.0 && curPos.z <= 176.0) {
       setCurrentRoom('gallery-ceramics');
-    } else if (curPos.z > 130.0 && curPos.z <= 245.0) {
+    } else if (curPos.z > 176.0 && curPos.z <= 291.0) {
       setCurrentRoom('gallery-market-economy');
     }
 
@@ -1191,7 +1201,9 @@ export default function LobbyPage() {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Gốm sứ hội nhập' },
+      'gallery-sculptures': { id: 'gallery-sculptures', name: 'Phòng 03: Điêu khắc thế giới' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 04: Gốm sứ hội nhập' },
+      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 05: Kinh tế thị trường' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1763,6 +1775,9 @@ export default function LobbyPage() {
           </span>
         </div>
       )}
+
+      {/* ═══ ALBUM BỘ SƯU TẬP PHÒNG GỐM SỨ ═══ */}
+      <CeramicsCollection />
     </div>
   );
 }

@@ -249,7 +249,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
               <div className="relative z-20 flex flex-col gap-4">
                 <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 04
+                  Phòng 03
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
                   Tọa độ Việt Nam &amp; Kỷ nguyên Không biên giới

@@ -4,51 +4,155 @@ import React, { useState, useEffect } from 'react';
 import { useMuseum } from '@/context/MuseumContext';
 import { BookOpen, Search, FileCheck, DoorOpen, X, ChevronRight, Sparkles } from 'lucide-react';
 
-const STEPS = [
-  {
-    icon: <Search size={28} className="text-amber-600" />,
-    title: '① Khám phá hiện vật',
-    desc: 'Đi vòng quanh phòng, nhấp vào các hiện vật trên tường để quan sát. Bạn có 20 giây quan sát trước khi trả lời câu hỏi.',
+const GALLERY_CONFIGS: Record<string, {
+  headerTitle: string;
+  welcomeTitle: string;
+  introText: React.ReactNode;
+  steps: {
+    icon: React.ReactNode;
+    title: string;
+    desc: string;
+  }[];
+  summary: React.ReactNode;
+}> = {
+  'gallery-subsidy': {
+    headerTitle: 'PHÒNG 01 • VIỆT NAM 1976–1985',
+    welcomeTitle: 'Chào mừng đến Phòng Bao Cấp!',
+    introText: (
+      <>
+        <span className="italic">Chủ đề: </span>
+        <strong>Một tháng sống trong thời bao cấp.</strong>
+        <span className="italic"> Bạn sẽ điều tra cơ chế vận hành kinh tế Việt Nam trước Đổi mới thông qua các hiện vật lịch sử. Đọc kỹ hướng dẫn bên dưới trước khi bắt đầu!</span>
+      </>
+    ),
+    steps: [
+      {
+        icon: <Search size={28} className="text-amber-600" />,
+        title: '① Khám phá hiện vật',
+        desc: 'Đi vòng quanh phòng, nhấp vào các hiện vật trên tường để quan sát. Bạn có 20 giây quan sát trước khi trả lời câu hỏi.',
+      },
+      {
+        icon: <FileCheck size={28} className="text-amber-600" />,
+        title: '② Trả lời câu hỏi lịch sử',
+        desc: 'Sau khi quan sát, trả lời 1–2 câu hỏi ngắn về hiện vật. Trả lời đúng để mở khóa manh mối điều tra.',
+      },
+      {
+        icon: <BookOpen size={28} className="text-amber-600" />,
+        title: '③ Hoàn thiện Sổ điều tra',
+        desc: 'Sau khi thu thập đủ 6 manh mối, mở Sổ điều tra (góc dưới phải). Ghép bằng chứng và đưa ra kết luận cuối phòng.',
+      },
+      {
+        icon: <DoorOpen size={28} className="text-amber-600" />,
+        title: '④ Mở cửa sang phòng tiếp theo',
+        desc: 'Hoàn thành Bảng suy luận chính xác (20/20 điểm) để mở cửa sang Phòng 02: Hội họa cổ điển.',
+      },
+    ],
+    summary: (
+      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🔍</span>
+          <span>6 hiện vật cần khám phá</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">⏱️</span>
+          <span>20 giây quan sát mỗi vật</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">📒</span>
+          <span>Sổ điều tra → góc dưới phải</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🏆</span>
+          <span>Đạt 20/20 để mở cửa tiếp</span>
+        </div>
+      </div>
+    ),
   },
-  {
-    icon: <FileCheck size={28} className="text-amber-600" />,
-    title: '② Trả lời câu hỏi lịch sử',
-    desc: 'Sau khi quan sát, trả lời 1–2 câu hỏi ngắn về hiện vật. Trả lời đúng để mở khóa manh mối điều tra.',
+  'gallery-ceramics': {
+    headerTitle: 'PHÒNG 03 • HỘI NHẬP QUỐC TẾ',
+    welcomeTitle: 'Chào mừng đến Phòng Gốm Sứ!',
+    introText: (
+      <>
+        <span className="italic">Chủ đề: </span>
+        <strong>Việt Nam mở cửa với thế giới.</strong>
+        <span className="italic"> Bạn sẽ tìm hiểu về chặng đường hội nhập kinh tế quốc tế của nước nhà qua các bức tranh tư liệu lịch sử. Đọc kỹ thông tin để chuẩn bị cho mini game!</span>
+      </>
+    ),
+    steps: [
+      {
+        icon: <Search size={28} className="text-amber-600" />,
+        title: '① Khám phá tác phẩm',
+        desc: 'Đi xung quanh phòng triển lãm, nhấp vào các bức tranh trên tường để đọc chi tiết thông tin lịch sử về từng sự kiện mở cửa.',
+      },
+      {
+        icon: <BookOpen size={28} className="text-amber-600" />,
+        title: '② Thu thập dữ kiện',
+        desc: 'Mỗi bức tranh sau khi đọc sẽ được ghi nhận vào "Bộ sưu tập" ở góc dưới bên phải màn hình. Hãy thu thập đủ 9 dữ kiện.',
+      },
+      {
+        icon: <Sparkles size={28} className="text-amber-600" />,
+        title: '③ Tham gia Mini Game',
+        desc: 'Đến khu vực bức tranh "Game dòng chảy lịch sử" ở cuối phòng để bắt đầu trò chơi sắp xếp 9 sự kiện theo đúng trình tự thời gian.',
+      },
+      {
+        icon: <FileCheck size={28} className="text-amber-600" />,
+        title: '④ Hoàn thành thử thách',
+        desc: 'Sắp xếp chính xác các sự kiện để đạt điểm số cao nhất. Bạn có 3 phút thực hiện và chỉ được nộp kết quả duy nhất một lần!',
+      },
+    ],
+    summary: (
+      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🖼️</span>
+          <span>9 bức tranh cần đọc</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">📁</span>
+          <span>Bộ sưu tập → góc dưới phải</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">⏱️</span>
+          <span>Giới hạn 3 phút chơi game</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🎯</span>
+          <span>Chỉ nộp bài duy nhất 1 lần</span>
+        </div>
+      </div>
+    ),
   },
-  {
-    icon: <BookOpen size={28} className="text-amber-600" />,
-    title: '③ Hoàn thiện Sổ điều tra',
-    desc: 'Sau khi thu thập đủ 6 manh mối, mở Sổ điều tra (góc dưới phải). Ghép bằng chứng và đưa ra kết luận cuối phòng.',
-  },
-  {
-    icon: <DoorOpen size={28} className="text-amber-600" />,
-    title: '④ Mở cửa sang phòng tiếp theo',
-    desc: 'Hoàn thành Bảng suy luận chính xác (20/20 điểm) để mở cửa sang Phòng 02: Hội họa cổ điển.',
-  },
-];
-
-const STORAGE_KEY = 'room-subsidy-welcomed';
+};
 
 export const RoomWelcomeModal: React.FC = () => {
   const { activeGallery, nickname } = useMuseum();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [hasDismissed, setHasDismissed] = useState(false);
+  const [currentGalleryId, setCurrentGalleryId] = useState<string | null>(null);
 
-  // Hiện popup khi bước vào phòng bao cấp
+  const config = activeGallery?.id ? GALLERY_CONFIGS[activeGallery.id] : null;
+
+  // Reset trạng thái khi đổi phòng
   useEffect(() => {
-    if (activeGallery?.id === 'gallery-subsidy' && nickname) {
+    if (activeGallery?.id !== currentGalleryId) {
+      setCurrentGalleryId(activeGallery?.id || null);
+      setHasDismissed(false);
+      setVisible(false);
+      setStep(0);
+    }
+  }, [activeGallery?.id, currentGalleryId]);
+
+  // Hiện popup khi bước vào phòng có cấu hình và có nickname
+  useEffect(() => {
+    if (config && nickname) {
       if (!hasDismissed) {
         const timer = setTimeout(() => setVisible(true), 800);
         return () => clearTimeout(timer);
       }
     } else {
-      // Khi đi ra khỏi phòng hoặc đăng xuất, reset trạng thái để lần sau vào lại sẽ hiện
       setVisible(false);
-      setStep(0);
-      setHasDismissed(false);
     }
-  }, [activeGallery?.id, nickname, hasDismissed]);
+  }, [config, nickname, hasDismissed]);
 
   const handleDismiss = () => {
     setHasDismissed(true);
@@ -56,17 +160,17 @@ export const RoomWelcomeModal: React.FC = () => {
   };
 
   const handleNext = () => {
-    if (step < STEPS.length - 1) {
+    if (config && step < config.steps.length - 1) {
       setStep(s => s + 1);
     } else {
       handleDismiss();
     }
   };
 
-  if (!visible) return null;
+  if (!visible || !config || activeGallery?.id !== currentGalleryId) return null;
 
-  const currentStep = STEPS[step];
-  const isLast = step === STEPS.length - 1;
+  const currentStep = config.steps[step];
+  const isLast = step === config.steps.length - 1;
 
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-auto">
@@ -87,10 +191,10 @@ export const RoomWelcomeModal: React.FC = () => {
               </div>
               <div>
                 <p className="text-[9px] uppercase tracking-widest text-amber-200 font-bold">
-                  PHÒNG 01 • VIỆT NAM 1976–1985
+                  {config.headerTitle}
                 </p>
                 <h2 className="text-base font-bold leading-snug mt-0.5">
-                  Chào mừng đến Phòng Bao Cấp!
+                  {config.welcomeTitle}
                 </h2>
               </div>
             </div>
@@ -104,7 +208,7 @@ export const RoomWelcomeModal: React.FC = () => {
 
           {/* Progress dots */}
           <div className="flex gap-1.5 mt-4">
-            {STEPS.map((_, i) => (
+            {config.steps.map((_, i) => (
               <div
                 key={i}
                 className={`h-1 rounded-full transition-all duration-300 ${
@@ -121,9 +225,7 @@ export const RoomWelcomeModal: React.FC = () => {
           {/* Intro text – chỉ hiện ở step 0 */}
           {step === 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-900 leading-relaxed">
-              <span className="italic">Chủ đề: </span>
-              <strong>Một tháng sống trong thời bao cấp.</strong>
-              <span className="italic"> Bạn sẽ điều tra cơ chế vận hành kinh tế Việt Nam trước Đổi mới thông qua các hiện vật lịch sử. Đọc kỹ hướng dẫn bên dưới trước khi bắt đầu!</span>
+              {config.introText}
             </div>
           )}
 
@@ -148,24 +250,7 @@ export const RoomWelcomeModal: React.FC = () => {
               <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest mb-3">
                 TÓM TẮT LUẬT CHƠI
               </p>
-              <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
-                <div className="flex items-start gap-1.5">
-                  <span className="text-amber-600 font-bold shrink-0">🔍</span>
-                  <span>6 hiện vật cần khám phá</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-amber-600 font-bold shrink-0">⏱️</span>
-                  <span>20 giây quan sát mỗi vật</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-amber-600 font-bold shrink-0">📒</span>
-                  <span>Sổ điều tra → góc dưới phải</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-amber-600 font-bold shrink-0">🏆</span>
-                  <span>Đạt 20/20 để mở cửa tiếp</span>
-                </div>
-              </div>
+              {config.summary}
             </div>
           )}
         </div>

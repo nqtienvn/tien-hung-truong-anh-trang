@@ -10,8 +10,9 @@ import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, S
 const DOOR_CONFIGS = [
   { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Cửa 1: Sảnh ↔ Phòng 01', color: 'amber' },
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
-  { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
-  { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
+  { doorId: 'door-room3', targetRoom: 'gallery-sculptures', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'indigo' },
+  { doorId: 'door-room4', targetRoom: 'gallery-ceramics', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'emerald' },
+  { doorId: 'door-room5', targetRoom: 'gallery-market-economy', label: 'Cửa 5: Phòng 04 ↔ Phòng 05', color: 'rose' },
 ];
 
 interface DoorState {
@@ -626,16 +627,22 @@ export default function AdminDashboard() {
             {renderAdminRoom('gallery-paintings', 'Phòng 02: Tranh Hội Họa', 'Bộ sưu tập hội họa tranh vẽ nghệ thuật 2D', ['door-room2', 'door-room3'])}
 
             {/* 6. CỬA 3 */}
-            {renderAdminDoor('door-room3', 'gallery-ceramics', 'Cửa số 03: Phòng 02 ↔ Phòng 03')}
+            {renderAdminDoor('door-room3', 'gallery-sculptures', 'Cửa số 03: Phòng 02 ↔ Phòng 03')}
 
             {/* 7. PHÒNG 3 */}
-            {renderAdminRoom('gallery-ceramics', 'Phòng 03: Gốm Sứ Hội Nhập', 'Các tác phẩm gốm sứ tinh xảo và câu chuyện làng nghề', ['door-room3', 'door-room4'])}
+            {renderAdminRoom('gallery-sculptures', 'Phòng 03: Điêu Khắc 3D', 'Bộ sưu tập các mô hình điêu khắc 3D sống động', ['door-room3', 'door-room4'])}
 
             {/* 8. CỬA 4 */}
-            {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
+            {renderAdminDoor('door-room4', 'gallery-ceramics', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
 
             {/* 9. PHÒNG 4 */}
-            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4'])}
+            {renderAdminRoom('gallery-ceramics', 'Phòng 04: Gốm Sứ Hội Nhập', 'Các tác phẩm gốm sứ tinh xảo và hành trình hội nhập kinh tế', ['door-room4', 'door-room5'])}
+
+            {/* 10. CỬA 5 */}
+            {renderAdminDoor('door-room5', 'gallery-market-economy', 'Cửa số 05: Phòng 04 ↔ Phòng 05')}
+
+            {/* 11. PHÒNG 5 */}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 05: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room5'])}
           </div>
         </div>
 

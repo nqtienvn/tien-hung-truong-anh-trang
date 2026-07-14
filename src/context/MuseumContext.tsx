@@ -119,11 +119,13 @@ interface MuseumContextType {
   addClue: (clueId: string) => void;
   setRoomOneCompleted: (completed: boolean) => void;
   resetRoomOne: () => void;
-
   sittingPosition: { x: number; y: number; z: number; rotationY?: number } | null;
   setSittingPosition: (pos: { x: number; y: number; z: number; rotationY?: number } | null) => void;
   sittingPrompt: 'sit' | 'stand' | null;
   setSittingPrompt: (prompt: 'sit' | 'stand' | null) => void;
+
+  collectedCeramics: string[];
+  addCeramic: (id: string) => void;
 }
 
 export interface GameEvent {
@@ -196,6 +198,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
   const [sittingPosition, setSittingPosition] = useState<{ x: number; y: number; z: number; rotationY?: number } | null>(null);
   const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
+  const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
 
   // Sync gameplay progress theo từng người chơi (nickname)
   useEffect(() => {
@@ -256,16 +259,61 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [cluesCollected, nickname]);
 
+  // Sync Room 3 gameplay progress (collectedCeramics)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!nickname) {
+      setCollectedCeramics([]);
+      return;
+    }
+
+    const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
+    const savedProgress = localStorage.getItem(progressKey);
+
+    if (!savedProgress) {
+      setCollectedCeramics([]);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedProgress) as {
+        collectedCeramics?: string[];
+      };
+      setCollectedCeramics(Array.isArray(parsed.collectedCeramics) ? parsed.collectedCeramics : []);
+    } catch (e) {
+      console.error('Lỗi phân tích tiến trình Room 3:', e);
+      setCollectedCeramics([]);
+    }
+  }, [nickname]);
+
+  const addCeramic = useCallback((ceramicId: string) => {
+    setCollectedCeramics((prev) => {
+      if (prev.includes(ceramicId)) return prev;
+      const updated = [...prev, ceramicId];
+      if (typeof window !== 'undefined' && nickname) {
+        const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
+        localStorage.setItem(progressKey, JSON.stringify({
+          collectedCeramics: updated,
+        }));
+      }
+      return updated;
+    });
+  }, [nickname]);
+
   const resetRoomOne = useCallback(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
+    setCollectedCeramics([]);
     if (typeof window !== 'undefined') {
       if (nickname) {
         localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
+        localStorage.removeItem(`roomThreeProgress:${nickname.trim().toLowerCase()}`);
       }
       // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
+      localStorage.removeItem('collectedCeramics');
     }
   }, [nickname]);
 
@@ -322,10 +370,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const currentEvents = orderedEventsRef.current;
           const correctCount = currentEvents.filter((event, idx) => event.sortOrder === idx).length;
           const finalScore = correctCount * 10;
-          
+
           setScore(finalScore);
           setGameState('lost');
-          socket?.emit('submit-score', { score: finalScore });
+          socket?.emit('submit-score', { score: finalScore, timeSpent: 180 });
           socket?.emit('update-status', '');
           return 0;
         }
@@ -354,21 +402,15 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLastCheckResults(results);
 
     const correctCount = results.filter(r => r === true).length;
-    
-    if (correctCount === 9) {
-      // Đúng hết cả 9 câu -> 100 điểm
-      setScore(100);
-      setGameState('won');
-      socket?.emit('submit-score', { score: 100 });
-      socket?.emit('update-status', '');
-    } else {
-      // Không đúng hết -> mỗi câu đúng được 10 điểm
-      const currentScore = correctCount * 10;
-      setScore(currentScore);
-      // Phạt trừ 5 giây cho mỗi lần check sai thứ tự
-      setTimeLeft((prev) => Math.max(0, prev - 5));
-    }
-  }, [orderedEvents, socket]);
+    const finalScore = correctCount === 9 ? 100 : correctCount * 10;
+
+    const timeSpent = 180 - timeLeft;
+
+    setScore(finalScore);
+    setGameState('won'); // Kết thúc game và chuyển thẳng sang màn hình kết quả luôn
+    socket?.emit('submit-score', { score: finalScore, timeSpent });
+    socket?.emit('update-status', '');
+  }, [orderedEvents, timeLeft, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
     preset: 'low',
@@ -743,11 +785,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addClue,
         setRoomOneCompleted: handleSetRoomOneCompleted,
         resetRoomOne,
-
         sittingPosition,
         setSittingPosition,
         sittingPrompt,
         setSittingPrompt,
+        collectedCeramics,
+        addCeramic,
       }}
     >
       {children}
