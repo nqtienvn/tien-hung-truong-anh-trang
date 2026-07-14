@@ -270,6 +270,7 @@ io.on('connection', (socket) => {
     user.z = data.z;
     user.yaw = data.yaw;
     user.isSitting = data.isSitting;
+    user.headYaw = data.headYaw;
 
     // Cập nhật galleryId thời gian thực dựa vào tọa độ z để server biết user đang ở phòng nào
     if (data.z <= 8.0) {

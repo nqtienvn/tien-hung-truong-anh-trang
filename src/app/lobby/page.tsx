@@ -249,6 +249,16 @@ const LobbyCameraController: React.FC = () => {
     const py = player.position.y;
     const pz = player.position.z;
 
+    // Giới hạn hướng xoay ngang của đầu tối đa 90 độ sang 2 bên khi ngồi ghế
+    if (sittingPosition && sittingPosition.rotationY !== undefined) {
+      const bodyYaw = sittingPosition.rotationY;
+      const forwardTheta = bodyYaw + Math.PI; // Bù 180 độ vì camera hướng ngược chiều với mặt trước của body mặc định
+      let diff = theta.current - forwardTheta;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
+      theta.current = forwardTheta + clampedDiff;
+    }
+
     // Nếu đang Zoom hoặc Ngồi (First Person), đặt camera cao ngang tầm mắt/đầu thật của nhân vật (1.12m)
     // Nếu đi lại bình thường (Third Person), đặt camera nhìn vào vùng lưng/cổ (0.6m)
     const isFirstPerson = !!(isZooming.current || sittingPosition);
@@ -381,6 +391,7 @@ const LobbyPlayer: React.FC = () => {
   const rightLegRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
+  const headRef = useRef<THREE.Group>(null);
 
   const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt } = useMuseum();
   const isPawn = settings.preset === 'low';
@@ -818,9 +829,8 @@ const LobbyPlayer: React.FC = () => {
 
     if (sittingPosition) {
       playerRef.current.position.set(sittingPosition.x, sittingPosition.y, sittingPosition.z);
-      if (sittingPosition.rotationY !== undefined) {
-        playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, sittingPosition.rotationY, 0.15);
-      }
+      const bodyYaw = sittingPosition.rotationY !== undefined ? sittingPosition.rotationY : -Math.PI / 2;
+      playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, bodyYaw, 0.15);
 
       // Xoay chân gập vuông góc 90 độ về phía trước và để tay đặt lên đùi
       if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI / 2.0;
@@ -834,15 +844,28 @@ const LobbyPlayer: React.FC = () => {
         rightArmRef.current.rotation.z = -0.1;
       }
 
-      // Phát tọa độ ngồi cố định góc nhìn cho người khác (nhưng local camera vẫn tự do xoay góc nhìn thứ nhất)
+      // Tính góc xoay đầu thực tế của camera so với hướng thẳng của thân
+      const camDir = new THREE.Vector3();
+      state.camera.getWorldDirection(camDir);
+      const camYaw = Math.atan2(-camDir.x, -camDir.z);
+      let hDiff = camYaw - (bodyYaw + Math.PI); // Bù 180 độ vì camera hướng ngược chiều với mặt trước của body mặc định
+      hDiff = Math.atan2(Math.sin(hDiff), Math.cos(hDiff));
+
+      // Xoay đầu local (mặc dù local head bị ẩn khi ngồi để tránh clip camera, nhưng vẫn quay đúng hướng)
+      if (headRef.current) {
+        headRef.current.rotation.y = hDiff;
+      }
+
+      // Phát tọa độ ngồi cố định góc nhìn thân cho người khác, kèm góc xoay đầu relative
       const now = state.clock.getElapsedTime() * 1000;
       if (now - lastUpdate.current > 80) {
         socket?.emit('move', {
           x: sittingPosition.x,
           y: sittingPosition.y - baseY, // Gửi tọa độ Y tương đối để server đồng bộ đúng độ cao
           z: sittingPosition.z,
-          yaw: sittingPosition.rotationY !== undefined ? sittingPosition.rotationY : -Math.PI / 2, // Gửi yaw cố định của ghế
+          yaw: bodyYaw, // Gửi yaw cố định của ghế
           isSitting: true,
+          headYaw: hDiff, // Gửi góc xoay ngang relative của đầu
         });
         lastUpdate.current = now;
       }
@@ -961,6 +984,11 @@ const LobbyPlayer: React.FC = () => {
       }
     }
 
+    // Trả đầu về vị trí thẳng khi đứng dậy/đi lại
+    if (headRef.current) {
+      headRef.current.rotation.y += (0 - headRef.current.rotation.y) * 0.15;
+    }
+
     // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
     if (now - lastUpdate.current > 80) {
@@ -1001,10 +1029,22 @@ const LobbyPlayer: React.FC = () => {
       {isPawn ? (
         <group scale={1.6}>
           {!sittingPosition && (
-            <mesh position={[0, 0.7, 0]}>
-              <sphereGeometry args={[0.18, 20, 20]} />
-              <meshStandardMaterial {...skinProps} />
-            </mesh>
+            <group ref={headRef} position={[0, 0.7, 0]}>
+              <mesh>
+                <sphereGeometry args={[0.18, 20, 20]} />
+                <meshStandardMaterial {...skinProps} />
+              </mesh>
+              {/* Mắt trái */}
+              <mesh position={[-0.06, 0.04, 0.16]}>
+                <sphereGeometry args={[0.025, 12, 12]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+              {/* Mắt phải */}
+              <mesh position={[0.06, 0.04, 0.16]}>
+                <sphereGeometry args={[0.025, 12, 12]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+            </group>
           )}
           <mesh position={[0, 0.48, 0]}>
             <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
@@ -1022,10 +1062,22 @@ const LobbyPlayer: React.FC = () => {
       ) : (
         <group scale={1.6}>
           {!sittingPosition && (
-            <mesh position={[0, 0.7, 0]}>
-              <sphereGeometry args={[HEAD_R, 28, 28]} />
-              <meshStandardMaterial {...skinProps} />
-            </mesh>
+            <group ref={headRef} position={[0, 0.7, 0]}>
+              <mesh>
+                <sphereGeometry args={[HEAD_R, 28, 28]} />
+                <meshStandardMaterial {...skinProps} />
+              </mesh>
+              {/* Mắt trái */}
+              <mesh position={[-0.07, 0.05, 0.20]}>
+                <sphereGeometry args={[0.03, 16, 16]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+              {/* Mắt phải */}
+              <mesh position={[0.07, 0.05, 0.20]}>
+                <sphereGeometry args={[0.03, 16, 16]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+            </group>
           )}
           <mesh position={[0, 0.28, 0]}>
             <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />

@@ -47,10 +47,14 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
   const targetPos = useRef(new THREE.Vector3(user.x, user.y + baseY, user.z));
   const targetYaw = useRef(user.yaw);
 
+  const headRef = useRef<THREE.Group>(null);
+  const targetHeadYaw = useRef(user.headYaw || 0);
+
   useEffect(() => {
     targetPos.current.set(user.x, user.y + baseY, user.z);
     targetYaw.current = user.yaw;
-  }, [user.x, user.y, user.z, user.yaw, baseY]);
+    targetHeadYaw.current = user.headYaw || 0;
+  }, [user.x, user.y, user.z, user.yaw, user.headYaw, baseY]);
 
   useEffect(() => {
     if (groupRef.current) {
@@ -67,6 +71,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
     if (realTimeData) {
       targetPos.current.set(realTimeData.x, realTimeData.y + baseY, realTimeData.z);
       targetYaw.current = realTimeData.yaw;
+      targetHeadYaw.current = realTimeData.headYaw || 0;
     }
 
     // Giảm từ 12 xuống 7 để nội suy vị trí mượt hơn khi tần suất sync qua mạng giảm
@@ -77,6 +82,16 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
     diff = Math.atan2(Math.sin(diff), Math.cos(diff));
     groupRef.current.rotation.y += diff * lf;
 
+    const isSitting = !!(realTimeData?.isSitting || user.isSitting);
+
+    // Nội suy mượt mà cho xoay ngang của đầu
+    if (headRef.current) {
+      const targetHY = isSitting ? targetHeadYaw.current : 0;
+      let hDiff = targetHY - headRef.current.rotation.y;
+      hDiff = Math.atan2(Math.sin(hDiff), Math.cos(hDiff));
+      headRef.current.rotation.y += hDiff * lf;
+    }
+
     const dist = groupRef.current.position.distanceTo(lastPos.current);
     isMoving.current = dist > 0.002;
     lastPos.current.copy(groupRef.current.position);
@@ -85,7 +100,7 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
     const amp = 0.45,
       spd = 10;
 
-    const isSitting = !!(realTimeData?.isSitting || user.isSitting);
+
 
     if (isSitting) {
       if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI / 2.0;
@@ -136,10 +151,23 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
       {isPawn ? (
         <group scale={1.6}>
           {/* MÔ HÌNH CON CỜ (CHESS PAWN) - Tối ưu hiệu năng tối đa cho cấu hình Thấp */}
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[0.18, 20, 20]} />
-            {mat}
-          </mesh>
+          {/* ĐẦU BẢN CHESS PAWN */}
+          <group ref={headRef} position={[0, 0.7, 0]}>
+            <mesh>
+              <sphereGeometry args={[0.18, 20, 20]} />
+              {mat}
+            </mesh>
+            {/* Mắt trái */}
+            <mesh position={[-0.06, 0.04, 0.16]}>
+              <sphereGeometry args={[0.025, 12, 12]} />
+              <meshBasicMaterial color="#000000" />
+            </mesh>
+            {/* Mắt phải */}
+            <mesh position={[0.06, 0.04, 0.16]}>
+              <sphereGeometry args={[0.025, 12, 12]} />
+              <meshBasicMaterial color="#000000" />
+            </mesh>
+          </group>
           <mesh position={[0, 0.48, 0]}>
             <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
             {mat}
@@ -156,11 +184,23 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
       ) : (
         <group scale={1.6}>
           {/* MÔ HÌNH CON NGƯỜI (HUMANOID MANNEQUIN) - Cấu hình Trung bình / Cao */}
-          {/* ĐẦU */}
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[HEAD_R, 28, 28]} />
-            {mat}
-          </mesh>
+          {/* ĐẦU BẢN THƯỜNG / CAO */}
+          <group ref={headRef} position={[0, 0.7, 0]}>
+            <mesh>
+              <sphereGeometry args={[HEAD_R, 28, 28]} />
+              {mat}
+            </mesh>
+            {/* Mắt trái */}
+            <mesh position={[-0.07, 0.05, 0.20]}>
+              <sphereGeometry args={[0.03, 16, 16]} />
+              <meshBasicMaterial color="#000000" />
+            </mesh>
+            {/* Mắt phải */}
+            <mesh position={[0.07, 0.05, 0.20]}>
+              <sphereGeometry args={[0.03, 16, 16]} />
+              <meshBasicMaterial color="#000000" />
+            </mesh>
+          </group>
 
           {/* THÂN */}
           <mesh position={[0, 0.28, 0]}>
