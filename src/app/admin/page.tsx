@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
-import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
+import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Clock } from 'lucide-react';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
@@ -195,6 +195,13 @@ export default function AdminDashboard() {
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
     if (window.confirm(confirmMsg)) {
       adminSocket.emit('admin:teleport-all', { targetRoom });
+    }
+  };
+
+  const handleStartRoomOneCountdown = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu đếm ngược 7 giây cho tất cả người chơi trong Phòng 1?')) {
+      adminSocket.emit('admin:start-room1-countdown');
     }
   };
 
@@ -420,14 +427,26 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-2">
             {isRoomOpen && (
-              <button
-                type="button"
-                onClick={() => handleTeleportAll(roomId)}
-                className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
-              >
-                <Compass size={12} />
-                Dịch chuyển mọi người
-              </button>
+              <>
+                {roomId === 'gallery-subsidy' && (
+                  <button
+                    type="button"
+                    onClick={handleStartRoomOneCountdown}
+                    className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-violet-500/10 hover:bg-violet-500/25 border border-violet-500/25 text-violet-400"
+                  >
+                    <Clock size={12} />
+                    Bắt đầu đếm ngược (7s)
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleTeleportAll(roomId)}
+                  className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+                >
+                  <Compass size={12} />
+                  Dịch chuyển mọi người
+                </button>
+              </>
             )}
 
             <button

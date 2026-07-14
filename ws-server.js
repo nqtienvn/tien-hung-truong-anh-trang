@@ -90,31 +90,7 @@ const updateRoomOneReadyStatus = () => {
   }
 
   if (roomOneState === 'waiting') {
-    if (readyPlayers >= totalPlayers) {
-      roomOneState = 'countdown';
-      io.to('museum-unified').emit('room1:countdown-start', { duration: 7 });
-      console.log(`[ROOM-1] Bắt đầu đếm ngược 7 giây cho tất cả người chơi.`);
-
-      roomOneCountdownTimer = setTimeout(() => {
-        roomOneState = 'started';
-        io.to('museum-unified').emit('room1:start-game');
-        console.log(`[ROOM-1] Trò chơi đã bắt đầu. Người chơi có thể di chuyển.`);
-        roomOneCountdownTimer = null;
-      }, 7000);
-    } else {
-      io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
-    }
-  } else if (roomOneState === 'countdown') {
-    if (readyPlayers < totalPlayers) {
-      roomOneState = 'waiting';
-      if (roomOneCountdownTimer) {
-        clearTimeout(roomOneCountdownTimer);
-        roomOneCountdownTimer = null;
-      }
-      io.to('museum-unified').emit('room1:countdown-cancelled');
-      io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
-      console.log(`[ROOM-1] Có người chơi mới hoặc ai đó rời đi làm mất trạng thái sẵn sàng. Hủy đếm ngược và quay lại đợi.`);
-    }
+    io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
   }
 };
 
@@ -472,6 +448,22 @@ io.on('connection', (socket) => {
   socket.on('admin:get-door-status', () => {
     socket.emit('door-states', doorStates);
     socket.emit('room-states', roomStates);
+  });
+
+  socket.on('admin:start-room1-countdown', () => {
+    console.log(`[ADMIN] Yêu cầu bắt đầu đếm ngược Phòng 1 từ admin.`);
+    if (roomOneState === 'waiting') {
+      roomOneState = 'countdown';
+      io.to('museum-unified').emit('room1:countdown-start', { duration: 7 });
+      console.log(`[ROOM-1] Bắt đầu đếm ngược 7 giây cho tất cả người chơi theo lệnh Admin.`);
+
+      roomOneCountdownTimer = setTimeout(() => {
+        roomOneState = 'started';
+        io.to('museum-unified').emit('room1:start-game');
+        console.log(`[ROOM-1] Trò chơi đã bắt đầu theo lệnh Admin.`);
+        roomOneCountdownTimer = null;
+      }, 7000);
+    }
   });
 
   const roomClosingTimers = {};
