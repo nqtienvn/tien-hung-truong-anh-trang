@@ -126,8 +126,10 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
     } else if (doorId === 'door-room4') {
+      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
+    } else if (doorId === 'door-room5') {
       canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
@@ -151,6 +153,8 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room3') {
       teleportTo = 'gallery-paintings';
     } else if (doorId === 'door-room4') {
+      teleportTo = 'gallery-sculptures';
+    } else if (doorId === 'door-room5') {
       teleportTo = 'gallery-ceramics';
     }
 
@@ -167,10 +171,12 @@ export default function AdminDashboard() {
         relatedDoors.push('door-room1', 'door-room2');
       } else if (roomId === 'gallery-paintings') {
         relatedDoors.push('door-room2', 'door-room3');
-      } else if (roomId === 'gallery-ceramics') {
+      } else if (roomId === 'gallery-sculptures') {
         relatedDoors.push('door-room3', 'door-room4');
+      } else if (roomId === 'gallery-ceramics') {
+        relatedDoors.push('door-room4', 'door-room5');
       } else if (roomId === 'gallery-market-economy') {
-        relatedDoors.push('door-room4');
+        relatedDoors.push('door-room5');
       }
 
       const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
@@ -190,8 +196,9 @@ export default function AdminDashboard() {
       ? 'Sảnh chờ' 
       : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
       : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
-      : targetRoom === 'gallery-ceramics' ? 'Phòng 03 (Đồ gốm sứ)' 
-      : 'Phòng 04 (Kinh tế thị trường)';
+      : targetRoom === 'gallery-sculptures' ? 'Phòng 03 (Điêu khắc 3D)' 
+      : targetRoom === 'gallery-ceramics' ? 'Phòng 04 (Đồ gốm sứ)' 
+      : 'Phòng 05 (Kinh tế thị trường)';
 
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
     if (window.confirm(confirmMsg)) {
@@ -321,8 +328,10 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room2') {
       isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
     } else if (doorId === 'door-room3') {
-      isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
+      isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen) || false;
     } else if (doorId === 'door-room4') {
+      isPrereqMet = (roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
+    } else if (doorId === 'door-room5') {
       isPrereqMet = (roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen) || false;
     }
 
