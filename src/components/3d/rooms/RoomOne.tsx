@@ -99,8 +99,8 @@ export const RoomOne: React.FC<RoomOneProps> = ({
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={overriddenSettings} isVisible={isVisible}>
-      {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = 8.0 & Z = 18.0) */}
-      {[8.0, 18.0].map((z) => (
+      {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = -10.0 & Z = 10.0) */}
+      {[-10.0, 10.0].map((z) => (
         <group key={z} position={[0, 0, z]}>
           <mesh position={[0, 0.45, 0]}>
             <boxGeometry args={[3.2, 0.08, 0.8]} />
@@ -115,8 +115,8 @@ export const RoomOne: React.FC<RoomOneProps> = ({
         </group>
       ))}
 
-      {/* 4. CỤM GHẾ NGỒI GIỮA PHÒNG - tạo cảm giác phòng triển lãm có điểm nghỉ chân */}
-      {[-16.5, -10.5, -4.5].map((z, index) => (
+      {/* 4. CỤM GHẾ NGỒI GIỮA PHÒNG - tạo cảm giác phòng triển lãm có điểm nghỉ chân (phân bố đều tại Z = -20.0, Z = 0.0, Z = 20.0) */}
+      {[-20.0, 0.0, 20.0].map((z, index) => (
         <group key={`central-bench-${z}`} position={[0, 0, z]} rotation={[0, index % 2 === 0 ? 0 : Math.PI, 0]}>
           <mesh position={[0, 0.52, 0]}>
             <boxGeometry args={[4.0, 0.12, 0.82]} />
@@ -141,10 +141,10 @@ export const RoomOne: React.FC<RoomOneProps> = ({
         </group>
       ))}
 
-      {/* 5. BÀN TRANG TRÍ GỌN VỚI LỌ HOA - đặt lệch bên để không cản lối */}
+      {/* 5. BÀN TRANG TRÍ GỌN VỚI LỌ HOA - đặt lệch bên để không cản lối (phân bố đều tại Z = -15.0 và Z = 15.0) */}
       {[
-        { x: -7.2, z: -13.2 },
-        { x: 7.2, z: -7.2 },
+        { x: -7.2, z: -15.0 },
+        { x: 7.2, z: 15.0 },
       ].map((item, index) => (
         <group key={`decor-table-${index}`} position={[item.x, 0, item.z]}>
           <mesh position={[0, 0.64, 0]}>

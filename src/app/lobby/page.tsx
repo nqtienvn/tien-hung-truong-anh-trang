@@ -490,28 +490,28 @@ const LobbyPlayer: React.FC = () => {
         // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
 
-        // 1. Ghế gỗ băng cũ trong phòng (local Z = 8.0 & 18.0 => Global Z = 39.0 & 49.0)
+        // 1. Ghế gỗ băng cũ trong phòng (local Z = -10.0 & 10.0 => Global Z = 21.0 & 41.0)
         // Khi đang nhảy cao hơn mặt ghế thì cho vượt qua.
         const canJumpOverBench = currentY > 3.75;
-        if (!canJumpOverBench && z > 38.5 && z < 39.5 && x > -1.7 && x < 1.7) {
+        if (!canJumpOverBench && z > 20.5 && z < 21.5 && x > -1.7 && x < 1.7) {
           return true;
         }
-        if (!canJumpOverBench && z > 48.5 && z < 49.5 && x > -1.7 && x < 1.7) {
+        if (!canJumpOverBench && z > 40.5 && z < 41.5 && x > -1.7 && x < 1.7) {
           return true;
         }
 
-        // 5. Dãy ghế ngồi giữa phòng (local Z = -16.5, -10.5, -4.5 => Global Z = 14.5, 20.5, 26.5)
-        const centralBenchZs = [14.5, 20.5, 26.5];
+        // 5. Dãy ghế ngồi giữa phòng (local Z = -20.0, 0.0, 20.0 => Global Z = 11.0, 31.0, 51.0)
+        const centralBenchZs = [11.0, 31.0, 51.0];
         for (const benchZ of centralBenchZs) {
           if (!canJumpOverBench && z > benchZ - 0.65 && z < benchZ + 0.65 && x > -2.15 && x < 2.15) {
             return true;
           }
         }
 
-        // 6. Bàn lọ hoa trang trí: vẫn chặn để không xuyên qua bàn.
+        // 6. Bàn lọ hoa trang trí (local Z = -15.0 & 15.0 => Global Z = 16.0 & 46.0)
         const decorTables = [
-          { x: -7.2, z: 17.8 },
-          { x: 7.2, z: 23.8 },
+          { x: -7.2, z: 16.0 },
+          { x: 7.2, z: 46.0 },
         ];
         for (const table of decorTables) {
           const dx = x - table.x;
