@@ -303,13 +303,17 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
       ))}
 
       {/* 4. Tường cuối sau (z = halfL - 1.8 = 13.2) */}
-      {doorXPositions.map((xPos) => (
-        <VelvetRopeBarrier
-          key={`barrier-back-${xPos}`}
-          p1={[xPos - 2.2, halfL - 1.8]}
-          p2={[xPos + 2.2, halfL - 1.8]}
-        />
-      ))}
+      {doorXPositions.map((xPos) => {
+        // Loại bỏ hàng rào bên phải (xPos > 0) vì có máy chơi game ở đó
+        if (xPos > 0) return null;
+        return (
+          <VelvetRopeBarrier
+            key={`barrier-back-${xPos}`}
+            p1={[xPos - 2.2, halfL - 1.8]}
+            p2={[xPos + 2.2, halfL - 1.8]}
+          />
+        );
+      })}
 
     </BaseRoom>
   );

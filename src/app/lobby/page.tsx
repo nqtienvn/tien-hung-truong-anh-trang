@@ -598,6 +598,39 @@ const LobbyPlayer: React.FC = () => {
 
         if (x < -14.7 || x > 14.7) return true;
 
+        // 1. Va chạm với máy chơi game tại X = 8.0, Z = 128.6 (global)
+        if (x > 6.6 && x < 9.4 && z > 127.4 && z < 129.5) {
+          return true;
+        }
+
+        // 2. Va chạm với hàng rào bên trái (X = -13.2)
+        if (x < -12.4) {
+          if ((z > 104.2 && z < 109.8) || (z > 112.2 && z < 117.8) || (z > 120.2 && z < 125.8)) {
+            return true;
+          }
+        }
+
+        // 3. Va chạm với hàng rào bên phải (X = 13.2)
+        if (x > 12.4) {
+          if ((z > 104.2 && z < 109.8) || (z > 112.2 && z < 117.8) || (z > 120.2 && z < 125.8)) {
+            return true;
+          }
+        }
+
+        // 4. Va chạm với hàng rào cửa vào trước (Z = 101.8 global)
+        if (z < 102.6) {
+          if ((x > -10.8 && x < -5.2) || (x > 5.2 && x < 10.8)) {
+            return true;
+          }
+        }
+
+        // 5. Va chạm với hàng rào phía sau bên trái (Z = 128.2 global)
+        if (z > 127.4) {
+          if (x > -10.8 && x < -5.2) {
+            return true;
+          }
+        }
+
         if (z > 129.3) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
@@ -780,8 +813,8 @@ const LobbyPlayer: React.FC = () => {
         rightArmRef.current.rotation.z = -0.1;
       }
 
-      const now = state.clock.getElapsedTime();
-      if (now - lastUpdate.current > 0.08) {
+      const now = state.clock.getElapsedTime() * 1000;
+      if (now - lastUpdate.current > 80) {
         socket?.emit('move', {
           x: sittingPosition.x,
           y: sittingPosition.y,

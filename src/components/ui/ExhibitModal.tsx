@@ -408,6 +408,34 @@ export const ExhibitModal: React.FC = () => {
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-slate-950/85 via-slate-950/10 to-transparent" />
+        <div className="relative h-[38vh] lg:h-full lg:w-[48%] xl:w-[52%] bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0 flex items-center justify-center">
+          {(() => {
+            const thumbnailUrl = selectedExhibit.id === 'vn-back-right'
+              ? '/exhibits/anhgame.jpg'
+              : selectedExhibit.thumbnail_url;
+            return thumbnailUrl ? (
+              <img
+                src={thumbnailUrl}
+                alt={titleText}
+                className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
+              />
+            ) : (
+              <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
+                <div className="w-24 h-24 bg-cyan-500/10 text-cyan-400 rounded-2xl flex items-center justify-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
+                  <Gamepad2 size={48} className="animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-bold text-white tracking-wide">{titleText}</h3>
+                  <p className="text-xs text-slate-400 mt-2 max-w-sm">
+                    {language === 'vi' 
+                      ? 'Trò chơi tương tác tìm hiểu lịch sử trực quan của phòng trưng bày.' 
+                      : 'Interactive game to explore the gallery\'s visual history.'}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+          <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-slate-950/85 via-slate-950/10 to-transparent pointer-events-none" />
 
           {/* Nhãn loại hiện vật */}
           <span className="absolute bottom-5 left-5 bg-amber-500/20 text-amber-200 border border-amber-500/35 text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-lg uppercase font-sans">

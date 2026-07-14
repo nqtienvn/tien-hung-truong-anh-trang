@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useMuseum } from '@/context/MuseumContext';
-import { BookOpen, Search, FileCheck, DoorOpen, X, ChevronRight, Sparkles } from 'lucide-react';
+import { BookOpen, Search, FileCheck, DoorOpen, X, ChevronRight, Sparkles, Gamepad2 } from 'lucide-react';
 
 const GALLERY_CONFIGS: Record<string, {
   headerTitle: string;
@@ -70,7 +70,7 @@ const GALLERY_CONFIGS: Record<string, {
   },
   'gallery-ceramics': {
     headerTitle: 'PHÒNG 03 • HỘI NHẬP QUỐC TẾ',
-    welcomeTitle: 'Chào mừng đến Phòng Gốm Sứ!',
+    welcomeTitle: 'Chào mừng đến Phòng Hội Nhập!',
     introText: (
       <>
         <span className="italic">Chủ đề: </span>
@@ -90,9 +90,9 @@ const GALLERY_CONFIGS: Record<string, {
         desc: 'Mỗi bức tranh sau khi đọc sẽ được ghi nhận vào "Bộ sưu tập" ở góc dưới bên phải màn hình. Hãy thu thập đủ 9 dữ kiện.',
       },
       {
-        icon: <Sparkles size={28} className="text-amber-600" />,
+        icon: <Gamepad2 size={28} className="text-amber-600" />,
         title: '③ Tham gia Mini Game',
-        desc: 'Đến khu vực bức tranh "Game dòng chảy lịch sử" ở cuối phòng để bắt đầu trò chơi sắp xếp 9 sự kiện theo đúng trình tự thời gian.',
+        desc: 'Đến khu vực máy chơi game "Game dòng chảy lịch sử" ở cuối phòng để bắt đầu trò chơi sắp xếp 9 sự kiện theo đúng trình tự thời gian.',
       },
       {
         icon: <FileCheck size={28} className="text-amber-600" />,
