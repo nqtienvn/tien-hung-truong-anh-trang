@@ -133,6 +133,10 @@ interface MuseumContextType {
   roomOneTotalPlayers: number;
   roomOneCountdownTime: number;
   roomOneState: 'waiting' | 'countdown' | 'started';
+
+  // --- Welcome Modal Status ---
+  welcomeModalOpen: boolean;
+  setWelcomeModalOpen: (open: boolean) => void;
 }
 
 export interface GameEvent {
@@ -185,6 +189,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomOneTotalPlayers, setRoomOneTotalPlayers] = useState(0);
   const [roomOneCountdownTime, setRoomOneCountdownTime] = useState(0);
   const [roomOneState, setRoomOneState] = useState<'waiting' | 'countdown' | 'started'>('waiting');
+
+  // --- Welcome Modal Status ---
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
   const [miniGameOpen, setMiniGameOpen] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<Array<{ nickname: string; score: number; time: string }>>([]);
@@ -753,6 +760,19 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => clearInterval(timer);
   }, [roomOneState, roomOneCountdownTime]);
 
+  // Khóa di chuyển ở Phòng 1 nếu game chưa bắt đầu
+  useEffect(() => {
+    if (activeGallery?.id === 'gallery-subsidy') {
+      if (roomOneState !== 'started') {
+        setRoomOneLocked(true);
+      } else {
+        setRoomOneLocked(false);
+      }
+    } else {
+      setRoomOneLocked(false);
+    }
+  }, [activeGallery?.id, roomOneState]);
+
   return (
     <MuseumContext.Provider
       value={{
@@ -828,6 +848,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         roomOneTotalPlayers,
         roomOneCountdownTime,
         roomOneState,
+
+        // --- Welcome Modal Status ---
+        welcomeModalOpen,
+        setWelcomeModalOpen,
       }}
     >
       {children}

@@ -131,7 +131,8 @@ export const RoomWelcomeModal: React.FC = () => {
     roomOneState, 
     roomOneWaitingPlayers, 
     roomOneTotalPlayers, 
-    roomOneCountdownTime 
+    roomOneCountdownTime,
+    setWelcomeModalOpen
   } = useMuseum();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
@@ -140,6 +141,14 @@ export const RoomWelcomeModal: React.FC = () => {
   const [isWaitingRoomOne, setIsWaitingRoomOne] = useState(false);
 
   const config = activeGallery?.id ? GALLERY_CONFIGS[activeGallery.id] : null;
+
+  // Cập nhật trạng thái mở của welcome modal lên global context để khóa di chuyển
+  useEffect(() => {
+    setWelcomeModalOpen(visible);
+    return () => {
+      setWelcomeModalOpen(false);
+    };
+  }, [visible, setWelcomeModalOpen]);
 
   // Reset trạng thái khi đổi phòng
   useEffect(() => {
