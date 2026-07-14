@@ -273,6 +273,7 @@ const LobbyCameraController: React.FC = () => {
     const isDoor2Open = doorStates['door-room2']?.isOpen || false;
     const isDoor3Open = doorStates['door-room3']?.isOpen || false;
     const isDoor4Open = doorStates['door-room4']?.isOpen || false;
+    const isDoor5Open = doorStates['door-room5']?.isOpen || false;
 
     let minX = -LOBBY_W / 2 + 0.5; // -14.5
     let maxX = LOBBY_W / 2 - 0.5;  // 14.5
@@ -284,35 +285,42 @@ const LobbyCameraController: React.FC = () => {
       minX = -LOBBY_W / 2 + 0.5;
       maxX = LOBBY_W / 2 - 0.5;
       minZ = -9.4;
-      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 244.8 : 129.8) : 99.8) : 53.8) : 7.8;
+      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 290.8 : 175.8) : 145.8) : 99.8) : 53.8) : 7.8;
     } 
     else if (pz > 8.0 && pz <= 54.0) {
       // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor1Open ? -9.4 : 8.2;
-      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 244.8 : 129.8) : 99.8) : 53.8;
+      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 290.8 : 175.8) : 145.8) : 99.8) : 53.8;
     } 
     else if (pz > 54.0 && pz <= 100.0) {
       // Đang ở Phòng 2
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
-      maxZ = isDoor3Open ? (isDoor4Open ? 244.8 : 129.8) : 99.8;
+      maxZ = isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 290.8 : 175.8) : 145.8) : 99.8;
     } 
-    else if (pz > 100.0 && pz <= 130.0) {
+    else if (pz > 100.0 && pz <= 146.0) {
       // Đang ở Phòng 3
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
+      maxZ = isDoor4Open ? (isDoor5Open ? 290.8 : 175.8) : 145.8;
+    } 
+    else if (pz > 146.0 && pz <= 176.0) {
+      // Đang ở Phòng 4
       minX = -14.5;
       maxX = 14.5;
-      minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
-      maxZ = isDoor4Open ? 244.8 : 129.8;
-    } 
-    else if (pz > 130.0 && pz <= 245.0) {
-      // Đang ở Phòng 4
+      minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 146.2;
+      maxZ = isDoor5Open ? 290.8 : 175.8;
+    }
+    else if (pz > 176.0 && pz <= 291.0) {
+      // Đang ở Phòng 5
       minX = -8.5;
       maxX = 8.5;
-      minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
-      maxZ = 244.8;
+      minZ = isDoor5Open ? (isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 146.2) : 176.2;
+      maxZ = 290.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -610,36 +618,53 @@ const LobbyPlayer: React.FC = () => {
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 100.0 -> 130.0) ──
-      if (z > 100.0 && z <= 130.0) {
+      // ── PHÒNG TRIỂN LÃM 3 (gallery-sculptures: Z 100.0 -> 146.0) ──
+      if (z > 100.0 && z <= 146.0) {
         // Chỉ chặn khi đi lùi về phòng 2 qua cửa 3 đang đóng
         if (z < 100.6) {
           const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
         }
 
-        if (x < -14.7 || x > 14.7) return true;
+        if (x < -11.7 || x > 11.7) return true;
 
-        if (z > 129.3) {
+        if (z > 145.3) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
         }
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 245.0) ──
-      if (z > 130.0 && z <= 245.0) {
+      // ── PHÒNG TRIỂN LÃM 4 (gallery-ceramics: Z 146.0 -> 176.0) ──
+      if (z > 146.0 && z <= 176.0) {
         // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
-        if (z < 130.6) {
+        if (z < 146.6) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
+        }
+
+        if (x < -14.7 || x > 14.7) return true;
+
+        if (z > 175.3) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
+        return false;
+      }
+
+      // ── PHÒNG TRIỂN LÃM 5 (gallery-market-economy: Z 176.0 -> 291.0) ──
+      if (z > 176.0 && z <= 291.0) {
+        // Chỉ chặn khi đi lùi về phòng 4 qua cửa 5 đang đóng
+        if (z < 176.6) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
         }
 
         // Biên giới tường bên (rộng 18m, X = ±9m)
         if (x < -8.7 || x > 8.7) return true;
 
-        // Tường sau phòng 4 (Z = 245.0)
-        if (z > 244.3) return true;
+        // Tường sau phòng 5 (Z = 291.0)
+        if (z > 290.3) return true;
         return false;
       }
 
