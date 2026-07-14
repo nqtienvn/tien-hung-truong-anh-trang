@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ExhibitionRoom } from './ExhibitionRoom';
@@ -49,6 +49,33 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
   const { galleryId, exhibits, gallery } = room;
   const groupRef = useRef<THREE.Group>(null);
 
+  // Cơ chế đếm số hiện vật được phép hiển thị để load từ từ (staggered loading)
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  // Khi phòng được hiển thị, tăng dần số lượng hiện vật để tránh giật lag đột ngột
+  useEffect(() => {
+    if (!isVisible) {
+      setVisibleCount(0);
+      return;
+    }
+
+    // Đặt cái đầu tiên ngay lập tức
+    setVisibleCount(1);
+
+    // Cứ mỗi 150ms mount thêm 1 hiện vật để chia đều tải tải lưới (geometry) và tải hoạ tiết (texture)
+    const interval = setInterval(() => {
+      setVisibleCount((prev) => {
+        if (prev >= exhibits.length) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [isVisible, exhibits.length]);
+
   // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -93,8 +120,8 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
         {/* Phòng triển lãm */}
         <ExhibitionRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} />
 
-        {/* Các hiện vật trong phòng */}
-        {exhibits.map((exhibit) => (
+        {/* Các hiện vật trong phòng - Load từ từ từng cái một để giảm lag */}
+        {exhibits.slice(0, visibleCount).map((exhibit) => (
           <ExhibitObject key={exhibit.id} exhibit={exhibit} isVisible={isVisible} />
         ))}
       </Suspense>
