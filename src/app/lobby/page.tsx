@@ -574,8 +574,8 @@ const LobbyPlayer: React.FC = () => {
         const localZ = z - 77.0;
         const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
         
-        // Chặn bục sân khấu bên trái (local X: -12.0 đến -7.6, local Z: -7.5 đến 7.5)
-        if (x < -7.6 && localZ > -7.5 && localZ < 7.5) return true;
+        // Chặn bục sân khấu bên trái và lan can 2 đầu sân khấu (local X: -12.0 đến -7.6, local Z: -7.6 đến 7.6)
+        if (x < -7.6 && localZ > -7.6 && localZ < 7.6) return true;
 
         // Chặn các dãy bàn dọc
         for (const rowX of deskXCoords) {

@@ -201,6 +201,29 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
             </mesh>
           </group>
         ))}
+
+        {/* Lan can chặn hai đầu sân khấu để tránh đi lên từ hai bên (Z = -7.5 và Z = 7.5) */}
+        {[-7.5, 7.5].map((zVal, idx) => (
+          <group key={`stage-side-rail-${idx}`} position={[0, 0.4, zVal]}>
+            {/* Tấm kính cường lực bảo vệ trong suốt */}
+            <mesh position={[0, 0.325, 0]}>
+              <boxGeometry args={[3.2, 0.65, 0.02]} />
+              <meshStandardMaterial color="#0891b2" transparent opacity={0.25} roughness={0.1} metalness={0.8} />
+            </mesh>
+            {/* Tay vịn bằng gỗ sồi */}
+            <mesh position={[0, 0.67, 0]}>
+              <boxGeometry args={[3.22, 0.04, 0.06]} />
+              <meshStandardMaterial color="#2d1708" roughness={0.3} />
+            </mesh>
+            {/* Trụ đỡ kim loại */}
+            {[-1.2, 1.2].map((xPost, pIdx) => (
+              <mesh key={`post-${pIdx}`} position={[xPost, 0.29, 0]}>
+                <boxGeometry args={[0.04, 0.58, 0.04]} />
+                <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
+              </mesh>
+            ))}
+          </group>
+        ))}
       </group>
 
       {/* Bàn Chủ tọa Đoàn Chủ tịch quay sang phải */}
