@@ -274,17 +274,17 @@
         "vi": "Trò chơi thử thách trí nhớ và sự nhanh nhạy của bạn với các mốc thời gian và sự kiện lịch sử của Việt Nam.\n\nLuật chơi:\n- Kéo thả hoặc click chọn 2 thẻ sự kiện để tráo đổi vị trí của chúng.\n- Sắp xếp 9 sự kiện lịch sử theo trình tự thời gian từ sớm nhất (trên cùng) đến muộn nhất (dưới cùng).\n- Khi đã chắc chắn, nhấn Xác nhận sắp xếp ở dưới để nộp bài (bạn chỉ có duy nhất một lần nộp).\n- Mỗi sự kiện xếp đúng vị trí sẽ được 10 điểm, xếp đúng toàn bộ 9 sự kiện được 100 điểm. Thời gian giới hạn là 3 phút.\n\nLưu ý quan trọng:\n- Lượt chơi tính điểm chỉ được thực hiện 1 lần duy nhất.\n- Khi bạn đã bắt đầu chơi game, vẫn có thể thoát ra ngoài để đi xung quanh phòng triển lãm xem lại các bức tranh để kiểm tra chắc chắn mốc thời gian của từng sự kiện trước khi quay lại đây chơi hoặc nộp kết quả.",
         "en": "A game to challenge your memory and agility with Vietnam's historical milestones and events.\n\nRules of the game:\n- Drag and drop or click 2 cards to swap their positions.\n- Arrange 9 historical events in chronological order from earliest (top) to latest (bottom).\n- Once you are sure, click Verify Timeline below to submit (you only have one attempt to submit).\n- Each correctly placed event awards 10 points, and a perfect 9/9 order awards 100 points. The time limit is 3 minutes.\n\nImportant Note:\n- You can only submit your score once.\n- Once you start the game, you can leave and walk around the gallery to check other paintings and verify the years of each event before coming back to play or submit."
       },
-      "model_3d_url": "",
+      "model_3d_url": "procedural-arcade",
       "thumbnail_url": "/exhibits/anhgame.jpg",
       "coordinate_x": 8.0,
-      "coordinate_y": 3.4,
-      "coordinate_z": 14.88,
+      "coordinate_y": 0.38,
+      "coordinate_z": 13.6,
       "rotation_x": 0.0,
       "rotation_y": 3.1416,
       "rotation_z": 0.0,
-      "scale_x": 4.4,
-      "scale_y": 2.8,
-      "scale_z": 0.1
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "scale_z": 1.0
     }
   ]
 }
