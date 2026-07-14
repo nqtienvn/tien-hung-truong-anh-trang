@@ -56,7 +56,6 @@ const CameraLerpController: React.FC = () => {
   } = useMuseum();
   
   const { camera, gl } = useThree();
-  const isSculptures = activeGallery?.id === 'gallery-sculptures';
 
   // Góc xoay cầu của camera xung quanh nhân vật (theta: ngang, phi: dọc)
   const theta = useRef(Math.PI); // Azimuthal angle (Xoay ngang, mặc định nhìn về phía trước)

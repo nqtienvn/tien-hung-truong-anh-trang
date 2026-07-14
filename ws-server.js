@@ -60,7 +60,6 @@ const closingTimers = {};
 const roomStates = {
   'gallery-subsidy': { isOpen: false },
   'gallery-paintings': { isOpen: false },
-  'gallery-sculptures': { isOpen: false },
   'gallery-ceramics': { isOpen: false },
   'gallery-market-economy': { isOpen: false }
 };
@@ -332,10 +331,8 @@ io.on('connection', (socket) => {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
-    } else if (doorId === 'door-room5') {
       canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
@@ -416,12 +413,10 @@ io.on('connection', (socket) => {
       relatedDoors.push('door-room1', 'door-room2');
     } else if (roomId === 'gallery-paintings') {
       relatedDoors.push('door-room2', 'door-room3');
-    } else if (roomId === 'gallery-sculptures') {
-      relatedDoors.push('door-room3', 'door-room4');
     } else if (roomId === 'gallery-ceramics') {
-      relatedDoors.push('door-room4', 'door-room5');
+      relatedDoors.push('door-room3', 'door-room4');
     } else if (roomId === 'gallery-market-economy') {
-      relatedDoors.push('door-room5');
+      relatedDoors.push('door-room4');
     }
 
     const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);

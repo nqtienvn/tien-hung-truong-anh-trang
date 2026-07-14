@@ -164,7 +164,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
     'gallery-subsidy': { isOpen: false },
     'gallery-paintings': { isOpen: false },
-    'gallery-sculptures': { isOpen: false },
     'gallery-ceramics': { isOpen: false },
     'gallery-market-economy': { isOpen: false }
   });
@@ -693,7 +692,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const idleId = idleCallback(() => {
       if (roomStates['gallery-subsidy']?.isOpen) loadRoom('gallery-subsidy');
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
-      if (roomStates['gallery-sculptures']?.isOpen) loadRoom('gallery-sculptures');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
       if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');

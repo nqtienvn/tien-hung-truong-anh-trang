@@ -53,8 +53,6 @@ export const PlayerCharacter: React.FC = () => {
   });
 
   const lastUpdate = useRef(0);
-  const isSculptures = activeGallery?.id === "gallery-sculptures";
-
   // Cache vectors for useFrame to prevent GC pauses
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
@@ -64,9 +62,7 @@ export const PlayerCharacter: React.FC = () => {
   useEffect(() => {
     if (playerRef.current) {
       let spawnZ = 12;
-      if (activeGallery?.id === "gallery-sculptures") {
-        spawnZ = -12;
-      } else if (activeGallery?.id === "gallery-ceramics") {
+      if (activeGallery?.id === "gallery-ceramics") {
         spawnZ = -10;
       } else if (activeGallery?.id === "gallery-market-economy") {
         spawnZ = -55.5; // Điểm bắt đầu cục bộ của Room 4 (Z local chạy từ -57.5 đến 57.5)
@@ -141,23 +137,6 @@ export const PlayerCharacter: React.FC = () => {
       // 3. Ghế băng tại Z = 8.0 và Z = 18.0
       if (x > -2.3 && x < 2.3 && z > 7.3 && z < 8.7) return true;
       if (x > -2.3 && x < 2.3 && z > 17.3 && z < 18.7) return true;
-    }
-
-    // ── Phòng 2: gallery-sculptures ─────────────────────────────────────────
-    if (galleryId === "gallery-sculptures") {
-      // 1. Tường ngăn tại Z = -3.0: Cổng mở X từ 2.0 đến 5.0
-      if (z > -3.3 && z < -2.7) {
-        if (x < 2.0 || x > 5.0) return true;
-      }
-
-      // 2. Bệ đỡ tượng tại Z = -8.0, -14.0, -20.0
-      const pedestalsZ = [-8.0, -14.0, -20.0];
-      const collisionRadius = 1.0;
-      for (const pZ of pedestalsZ) {
-        const dx = x;
-        const dz = z - pZ;
-        if (Math.sqrt(dx * dx + dz * dz) < collisionRadius) return true;
-      }
     }
 
     // ── Phòng 3: gallery-ceramics — hoàn toàn trống, không vật cản ──────────

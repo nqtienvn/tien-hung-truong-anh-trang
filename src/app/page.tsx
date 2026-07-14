@@ -26,16 +26,16 @@ export default function Home() {
             Khởi nguồn
           </Link>
           <Link
-            href="/gallery/gallery-sculptures"
+            href="/gallery/gallery-ceramics"
+            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
+          >
+            Gốm sứ
+          </Link>
+          <Link
+            href="/gallery/gallery-market-economy"
             className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
           >
             Thị trường
-          </Link>
-          <Link
-            href="/gallery/gallery-sculptures"
-            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Giới hạn
           </Link>
           <Link
             href="/gallery/gallery-paintings"
@@ -90,7 +90,7 @@ export default function Home() {
         </Link>
         <Link
           className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
-          href="/gallery/gallery-sculptures"
+          href="/gallery/gallery-market-economy"
         >
           <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
             <span className="material-symbols-outlined text-xl">

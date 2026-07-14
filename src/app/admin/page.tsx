@@ -10,9 +10,8 @@ import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, S
 const DOOR_CONFIGS = [
   { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Cửa 1: Sảnh ↔ Phòng 01', color: 'amber' },
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
-  { doorId: 'door-room3', targetRoom: 'gallery-sculptures', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'indigo' },
-  { doorId: 'door-room4', targetRoom: 'gallery-ceramics', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'emerald' },
-  { doorId: 'door-room5', targetRoom: 'gallery-market-economy', label: 'Cửa 5: Phòng 04 ↔ Phòng 05', color: 'rose' },
+  { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
+  { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
 ];
 
 interface DoorState {
@@ -126,10 +125,8 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
-    } else if (doorId === 'door-room5') {
       canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
@@ -153,8 +150,6 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room3') {
       teleportTo = 'gallery-paintings';
     } else if (doorId === 'door-room4') {
-      teleportTo = 'gallery-sculptures';
-    } else if (doorId === 'door-room5') {
       teleportTo = 'gallery-ceramics';
     }
 
@@ -171,12 +166,10 @@ export default function AdminDashboard() {
         relatedDoors.push('door-room1', 'door-room2');
       } else if (roomId === 'gallery-paintings') {
         relatedDoors.push('door-room2', 'door-room3');
-      } else if (roomId === 'gallery-sculptures') {
-        relatedDoors.push('door-room3', 'door-room4');
       } else if (roomId === 'gallery-ceramics') {
-        relatedDoors.push('door-room4', 'door-room5');
+        relatedDoors.push('door-room3', 'door-room4');
       } else if (roomId === 'gallery-market-economy') {
-        relatedDoors.push('door-room5');
+        relatedDoors.push('door-room4');
       }
 
       const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
@@ -196,9 +189,8 @@ export default function AdminDashboard() {
       ? 'Sảnh chờ' 
       : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
       : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
-      : targetRoom === 'gallery-sculptures' ? 'Phòng 03 (Điêu khắc 3D)' 
-      : targetRoom === 'gallery-ceramics' ? 'Phòng 04 (Đồ gốm sứ)' 
-      : 'Phòng 05 (Kinh tế thị trường)';
+      : targetRoom === 'gallery-ceramics' ? 'Phòng 03 (Đồ gốm sứ)' 
+      : 'Phòng 04 (Kinh tế thị trường)';
 
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
     if (window.confirm(confirmMsg)) {
@@ -328,10 +320,8 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room2') {
       isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
     } else if (doorId === 'door-room3') {
-      isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen) || false;
+      isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
     } else if (doorId === 'door-room4') {
-      isPrereqMet = (roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
-    } else if (doorId === 'door-room5') {
       isPrereqMet = (roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen) || false;
     }
 
@@ -636,22 +626,16 @@ export default function AdminDashboard() {
             {renderAdminRoom('gallery-paintings', 'Phòng 02: Tranh Hội Họa', 'Bộ sưu tập hội họa tranh vẽ nghệ thuật 2D', ['door-room2', 'door-room3'])}
 
             {/* 6. CỬA 3 */}
-            {renderAdminDoor('door-room3', 'gallery-sculptures', 'Cửa số 03: Phòng 02 ↔ Phòng 03')}
+            {renderAdminDoor('door-room3', 'gallery-ceramics', 'Cửa số 03: Phòng 02 ↔ Phòng 03')}
 
             {/* 7. PHÒNG 3 */}
-            {renderAdminRoom('gallery-sculptures', 'Phòng 03: Điêu Khắc 3D', 'Bộ sưu tập các mô hình điêu khắc 3D sống động', ['door-room3', 'door-room4'])}
+            {renderAdminRoom('gallery-ceramics', 'Phòng 03: Gốm Sứ Hội Nhập', 'Các tác phẩm gốm sứ tinh xảo và câu chuyện làng nghề', ['door-room3', 'door-room4'])}
 
             {/* 8. CỬA 4 */}
-            {renderAdminDoor('door-room4', 'gallery-ceramics', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
+            {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
 
             {/* 9. PHÒNG 4 */}
-            {renderAdminRoom('gallery-ceramics', 'Phòng 04: Gốm Sứ Hội Nhập', 'Các tác phẩm gốm sứ tinh xảo và hành trình hội nhập kinh tế', ['door-room4', 'door-room5'])}
-
-            {/* 10. CỬA 5 */}
-            {renderAdminDoor('door-room5', 'gallery-market-economy', 'Cửa số 05: Phòng 04 ↔ Phòng 05')}
-
-            {/* 11. PHÒNG 5 */}
-            {renderAdminRoom('gallery-market-economy', 'Phòng 05: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room5'])}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4'])}
           </div>
         </div>
 
