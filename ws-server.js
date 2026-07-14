@@ -133,8 +133,15 @@ const broadcastRoomTwoPlayers = () => {
     .map(u => ({
       socketId: u.id,
       nickname: u.nickname,
-      submitted: u.room2Score !== undefined,
-      score: u.room2Score || 0
+      submitted1: u.room2Score1 !== undefined,
+      score1: u.room2Score1 || 0,
+      submitted2: u.room2Score2 !== undefined,
+      score2: u.room2Score2 || 0,
+      submitted3: u.room2Score3 !== undefined,
+      score3: u.room2Score3 || 0,
+      submitted4: u.room2Score4 !== undefined,
+      score4: u.room2Score4 || 0,
+      totalScore: (u.room2Score1 || 0) + (u.room2Score2 || 0) + (u.room2Score3 || 0) + (u.room2Score4 || 0)
     }));
   
   io.emit('admin:room2-players-update', usersInRoomTwo);
@@ -772,6 +779,44 @@ io.on('connection', (socket) => {
     broadcastRoomTwoPlayers();
   });
 
+  socket.on('admin:start-room2-session2', () => {
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ hai ở Phòng 2 từ admin.');
+    roomTwoSessionState = 'session2';
+    io.emit('room2:session2-start');
+    broadcastRoomTwoPlayers();
+  });
+
+  socket.on('admin:start-room2-session3', () => {
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ ba ở Phòng 2 từ admin.');
+    roomTwoSessionState = 'session3';
+    io.emit('room2:session3-start');
+    broadcastRoomTwoPlayers();
+  });
+
+  socket.on('admin:start-room2-session4', () => {
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ tư ở Phòng 2 từ admin.');
+    roomTwoSessionState = 'session4';
+    io.emit('room2:session4-start');
+    broadcastRoomTwoPlayers();
+  });
+
+  socket.on('admin:start-room2-completed', () => {
+    console.log('[ADMIN] Yêu cầu HOÀN THÀNH họp Phòng 2 từ admin. Tự động mở cửa 3.');
+    roomTwoSessionState = 'completed';
+    io.emit('room2:completed-start');
+
+    // Tự động mở cửa Phòng 3 để cho phép đi tiếp
+    doorStates['door-room3'] = { isOpen: true, targetRoom: 'gallery-ceramics' };
+    io.emit('door-opened', { doorId: 'door-room3', targetRoom: 'gallery-ceramics' });
+    io.emit('door-states', doorStates);
+
+    // Tự động bật phòng 3 (gallery-ceramics) hoạt động
+    roomStates['gallery-ceramics'] = { isOpen: true };
+    io.emit('room-states', roomStates);
+
+    broadcastRoomTwoPlayers();
+  });
+
   socket.on('admin:get-room2-players', () => {
     broadcastRoomTwoPlayers();
   });
@@ -780,23 +825,79 @@ io.on('connection', (socket) => {
     const user = activeUsers[socket.id];
     if (!user) return;
 
-    const val = data.value || 0;
-    
-    // Tính điểm dựa trên mức lựa chọn của nhóm (khoảng giá trị của slider)
+    const { session, value, selectedPolicies } = data;
     let calculatedScore = 0;
-    if (val >= 0 && val <= 30) calculatedScore = 2;
-    else if (val >= 31 && val <= 50) calculatedScore = 5;
-    else if (val >= 51 && val <= 70) calculatedScore = 8;
-    else if (val >= 71 && val <= 80) calculatedScore = 12;
-    else if (val >= 81 && val <= 90) calculatedScore = 15;
-    else if (val >= 91 && val <= 100) calculatedScore = 10;
 
-    user.room2Score = calculatedScore;
-    user.score = (user.score || 0) + calculatedScore;
+    if (session === 1) {
+      const val = value || 0;
+      if (val >= 0 && val <= 30) calculatedScore = 2;
+      else if (val >= 31 && val <= 50) calculatedScore = 5;
+      else if (val >= 51 && val <= 70) calculatedScore = 8;
+      else if (val >= 71 && val <= 80) calculatedScore = 12;
+      else if (val >= 81 && val <= 90) calculatedScore = 15;
+      else if (val >= 91 && val <= 100) calculatedScore = 10;
 
-    console.log(`[ROOM-2-SUBMIT] ${user.nickname} nộp đánh giá: ${val}. Điểm đạt: ${calculatedScore}`);
-    
-    socket.emit('room2:submit-success', { score: calculatedScore });
+      user.room2Score1 = calculatedScore;
+      user.score = (user.score || 0) + calculatedScore;
+      console.log(`[ROOM-2-SUBMIT] Session 1: ${user.nickname} nộp đánh giá: ${val}. Điểm đạt: ${calculatedScore}`);
+    } 
+    else if (session === 2) {
+      // Session 2: Báo cáo sản xuất - kéo nguyên nhân chính
+      const selectedCauses = Array.isArray(value) ? value : [];
+      const correctCauses = ['machinery', 'materials', 'incentives', 'market_demand'];
+      let matchCount = 0;
+      correctCauses.forEach(c => {
+        if (selectedCauses.includes(c)) matchCount++;
+      });
+      calculatedScore = matchCount * 2.5;
+
+      user.room2Score2 = calculatedScore;
+      user.score = (user.score || 0) + calculatedScore;
+      console.log(`[ROOM-2-SUBMIT] Session 2: ${user.nickname} chọn đúng ${matchCount}/4 nguyên nhân. Điểm đạt: ${calculatedScore}`);
+    } 
+    else if (session === 3) {
+      // Session 3: Báo cáo nông nghiệp - Cải tổ mô hình
+      const model = value || '';
+      const policies = Array.isArray(selectedPolicies) ? selectedPolicies : [];
+
+      if (model === 'C') calculatedScore += 4;
+
+      const correctPolicies = ['policy1', 'policy2', 'policy3'];
+      let policyMatchCount = 0;
+      correctPolicies.forEach(p => {
+        if (policies.includes(p)) policyMatchCount++;
+      });
+      calculatedScore += policyMatchCount * 1;
+
+      // Giải thích tác động (tất cả 3 chính sách hỗ trợ đúng được chọn)
+      if (policyMatchCount === 3 && model === 'C') {
+        calculatedScore += 3;
+      }
+
+      user.room2Score3 = calculatedScore;
+      user.score = (user.score || 0) + calculatedScore;
+      console.log(`[ROOM-2-SUBMIT] Session 3: ${user.nickname} chọn mô hình: ${model}, đúng ${policyMatchCount}/3 chính sách. Điểm đạt: ${calculatedScore}`);
+    } 
+    else if (session === 4) {
+      // Session 4: Bỏ phiếu đường lối phát triển
+      const path = value || '';
+      const policies = Array.isArray(selectedPolicies) ? selectedPolicies : [];
+
+      if (path === '3') calculatedScore += 8;
+
+      const correctPolicies = ['A', 'B', 'C'];
+      let policyMatchCount = 0;
+      correctPolicies.forEach(p => {
+        if (policies.includes(p)) policyMatchCount++;
+      });
+      calculatedScore += policyMatchCount * 4; // 2đ cho chính sách + 2đ cho đổi mới cơ chế
+
+      user.room2Score4 = calculatedScore;
+      user.score = (user.score || 0) + calculatedScore;
+      console.log(`[ROOM-2-SUBMIT] Session 4: ${user.nickname} chọn đường lối: ${path}, đúng ${policyMatchCount}/3 chính sách. Điểm đạt: ${calculatedScore}`);
+    }
+
+    socket.emit('room2:submit-success', { session, score: calculatedScore });
     broadcastRoomTwoPlayers();
   });
 

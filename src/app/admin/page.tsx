@@ -58,7 +58,7 @@ export default function AdminDashboard() {
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
   const [roomOnePlayers, setRoomOnePlayers] = useState<any[]>([]);
   const [roomTwoPlayers, setRoomTwoPlayers] = useState<any[]>([]);
-  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1'>('waiting');
+  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed'>('waiting');
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [isRoomTwoResultsModalOpen, setIsRoomTwoResultsModalOpen] = useState(false);
 
@@ -219,6 +219,34 @@ export default function AdminDashboard() {
     if (!adminSocket) return;
     if (window.confirm('Khai mạc Đại hội VI và bắt đầu Phiên họp thứ nhất ở Phòng 2?')) {
       adminSocket.emit('admin:start-room2-session1');
+    }
+  };
+
+  const handleStartRoomTwoSessionTwo = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu Phiên họp thứ hai (Báo cáo sản xuất) ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session2');
+    }
+  };
+
+  const handleStartRoomTwoSessionThree = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu Phiên họp thứ ba (Báo cáo nông nghiệp) ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session3');
+    }
+  };
+
+  const handleStartRoomTwoSessionFour = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu Phiên họp thứ tư (Đường lối phát triển) ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session4');
+    }
+  };
+
+  const handleStartRoomTwoCompleted = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Chốt nội dung Đại hội VI và mở cửa Phòng 3 sang phòng Gốm sứ?')) {
+      adminSocket.emit('admin:start-room2-completed');
     }
   };
 
@@ -479,7 +507,7 @@ export default function AdminDashboard() {
                   </>
                 )}
                 {roomId === 'gallery-paintings' && (
-                  <>
+                  <div className="flex flex-wrap gap-1.5 justify-end">
                     <button
                       type="button"
                       onClick={() => {
@@ -488,25 +516,72 @@ export default function AdminDashboard() {
                         }
                         setIsRoomTwoResultsModalOpen(true);
                       }}
-                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
+                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
                     >
-                      <Users size={12} />
-                      Đại biểu & Biểu quyết
+                      <Users size={10} />
+                      Đại biểu
                     </button>
                     <button
                       type="button"
                       onClick={handleStartRoomTwoSessionOne}
                       disabled={roomTwoSessionState === 'session1'}
-                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
                         roomTwoSessionState === 'session1'
-                          ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
-                          : 'bg-emerald-500/10 hover:bg-emerald-500/25 border-emerald-500/25 text-emerald-400 cursor-pointer'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
                       }`}
                     >
-                      <Zap size={12} />
-                      {roomTwoSessionState === 'session1' ? 'Đã bắt đầu Phiên 1' : 'Bắt đầu Phiên 1'}
+                      Phiên 1
                     </button>
-                  </>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionTwo}
+                      disabled={roomTwoSessionState === 'session2'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session2'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 2
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionThree}
+                      disabled={roomTwoSessionState === 'session3'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session3'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionFour}
+                      disabled={roomTwoSessionState === 'session4'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session4'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 4
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoCompleted}
+                      disabled={roomTwoSessionState === 'completed'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'completed'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-amber-500/10 hover:bg-amber-500/25 border-amber-500/25 text-amber-400 cursor-pointer'
+                      }`}
+                    >
+                      Chốt Đổi Mới
+                    </button>
+                  </div>
                 )}
                 <button
                   type="button"
@@ -1094,13 +1169,13 @@ export default function AdminDashboard() {
       {/* MODAL DANH SÁCH KẾT QUẢ PHÒNG 2 REALTIME */}
       {isRoomTwoResultsModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
+          <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
             
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
                 <Users size={16} />
-                <span>Đại biểu & Biểu quyết Phòng 02</span>
+                <span>Đại biểu & Biểu quyết Phòng 02 (Đại hội VI)</span>
               </div>
               <button
                 onClick={() => setIsRoomTwoResultsModalOpen(false)}
@@ -1120,32 +1195,52 @@ export default function AdminDashboard() {
                 <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="bg-slate-950 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800 tracking-wider">
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[9px] uppercase border-b border-slate-800 tracking-wider">
                         <th className="py-3 px-4">Đại biểu</th>
-                        <th className="py-3 px-4 text-center">Trạng thái biểu quyết</th>
-                        <th className="py-3 px-4 text-center font-bold text-amber-400">Điểm đạt</th>
+                        <th className="py-3 px-3 text-center">Phiên 1 (Giá)</th>
+                        <th className="py-3 px-3 text-center">Phiên 2 (Sản xuất)</th>
+                        <th className="py-3 px-3 text-center">Phiên 3 (Nông nghiệp)</th>
+                        <th className="py-3 px-3 text-center">Phiên 4 (Đường lối)</th>
+                        <th className="py-3 px-4 text-center font-bold text-amber-400">Tổng điểm</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-850 text-slate-350">
                       {roomTwoPlayers.map((p) => {
                         return (
                           <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
-                            <td className="py-3 px-4 font-medium text-white max-w-[150px] truncate">
+                            <td className="py-3 px-4 font-medium text-white max-w-[120px] truncate">
                               {p.nickname}
                             </td>
-                            <td className="py-3 px-4 text-center">
-                              {p.submitted ? (
-                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
-                                  Đã nộp đánh giá
-                                </span>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted1 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score1}đ</span>
                               ) : (
-                                <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase animate-pulse">
-                                  Đang biểu quyết
-                                </span>
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted2 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score2}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted3 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score3}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted4 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score4}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
                               )}
                             </td>
                             <td className="py-3 px-4 text-center font-mono font-bold text-amber-400">
-                              {p.submitted ? `+${p.score}đ` : '-'}
+                              {p.totalScore || 0}đ
                             </td>
                           </tr>
                         );

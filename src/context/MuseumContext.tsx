@@ -141,11 +141,17 @@ interface MuseumContextType {
   setRoomOneSessionResults: (results: any[] | null) => void;
 
   // --- Room 2 Conference Session Synchronizer ---
-  roomTwoSessionState: 'waiting' | 'session1';
+  roomTwoSessionState: 'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed';
   roomTwoDocOpen: boolean;
   setRoomTwoDocOpen: React.Dispatch<React.SetStateAction<boolean>>;
   roomTwoScore: number | null;
   setRoomTwoScore: React.Dispatch<React.SetStateAction<number | null>>;
+  roomTwoScore2: number | null;
+  setRoomTwoScore2: React.Dispatch<React.SetStateAction<number | null>>;
+  roomTwoScore3: number | null;
+  setRoomTwoScore3: React.Dispatch<React.SetStateAction<number | null>>;
+  roomTwoScore4: number | null;
+  setRoomTwoScore4: React.Dispatch<React.SetStateAction<number | null>>;
 
   // --- Welcome Modal Status ---
   welcomeModalOpen: boolean;
@@ -206,9 +212,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomOneSessionResults, setRoomOneSessionResults] = useState<any[] | null>(null);
 
   // --- Room 2 Conference Session Synchronizer ---
-  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1'>('waiting');
+  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed'>('waiting');
   const [roomTwoDocOpen, setRoomTwoDocOpen] = useState<boolean>(false);
   const [roomTwoScore, setRoomTwoScore] = useState<number | null>(null);
+  const [roomTwoScore2, setRoomTwoScore2] = useState<number | null>(null);
+  const [roomTwoScore3, setRoomTwoScore3] = useState<number | null>(null);
+  const [roomTwoScore4, setRoomTwoScore4] = useState<number | null>(null);
 
   // --- Welcome Modal Status ---
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
@@ -706,7 +715,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // ── Room 2 Conference Session Sync Events ──
-    newSocket.on('room2:state-sync', (data: { roomTwoSessionState: 'waiting' | 'session1' }) => {
+    newSocket.on('room2:state-sync', (data: { roomTwoSessionState: any }) => {
       setRoomTwoSessionState(data.roomTwoSessionState);
     });
 
@@ -714,8 +723,27 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setRoomTwoSessionState('session1');
     });
 
-    newSocket.on('room2:submit-success', (data: { score: number }) => {
-      setRoomTwoScore(data.score);
+    newSocket.on('room2:session2-start', () => {
+      setRoomTwoSessionState('session2');
+    });
+
+    newSocket.on('room2:session3-start', () => {
+      setRoomTwoSessionState('session3');
+    });
+
+    newSocket.on('room2:session4-start', () => {
+      setRoomTwoSessionState('session4');
+    });
+
+    newSocket.on('room2:completed-start', () => {
+      setRoomTwoSessionState('completed');
+    });
+
+    newSocket.on('room2:submit-success', (data: { session: number; score: number }) => {
+      if (data.session === 1) setRoomTwoScore(data.score);
+      else if (data.session === 2) setRoomTwoScore2(data.score);
+      else if (data.session === 3) setRoomTwoScore3(data.score);
+      else if (data.session === 4) setRoomTwoScore4(data.score);
     });
 
     setSocket(newSocket);
@@ -827,6 +855,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (currentRoom !== 'gallery-paintings') {
       setRoomTwoDocOpen(false);
       setRoomTwoScore(null);
+      setRoomTwoScore2(null);
+      setRoomTwoScore3(null);
+      setRoomTwoScore4(null);
     }
   }, [currentRoom]);
 
@@ -916,6 +947,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRoomTwoDocOpen,
         roomTwoScore,
         setRoomTwoScore,
+        roomTwoScore2,
+        setRoomTwoScore2,
+        roomTwoScore3,
+        setRoomTwoScore3,
+        roomTwoScore4,
+        setRoomTwoScore4,
 
         // --- Welcome Modal Status ---
         welcomeModalOpen,
