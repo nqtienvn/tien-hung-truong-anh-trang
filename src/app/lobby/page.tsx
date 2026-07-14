@@ -16,6 +16,7 @@ import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
+import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
 
 // ── Summary Minigame data (mirrored from RoomFour constants) ──
 const MG_SITUATIONS = [
@@ -278,28 +279,28 @@ const LobbyCameraController: React.FC = () => {
       maxX = LOBBY_W / 2 - 0.5;
       minZ = -9.4;
       maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8) : 53.8) : 7.8;
-    } 
+    }
     else if (pz > 8.0 && pz <= 54.0) {
       // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor1Open ? -9.4 : 8.2;
       maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8) : 53.8;
-    } 
+    }
     else if (pz > 54.0 && pz <= 100.0) {
       // Đang ở Phòng 2
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
       maxZ = isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8;
-    } 
+    }
     else if (pz > 100.0 && pz <= 130.0) {
       // Đang ở Phòng 3 (Gốm sứ)
       minX = -14.5;
       maxX = 14.5;
       minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
       maxZ = isDoor4Open ? 279.8 : 129.8;
-    } 
+    }
     else if (pz > 130.0 && pz <= 280.0) {
       // Đang ở Phòng 4 (Kinh tế thị trường)
       minX = -8.5;
@@ -415,7 +416,7 @@ const LobbyPlayer: React.FC = () => {
   const nearestChairRef = useRef<{ x: number; y: number; z: number } | null>(null);
   const sittingPositionRef = useRef<any>(null);
   const exitPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
-  
+
   useEffect(() => {
     sittingPositionRef.current = sittingPosition;
   }, [sittingPosition]);
@@ -561,7 +562,7 @@ const LobbyPlayer: React.FC = () => {
         // Chặn các bàn đại biểu và ghế trong Phòng 2 (X xoay dọc, 5 dãy bàn bậc thang)
         const localZ = z - 77.0;
         const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
-        
+
         // Chặn bục sân khấu bên trái (local X: -12.0 đến -7.6, local Z: -7.5 đến 7.5)
         if (x < -7.6 && localZ > -7.5 && localZ < 7.5) return true;
 
@@ -762,7 +763,7 @@ const LobbyPlayer: React.FC = () => {
             closest = chair;
           }
         }
-        
+
         if (minDist < 1.3) {
           if (sittingPrompt !== 'sit') setSittingPrompt('sit');
           nearestChairRef.current = closest;
@@ -1179,10 +1180,10 @@ export default function LobbyPage() {
     if (mgFeedback !== null || questionTimeLeft <= 0) return;
     const correct = mgQuestions[mgIndex].category;
     let nextScore = mgScore;
-    
+
     // Trả lời trước 10s (thời gian đếm ngược còn >= 5s) được 10 điểm, còn lại được 5 điểm
     const points = questionTimeLeft >= 5 ? 10 : 5;
-    
+
     if (catId === correct) {
       setMgFeedback('correct');
       setMgEarnedPoints(points);
@@ -1503,7 +1504,7 @@ export default function LobbyPage() {
 
                 <p className="text-[11px] text-slate-300 leading-relaxed min-h-[64px]">
                   {settings.preset === 'ultra-low' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '⚡ Tối ưu tối đa cho máy yếu. 🔦 Tắt toàn bộ đèn điểm (dùng đèn hướng). 📉 Độ phân giải cực thấp. 🚫 Ẩn tất cả người chơi khác. 🌫️ Sương mù gần hơn để giảm tải GPU.'
                       : '⚡ Maximum optimization for weak devices. 🔦 All point lights disabled (directional only). 📉 Ultra-low resolution. 🚫 Hide all other players. 🌫️ Closer fog for GPU relief.'
                   )}
@@ -1635,23 +1636,23 @@ export default function LobbyPage() {
                 </div>
                 <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Tổng điểm tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
                 {mgHasProgress ? (
-                  <button 
+                  <button
                     onClick={() => {
                       setMgStep('game');
-                    }} 
+                    }}
                     style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
                   >
                     ▶️ {language === 'vi' ? `Tiếp tục chơi (Câu ${mgIndex + 1})` : `Continue (Q${mgIndex + 1})`}
                   </button>
                 ) : (
-                  <button 
+                  <button
                     onClick={() => {
                       setMgQuestions(shuffleQuestions(MG_SITUATIONS));
                       setMgStep('game');
                       setQuestionTimeLeft(15);
                       setMgEarnedPoints(null);
                       setMgHasProgress(true);
-                    }} 
+                    }}
                     style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
                   >
                     🚀 {language === 'vi' ? 'Bắt đầu chơi' : 'Start Game'}
@@ -1782,12 +1783,12 @@ export default function LobbyPage() {
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <span style={{
-                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
-                                fontSize: '10px', fontWeight: 900,
-                                background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
-                                color: idx < 3 ? '#020617' : '#475569',
-                                border: idx >= 3 ? '1px solid #334155' : 'none'
-                              }}>
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
+                              fontSize: '10px', fontWeight: 900,
+                              background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
+                              color: idx < 3 ? '#020617' : '#475569',
+                              border: idx >= 3 ? '1px solid #334155' : 'none'
+                            }}>
                               {idx + 1}
                             </span>
                             <span style={{ fontSize: '12px', fontWeight: p.isMe ? 900 : 600, color: p.isMe ? '#10b981' : '#cbd5e1' }}>
@@ -1843,6 +1844,9 @@ export default function LobbyPage() {
 
       {/* ═══ ALBUM BỘ SƯU TẬP PHÒNG GỐM SỨ ═══ */}
       <CeramicsCollection />
+
+      {/* ═══ SỔ TAY NHIỆM VỤ PHÒNG KINH TẾ THỊ TRƯỜNG ═══ */}
+      <MarketEconomyQuest />
     </div>
   );
 }

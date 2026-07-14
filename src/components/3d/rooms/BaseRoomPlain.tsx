@@ -250,8 +250,8 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
                 <p
                   key={i}
                   className={`text-[10px] leading-relaxed ${i === 2
-                      ? 'text-violet-300 font-bold italic text-center pt-1 border-t border-violet-500/20'
-                      : 'text-slate-300'
+                    ? 'text-violet-300 font-bold italic text-center pt-1 border-t border-violet-500/20'
+                    : 'text-slate-300'
                     }`}
                 >
                   {i < 2 && <span className="text-violet-400 font-bold mr-1">{i === 0 ? '🤔' : '💭'}</span>}
@@ -357,158 +357,158 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
       {/* Hộp chứa meshes, được ẩn/hiện tức thì mà không unmount để tránh lag WebGL */}
       <group visible={isVisible}>
         <group position={[0, 0, zOffset]}>
-        {/* 1. SÀN NHÀ & THẢM TRẢI SÀN (Floor & Center Carpet) */}
-        {floorType === 'wood' && (
-          <>
+          {/* 1. SÀN NHÀ & THẢM TRẢI SÀN (Floor & Center Carpet) */}
+          {floorType === 'wood' && (
+            <>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+                <planeGeometry args={[roomWidth, roomLength]} />
+                <meshStandardMaterial
+                  color={floorColor}
+                  roughness={0.4}
+                  metalness={0.1}
+                />
+              </mesh>
+              <gridHelper args={[roomLength, Math.round(roomLength), '#312017', '#251811']} position={[0, 0.005, 0]} />
+            </>
+          )}
+
+          {floorType === 'marble' && (
+            <>
+              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+                <planeGeometry args={[roomWidth, roomLength]} />
+                <meshStandardMaterial
+                  color={floorColor}
+                  roughness={0.15}
+                  metalness={0.25}
+                />
+              </mesh>
+              <gridHelper args={[roomLength, Math.round(roomLength / 2), '#cbd5e1', '#94a3b8']} position={[0, 0.005, 0]} />
+            </>
+          )}
+
+          {floorType === 'carpet' && (
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
               <planeGeometry args={[roomWidth, roomLength]} />
               <meshStandardMaterial
                 color={floorColor}
-                roughness={0.4}
-                metalness={0.1}
+                roughness={0.95}
+                metalness={0.0}
               />
             </mesh>
-            <gridHelper args={[roomLength, Math.round(roomLength), '#312017', '#251811']} position={[0, 0.005, 0]} />
-          </>
-        )}
+          )}
 
-        {floorType === 'marble' && (
-          <>
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-              <planeGeometry args={[roomWidth, roomLength]} />
+          {/* Tấm thảm dài màu xám-be cổ điển ở trục chính hành lang (chỉ hiển thị nếu sàn chính không phải thảm) */}
+          {floorType !== 'carpet' && (
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+              <planeGeometry args={[Math.min(roomWidth / 2, 6), roomLength]} />
               <meshStandardMaterial
-                color={floorColor}
-                roughness={0.15}
-                metalness={0.25}
+                color="#a29587"
+                roughness={0.95}
+                metalness={0.0}
               />
             </mesh>
-            <gridHelper args={[roomLength, Math.round(roomLength / 2), '#cbd5e1', '#94a3b8']} position={[0, 0.005, 0]} />
-          </>
-        )}
+          )}
 
-        {floorType === 'carpet' && (
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-            <planeGeometry args={[roomWidth, roomLength]} />
+          {/* 2. TRẦN NHÀ HÌNH VÒM & GIẾNG TRỜI (Vaulted Ceiling & Glass Skylight) */}
+          {/* Tấm trần vòm nghiêng bên trái */}
+          <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]}>
+            <boxGeometry args={[panelWidth, 0.1, roomLength]} />
+            <meshStandardMaterial color="#334155" roughness={0.7} />
+          </mesh>
+
+          {/* Tấm trần vòm nghiêng bên phải */}
+          <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]}>
+            <boxGeometry args={[panelWidth, 0.1, roomLength]} />
+            <meshStandardMaterial color="#334155" roughness={0.7} />
+          </mesh>
+
+          {/* Giếng trời kính giữa trần */}
+          <mesh position={[0, roomHeight, 0]}>
+            <boxGeometry args={[skylightWidth, 0.08, roomLength]} />
             <meshStandardMaterial
-              color={floorColor}
-              roughness={0.95}
-              metalness={0.0}
+              color="#38bdf8"
+              transparent
+              opacity={0.35}
+              roughness={0.05}
+              metalness={0.9}
             />
           </mesh>
-        )}
 
-        {/* Tấm thảm dài màu xám-be cổ điển ở trục chính hành lang (chỉ hiển thị nếu sàn chính không phải thảm) */}
-        {floorType !== 'carpet' && (
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-            <planeGeometry args={[Math.min(roomWidth / 2, 6), roomLength]} />
+          {/* Khung dầm sắt nâng đỡ giếng trời */}
+          {Array.from({ length: Math.round(roomLength / 6) }).map((_, idx) => {
+            const zPos = -roomLength / 2 + (idx * 6) + 3;
+            return (
+              <mesh key={`ceiling-beam-${idx}`} position={[0, roomHeight - 0.05, zPos]}>
+                <boxGeometry args={[skylightWidth + 0.2, 0.1, 0.15]} />
+                <meshStandardMaterial color="#1e293b" roughness={0.9} />
+              </mesh>
+            );
+          })}
+          <mesh position={[0, roomHeight - 0.19, 0]}>
+            <boxGeometry args={[0.05, 0.05, roomLength]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.9} />
+          </mesh>
+          <mesh position={[-skylightWidth / 2, roomHeight - 0.19, 0]}>
+            <boxGeometry args={[0.05, 0.05, roomLength]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.9} />
+          </mesh>
+          <mesh position={[skylightWidth / 2, roomHeight - 0.19, 0]}>
+            <boxGeometry args={[0.05, 0.05, roomLength]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.9} />
+          </mesh>
+
+          {/* 3. BỨC TƯỜNG (Dynamic Walls) */}
+          {/* Tường trái */}
+          <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+            <boxGeometry args={[roomLength, roomHeight, 0.2]} />
             <meshStandardMaterial
-              color="#a29587"
-              roughness={0.95}
-              metalness={0.0}
+              color={wallColor}
+              roughness={0.7}
             />
           </mesh>
-        )}
 
-        {/* 2. TRẦN NHÀ HÌNH VÒM & GIẾNG TRỜI (Vaulted Ceiling & Glass Skylight) */}
-        {/* Tấm trần vòm nghiêng bên trái */}
-        <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]}>
-          <boxGeometry args={[panelWidth, 0.1, roomLength]} />
-          <meshStandardMaterial color="#334155" roughness={0.7} />
-        </mesh>
+          {/* Tường phải */}
+          <mesh position={[roomWidth / 2, roomHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
+            <boxGeometry args={[roomLength, roomHeight, 0.2]} />
+            <meshStandardMaterial
+              color={wallColor}
+              roughness={0.7}
+            />
+          </mesh>
 
-        {/* Tấm trần vòm nghiêng bên phải */}
-        <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]}>
-          <boxGeometry args={[panelWidth, 0.1, roomLength]} />
-          <meshStandardMaterial color="#334155" roughness={0.7} />
-        </mesh>
+          {/* --- TƯỜNG TRƯỚC (Front Wall with Doorway) --- */}
+          {/* Tường trước bên trái */}
+          <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2 + 0.01]}>
+            <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+            <meshStandardMaterial color={wallColor} roughness={0.7} />
+          </mesh>
+          {/* Tường trước bên phải */}
+          <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2 + 0.01]}>
+            <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+            <meshStandardMaterial color={wallColor} roughness={0.7} />
+          </mesh>
+          {/* Tường trước phía trên cửa */}
+          <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2 + 0.01]}>
+            <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
+            <meshStandardMaterial color={wallColor} roughness={0.7} />
+          </mesh>
 
-        {/* Giếng trời kính giữa trần */}
-        <mesh position={[0, roomHeight, 0]}>
-          <boxGeometry args={[skylightWidth, 0.08, roomLength]} />
-          <meshStandardMaterial
-            color="#38bdf8"
-            transparent
-            opacity={0.35}
-            roughness={0.05}
-            metalness={0.9}
-          />
-        </mesh>
-
-        {/* Khung dầm sắt nâng đỡ giếng trời */}
-        {Array.from({ length: Math.round(roomLength / 6) }).map((_, idx) => {
-          const zPos = -roomLength / 2 + (idx * 6) + 3;
-          return (
-            <mesh key={`ceiling-beam-${idx}`} position={[0, roomHeight - 0.05, zPos]}>
-              <boxGeometry args={[skylightWidth + 0.2, 0.1, 0.15]} />
-              <meshStandardMaterial color="#1e293b" roughness={0.9} />
-            </mesh>
-          );
-        })}
-        <mesh position={[0, roomHeight - 0.19, 0]}>
-          <boxGeometry args={[0.05, 0.05, roomLength]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.9} />
-        </mesh>
-        <mesh position={[-skylightWidth / 2, roomHeight - 0.19, 0]}>
-          <boxGeometry args={[0.05, 0.05, roomLength]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.9} />
-        </mesh>
-        <mesh position={[skylightWidth / 2, roomHeight - 0.19, 0]}>
-          <boxGeometry args={[0.05, 0.05, roomLength]} />
-          <meshStandardMaterial color="#1e293b" roughness={0.9} />
-        </mesh>
-
-        {/* 3. BỨC TƯỜNG (Dynamic Walls) */}
-        {/* Tường trái */}
-        <mesh position={[-roomWidth / 2, roomHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[roomLength, roomHeight, 0.2]} />
-          <meshStandardMaterial
-            color={wallColor}
-            roughness={0.7}
-          />
-        </mesh>
-
-        {/* Tường phải */}
-        <mesh position={[roomWidth / 2, roomHeight / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <boxGeometry args={[roomLength, roomHeight, 0.2]} />
-          <meshStandardMaterial
-            color={wallColor}
-            roughness={0.7}
-          />
-        </mesh>
-
-        {/* --- TƯỜNG TRƯỚC (Front Wall with Doorway) --- */}
-        {/* Tường trước bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2 + 0.01]}>
-          <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
-          <meshStandardMaterial color={wallColor} roughness={0.7} />
-        </mesh>
-        {/* Tường trước bên phải */}
-        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2 + 0.01]}>
-          <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
-          <meshStandardMaterial color={wallColor} roughness={0.7} />
-        </mesh>
-        {/* Tường trước phía trên cửa */}
-        <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2 + 0.01]}>
-          <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
-          <meshStandardMaterial color={wallColor} roughness={0.7} />
-        </mesh>
-
-        {/* --- TƯỜNG SAU (Back Wall with Doorway) --- */}
-        {/* Tường sau bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2 - 0.01]}>
-          <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
-          <meshStandardMaterial color={wallColor} roughness={0.7} />
-        </mesh>
-        {/* Tường sau bên phải */}
-        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2 - 0.01]}>
-          <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
-          <meshStandardMaterial color={wallColor} roughness={0.7} />
-        </mesh>
-        {/* Tường sau phía trên cửa */}
-        <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2 - 0.01]}>
-          <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
-          <meshStandardMaterial color={wallColor} roughness={0.7} />
-        </mesh>
+          {/* --- TƯỜNG SAU (Back Wall with Doorway) --- */}
+          {/* Tường sau bên trái */}
+          <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2 - 0.01]}>
+            <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+            <meshStandardMaterial color={wallColor} roughness={0.7} />
+          </mesh>
+          {/* Tường sau bên phải */}
+          <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2 - 0.01]}>
+            <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
+            <meshStandardMaterial color={wallColor} roughness={0.7} />
+          </mesh>
+          {/* Tường sau phía trên cửa */}
+          <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2 - 0.01]}>
+            <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
+            <meshStandardMaterial color={wallColor} roughness={0.7} />
+          </mesh>
         </group>
 
         {/* Vách ngăn phân chia thành các phòng nhỏ (chỉ áp dụng cho gallery-market-economy) */}

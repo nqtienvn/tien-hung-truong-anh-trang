@@ -2098,6 +2098,9 @@ interface ZoneNPCProps {
   onClick?: (e: any) => void;
   textureUrl?: string;
   autoShowOnProximity?: boolean;
+  npcId?: string;
+  onTalk?: (npcId: string) => void;
+  isLocked?: boolean;
 }
 
 const NPCStandee: React.FC<{ url: string; color: string }> = ({ url, color }) => {
@@ -2180,7 +2183,10 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
   activeIntensity,
   onClick,
   textureUrl,
-  autoShowOnProximity
+  autoShowOnProximity,
+  npcId,
+  onTalk,
+  isLocked = false
 }) => {
   const isVi = language === 'vi';
   const [forceShow, setForceShow] = useState(false);
@@ -2188,10 +2194,14 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
   const handleNpcClick = (e: any) => {
     e.stopPropagation();
     console.log('[NPC-CLICK] Người chơi click vào NPC:', nameVi);
+    setForceShow(prev => !prev);
+    if (!isLocked) {
+      if (onTalk && npcId) {
+        onTalk(npcId);
+      }
+    }
     if (onClick) {
       onClick(e);
-    } else {
-      setForceShow(prev => !prev);
     }
   };
 
@@ -2287,7 +2297,9 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
               {isVi ? nameVi : nameEn}
             </span>
             <p className="text-xs font-bold leading-normal text-slate-200 text-center">
-              {isVi ? infoVi : infoEn}
+              {isLocked
+                ? (isVi ? "Khóa! Bạn cần trò chuyện với chuyên gia ở phân khu trước." : "Locked! You must talk to the previous expert first.")
+                : (isVi ? infoVi : infoEn)}
             </p>
           </div>
         </Html>
@@ -2297,12 +2309,12 @@ const ZoneNPC: React.FC<ZoneNPCProps> = ({
             onClick={handleNpcClick}
             className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none cursor-pointer"
             style={{
-              borderColor: color,
-              color: color,
-              boxShadow: `0 0 12px ${color}30`
+              borderColor: isLocked ? '#64748b' : color,
+              color: isLocked ? '#64748b' : color,
+              boxShadow: `0 0 12px ${isLocked ? 'rgba(100,116,139,0.3)' : color + '30'}`
             }}
           >
-            !
+            {isLocked ? '🔒' : '!'}
           </div>
         </Html>
       )}
@@ -2345,7 +2357,7 @@ const MINIGAME_CATEGORIES = [
 ];
 
 export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, isVisible = true }) => {
-  const { activeGallery, language } = useMuseum();
+  const { activeGallery, language, talkedNpcs, addTalkedNpc } = useMuseum();
   const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
 
   const modifiedSettings = {
@@ -2474,33 +2486,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
     setNpcSubtitles(msgs[zoneId] ?? '');
   };
 
-  const handleNextToGameIntro = () => {
-    setStep(4);
-    setNpcSubtitles(language === 'vi' ? 'Hãy tham gia thử thách để chứng minh năng lực hoạch định chính sách!' : 'Take the challenge to prove your policy-making skills!');
-  };
-
-  const handleStartGame = () => {
-    setGameIndex(0); setScore(0);
-    setSelectedCategory(null); setAnswerStatus('idle');
-    setStep(5);
-  };
-
-  const handleSelectCategory = (catId: string) => {
-    if (answerStatus !== 'idle') return;
-    setSelectedCategory(catId);
-    const correct = GAME_SITUATIONS[gameIndex].category;
-    if (catId === correct) { setAnswerStatus('correct'); setScore(prev => prev + 5); }
-    else { setAnswerStatus('incorrect'); }
-    setTimeout(() => {
-      setSelectedCategory(null); setAnswerStatus('idle');
-      if (gameIndex < GAME_SITUATIONS.length - 1) setGameIndex(prev => prev + 1);
-      else setStep(6);
-    }, 1500);
-  };
-
-  // ── Render ──
   return (
     <BaseRoomPlain galleryId={galleryId} customSettings={modifiedSettings} isVisible={isVisible}>
+
 
       {/* ── Global Lighting ── */}
       <ambientLight intensity={entranceLight} />
@@ -2527,6 +2515,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             color="#ef4444"
             isVisible={isVisible}
             activeIntensity={zoneIntensities[0]}
+            npcId="expert-1"
+            onTalk={addTalkedNpc}
+            isLocked={false}
           />
         </>
       )}
@@ -2541,7 +2532,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[1]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, -27.5]}
+            position={[2.4, 0.05, -30]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Thị trường)"
             nameEn="Economist (Market Mechanism)"
@@ -2551,6 +2542,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             color="#eab308"
             isVisible={isVisible}
             activeIntensity={zoneIntensities[1]}
+            npcId="expert-2"
+            onTalk={addTalkedNpc}
+            isLocked={!talkedNpcs.includes('expert-1')}
           />
         </>
       )}
@@ -2575,6 +2569,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             color="#06b6d4"
             isVisible={isVisible}
             activeIntensity={zoneIntensities[2]}
+            npcId="expert-3"
+            onTalk={addTalkedNpc}
+            isLocked={!talkedNpcs.includes('expert-2')}
           />
         </>
       )}
@@ -2589,7 +2586,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[3]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, 2.5]}
+            position={[2.4, 0.05, 1]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (An sinh)"
             nameEn="Economist (Social Welfare)"
@@ -2599,6 +2596,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             color="#f97316"
             isVisible={isVisible}
             activeIntensity={zoneIntensities[3]}
+            npcId="expert-4"
+            onTalk={addTalkedNpc}
+            isLocked={!talkedNpcs.includes('expert-3')}
           />
         </>
       )}
@@ -2623,6 +2623,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             color="#3b82f6"
             isVisible={isVisible}
             activeIntensity={zoneIntensities[4]}
+            npcId="expert-5"
+            onTalk={addTalkedNpc}
+            isLocked={!talkedNpcs.includes('expert-4')}
           />
         </>
       )}
@@ -2630,12 +2633,20 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Summary / Exit NPC in the last room -- */}
       {isVisible && (
         <ZoneNPC
-          position={[0, 0.05, 32.5]}
+          position={[0, 0.05, 26]}
           rotation={[0, 0, 0]}
           nameVi="Ronaldo"
           nameEn="Summary Specialist"
-          infoVi="Chào cậu! Cậu đến chơi minigame hả? Nhanh lên nhé, tôi đang vội. HLV bảo cả đội phải ra sân bay trước 5 giờ chiều...! Với lại cúp vàng thì hình như... có người ở Nam Mỹ cầm hộ rồi."
-          infoEn="Hi there! Are you here to play the minigame? Hurry up, I'm late. The coach said the whole team has to be at the airport before 5 PM... And that World Cup trophy... well, someone in South America is holding it for me."
+          infoVi={
+            talkedNpcs.length < 5
+              ? "Chào cậu! Cậu cần trao đổi với tất cả 5 chuyên gia kinh tế ở các phân khu trước để tìm hiểu kiến thức thì mới có thể bắt đầu thử thách!"
+              : "Chào cậu! Cậu đã trao đổi với tất cả chuyên gia rồi đấy. Cậu sẵn sàng tham gia thử thách chưa? Hãy click vào tôi để bắt đầu minigame!"
+          }
+          infoEn={
+            talkedNpcs.length < 5
+              ? "Hi there! You must talk to all 5 economic experts in the zones to gather knowledge before you can start the challenge!"
+              : "Hi there! You've spoken to all experts. Are you ready for the challenge? Click on me to start the minigame!"
+          }
           language={language}
           color="#10b981"
           isVisible={isVisible}
@@ -2643,7 +2654,10 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
           textureUrl="/images/room4/ronaldo.jpg"
           autoShowOnProximity={true}
           onClick={() => {
-            window.dispatchEvent(new CustomEvent('openSummaryMinigame'));
+            const alreadyPlayed = typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true';
+            if (talkedNpcs.length === 5 || alreadyPlayed) {
+              window.dispatchEvent(new CustomEvent('openSummaryMinigame'));
+            }
           }}
         />
       )}

@@ -126,6 +126,9 @@ interface MuseumContextType {
 
   collectedCeramics: string[];
   addCeramic: (id: string) => void;
+
+  talkedNpcs: string[];
+  addTalkedNpc: (npcId: string) => void;
 }
 
 export interface GameEvent {
@@ -198,6 +201,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [sittingPosition, setSittingPosition] = useState<{ x: number; y: number; z: number; rotationY?: number } | null>(null);
   const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
   const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
+  const [talkedNpcs, setTalkedNpcs] = useState<string[]>([]);
 
   // Sync gameplay progress theo từng người chơi (nickname)
   useEffect(() => {
@@ -300,19 +304,64 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [nickname]);
 
+  // Sync Room 4 gameplay progress (talkedNpcs)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!nickname) {
+      setTalkedNpcs([]);
+      return;
+    }
+
+    const progressKey = `roomFourProgress:${nickname.trim().toLowerCase()}`;
+    const savedProgress = localStorage.getItem(progressKey);
+
+    if (!savedProgress) {
+      setTalkedNpcs([]);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedProgress) as {
+        talkedNpcs?: string[];
+      };
+      setTalkedNpcs(Array.isArray(parsed.talkedNpcs) ? parsed.talkedNpcs : []);
+    } catch (e) {
+      console.error('Lỗi phân tích tiến trình Room 4:', e);
+      setTalkedNpcs([]);
+    }
+  }, [nickname]);
+
+  const addTalkedNpc = useCallback((npcId: string) => {
+    setTalkedNpcs((prev) => {
+      if (prev.includes(npcId)) return prev;
+      const updated = [...prev, npcId];
+      if (typeof window !== 'undefined' && nickname) {
+        const progressKey = `roomFourProgress:${nickname.trim().toLowerCase()}`;
+        localStorage.setItem(progressKey, JSON.stringify({
+          talkedNpcs: updated,
+        }));
+      }
+      return updated;
+    });
+  }, [nickname]);
+
   const resetRoomOne = useCallback(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
     setCollectedCeramics([]);
+    setTalkedNpcs([]);
     if (typeof window !== 'undefined') {
       if (nickname) {
         localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
         localStorage.removeItem(`roomThreeProgress:${nickname.trim().toLowerCase()}`);
+        localStorage.removeItem(`roomFourProgress:${nickname.trim().toLowerCase()}`);
       }
       // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
       localStorage.removeItem('collectedCeramics');
+      localStorage.removeItem('roomFourProgress');
     }
   }, [nickname]);
 
@@ -790,6 +839,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSittingPrompt,
         collectedCeramics,
         addCeramic,
+        talkedNpcs,
+        addTalkedNpc,
       }}
     >
       {children}
