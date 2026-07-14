@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useRef, useEffect, useState, useCallback } from 'react';
+import React, { Suspense, useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
@@ -15,6 +15,39 @@ import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
+import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
+
+// ── Summary Minigame data (mirrored from RoomFour constants) ──
+const MG_SITUATIONS = [
+  { text: 'Được mùa nhưng thu nhập lại giảm.', category: 'market' },
+  { text: 'Ít người sử dụng nhưng vẫn được đầu tư.', category: 'state' },
+  { text: 'Cùng một sản phẩm nhưng có rất nhiều đơn vị cùng cung cấp.', category: 'multi_sector' },
+  { text: 'Khó khăn về tài chính nhưng vẫn được tiếp cận dịch vụ.', category: 'social' },
+  { text: 'Một sản phẩm hoàn thành sau nhiều công đoạn ở nhiều quốc gia.', category: 'integration' },
+  { text: 'Nhu cầu tăng làm giá tăng.', category: 'market' },
+  { text: 'Không đạt tiêu chuẩn nên không được phép tiếp tục hoạt động.', category: 'state' },
+  { text: 'Nhiều mô hình cùng tồn tại trong một lĩnh vực.', category: 'multi_sector' },
+  { text: 'Điều kiện sống khác nhau nhưng cơ hội tiếp cận gần như giống nhau.', category: 'social' },
+  { text: 'Một đơn hàng phải đi qua nhiều quốc gia mới hoàn thành.', category: 'integration' },
+  { text: 'Bán chậm nên giá giảm.', category: 'market' },
+  { text: 'Phải thay đổi để đáp ứng quy định mới.', category: 'state' },
+  { text: 'Nhiều chủ sở hữu cùng tham gia một lĩnh vực.', category: 'multi_sector' },
+  { text: 'Không đủ khả năng chi trả nhưng vẫn được hỗ trợ.', category: 'social' },
+  { text: 'Một sản phẩm được tạo ra bởi nhiều quốc gia.', category: 'integration' },
+  { text: 'Nguồn cung giảm làm giá tăng.', category: 'market' },
+  { text: 'Chưa đáp ứng yêu cầu nên phải tạm dừng.', category: 'state' },
+  { text: 'Nhiều hình thức kinh doanh cùng cạnh tranh.', category: 'multi_sector' },
+  { text: 'Khoảng cách giữa các nhóm được thu hẹp.', category: 'social' },
+  { text: 'Một chuỗi sản xuất trải dài qua nhiều quốc gia.', category: 'integration' },
+];
+
+const MG_CATEGORIES = [
+  { id: 'market', nameVi: 'Cơ chế thị trường', nameEn: 'Market Mechanism', icon: '💹' },
+  { id: 'state', nameVi: 'Vai trò Nhà nước', nameEn: 'State Regulation', icon: '🏛️' },
+  { id: 'multi_sector', nameVi: 'Nhiều thành phần kinh tế', nameEn: 'Multi-sector Economy', icon: '🏭' },
+  { id: 'social', nameVi: 'Công bằng xã hội', nameEn: 'Social Welfare', icon: '❤️' },
+  { id: 'integration', nameVi: 'Hội nhập quốc tế', nameEn: 'Global Integration', icon: '🌍' },
+];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CÁC HẰNG SỐ CỦA SẢNH
@@ -48,6 +81,13 @@ const DOOR_CONFIGS = [
     rotation: [0, Math.PI, 0] as [number, number, number],
     label: 'Phòng 03: Gốm sứ',
   },
+  {
+    doorId: 'door-room4',
+    targetRoom: 'gallery-market-economy',
+    position: [0, 3.0, 130.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 04: Hội nhập',
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -64,8 +104,25 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     if (z > 7.0 && z <= 8.5) return 3.0; // Mezzanine
   }
 
-  // Tất cả các phòng triển lãm Z từ 8.0 đến 130.0 đều nằm trên sàn tầng 2 (Y = 3.0)
+  // Bậc thang và sàn các phòng triển lãm
   if (z > 8.0 && z <= 130.0) {
+    // Phòng 2 (Hội trường / Paintings): 54.0 < Z <= 100.0
+    if (z > 54.0 && z <= 100.0) {
+      // Chỉ áp dụng độ cao bậc thang ở khu vực có các tấm bê tông (Z từ 60.0 đến 94.0)
+      if (z >= 60.0 && z <= 94.0) {
+        if (x < -3.4) return 3.0;
+        if (x < -0.2) return 3.3;
+        if (x < 3.0) return 3.6;
+        if (x < 6.2) return 3.9;
+        return 4.2;
+      }
+      return 3.0;
+    }
+    return 3.0;
+  }
+
+  // Phòng 4 (gallery-market-economy) — Z từ 130.0 đến 245.0, Y = 3.0
+  if (z > 130.0 && z <= 245.0) {
     return 3.0;
   }
 
@@ -77,16 +134,47 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const { doorStates } = useMuseum();
+  const { doorStates, activeGallery } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
+  const isZooming = useRef(false);
 
   const targetCamPos = useRef(new THREE.Vector3()).current;
   const targetLookAt = useRef(new THREE.Vector3()).current;
 
   useEffect(() => {
     const canvas = gl.domElement;
+
+    // Ngăn chặn menu chuột phải để sử dụng nút RMB làm ống kính Zoom phóng to màn hình
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 2) {
+        isZooming.current = true;
+      }
+    };
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (e.button === 2) {
+        isZooming.current = false;
+      }
+    };
+
+    // Hỗ trợ phím tắt Z/C cho những máy dùng Touchpad không click chuột phải được dễ dàng
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'KeyZ' || e.code === 'KeyC') {
+        isZooming.current = true;
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'KeyZ' || e.code === 'KeyC') {
+        isZooming.current = false;
+      }
+    };
 
     const isInsideCanvas = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -121,11 +209,23 @@ const LobbyCameraController: React.FC = () => {
       phi.current = Math.max(0.3, Math.min(Math.PI / 2 + 0.35, phi.current));
     };
 
+    window.addEventListener('contextmenu', handleContextMenu);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
     window.addEventListener('pointerdown', handlePointerDown);
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', handlePointerUp);
     window.addEventListener('pointermove', handlePointerMove);
     return () => {
+      window.removeEventListener('contextmenu', handleContextMenu);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('pointercancel', handlePointerUp);
@@ -133,7 +233,15 @@ const LobbyCameraController: React.FC = () => {
     };
   }, [gl]);
 
-  useFrame((state) => {
+  useFrame((state, delta) => {
+    // Thực hiện hiệu ứng Zoom mềm mại bằng cách thay đổi FOV (ép kiểu PerspectiveCamera)
+    const persCam = camera as THREE.PerspectiveCamera;
+    const targetFov = isZooming.current ? 20 : 65;
+    if (persCam.fov !== undefined && Math.abs(persCam.fov - targetFov) > 0.1) {
+      persCam.fov = THREE.MathUtils.lerp(persCam.fov, targetFov, 0.15);
+      persCam.updateProjectionMatrix();
+    }
+
     const player = state.scene.getObjectByName('lobby-player');
     if (!player) return;
 
@@ -142,31 +250,62 @@ const LobbyCameraController: React.FC = () => {
     const pz = player.position.z;
     const targetHeight = py + 0.6;
 
-    const idealDist = 5.5;
+    // Khi zoom, thu nhỏ khoảng cách camera về 0 (góc nhìn thứ nhất) để không bị cản bởi đầu nhân vật
+    const idealDist = isZooming.current ? 0.0 : 5.5;
+
+    // Ẩn người chơi nếu camera zoom lại gần (dưới 2 mét) để tránh hiện tượng xuyên mặt/đầu nhân vật
+    const camToPlayerDist = camera.position.distanceTo(player.position);
+    player.visible = !isZooming.current || (camToPlayerDist > 1.8);
 
     const xOff = idealDist * Math.sin(theta.current) * Math.sin(phi.current);
     const yOff = idealDist * Math.cos(phi.current);
     const zOff = idealDist * Math.cos(theta.current) * Math.sin(phi.current);
 
-    // Xác định ranh giới camera dựa trên vị trí người chơi để tránh xuyên tường
+    // Xác định ranh giới camera dựa trên vị trí người chơi và trạng thái các cửa để tránh camera nhìn xuyên qua cửa đóng
+    const isDoor1Open = doorStates['door-room1']?.isOpen || false;
+    const isDoor2Open = doorStates['door-room2']?.isOpen || false;
+    const isDoor3Open = doorStates['door-room3']?.isOpen || false;
+    const isDoor4Open = doorStates['door-room4']?.isOpen || false;
+
     let minX = -LOBBY_W / 2 + 0.5; // -14.5
     let maxX = LOBBY_W / 2 - 0.5;  // 14.5
     let minZ = -9.4;
     let maxZ = 7.8;
 
-    // Các phòng triển lãm (Phòng 1, 2): Z từ 8.0 đến 100.0, W = 24 -> X từ -12 đến 12
-    if (pz > 8.0 && pz <= 100.0) {
+    if (pz <= 8.0) {
+      // Đang ở Sảnh
+      minX = -LOBBY_W / 2 + 0.5;
+      maxX = LOBBY_W / 2 - 0.5;
+      minZ = -9.4;
+      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8) : 53.8) : 7.8;
+    } 
+    else if (pz > 8.0 && pz <= 54.0) {
+      // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
-      minZ = 8.2;
-      maxZ = 99.8;
-    }
-    // Phòng 03 (gallery-ceramics): Z từ 100.0 đến 130.0, W = 30 -> X từ -15 đến 15
+      minZ = isDoor1Open ? -9.4 : 8.2;
+      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8) : 53.8;
+    } 
+    else if (pz > 54.0 && pz <= 100.0) {
+      // Đang ở Phòng 2
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
+      maxZ = isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8;
+    } 
     else if (pz > 100.0 && pz <= 130.0) {
+      // Đang ở Phòng 3 (Gốm sứ)
       minX = -14.5;
       maxX = 14.5;
-      minZ = 100.2;
-      maxZ = 129.8;
+      minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
+      maxZ = isDoor4Open ? 279.8 : 129.8;
+    } 
+    else if (pz > 130.0 && pz <= 280.0) {
+      // Đang ở Phòng 4 (Kinh tế thị trường)
+      minX = -8.5;
+      maxX = 8.5;
+      minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
+      maxZ = 279.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -175,12 +314,29 @@ const LobbyCameraController: React.FC = () => {
     // Tính toán độ cao sàn nhà thực tế tại vị trí camera để kẹp độ cao tối thiểu
     const groundYAtCam = getLobbyGroundY(camX, camZ, doorStates);
     const minCamY = groundYAtCam + 0.45;
-    const camY = Math.max(minCamY, Math.min(LOBBY_H + 5, targetHeight + yOff));
+
+    // Giới hạn camera không vượt quá trần nhà để chống nhìn xuyên trần
+    let maxCamY = LOBBY_H - 0.5; // Sảnh mặc định 11.5m
+    if (camZ > 8.0) {
+      const activeRoomHeight = activeGallery?.room_height ?? 6.0;
+      maxCamY = 3.0 + activeRoomHeight - 0.5;
+    }
+    const camY = Math.max(minCamY, Math.min(maxCamY, targetHeight + yOff));
 
     targetCamPos.set(camX, camY, camZ);
-    targetLookAt.set(px, targetHeight, pz);
 
-    camera.position.lerp(targetCamPos, 0.12);
+    // Khi zoom, hướng nhìn của camera sẽ nhìn thẳng ra phía trước tầm nhìn thay vì nhìn vào đầu nhân vật
+    if (isZooming.current) {
+      const lookAtX = px - 10 * Math.sin(theta.current) * Math.sin(phi.current);
+      const lookAtY = targetHeight - 10 * Math.cos(phi.current);
+      const lookAtZ = pz - 10 * Math.cos(theta.current) * Math.sin(phi.current);
+      targetLookAt.set(lookAtX, lookAtY, lookAtZ);
+    } else {
+      targetLookAt.set(px, targetHeight, pz);
+    }
+
+    const camAlpha = 1.0 - Math.exp(-8.0 * Math.min(0.1, delta));
+    camera.position.lerp(targetCamPos, camAlpha);
     camera.lookAt(targetLookAt);
   });
 
@@ -209,7 +365,7 @@ const RoomPrecompiler: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyPlayer: React.FC = () => {
   const playerRef = useRef<THREE.Group>(null);
-  const keys = useRef({ w: false, a: false, s: false, d: false, e: false, space: false });
+  const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
   const isMoving = useRef(false);
   const jumpVelocity = useRef(0);
   const isJumping = useRef(false);
@@ -219,7 +375,7 @@ const LobbyPlayer: React.FC = () => {
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -227,6 +383,42 @@ const LobbyPlayer: React.FC = () => {
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
   const moveDir = useRef(new THREE.Vector3()).current;
+
+  // Khởi tạo danh sách 60 ghế ngồi trong Phòng 2 bậc thang để check khoảng cách và tọa độ ngồi
+  const ROOM2_CHAIRS = useMemo(() => {
+    const chairs: Array<{ x: number; y: number; z: number }> = [];
+    const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
+    const frontChairZs = [-14.5, -12.5, -10.5, -8.5, -6.5, -4.5];
+    const backChairZs = [4.5, 6.5, 8.5, 10.5, 12.5, 14.5];
+
+    const getTierY = (xVal: number) => {
+      if (xVal < -3.4) return 0.0;
+      if (xVal < -0.2) return 0.3;
+      if (xVal < 3.0) return 0.6;
+      if (xVal < 6.2) return 0.9;
+      return 1.2;
+    };
+
+    for (const xCol of deskXCoords) {
+      const tierY = getTierY(xCol);
+      for (const zVal of [...frontChairZs, ...backChairZs]) {
+        chairs.push({
+          x: xCol - 0.4,
+          y: 3.35 + tierY, // Độ cao ngồi = 3.35 (đệm ghế) + độ cao bậc thang
+          z: 77.0 + zVal
+        });
+      }
+    }
+    return chairs;
+  }, []);
+
+  const nearestChairRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  const sittingPositionRef = useRef<any>(null);
+  const exitPositionRef = useRef<{ x: number; y: number; z: number } | null>(null);
+  
+  useEffect(() => {
+    sittingPositionRef.current = sittingPosition;
+  }, [sittingPosition]);
 
   // Thiết lập vị trí spawn ban đầu khi mount sảnh
   useEffect(() => {
@@ -266,13 +458,6 @@ const LobbyPlayer: React.FC = () => {
         // Quầy lễ tân bên phải
         if (x > 12.0 && x < 15.0 && z > -6.7 && z < 0.7) return true;
 
-        // Cầu thang
-        if (x > -4.0 && x < 4.0 && z > 2.0 && z <= 7.0) {
-          const stepIndex = Math.floor((z - 2.0) / 0.5);
-          const clampedIndex = Math.max(0, Math.min(9, stepIndex));
-          const stairY = clampedIndex * 0.3;
-          if (currentY < stairY - 0.1) return true;
-        }
 
         // Thành cầu thang
         if (z > 1.5 && z <= 8.0) {
@@ -296,8 +481,11 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 1 (gallery-subsidy: Z 8.0 -> 54.0) ──
       if (z > 8.0 && z <= 54.0) {
-        const isRoom1Open = doorStates['door-room1']?.isOpen;
-        if (!isRoom1Open) return true;
+        // Chỉ chặn khi đi lùi về sảnh qua cửa 1 đang đóng
+        if (z < 8.6) {
+          const passingDoor1 = doorStates['door-room1']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor1) return true;
+        }
 
         // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
@@ -343,10 +531,51 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 2 (gallery-paintings: Z 54.0 -> 100.0) ──
       if (z > 54.0 && z <= 100.0) {
-        const isRoom2Open = doorStates['door-room2']?.isOpen;
-        if (!isRoom2Open) return true;
+        // Chỉ chặn khi đi lùi về phòng 1 qua cửa 2 đang đóng
+        if (z < 54.6) {
+          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor2) return true;
+        }
 
         if (x < -11.7 || x > 11.7) return true;
+
+        // Chặn các bàn đại biểu và ghế trong Phòng 2 (X xoay dọc, 5 dãy bàn bậc thang)
+        const localZ = z - 77.0;
+        const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
+        
+        // Chặn bục sân khấu bên trái (local X: -12.0 đến -7.6, local Z: -7.5 đến 7.5)
+        if (x < -7.6 && localZ > -7.5 && localZ < 7.5) return true;
+
+        // Chặn các dãy bàn dọc
+        for (const rowX of deskXCoords) {
+          // Kiểm tra xem người chơi có đè lên X của hàng bàn ghế không (đã dịch sang trái 1.0m)
+          if (x > rowX - 1.4 && x < rowX - 0.1) {
+            // Kiểm tra theo trục dọc Z (Front block & Back block)
+            const inFrontBlock = localZ > -15.2 && localZ < -3.8;
+            const inBackBlock = localZ > 3.8 && localZ < 15.2;
+            if (inFrontBlock || inBackBlock) return true;
+          }
+        }
+
+        // Chặn va chạm của lan can (Railing Collisions) ngăn nhảy qua các bậc thềm
+        const railXCoords = [-3.4, -0.2, 3.0, 6.2];
+        const inFrontRailZ = localZ >= -14.5 && localZ <= -4.5;
+        const inBackRailZ = localZ >= 4.5 && localZ <= 14.5;
+        if (inFrontRailZ || inBackRailZ) {
+          for (const railX of railXCoords) {
+            if (x > railX - 0.2 && x < railX + 0.2) {
+              return true;
+            }
+          }
+        }
+
+        // Chặn va chạm ở 2 đầu lan can biên Z (Z global = 60.0 và 94.0) khi đứng trên các bậc (X > -3.4)
+        if (x > -3.4) {
+          // Chặn ở đầu Z = 60.0 (giới hạn an toàn từ 59.6 đến 60.4)
+          if (z >= 59.6 && z <= 60.4) return true;
+          // Chặn ở đầu Z = 94.0 (giới hạn an toàn từ 93.6 đến 94.4)
+          if (z >= 93.6 && z <= 94.4) return true;
+        }
 
         if (z > 99.3) {
           const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
@@ -357,12 +586,34 @@ const LobbyPlayer: React.FC = () => {
 
       // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 100.0 -> 130.0) ──
       if (z > 100.0 && z <= 130.0) {
-        const isRoom3Open = doorStates['door-room3']?.isOpen;
-        if (!isRoom3Open) return true;
+        // Chỉ chặn khi đi lùi về phòng 2 qua cửa 3 đang đóng
+        if (z < 100.6) {
+          const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor3) return true;
+        }
 
         if (x < -14.7 || x > 14.7) return true;
 
-        if (z > 129.3) return true;
+        if (z > 129.3) {
+          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor4) return true;
+        }
+        return false;
+      }
+
+      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 280.0) ──
+      if (z > 130.0 && z <= 280.0) {
+        // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
+        if (z < 130.6) {
+          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor4) return true;
+        }
+
+        // Biên giới tường bên (rộng 18m, X = ±9m)
+        if (x < -8.7 || x > 8.7) return true;
+
+        // Tường sau phòng 4 (Z = 280.0)
+        if (z > 279.3) return true;
         return false;
       }
 
@@ -373,7 +624,7 @@ const LobbyPlayer: React.FC = () => {
 
   // Bắt phím WASD
   useEffect(() => {
-    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd' | 'e' | 'space'> = {
+    const movementKeyMap: Record<string, 'w' | 'a' | 's' | 'd' | 'e' | 'shift' | 'space'> = {
       KeyW: 'w',
       KeyA: 'a',
       KeyS: 's',
@@ -384,6 +635,8 @@ const LobbyPlayer: React.FC = () => {
       ArrowLeft: 'a',
       ArrowDown: 's',
       ArrowRight: 'd',
+      ShiftLeft: 'shift',
+      ShiftRight: 'shift',
     };
 
     const shouldIgnoreKeyboard = (target: EventTarget | null) => {
@@ -395,6 +648,30 @@ const LobbyPlayer: React.FC = () => {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (shouldIgnoreKeyboard(e.target)) return;
+
+      if (e.code === 'KeyF') {
+        e.preventDefault();
+        if (sittingPositionRef.current) {
+          // Lưu vị trí dịch chuyển để đứng dậy (trục X dịch sang phải +1.2m)
+          const exitX = sittingPositionRef.current.x + 1.2;
+          const exitZ = sittingPositionRef.current.z;
+          // Tính toán độ cao đứng lên dựa trên vị trí bậc thang tại tọa độ exitX
+          const exitY = getLobbyGroundY(exitX, exitZ, doorStates) + baseY;
+          exitPositionRef.current = { x: exitX, y: exitY, z: exitZ };
+          setSittingPosition(null);
+        } else if (nearestChairRef.current) {
+          // Ngồi xuống ghế: Lấy đúng tọa độ y từ vật thể ghế đã tính độ cao bậc thang
+          setSittingPosition({
+            x: nearestChairRef.current.x,
+            y: nearestChairRef.current.y,
+            z: nearestChairRef.current.z,
+            rotationY: -Math.PI / 2
+          });
+          setSittingPrompt('stand');
+        }
+        return;
+      }
+
       const key = movementKeyMap[e.code];
       if (!key) return;
       e.preventDefault();
@@ -402,7 +679,7 @@ const LobbyPlayer: React.FC = () => {
       if (key === 'space') {
         if (!isJumping.current) {
           isJumping.current = true;
-          jumpVelocity.current = 5.2;
+          jumpVelocity.current = 7.5;
         }
         keys.current.space = true;
         return;
@@ -423,6 +700,7 @@ const LobbyPlayer: React.FC = () => {
       keys.current.s = false;
       keys.current.d = false;
       keys.current.e = false;
+      keys.current.shift = false;
       keys.current.space = false;
     };
     window.addEventListener('keydown', onKeyDown);
@@ -441,7 +719,76 @@ const LobbyPlayer: React.FC = () => {
     if (!playerRef.current) return;
     if (selectedExhibit) return;
 
-    const { w, a, s, d, e } = keys.current;
+    // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
+    if (exitPositionRef.current) {
+      playerRef.current.position.set(exitPositionRef.current.x, exitPositionRef.current.y, exitPositionRef.current.z);
+      exitPositionRef.current = null;
+      return;
+    }
+
+    // Check khoảng cách ghế ngồi và cập nhật sittingPrompt
+    const pPos = playerRef.current.position;
+    if (sittingPosition) {
+      if (sittingPrompt !== 'stand') setSittingPrompt('stand');
+    } else {
+      if (pPos.z > 54.0 && pPos.z <= 100.0) {
+        let minDist = Infinity;
+        let closest: { x: number; y: number; z: number } | null = null;
+        for (const chair of ROOM2_CHAIRS) {
+          const dx = pPos.x - chair.x;
+          const dz = pPos.z - chair.z;
+          const dist = Math.sqrt(dx * dx + dz * dz);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = chair;
+          }
+        }
+        
+        if (minDist < 1.3) {
+          if (sittingPrompt !== 'sit') setSittingPrompt('sit');
+          nearestChairRef.current = closest;
+        } else {
+          if (sittingPrompt !== null) setSittingPrompt(null);
+          nearestChairRef.current = null;
+        }
+      } else {
+        if (sittingPrompt !== null) setSittingPrompt(null);
+        nearestChairRef.current = null;
+      }
+    }
+
+    if (sittingPosition) {
+      playerRef.current.position.set(sittingPosition.x, sittingPosition.y, sittingPosition.z);
+      if (sittingPosition.rotationY !== undefined) {
+        playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, sittingPosition.rotationY, 0.15);
+      }
+
+      // Xoay chân gập vuông góc 90 độ về phía trước và để tay đặt lên đùi
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI / 2.0;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI / 2.0;
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -Math.PI / 4.0;
+        leftArmRef.current.rotation.z = 0.1;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -Math.PI / 4.0;
+        rightArmRef.current.rotation.z = -0.1;
+      }
+
+      const now = state.clock.getElapsedTime();
+      if (now - lastUpdate.current > 0.08) {
+        socket?.emit('move', {
+          x: sittingPosition.x,
+          y: sittingPosition.y,
+          z: sittingPosition.z,
+          yaw: playerRef.current.rotation.y,
+        });
+        lastUpdate.current = now;
+      }
+      return;
+    }
+
+    const { w, a, s, d, shift } = keys.current;
     const moving = w || a || s || d;
     isMoving.current = moving;
 
@@ -449,7 +796,7 @@ const LobbyPlayer: React.FC = () => {
       state.camera.getWorldDirection(frontVec);
       frontVec.y = 0;
       frontVec.normalize();
-      
+
       rightVec.set(-frontVec.z, 0, frontVec.x).normalize();
 
       moveDir.set(0, 0, 0);
@@ -459,12 +806,13 @@ const LobbyPlayer: React.FC = () => {
       if (a) moveDir.sub(rightVec);
       moveDir.normalize();
 
-      const speed = e ? 7.4 : 4.5;
+      const speed = shift ? 10.0 : 6.0;
       const curPos = playerRef.current.position;
       const curGroundY = getLobbyGroundY(curPos.x, curPos.z, doorStates);
 
-      const nextX = curPos.x + moveDir.x * speed * delta;
-      const nextZ = curPos.z + moveDir.z * speed * delta;
+      const movementDelta = Math.min(0.04, delta);
+      const nextX = curPos.x + moveDir.x * speed * movementDelta;
+      const nextZ = curPos.z + moveDir.z * speed * movementDelta;
 
       if (!checkCollision(nextX, curPos.z, curGroundY)) {
         curPos.x = nextX;
@@ -476,7 +824,7 @@ const LobbyPlayer: React.FC = () => {
       const targetRot = Math.atan2(moveDir.x, moveDir.z);
       let diff = targetRot - playerRef.current.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      playerRef.current.rotation.y += diff * 12 * delta;
+      playerRef.current.rotation.y += diff * 12 * movementDelta;
     }
 
     const curPos = playerRef.current.position;
@@ -485,12 +833,12 @@ const LobbyPlayer: React.FC = () => {
     let bobY = 0;
     const t = state.clock.getElapsedTime();
     if (moving && settings.animations) {
-      bobY = Math.sin(t * 10) * 0.032;
+      bobY = Math.sin(t * (shift ? 16 : 11)) * 0.032;
     }
     const baseGroundY = curGroundY + baseY;
 
     if (isJumping.current) {
-      jumpVelocity.current -= 13.5 * delta;
+      jumpVelocity.current -= 24.0 * delta;
       curPos.y += jumpVelocity.current * delta;
 
       if (curPos.y <= baseGroundY) {
@@ -500,8 +848,8 @@ const LobbyPlayer: React.FC = () => {
       }
     } else {
       const targetY = baseGroundY + bobY;
-      // Sử dụng lerp nhanh hơn một chút để giảm trễ nhưng vẫn đảm bảo mượt mà
-      curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, 0.3);
+      const lerpAlphaY = 1.0 - Math.exp(-15.0 * delta);
+      curPos.y = THREE.MathUtils.lerp(curPos.y, targetY, lerpAlphaY);
     }
 
     // Chỉ kẹp cứng nếu người chơi bị hẫng chân quá sâu (ví dụ > 0.4 đơn vị) dưới sàn thực tế
@@ -519,10 +867,12 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-paintings');
     } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
       setCurrentRoom('gallery-ceramics');
+    } else if (curPos.z > 130.0 && curPos.z <= 280.0) {
+      setCurrentRoom('gallery-market-economy');
     }
 
     // Arm/Leg swing
-    const swingSpeed = 10;
+    const swingSpeed = shift ? 16 : 11;
     const swingAmp = 0.45;
 
     if (moving && settings.animations) {
@@ -549,9 +899,9 @@ const LobbyPlayer: React.FC = () => {
       }
     }
 
-    // Gửi tọa độ qua socket (20Hz)
+    // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
-    if (now - lastUpdate.current > 50) {
+    if (now - lastUpdate.current > 80) {
       if (socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
@@ -664,11 +1014,154 @@ export default function LobbyPage() {
     updatePreset,
     updateSettings,
     miniGameOpen,
+    setMiniGameOpen,
+    sittingPrompt,
+    otherUsers,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
   const [entered, setEntered] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // ── Summary Minigame state (Room 4) ──
+  const [mgOpen, setMgOpen] = useState(false);
+  const [mgStep, setMgStep] = useState<'rules' | 'game' | 'complete'>('rules');
+  const [mgIndex, setMgIndex] = useState(0);
+  const [mgScore, setMgScore] = useState(0);
+  const [mgDragOver, setMgDragOver] = useState<string | null>(null);
+  const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | 'timeout' | null>(null);
+  const [mgQuestions, setMgQuestions] = useState<typeof MG_SITUATIONS>(MG_SITUATIONS);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(15);
+  const [mgEarnedPoints, setMgEarnedPoints] = useState<number | null>(null);
+
+  const shuffleQuestions = (array: typeof MG_SITUATIONS) => {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  // Load played status on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const played = localStorage.getItem('minigame_played_gallery_four') === 'true';
+      if (played) {
+        const savedScore = localStorage.getItem('minigame_score_gallery_four');
+        if (savedScore) {
+          const parsedScore = parseInt(savedScore, 10);
+          setMgScore(parsedScore);
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: parsedScore });
+          }
+        }
+      }
+    }
+  }, [socket]);
+
+  // Đếm ngược 15s cho mỗi câu hỏi
+  useEffect(() => {
+    if (mgStep !== 'game' || mgFeedback !== null || !mgOpen) {
+      return;
+    }
+
+    if (questionTimeLeft <= 0) {
+      setMgFeedback('timeout');
+      
+      const timerComplete = setTimeout(() => {
+        setMgFeedback(null);
+        setMgEarnedPoints(null);
+        if (mgIndex < mgQuestions.length - 1) {
+          setMgIndex(prev => prev + 1);
+          setQuestionTimeLeft(15);
+        } else {
+          setMgStep('complete');
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('minigame_played_gallery_four', 'true');
+            localStorage.setItem('minigame_score_gallery_four', mgScore.toString());
+          }
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: mgScore });
+          }
+        }
+      }, 1200);
+
+      return () => clearTimeout(timerComplete);
+    }
+
+    const interval = setTimeout(() => {
+      setQuestionTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(interval);
+  }, [mgStep, mgFeedback, questionTimeLeft, mgIndex, mgQuestions.length, mgOpen, mgScore, socket]);
+
+  // Listen for CustomEvent from RoomFour
+  useEffect(() => {
+    const handler = () => {
+      setMgOpen(true);
+      setMiniGameOpen(true);
+      if (typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true') {
+        setMgStep('complete');
+        const savedScore = localStorage.getItem('minigame_score_gallery_four');
+        if (savedScore) {
+          const parsedScore = parseInt(savedScore, 10);
+          setMgScore(parsedScore);
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: parsedScore });
+          }
+        }
+      } else {
+        setMgStep('rules');
+        setMgIndex(0);
+        setMgScore(0);
+        setMgFeedback(null);
+        setQuestionTimeLeft(15);
+        setMgEarnedPoints(null);
+      }
+    };
+    window.addEventListener('openSummaryMinigame', handler);
+    return () => window.removeEventListener('openSummaryMinigame', handler);
+  }, [socket, setMiniGameOpen]);
+
+  const handleMgAnswer = (catId: string) => {
+    if (mgFeedback !== null || questionTimeLeft <= 0) return;
+    const correct = mgQuestions[mgIndex].category;
+    let nextScore = mgScore;
+    
+    // Trả lời trước 10s (thời gian đếm ngược còn >= 5s) được 10 điểm, còn lại được 5 điểm
+    const points = questionTimeLeft >= 5 ? 10 : 5;
+    
+    if (catId === correct) {
+      setMgFeedback('correct');
+      setMgEarnedPoints(points);
+      nextScore = mgScore + points;
+      setMgScore(nextScore);
+    } else {
+      setMgFeedback('incorrect');
+    }
+
+    const timerAns = setTimeout(() => {
+      setMgFeedback(null);
+      setMgEarnedPoints(null);
+      if (mgIndex < mgQuestions.length - 1) {
+        setMgIndex(prev => prev + 1);
+        setQuestionTimeLeft(15);
+      } else {
+        setMgStep('complete');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('minigame_played_gallery_four', 'true');
+          localStorage.setItem('minigame_score_gallery_four', nextScore.toString());
+        }
+        if (socket && socket.connected) {
+          socket.emit('update-score', { score: nextScore });
+        }
+      }
+    }, 1200);
+
+    return () => clearTimeout(timerAns);
+  };
 
   // Sync activeGallery với currentRoom trong sảnh + phòng triển lãm 3D liên tục
   useEffect(() => {
@@ -681,6 +1174,7 @@ export default function LobbyPage() {
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
       'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Gốm sứ hội nhập' },
+      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Kinh tế thị trường' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -707,7 +1201,7 @@ export default function LobbyPage() {
             <Canvas
               shadows={false}
               dpr={settings.preset === 'ultra-low' ? [0.3, 0.5] : settings.preset === 'low' ? [0.5, 1.0] : [0.5, 2]}
-              gl={{ antialias: settings.preset === 'medium' }}
+              gl={{ antialias: settings.preset === 'medium', powerPreference: 'high-performance' }}
               camera={{ position: [0, 3, -2], fov: 65 }}
             >
               <AdaptiveDpr pixelated />
@@ -718,7 +1212,7 @@ export default function LobbyPage() {
               <Suspense fallback={null}>
                 {/* Sảnh bảo tàng */}
                 <MuseumLobby />
-                
+
                 {/* Nhân vật người chơi */}
                 <LobbyPlayer />
 
@@ -955,7 +1449,7 @@ export default function LobbyPage() {
                 <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
                   {language === 'vi' ? 'Chi tiết cấu hình' : 'Preset Details'}
                 </span>
-                
+
                 <p className="text-[11px] text-slate-300 leading-relaxed min-h-[64px]">
                   {settings.preset === 'ultra-low' && (
                     language === 'vi' 
@@ -963,12 +1457,12 @@ export default function LobbyPage() {
                       : '⚡ Maximum optimization for weak devices. 🔦 All point lights disabled (directional only). 📉 Ultra-low resolution. 🚫 Hide all other players. 🌫️ Closer fog for GPU relief.'
                   )}
                   {settings.preset === 'low' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '♟️ Hiển thị hình quân cờ đơn giản. 🔒 Tắt đổ bóng. 🚶 Tắt vung tay chân. 👥 Chỉ hiện tối đa 10 người. Đảm bảo hoạt động mượt mà tuyệt đối trên mọi máy yếu.'
                       : '♟️ Pawn mesh. 🔒 Shadows Off. 🚶 Animations Off. 👥 Max 10 players visible. Guaranteed absolute smoothness for low-end mobile/PC devices.'
                   )}
                   {settings.preset === 'medium' && (
-                    language === 'vi' 
+                    language === 'vi'
                       ? '🚶 Hiển thị hình nhân di chuyển bình thường. ☀️ Bật đổ bóng động sắc nét. 🏃 Bật vung tay chân. 👥 Hiện đầy đủ người chơi. Trải nghiệm đồ họa sống động, mượt mà.'
                       : '🚶 Mannequin mesh. ☀️ Full Dynamic Shadows. 🏃 Limb animations On. 👥 Show all players. Premium and complete 3D interactive experience.'
                   )}
@@ -1011,16 +1505,250 @@ export default function LobbyPage() {
           </div>
         </div>
       )}
-      
+
       {/* ═══ MODAL CHI TIẾT HIỆN VẬT (Exhibit Modal) ═══ */}
       <ExhibitModal />
       {miniGameOpen && <MiniGameModal />}
+
+      {/* ── SUMMARY MINIGAME FULLSCREEN OVERLAY (pure DOM, outside Canvas) ── */}
+      {mgOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 2147483647, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}
+        >
+          {/* Background */}
+          <div style={{ position: 'absolute', inset: 0, background: '#020617' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.10) 0%, transparent 70%)' }} />
+
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '24px 32px', boxSizing: 'border-box' }}>
+
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '16px', marginBottom: '24px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>🏆</span>
+                <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>THỬ THÁCH KINH TẾ ĐỊNH HƯỚNG XHCN</span>
+              </div>
+            </div>
+
+            {/* RULES */}
+            {mgStep === 'rules' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
+                <span style={{ fontSize: '56px' }}>🎮</span>
+                <div>
+                  <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>LUẬT CHƠI MINIGAME</h4>
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.7, background: 'rgba(2,6,23,0.6)', padding: '16px 20px', borderRadius: '12px', border: '1px solid #1e293b', textAlign: 'left' }}>
+                    Hệ thống sẽ đưa ra <strong style={{ color: '#fff' }}>20 tình huống thực tế</strong> tương ứng với các đặc trưng kinh tế của Việt Nam.<br />
+                    • Nhiệm vụ: <strong style={{ color: '#10b981' }}>kéo (drag)</strong> thẻ tình huống thả vào đúng biểu tượng, hoặc <strong style={{ color: '#10b981' }}>click</strong> thẳng vào ô.<br />
+                    • Thời gian đếm ngược cho mỗi câu hỏi là <strong style={{ color: '#eab308' }}>15 giây</strong>.<br />
+                    • Điểm số: Trả lời đúng <strong style={{ color: '#10b981' }}>trước 10 giây</strong> (đồng hồ còn &gt; 5s) được <strong style={{ color: '#10b981' }}>+10 điểm</strong>. Trả lời đúng <strong style={{ color: '#eab308' }}>sau 10 giây</strong> (đồng hồ còn &le; 5s) được <strong style={{ color: '#eab308' }}>+5 điểm</strong>.
+                  </p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', width: '100%' }}>
+                  {MG_CATEGORIES.map(cat => (
+                    <div key={cat.id} style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid #1e293b', padding: '12px 8px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '24px' }}>{cat.icon}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>{language === 'vi' ? cat.nameVi : cat.nameEn}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Tổng điểm tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
+                <button 
+                  onClick={() => {
+                    setMgQuestions(shuffleQuestions(MG_SITUATIONS));
+                    setMgStep('game');
+                    setQuestionTimeLeft(15);
+                    setMgEarnedPoints(null);
+                  }} 
+                  style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
+                >
+                  🚀 Bắt đầu chơi
+                </button>
+              </div>
+            )}
+
+            {/* GAME */}
+            {mgStep === 'game' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>📝 Tình huống {mgIndex + 1} / {mgQuestions.length}</span>
+                    <div style={{ flex: 1, height: '4px', background: '#1e293b', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${((mgIndex + 1) / mgQuestions.length) * 100}%`, background: 'linear-gradient(to right, #10b981, #34d399)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
+                    <span style={{ color: questionTimeLeft <= 5 ? '#ef4444' : '#eab308', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      ⏳ Đếm ngược: <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: 900 }}>{questionTimeLeft}</span>s
+                    </span>
+                    <div style={{ width: '1px', height: '12px', background: '#334155' }} />
+                    <span>Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 200</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    draggable={mgFeedback === null}
+                    onDragStart={(e) => e.dataTransfer.setData('text/plain', mgQuestions[mgIndex].category)}
+                    style={{
+                      maxWidth: '560px', width: '100%', padding: '28px 32px', borderRadius: '18px', border: '1px solid', textAlign: 'center', position: 'relative',
+                      cursor: mgFeedback === null ? 'grab' : 'default', userSelect: 'none', transition: 'all 0.25s ease', boxSizing: 'border-box',
+                      background: mgFeedback === 'correct' ? 'rgba(6,78,59,0.4)' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? 'rgba(69,10,10,0.4)' : 'rgba(2,6,23,0.7)',
+                      borderColor: mgFeedback === 'correct' ? '#10b981' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '#ef4444' : '#334155',
+                      boxShadow: mgFeedback === 'correct' ? '0 0 40px rgba(16,185,129,0.2)' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '0 0 40px rgba(239,68,68,0.2)' : '0 8px 40px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', background: '#1e293b', color: '#64748b', border: '1px solid #334155', padding: '2px 10px', borderRadius: '99px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Kéo thẻ này thả vào ô tương ứng bên dưới</span>
+                    <p style={{ fontSize: '16px', fontWeight: 800, color: mgFeedback === 'correct' ? '#6ee7b7' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '#fca5a5' : '#f1f5f9', lineHeight: 1.6, marginTop: '8px' }}>
+                      &ldquo;{mgQuestions[mgIndex].text}&rdquo;
+                    </p>
+                    {mgFeedback === 'correct' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +{mgEarnedPoints || 10}đ</span>
+                      </div>
+                    )}
+                    {mgFeedback === 'incorrect' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>❌ CHƯA CHÍNH XÁC</span>
+                      </div>
+                    )}
+                    {mgFeedback === 'timeout' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>⏰ HẾT GIỜ!</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '10px' }}>
+                  <p style={{ textAlign: 'center', fontSize: '10px', color: '#475569', fontStyle: 'italic' }}>(Mẹo: Kéo thả hoặc click trực tiếp vào ô bên dưới)</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                    {MG_CATEGORIES.map(cat => {
+                      const isOver = mgDragOver === cat.id;
+                      return (
+                        <div
+                          key={cat.id}
+                          onDragOver={(e) => { e.preventDefault(); if (mgFeedback === null) setMgDragOver(cat.id); }}
+                          onDragLeave={() => setMgDragOver(null)}
+                          onDrop={(e) => { e.preventDefault(); setMgDragOver(null); handleMgAnswer(cat.id); }}
+                          onClick={() => handleMgAnswer(cat.id)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 8px',
+                            borderRadius: '16px', border: `2px solid ${isOver ? '#10b981' : '#1e293b'}`,
+                            background: isOver ? '#0f2a23' : 'rgba(2,6,23,0.6)', cursor: 'pointer', userSelect: 'none',
+                            transition: 'all 0.15s ease', transform: isOver ? 'scale(1.05)' : 'scale(1)',
+                            boxShadow: isOver ? '0 0 20px rgba(16,185,129,0.3)' : 'none', minHeight: '110px',
+                          }}
+                        >
+                          <span style={{ fontSize: '28px', marginBottom: '8px' }}>{cat.icon}</span>
+                          <span style={{ fontSize: '9px', fontWeight: 800, color: isOver ? '#6ee7b7' : '#94a3b8', textAlign: 'center', lineHeight: 1.3, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                            {language === 'vi' ? cat.nameVi : cat.nameEn}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* COMPLETE */}
+            {mgStep === 'complete' && (() => {
+              const allPlayerScores = [
+                { nickname: nickname || (language === 'vi' ? 'Bạn' : 'You'), score: mgScore, isMe: true },
+                ...otherUsers.map(u => ({ nickname: u.nickname, score: u.score || 0, isMe: false }))
+              ].sort((a, b) => b.score - a.score);
+
+              return (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', maxWidth: '640px', margin: '0 auto', textAlign: 'center', width: '100%' }}>
+                  <span style={{ fontSize: '56px' }}>🏆</span>
+                  <div>
+                    <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
+                    <p style={{ fontWeight: 850, fontSize: '15px', color: '#10b981' }}>
+                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 200 điểm
+                    </p>
+                  </div>
+
+                  {/* Leaderboard Table Container */}
+                  <div style={{ width: '100%', background: 'rgba(15,23,42,0.4)', border: '1px solid #1e293b', borderRadius: '16px', overflow: 'hidden' }}>
+                    <div style={{ background: '#0f172a', padding: '12px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span>Hạng / Người chơi</span>
+                      <div style={{ display: 'flex', gap: '40px' }}>
+                        <span style={{ width: '80px', textAlign: 'right' }}>Điểm số</span>
+                      </div>
+                    </div>
+                    <div style={{ maxHeight: '180px', overflowY: 'auto', padding: '4px 0' }}>
+                      {allPlayerScores.map((p, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px',
+                            background: p.isMe ? 'rgba(16,185,129,0.1)' : 'transparent',
+                            borderBottom: idx < allPlayerScores.length - 1 ? '1px solid rgba(30,41,59,0.5)' : 'none',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
+                                fontSize: '10px', fontWeight: 900,
+                                background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
+                                color: idx < 3 ? '#020617' : '#475569',
+                                border: idx >= 3 ? '1px solid #334155' : 'none'
+                              }}>
+                              {idx + 1}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: p.isMe ? 900 : 600, color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.nickname} {p.isMe && <span style={{ fontSize: '9px', background: '#10b981', color: '#020617', padding: '1px 5px', borderRadius: '4px', marginLeft: '6px', fontWeight: 900 }}>BẠN</span>}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '40px', fontFamily: 'monospace', fontSize: '13px', fontWeight: 800 }}>
+                            <span style={{ width: '80px', textAlign: 'right', color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.score}đ
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.6, margin: 0, fontStyle: 'italic', maxWidth: '500px' }}>
+                    &ldquo;Qua chuyến tham quan, chúng ta đã chứng kiến đầy đủ 5 đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam.&rdquo;
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <button onClick={() => { setMgOpen(false); setMiniGameOpen(false); }} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* ═══ SỔ NHIỆM VỤ ĐIỀU TRA PHÒNG BAO CẤP ═══ */}
       <InvestigationNotebook />
 
       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
+
+      {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
+      {sittingPrompt && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 bg-slate-950/95 border-2 border-cyan-500/30 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl animate-bounce">
+          <span className="flex h-3.5 w-3.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500"></span>
+          </span>
+          <span className="text-xs font-black tracking-wider text-slate-100 uppercase font-mono">
+            {sittingPrompt === 'sit' ? (
+              language === 'vi' ? 'Ấn F để ngồi' : 'Press F to Sit'
+            ) : (
+              language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
+            )}
+          </span>
+        </div>
+      )}
+
+      {/* ═══ ALBUM BỘ SƯU TẬP PHÒNG GỐM SỨ ═══ */}
+      <CeramicsCollection />
     </div>
   );
 }

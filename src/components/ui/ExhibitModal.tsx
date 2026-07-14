@@ -142,10 +142,22 @@ const GAMEPLAY_DICTIONARY: Record<string, GameplayData> = {
   }
 };
 
+const CERAMIC_EVENTS_MAP: Record<string, { vi: string; en: string }> = {
+  'vn-left-1': { vi: 'Đại hội VI - Đổi mới', en: '6th Party Congress - Doi Moi' },
+  'vn-left-2': { vi: 'Khoán 10', en: 'Resolution 10 (Khoan 10)' },
+  'vn-left-3': { vi: 'Việt Nam rút quân khỏi Campuchia', en: 'Withdrawal from Cambodia' },
+  'vn-right-1': { vi: 'Việt Nam trở thành nước xuất khẩu gạo', en: 'VN becomes a major rice exporter' },
+  'vn-back-left': { vi: 'Liên Xô tan rã', en: 'Soviet Union dissolution' },
+  'vn-right-2': { vi: 'Hoa Kỳ bãi bỏ cấm vận', en: 'US lifts trade embargo' },
+  'vn-right-3': { vi: 'Bình thường hóa quan hệ Việt Nam – Hoa Kỳ', en: 'Normalization of US-VN relations' },
+  'vn-door-left': { vi: 'Việt Nam gia nhập ASEAN', en: 'VN joins ASEAN' },
+  'vn-door-right': { vi: 'Nhật thực toàn phần tại Việt Nam', en: 'Total solar eclipse in Vietnam' }
+};
+
 export const ExhibitModal: React.FC = () => {
-  const { 
-    selectedExhibit, 
-    setSelectedExhibit, 
+  const {
+    selectedExhibit,
+    setSelectedExhibit,
     language,
     setLanguage,
     audioPlaying,
@@ -157,12 +169,17 @@ export const ExhibitModal: React.FC = () => {
     addClue,
     activeGallery,
     exhibitModalMode,
-    nickname
+    nickname,
+    collectedCeramics,
+    addCeramic
   } = useMuseum();
 
   // --- States cho Audio thuyết minh mặc định ---
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(150);
+  // --- States cho phòng gốm sứ (gallery-ceramics) ---
+  const isCeramicsRoom = activeGallery?.id === 'gallery-ceramics';
+  const [ceramicsCountdown, setCeramicsCountdown] = useState(10);
 
   // --- States cho Gameplay Bao cấp (gallery-subsidy) ---
   const isSubsidyRoom = activeGallery?.id === 'gallery-subsidy';
@@ -192,6 +209,10 @@ export const ExhibitModal: React.FC = () => {
       const length = selectedExhibit.id.length * 7 + 80;
       setAudioDuration(length);
 
+      if (isCeramicsRoom) {
+        setCeramicsCountdown(10);
+      }
+
       if (isSubsidyRoom && gameData) {
         if (exhibitModalMode === 'info') {
           setGameState('info');
@@ -215,7 +236,17 @@ export const ExhibitModal: React.FC = () => {
         }
       }
     }
-  }, [selectedExhibit, cluesCollected, failedQuizIds, isSubsidyRoom, gameData, exhibitModalMode, setAudioPlaying]);
+  }, [selectedExhibit, cluesCollected, failedQuizIds, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, setAudioPlaying]);
+
+  // Bộ đếm ngược 10 giây cho phòng gốm sứ
+  useEffect(() => {
+    if (isCeramicsRoom && selectedExhibit && !collectedCeramics.includes(selectedExhibit.id) && ceramicsCountdown > 0) {
+      const timer = setTimeout(() => {
+        setCeramicsCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isCeramicsRoom, selectedExhibit, collectedCeramics, ceramicsCountdown]);
 
   // Bộ đếm ngược thời gian quan sát hiện vật
   useEffect(() => {
@@ -254,9 +285,6 @@ export const ExhibitModal: React.FC = () => {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
-
-
-
   // --- Xử lý logic Quiz game ---
   const currentQuiz = gameData?.quizzes[currentQuizIndex];
   const shuffledOptions = useMemo(() => {
@@ -287,7 +315,7 @@ export const ExhibitModal: React.FC = () => {
   const handleSelectOption = (idx: number) => {
     if (answerChecked) return;
     if (currentQuiz?.isMulti) {
-      setSelectedOptions(prev => 
+      setSelectedOptions(prev =>
         prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
       );
     } else {
@@ -301,8 +329,8 @@ export const ExhibitModal: React.FC = () => {
     let correct = false;
     if (currentQuiz.isMulti) {
       const correctIdxs = currentQuiz.correctIndex as number[];
-      correct = selectedOptions.length === correctIdxs.length && 
-                selectedOptions.every(val => correctIdxs.includes(val));
+      correct = selectedOptions.length === correctIdxs.length &&
+        selectedOptions.every(val => correctIdxs.includes(val));
     } else {
       correct = selectedOption === currentQuiz.correctIndex;
     }
@@ -332,31 +360,20 @@ export const ExhibitModal: React.FC = () => {
 
   const handleCollectClue = () => {
     addClue(selectedExhibit.id);
-    confetti({ particleCount: 50, spread: 60 });
     setSelectedExhibit(null); // Đóng modal sau khi thu thập
   };
+
   return (
-    <div className="absolute inset-x-4 top-10 bottom-10 z-50 flex items-center justify-center pointer-events-none select-none">
-      <div className="relative w-full max-w-7xl h-full bg-slate-950/94 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row text-slate-100 transition-all duration-300 pointer-events-auto">
-        {/* Nút đóng toàn modal */}
-        <button
-          onClick={() => setSelectedExhibit(null)}
-          className="absolute top-4 right-4 z-30 bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white p-2.5 rounded-full border border-slate-700/70 backdrop-blur-sm transition-colors cursor-pointer shadow-lg"
-          aria-label="Đóng"
-        >
-          <X size={18} />
-        </button>
-        
+    <div className="absolute inset-x-4 top-16 bottom-16 z-50 flex items-center justify-center pointer-events-none select-none">
+      <div className="w-full max-w-7xl h-full bg-slate-950/92 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row text-slate-100 transition-all duration-300 pointer-events-auto">
         {/* Ảnh xem trước lớn bên trái */}
         <div className="relative h-[38vh] lg:h-full lg:w-[48%] xl:w-[52%] bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0">
-          <img 
-            src={selectedExhibit.thumbnail_url} 
+          <img
+            src={selectedExhibit.thumbnail_url}
             alt={titleText}
             className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
           />
           <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-slate-950/85 via-slate-950/10 to-transparent" />
-          
-
 
           {/* Nhãn loại hiện vật */}
           <span className="absolute bottom-5 left-5 bg-amber-500/20 text-amber-200 border border-amber-500/35 text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-lg uppercase font-sans">
@@ -365,294 +382,400 @@ export const ExhibitModal: React.FC = () => {
         </div>
 
         {/* Nội dung chi tiết */}
-        <div className="flex-1 p-5 lg:p-6 overflow-y-auto space-y-4 custom-scrollbar text-base min-w-0">
-          
-          {/* ═══════════════════════════════════════════════════════════════
-              TRƯỜNG HỢP 1: GAMEPLAY KHÁM PHÁ THỜI BAO CẤP (PHÒNG BAO CẤP)
-              ═══════════════════════════════════════════════════════════════ */}
-          {isSubsidyRoom && gameData ? (
-            <div className="space-y-4">
-              {/* Tiêu đề hiện vật */}
-              <div className="pr-12">
-                <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white leading-tight mb-1 font-sans">
-                  {titleText}
-                </h2>
-                <div className="text-amber-300 font-sans text-xs uppercase tracking-wider font-bold">
-                  {authorText}
-                </div>
-              </div>
-              <hr className="border-slate-800/80" />
+        <div className="flex-1 flex flex-col min-w-0 relative">
+          {/* Nút đóng */}
+          <button
+            onClick={() => setSelectedExhibit(null)}
+            className="absolute top-4 right-4 lg:top-6 lg:right-6 bg-slate-900/85 hover:bg-slate-800/90 text-slate-200 hover:text-white p-3 rounded-full border border-slate-700/60 backdrop-blur-sm transition-colors cursor-pointer z-50 shadow-md"
+          >
+            <X size={20} />
+          </button>
 
-              {/* BƯỚC 1: QUAN SÁT HIỆN VẬT CÓ ĐẾM NGƯỢC */}
-              {effectiveGameState === 'observe' && (
-                <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center border border-amber-500/20 animate-pulse relative">
-                    <Clock size={24} />
-                    <div className="absolute inset-0 rounded-full border border-amber-500/35 animate-ping opacity-25" />
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-amber-400 font-mono uppercase tracking-widest">
-                      Thời gian quan sát hiện vật
-                    </span>
-                    <h3 className="text-3xl font-mono font-black text-white">{countdown} giây</h3>
-                    <p className="text-[11px] text-slate-400 max-w-xs leading-relaxed font-sans pt-1">
-                      Hãy rê chuột xung quanh hoặc ngắm kỹ bức tranh/hiện vật trong phòng 3D. Hết thời gian quan sát sẽ mở khóa câu hỏi trắc nghiệm lịch sử.
-                    </p>
+          <div className="flex-1 p-6 lg:p-8 overflow-y-auto space-y-6 custom-scrollbar text-base">
+
+            {/* ═══════════════════════════════════════════════════════════════
+                TRƯỜNG HỢP 1: GAMEPLAY KHÁM PHÁ THỜI BAO CẤP (PHÒNG BAO CẤP)
+                ═══════════════════════════════════════════════════════════════ */}
+            {isSubsidyRoom && gameData ? (
+              <div className="space-y-4">
+                {/* Tiêu đề hiện vật */}
+                <div className="pr-12">
+                  <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-2 font-sans">
+                    {titleText}
+                  </h2>
+                  <div className="text-amber-300 font-sans text-sm uppercase tracking-wider font-bold">
+                    {authorText}
                   </div>
                 </div>
-              )}
+                <hr className="border-slate-800/80" />
 
-              {/* BƯỚC 2: TRẢ LỜI CÂU HỎI TRẮC NGHIỆM */}
-              {effectiveGameState === 'quiz' && currentQuiz && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider">
-                    <HelpCircle size={14} />
-                    <span>CÂU HỎI LỊCH SỬ {currentQuizIndex + 1}/{gameData.quizzes.length}</span>
+                {/* BƯỚC 1: QUAN SÁT HIỆN VẬT CÓ ĐẾM NGƯỢC */}
+                {effectiveGameState === 'observe' && (
+                  <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
+                    <div className="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center border border-amber-500/20 animate-pulse relative">
+                      <Clock size={24} />
+                      <div className="absolute inset-0 rounded-full border border-amber-500/35 animate-ping opacity-25" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-amber-400 font-mono uppercase tracking-widest">
+                        Thời gian quan sát hiện vật
+                      </span>
+                      <h3 className="text-3xl font-mono font-black text-white">{countdown} giây</h3>
+                      <p className="text-[11px] text-slate-400 max-w-xs leading-relaxed font-sans pt-1">
+                        Hãy rê chuột xung quanh hoặc ngắm kỹ bức tranh/hiện vật trong phòng 3D. Hết thời gian quan sát sẽ mở khóa câu hỏi trắc nghiệm lịch sử.
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl">
-                    <p className="font-sans text-base font-bold text-slate-50 leading-relaxed">
-                      {currentQuiz.question}
-                    </p>
-                  </div>
+                )}
 
-                  {!answerChecked ? (
-                    <>
-                      <div className="space-y-2.5">
-                        {shuffledOptions.map((opt) => {
-                          const isOptionSelected = currentQuiz.isMulti
-                            ? selectedOptions.includes(opt.originalIndex)
-                            : selectedOption === opt.originalIndex;
+                {/* BƯỚC 2: TRẢ LỜI CÂU HỎI TRẮC NGHIỆM */}
+                {effectiveGameState === 'quiz' && currentQuiz && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider">
+                      <HelpCircle size={14} />
+                      <span>CÂU HỎI LỊCH SỬ {currentQuizIndex + 1}/{gameData.quizzes.length}</span>
+                    </div>
+                    <div className="bg-slate-900/50 border border-slate-800 p-5 rounded-2xl">
+                      <p className="font-sans text-xl lg:text-2xl font-bold text-slate-50 leading-relaxed">
+                        {currentQuiz.question}
+                      </p>
+                    </div>
 
-                          const optStyle = isOptionSelected
-                            ? 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold'
-                            : 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-300';
+                    <div className="space-y-2">
+                      {shuffledOptions.map((opt) => {
+                        const isOptionSelected = currentQuiz.isMulti
+                          ? selectedOptions.includes(opt.originalIndex)
+                          : selectedOption === opt.originalIndex;
 
-                          return (
-                            <button
-                              key={opt.originalIndex}
-                              onClick={() => handleSelectOption(opt.originalIndex)}
-                              className={`w-full text-left p-4 rounded-2xl border text-sm leading-relaxed font-sans transition-all cursor-pointer ${optStyle}`}
-                            >
-                              <span className="font-mono font-bold mr-1.5">{String.fromCharCode(65 + shuffledOptions.findIndex(item => item.originalIndex === opt.originalIndex))}.</span>
-                              {opt.text}
-                            </button>
-                          );
-                        })}
-                      </div>
+                        let optStyle = 'bg-slate-900 border-slate-800 hover:border-slate-700 text-slate-300';
 
+                        if (isOptionSelected) {
+                          optStyle = 'bg-amber-500/10 border-amber-500/50 text-amber-300 font-semibold';
+                        }
+
+                        if (answerChecked) {
+                          const isCorrectOpt = currentQuiz.isMulti
+                            ? (currentQuiz.correctIndex as number[]).includes(opt.originalIndex)
+                            : opt.originalIndex === currentQuiz.correctIndex;
+
+                          if (isCorrectOpt) {
+                            optStyle = 'bg-emerald-500/10 border-emerald-500/60 text-emerald-400 font-semibold';
+                          } else if (isOptionSelected) {
+                            optStyle = 'bg-rose-500/10 border-rose-500/65 text-rose-400';
+                          }
+                        }
+
+                        return (
+                          <button
+                            key={opt.originalIndex}
+                            disabled={answerChecked}
+                            onClick={() => handleSelectOption(opt.originalIndex)}
+                            className={`w-full text-left p-5 rounded-2xl border text-base lg:text-lg leading-relaxed font-sans transition-all cursor-pointer ${optStyle}`}
+                          >
+                            <span className="font-mono font-bold mr-1.5">
+                              {String.fromCharCode(65 + shuffledOptions.findIndex(item => item.originalIndex === opt.originalIndex))}.
+                            </span>
+                            {opt.text}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {!answerChecked ? (
                       <button
                         onClick={handleCheckAnswer}
                         disabled={(currentQuiz.isMulti ? selectedOptions.length === 0 : selectedOption === null)}
-                        className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-slate-950 font-black py-3.5 px-5 rounded-2xl transition-all cursor-pointer uppercase font-sans tracking-wide text-sm"
+                        className="w-full bg-amber-500 hover:bg-amber-400 disabled:opacity-40 disabled:hover:bg-amber-500 text-slate-950 font-black py-4 px-5 rounded-2xl transition-all cursor-pointer uppercase font-sans tracking-wide text-base"
                       >
                         Kiểm tra đáp án
                       </button>
-                    </>
-                  ) : (
-                    <div className="space-y-3">
-                      {isCorrect ? (
-                        <div className="bg-emerald-500/10 border border-emerald-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-emerald-400">
-                          <Check size={30} />
-                          <span className="font-mono font-bold text-sm">Đáp án chính xác!</span>
-                          <p className="text-xs text-emerald-300/80">Bạn có thể chuyển sang tư liệu để thu thập vật phẩm.</p>
-                        </div>
-                      ) : (
-                        <div className="bg-rose-500/10 border border-rose-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-rose-400">
-                          <AlertTriangle size={30} />
-                          <span className="font-mono font-bold text-sm">Lựa chọn chưa đúng.</span>
-                          <p className="text-xs text-rose-300/80">Câu hỏi này đã khóa cho lượt chơi của bạn. Bạn vẫn có thể đọc tư liệu nhưng không thu thập được vật phẩm này.</p>
-                        </div>
-                      )}
-
-                      <button
-                        onClick={handleNextStep}
-                        className={`w-full text-slate-950 font-bold py-3.5 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase font-mono tracking-wider ${
-                          isCorrect ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-300 hover:bg-slate-200'
-                        }`}
-                      >
+                    ) : (
+                      <div className="space-y-3">
                         {isCorrect ? (
+                          <div className="bg-emerald-500/10 border border-emerald-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-emerald-400">
+                            <Check size={30} />
+                            <span className="font-mono font-bold text-sm">Đáp án chính xác!</span>
+                            <p className="text-xs text-emerald-300/80">Bạn có thể chuyển sang tư liệu để thu thập vật phẩm.</p>
+                          </div>
+                        ) : (
+                          <div className="bg-rose-500/10 border border-rose-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-rose-400">
+                            <AlertTriangle size={30} />
+                            <span className="font-mono font-bold text-sm">Lựa chọn chưa đúng.</span>
+                            <p className="text-xs text-rose-300/80">Câu hỏi này đã khóa cho lượt chơi của bạn. Bạn vẫn có thể đọc tư liệu nhưng không thu thập được vật phẩm này.</p>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={handleNextStep}
+                          className={`w-full text-slate-950 font-bold py-3.5 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase font-mono tracking-wider ${
+                            isCorrect ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-300 hover:bg-slate-200'
+                          }`}
+                        >
+                          {isCorrect ? (
+                            <>
+                              Tiếp tục thu thập
+                              <ArrowRight size={14} />
+                            </>
+                          ) : (
+                            'Tiếp tục xem tư liệu'
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* BƯỚC 3: ĐỌC TƯ LIỆU VÀ LƯU MANH MỐI */}
+                {effectiveGameState === 'info' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
+                        <BookOpen size={14} />
+                        Tư liệu lịch sử bao cấp
+                      </span>
+                      <p className="text-xs text-slate-200 leading-relaxed font-sans text-justify bg-slate-900/35 p-3 rounded-xl border border-slate-900 font-medium">
+                        {gameData.historyText}
+                      </p>
+                    </div>
+
+                    {/* Thêm bài phát biểu giọng nói của Góc nhân chứng / Nhà máy */}
+                    {(selectedExhibit.id === 'exhibit-witness' || selectedExhibit.id === 'exhibit-factory') && (
+                      <div className="bg-gradient-to-br from-amber-500/10 to-transparent p-4 rounded-xl border border-amber-500/25 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
+                            <Volume2 size={14} />
+                            HỒ SƠ GHI ÂM TƯ LIỆU
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {formatTime(audioProgress)} / {formatTime(audioDuration)}
+                          </span>
+                        </div>
+
+                        <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative">
+                          <div
+                            className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
+                            style={{ width: `${(audioProgress / audioDuration) * 100}%` }}
+                          />
+                        </div>
+
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => setAudioPlaying(!audioPlaying)}
+                            className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2 px-5 rounded-full font-bold text-[10px] transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20 font-mono"
+                          >
+                            {audioPlaying ? (
+                              <>
+                                <Pause size={12} fill="currentColor" />
+                                TẠM DỪNG
+                              </>
+                            ) : (
+                              <>
+                                <Play size={12} fill="currentColor" />
+                                PHÁT GHI ÂM TƯ LIỆU
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Nút lưu manh mối: chỉ hiện trong luồng chơi/câu hỏi, không hiện khi bấm bệ xem thông tin */}
+                    {exhibitModalMode === 'game' && canCollectCurrentClue && (
+                      !cluesCollected.includes(selectedExhibit.id) ? (
+                        <button
+                          onClick={handleCollectClue}
+                          className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-4 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase font-sans tracking-widest text-[11px]"
+                        >
+                          <Save size={16} />
+                          Thu thập manh mối
+                        </button>
+                      ) : (
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
+                          <span className="text-xl">📒</span>
+                          <div>
+                            <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã lưu vào Sổ điều tra</span>
+                            <span className="text-xs font-semibold leading-relaxed font-sans">{gameData.clueText}</span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* ═══════════════════════════════════════════════════════════════
+                  TRƯỜNG HỢP 2: THUYẾT MINH MẶC ĐỊNH (PHÒNG TRANH HOẶC TƯỢNG)
+                  ═══════════════════════════════════════════════════════════════ */
+              <>
+                {/* Tiêu đề & Tác giả */}
+                <div className="pr-12">
+                  <h2 className="text-xl font-bold tracking-tight text-white leading-tight mb-1 font-sans">
+                    {titleText}
+                  </h2>
+                  <div className="flex items-center gap-1.5 text-amber-400 text-[10px] font-mono uppercase tracking-wider">
+                    <User size={12} />
+                    <span className="font-semibold">{authorText}</span>
+                  </div>
+                </div>
+
+                <hr className="border-slate-800/80" />
+
+                {/* Bộ đổi ngôn ngữ (i18n) */}
+                <div className="flex items-center justify-between bg-slate-900/50 p-2.5 rounded-xl border border-slate-800/60">
+                  <span className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
+                    <Globe size={14} />
+                    {language === 'vi' ? 'NGÔN NGỮ THUYẾT MINH' : 'GUIDE LANGUAGE'}
+                  </span>
+                  <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                    <button
+                      onClick={() => setLanguage('vi')}
+                      className={`text-[10px] px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer font-mono ${language === 'vi' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      VI
+                    </button>
+                    <button
+                      onClick={() => setLanguage('en')}
+                      className={`text-[10px] px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer font-mono ${language === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      EN
+                    </button>
+                  </div>
+                </div>
+
+                {/* Thuyết minh văn bản */}
+                <div className="space-y-2">
+                  <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
+                    <BookOpen size={14} />
+                    {selectedExhibit.id === 'vn-back-right'
+                      ? (language === 'vi' ? 'LUẬT CHƠI' : 'RULES OF THE GAME')
+                      : (language === 'vi' ? 'THUYẾT MINH HIỆN VẬT' : 'EXPLANATORY NOTE')}
+                  </span>
+                  <p className="text-xs text-slate-300 leading-relaxed font-sans text-justify bg-slate-900/20 p-3 rounded-xl border border-slate-900 whitespace-pre-line">
+                    {descriptionText}
+                  </p>
+                </div>
+
+                {/* Audio Guide */}
+                {selectedExhibit.id !== 'vn-back-right' && (
+                  <div className="bg-gradient-to-br from-amber-500/10 to-transparent p-4 rounded-xl border border-amber-500/20 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
+                        <Volume2 size={14} />
+                        AUDIO GUIDE
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {formatTime(audioProgress)} / {formatTime(audioDuration)}
+                      </span>
+                    </div>
+
+                    <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative">
+                      <div
+                        className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
+                        style={{ width: `${(audioProgress / audioDuration) * 100}%` }}
+                      />
+                    </div>
+
+                    <div className="flex justify-center">
+                      <button
+                        onClick={() => setAudioPlaying(!audioPlaying)}
+                        className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2 px-5 rounded-full font-bold text-[10px] transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20 font-mono"
+                      >
+                        {audioPlaying ? (
                           <>
-                            Tiếp tục thu thập
-                            <ArrowRight size={14} />
+                            <Pause size={12} fill="currentColor" />
+                            TẠM DỪNG
                           </>
                         ) : (
-                          'Tiếp tục xem tư liệu'
+                          <>
+                            <Play size={12} fill="currentColor" />
+                            NGHE THUYẾT MINH
+                          </>
                         )}
                       </button>
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
 
-              {/* BƯỚC 3: ĐỌC TƯ LIỆU VÀ LƯU MANH MỐI */}
-              {effectiveGameState === 'info' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
-                      <BookOpen size={14} />
-                      Tư liệu lịch sử bao cấp
-                    </span>
-                    <p className="text-xs text-slate-200 leading-relaxed font-sans text-justify bg-slate-900/35 p-3 rounded-xl border border-slate-900 font-medium">
-                      {gameData.historyText}
+                {/* Nút chơi game cho hiện vật WTO */}
+                {selectedExhibit.id === 'vn-back-right' && (
+                  <div className="bg-gradient-to-br from-cyan-500/10 to-transparent p-4 rounded-xl border border-cyan-500/25 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
+                        <Gamepad2 size={14} />
+                        {language === 'vi' ? 'DÒNG CHẢY LỊCH SỬ' : 'HISTORY FLOW'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 leading-normal font-sans">
+                      {language === 'vi'
+                        ? 'Kiểm tra trí nhớ của bạn qua trò chơi sắp xếp trục thời gian về các dấu mốc lịch sử.'
+                        : 'Test your memory with our timeline sorting game about historical milestones.'}
                     </p>
-                  </div>
-
-
-                  {/* Nút lưu manh mối: chỉ hiện trong luồng chơi/câu hỏi, không hiện khi bấm bệ xem thông tin */}
-                  {exhibitModalMode === 'game' && canCollectCurrentClue && (
-                    !cluesCollected.includes(selectedExhibit.id) ? (
+                    <p className="text-[10px] text-amber-400 font-semibold bg-slate-950/80 p-2.5 rounded-lg border border-amber-500/20 leading-relaxed font-sans">
+                      {language === 'vi'
+                        ? '⚠️ Lưu ý: Mỗi người chơi chỉ được chơi 1 lần duy nhất. Khi đã bắt đầu chơi game, bạn có thể thoát ra ngoài để kiểm tra lại các tác phẩm tranh trong phòng nhằm chắc chắn mốc thời gian của từng sự kiện trước khi xác nhận sắp xếp!'
+                        : '⚠️ Note: Each player can only play once. When you start the game, you can exit to check the paintings in the room to make sure of the time of each event before confirming the sorting!'}
+                    </p>
+                    <div className="flex justify-center">
                       <button
-                        onClick={handleCollectClue}
-                        className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-4 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase font-sans tracking-widest text-[11px]"
+                        onClick={() => {
+                          if (globalGameState === 'idle') {
+                            initializeGame();
+                          }
+                          setMiniGameOpen(true);
+                          setSelectedExhibit(null);
+                        }}
+                        className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-6 rounded-xl font-bold text-xs transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer shadow-lg shadow-cyan-500/20 font-mono"
                       >
-                        <Save size={16} />
-                        Thu thập manh mối
+                        <Gamepad2 size={14} fill="currentColor" />
+                        {globalGameState === 'playing'
+                          ? (language === 'vi' ? 'TIẾP TỤC CHƠI' : 'RESUME GAME')
+                          : (globalGameState === 'won' || globalGameState === 'lost'
+                            ? (language === 'vi' ? 'XEM KẾT QUẢ' : 'VIEW RESULTS')
+                            : (language === 'vi' ? 'BẮT ĐẦU CHƠI GAME' : 'START GAME'))}
                       </button>
-                    ) : (
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
-                        <span className="text-xl">📒</span>
-                        <div>
-                          <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã lưu vào Sổ điều tra</span>
-                          <span className="text-xs font-semibold leading-relaxed font-sans">{gameData.clueText}</span>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            /* ═══════════════════════════════════════════════════════════════
-                TRƯỜNG HỢP 2: THUYẾT MINH MẶC ĐỊNH (PHÒNG TRANH HOẶC TƯỢNG)
-                ═══════════════════════════════════════════════════════════════ */
-            <>
-              {/* Tiêu đề & Tác giả */}
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-white leading-tight mb-1 font-serif">
-                  {titleText}
-                </h2>
-                <div className="flex items-center gap-1.5 text-amber-400 text-[10px] font-mono uppercase tracking-wider">
-                  <User size={12} />
-                  <span className="font-semibold">{authorText}</span>
-                </div>
-              </div>
-
-              <hr className="border-slate-800/80" />
-
-              {/* Bộ đổi ngôn ngữ (i18n) */}
-              <div className="flex items-center justify-between bg-slate-900/50 p-2.5 rounded-xl border border-slate-800/60">
-                <span className="text-[10px] text-slate-400 flex items-center gap-1.5 font-mono">
-                  <Globe size={14} />
-                  {language === 'vi' ? 'NGÔN NGỮ THUYẾT MINH' : 'GUIDE LANGUAGE'}
-                </span>
-                <div className="flex bg-slate-950 p-0.5 rounded-lg border border-slate-800">
-                  <button 
-                    onClick={() => setLanguage('vi')}
-                    className={`text-[10px] px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer font-mono ${language === 'vi' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-                  >
-                    VI
-                  </button>
-                  <button 
-                    onClick={() => setLanguage('en')}
-                    className={`text-[10px] px-2.5 py-1 rounded-md font-semibold transition-all cursor-pointer font-mono ${language === 'en' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-                  >
-                    EN
-                  </button>
-                </div>
-              </div>
-
-              {/* Thuyết minh văn bản */}
-              <div className="space-y-2">
-                <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
-                  <BookOpen size={14} />
-                  {selectedExhibit.id === 'vn-back-right'
-                    ? (language === 'vi' ? 'LUẬT CHƠI' : 'RULES OF THE GAME')
-                    : (language === 'vi' ? 'THUYẾT MINH HIỆN VẬT' : 'EXPLANATORY NOTE')}
-                </span>
-                <p className="text-xs text-slate-355 leading-relaxed font-sans text-justify bg-slate-900/20 p-3 rounded-xl border border-slate-900">
-                  {descriptionText}
-                </p>
-              </div>
-
-              {/* Audio Guide */}
-              {selectedExhibit.id !== 'vn-back-right' && (
-                <div className="bg-gradient-to-br from-amber-500/10 to-transparent p-4 rounded-xl border border-amber-500/20 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-amber-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
-                      <Volume2 size={14} />
-                      AUDIO GUIDE
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">
-                      {formatTime(audioProgress)} / {formatTime(audioDuration)}
-                    </span>
+                    </div>
                   </div>
-                  
-                  <div className="h-1 bg-slate-800 rounded-full overflow-hidden relative">
-                    <div 
-                      className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-linear"
-                      style={{ width: `${(audioProgress / audioDuration) * 100}%` }}
-                    />
-                  </div>
+                )}
 
-                  <div className="flex justify-center">
+                {/* Nút thu thập tranh cho phòng gốm sứ */}
+                {activeGallery?.id === 'gallery-ceramics' && selectedExhibit.id !== 'vn-back-right' && (
+                  !collectedCeramics.includes(selectedExhibit.id) ? (
                     <button
-                      onClick={() => setAudioPlaying(!audioPlaying)}
-                      className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2 px-5 rounded-full font-bold text-[10px] transition-transform hover:scale-105 active:scale-95 cursor-pointer shadow-lg shadow-amber-500/20 font-mono"
-                    >
-                      {audioPlaying ? (
-                        <>
-                          <Pause size={12} fill="currentColor" />
-                          TẠM DỪNG
-                        </>
-                      ) : (
-                        <>
-                          <Play size={12} fill="currentColor" />
-                          NGHE THUYẾT MINH
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Nút chơi game cho hiện vật WTO */}
-              {selectedExhibit.id === 'vn-back-right' && (
-                <div className="bg-gradient-to-br from-cyan-500/10 to-transparent p-4 rounded-xl border border-cyan-500/25 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-cyan-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
-                      <Gamepad2 size={14} />
-                      {language === 'vi' ? 'DÒNG CHẢY LỊCH SỬ' : 'HISTORY FLOW'}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 leading-normal font-sans">
-                    {language === 'vi' 
-                      ? 'Kiểm tra trí nhớ của bạn qua trò chơi lật thẻ bài về các dấu mốc hội nhập WTO & thế giới.' 
-                      : 'Test your memory with our card matching game about Vietnam\'s integration milestones.'}
-                  </p>
-                  <div className="flex justify-center">
-                    <button
+                      disabled={ceramicsCountdown > 0}
                       onClick={() => {
-                        if (globalGameState === 'idle') {
-                          initializeGame();
-                        }
-                        setMiniGameOpen(true);
-                        setSelectedExhibit(null);
+                        addCeramic(selectedExhibit.id);
                       }}
-                      className="w-full flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-6 rounded-xl font-bold text-xs transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer shadow-lg shadow-cyan-500/20 font-mono"
+                      className={`w-full font-bold py-3.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2 uppercase font-sans tracking-widest text-xs mt-4 ${
+                        ceramicsCountdown > 0
+                          ? 'bg-slate-850 text-slate-500 cursor-not-allowed border border-slate-800'
+                          : 'bg-amber-500 hover:bg-amber-400 text-slate-950 cursor-pointer active:scale-95'
+                      }`}
                     >
-                      <Gamepad2 size={14} fill="currentColor" />
-                      {globalGameState === 'playing' 
-                        ? (language === 'vi' ? 'TIẾP TỤC CHƠI' : 'RESUME GAME')
-                        : (globalGameState === 'won' || globalGameState === 'lost'
-                          ? (language === 'vi' ? 'XEM KẾT QUẢ' : 'VIEW RESULTS')
-                          : (language === 'vi' ? 'BẮT ĐẦU CHƠI GAME' : 'START GAME'))}
+                      <Save size={16} />
+                      {language === 'vi' 
+                        ? (ceramicsCountdown > 0 ? `Thu thập dữ kiện (${ceramicsCountdown}s)` : 'Thu thập dữ kiện') 
+                        : (ceramicsCountdown > 0 ? `Collect Evidence (${ceramicsCountdown}s)` : 'Collect Evidence')}
                     </button>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+                  ) : (
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400 mt-4">
+                      <span className="text-xl">🖼️</span>
+                      <div>
+                        <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">
+                          {language === 'vi' ? 'Đã thu thập dữ kiện' : 'Evidence Collected'}
+                        </span>
+                        <span className="text-xs font-semibold leading-relaxed font-sans">
+                          {language === 'vi' 
+                            ? `Đã lưu: ${CERAMIC_EVENTS_MAP[selectedExhibit.id]?.vi || 'Dữ kiện'}` 
+                            : `Saved: ${CERAMIC_EVENTS_MAP[selectedExhibit.id]?.en || 'Evidence'}`}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                )}
+              </>
+            )}
 
+          </div>
         </div>
       </div>
     </div>

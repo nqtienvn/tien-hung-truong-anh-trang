@@ -44,13 +44,17 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
   const OPENING_ANGLE = Math.PI / 2.2; // ~82 độ
 
   useFrame((_state, delta) => {
+    // Giới hạn delta để tránh lỗi trồi sụt FPS hoặc chuyển tab làm alpha > 1 gây "nổ" góc quay
+    const alphaDoor = Math.min(1.0, 4.0 * delta);
+    const alphaLight = Math.min(1.0, 3.0 * delta);
+
     // Animation mở/đóng cánh cửa trái
     if (leftDoorRef.current) {
       const targetAngle = isOpen ? OPENING_ANGLE : 0;
       leftDoorRef.current.rotation.y = THREE.MathUtils.lerp(
         leftDoorRef.current.rotation.y,
         targetAngle,
-        4 * delta
+        alphaDoor
       );
     }
 
@@ -60,7 +64,7 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
       rightDoorRef.current.rotation.y = THREE.MathUtils.lerp(
         rightDoorRef.current.rotation.y,
         targetAngle,
-        4 * delta
+        alphaDoor
       );
     }
 
@@ -70,7 +74,7 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
       lightRef.current.intensity = THREE.MathUtils.lerp(
         lightRef.current.intensity,
         targetIntensity,
-        3 * delta
+        alphaLight
       );
     }
   });

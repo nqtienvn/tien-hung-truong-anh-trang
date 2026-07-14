@@ -2,6 +2,73 @@ import React from 'react';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
 
+const VelvetRopeBarrier: React.FC<{
+  p1: [number, number]; // [x, z] for post 1
+  p2: [number, number]; // [x, z] for post 2
+}> = ({ p1, p2 }) => {
+  const postColor = '#2a2119';
+  const metalColor = '#c59b45';
+  const ropeColor = '#9f1239';
+
+  // Calculate distance and rotation
+  const dx = p2[0] - p1[0];
+  const dz = p2[1] - p1[1];
+  const length = Math.sqrt(dx * dx + dz * dz);
+  const angle = Math.atan2(dx, dz); // Rotation around Y-axis relative to Z-axis
+
+  const midX = (p1[0] + p2[0]) / 2;
+  const midZ = (p1[1] + p2[1]) / 2;
+
+  return (
+    <group>
+      {/* Post 1 */}
+      <group position={[p1[0], 0, p1[1]]}>
+        <mesh position={[0, 0.48, 0]}>
+          <cylinderGeometry args={[0.055, 0.07, 0.96, 18]} />
+          <meshStandardMaterial color={postColor} roughness={0.28} metalness={0.65} />
+        </mesh>
+        <mesh position={[0, 0.98, 0]}>
+          <sphereGeometry args={[0.13, 18, 18]} />
+          <meshStandardMaterial color={metalColor} roughness={0.22} metalness={0.85} />
+        </mesh>
+        <mesh position={[0, 0.06, 0]}>
+          <cylinderGeometry args={[0.22, 0.28, 0.08, 24]} />
+          <meshStandardMaterial color={postColor} roughness={0.35} metalness={0.55} />
+        </mesh>
+      </group>
+
+      {/* Post 2 */}
+      <group position={[p2[0], 0, p2[1]]}>
+        <mesh position={[0, 0.48, 0]}>
+          <cylinderGeometry args={[0.055, 0.07, 0.96, 18]} />
+          <meshStandardMaterial color={postColor} roughness={0.28} metalness={0.65} />
+        </mesh>
+        <mesh position={[0, 0.98, 0]}>
+          <sphereGeometry args={[0.13, 18, 18]} />
+          <meshStandardMaterial color={metalColor} roughness={0.22} metalness={0.85} />
+        </mesh>
+        <mesh position={[0, 0.06, 0]}>
+          <cylinderGeometry args={[0.22, 0.28, 0.08, 24]} />
+          <meshStandardMaterial color={postColor} roughness={0.35} metalness={0.55} />
+        </mesh>
+      </group>
+
+      {/* Ropes group at the midpoint, rotated to align with the vector from p1 to p2 */}
+      <group position={[midX, 0.94, midZ]} rotation={[0, angle, 0]}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.045, 0.045, length, 20]} />
+          <meshStandardMaterial color={ropeColor} roughness={0.55} metalness={0.05} />
+        </mesh>
+        {/* Dây phụ thấp hơn tạo cảm giác dây nhung có độ dày */}
+        <mesh position={[0, -0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.028, 0.028, length * 0.96, 16]} />
+          <meshStandardMaterial color="#7f1d1d" roughness={0.62} metalness={0.03} />
+        </mesh>
+      </group>
+    </group>
+  );
+};
+
 export const RoomThree: React.FC<BaseRoomProps> = ({
   galleryId,
   customSettings,
@@ -203,6 +270,45 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
             <meshBasicMaterial color="#fff8e7" />
           </mesh>
         </group>
+      ))}
+
+      {/* ============================================================
+          HÀNG RÀO DÂY NHUNG ĐỎ TRƯỚC TRANH (Velvet Rope Barriers)
+      ============================================================ */}
+      {/* 1. Tường trái (x = -halfW + 1.8 = -13.2) */}
+      {sideZPositions.map((zPos) => (
+        <VelvetRopeBarrier
+          key={`barrier-left-${zPos}`}
+          p1={[-halfW + 1.8, zPos - 2.2]}
+          p2={[-halfW + 1.8, zPos + 2.2]}
+        />
+      ))}
+
+      {/* 2. Tường phải (x = halfW - 1.8 = 13.2) */}
+      {sideZPositions.map((zPos) => (
+        <VelvetRopeBarrier
+          key={`barrier-right-${zPos}`}
+          p1={[halfW - 1.8, zPos - 2.2]}
+          p2={[halfW - 1.8, zPos + 2.2]}
+        />
+      ))}
+
+      {/* 3. Tường cửa vào (z = -halfL + 1.8 = -13.2) */}
+      {doorXPositions.map((xPos) => (
+        <VelvetRopeBarrier
+          key={`barrier-door-${xPos}`}
+          p1={[xPos - 2.2, -halfL + 1.8]}
+          p2={[xPos + 2.2, -halfL + 1.8]}
+        />
+      ))}
+
+      {/* 4. Tường cuối sau (z = halfL - 1.8 = 13.2) */}
+      {doorXPositions.map((xPos) => (
+        <VelvetRopeBarrier
+          key={`barrier-back-${xPos}`}
+          p1={[xPos - 2.2, halfL - 1.8]}
+          p2={[xPos + 2.2, halfL - 1.8]}
+        />
       ))}
 
     </BaseRoom>

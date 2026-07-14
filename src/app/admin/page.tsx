@@ -4,14 +4,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
-import { Shield, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
+import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
-  { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Phòng 01: Bao cấp', color: 'amber' },
-  { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Phòng 02: Hội họa', color: 'cyan' },
-  { doorId: 'door-room3', targetRoom: 'gallery-sculptures', label: 'Phòng 03: Điêu khắc', color: 'emerald' },
-  { doorId: 'door-room4', targetRoom: 'gallery-ceramics', label: 'Phòng 04: Gốm sứ', color: 'rose' },
+  { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Cửa 1: Sảnh ↔ Phòng 01', color: 'amber' },
+  { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
+  { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
+  { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
 ];
 
 interface DoorState {
@@ -21,6 +21,10 @@ interface DoorState {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +32,16 @@ export default function AdminDashboard() {
   const [isNew, setIsNew] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
+  // Kiểm tra trạng thái xác thực đã lưu
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const auth = sessionStorage.getItem('admin_authorized');
+      if (auth === 'true') {
+        setIsAuthorized(true);
+      }
+    }
+  }, []);
 
   // ═══ Door Control State ═══
   const [adminSocket, setAdminSocket] = useState<Socket | null>(null);
@@ -38,13 +52,15 @@ export default function AdminDashboard() {
   const [roomStates, setRoomStates] = useState<Record<string, { isOpen: boolean }>>({
     'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
-    'gallery-sculptures': { isOpen: true },
-    'gallery-ceramics': { isOpen: true }
+    'gallery-ceramics': { isOpen: true },
+    'gallery-market-economy': { isOpen: true }
   });
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
 
   // Kết nối Socket.io cho admin
   useEffect(() => {
+    if (!isAuthorized) return;
+
     const socketUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
     const sock = io(socketUrl, {
       transports: ['websocket'],
@@ -97,7 +113,7 @@ export default function AdminDashboard() {
     return () => {
       sock.disconnect();
     };
-  }, []);
+  }, [isAuthorized]);
 
   const handleOpenDoor = (doorId: string, targetRoom: string) => {
     if (!adminSocket) return;
@@ -109,9 +125,9 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
+      canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
     if (!canOpen) {
@@ -134,7 +150,7 @@ export default function AdminDashboard() {
     } else if (doorId === 'door-room3') {
       teleportTo = 'gallery-paintings';
     } else if (doorId === 'door-room4') {
-      teleportTo = 'gallery-sculptures';
+      teleportTo = 'gallery-ceramics';
     }
 
     adminSocket.emit('admin:close-door', { doorId, teleportTo });
@@ -150,9 +166,9 @@ export default function AdminDashboard() {
         relatedDoors.push('door-room1', 'door-room2');
       } else if (roomId === 'gallery-paintings') {
         relatedDoors.push('door-room2', 'door-room3');
-      } else if (roomId === 'gallery-sculptures') {
-        relatedDoors.push('door-room3', 'door-room4');
       } else if (roomId === 'gallery-ceramics') {
+        relatedDoors.push('door-room3', 'door-room4');
+      } else if (roomId === 'gallery-market-economy') {
         relatedDoors.push('door-room4');
       }
 
@@ -167,7 +183,24 @@ export default function AdminDashboard() {
     adminSocket.emit('admin:toggle-room', { roomId, isOpen: !currentOpen });
   };
 
+  const handleTeleportAll = (targetRoom: string) => {
+    if (!adminSocket) return;
+    const roomName = targetRoom === 'lobby' 
+      ? 'Sảnh chờ' 
+      : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
+      : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
+      : targetRoom === 'gallery-ceramics' ? 'Phòng 03 (Đồ gốm sứ)' 
+      : 'Phòng 04 (Kinh tế thị trường)';
+
+    const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
+    if (window.confirm(confirmMsg)) {
+      adminSocket.emit('admin:teleport-all', { targetRoom });
+    }
+  };
+
   useEffect(() => {
+    if (!isAuthorized) return;
+
     // Tải toàn bộ galleries và exhibits
     Promise.all([
       fetch('/api/galleries').then(res => res.json()),
@@ -183,7 +216,7 @@ export default function AdminDashboard() {
         setError('Không thể kết nối đến máy chủ.');
         setLoading(false);
       });
-  }, []);
+  }, [isAuthorized]);
 
   const handleEdit = (exhibit: Exhibit) => {
     setEditingExhibit({ ...exhibit });
@@ -276,6 +309,223 @@ export default function AdminDashboard() {
     }
   };
 
+  const renderAdminDoor = (doorId: string, targetRoom: string, label: string) => {
+    const state = doorStates[doorId];
+    const isOpen = state?.isOpen || false;
+    const isLoading = doorLoading === doorId;
+
+    let isPrereqMet = true;
+    if (doorId === 'door-room1') {
+      isPrereqMet = roomStates['gallery-subsidy']?.isOpen || false;
+    } else if (doorId === 'door-room2') {
+      isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
+    } else if (doorId === 'door-room3') {
+      isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
+    } else if (doorId === 'door-room4') {
+      isPrereqMet = (roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen) || false;
+    }
+
+    return (
+      <div
+        key={doorId}
+        className={`p-3 rounded-xl border border-dashed transition-all w-full max-w-2xl mx-auto relative ${
+          isOpen
+            ? 'bg-emerald-500/5 border-emerald-500/20'
+            : 'bg-slate-900/20 border-slate-800'
+        }`}
+      >
+        <div className="absolute top-[-16px] left-[50%] translate-x-[-50%] w-0.5 h-4 bg-slate-800 pointer-events-none" />
+        <div className="absolute bottom-[-16px] left-[50%] translate-x-[-50%] w-0.5 h-4 bg-slate-800 pointer-events-none" />
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            {isOpen ? (
+              <DoorOpen size={16} className="text-emerald-400" />
+            ) : (
+              <DoorClosed size={16} className="text-slate-500" />
+            )}
+            <div>
+              <h4 className="text-xs font-bold text-slate-300">{label}</h4>
+              {!isPrereqMet && !isOpen && (
+                <p className="text-[9px] text-amber-500 font-semibold mt-0.5">
+                  ⚠️ Yêu cầu các phòng liên quan phải bật
+                </p>
+              )}
+            </div>
+          </div>
+
+          {isOpen ? (
+            <button
+              type="button"
+              onClick={() => handleCloseDoor(doorId)}
+              disabled={isLoading}
+              className="py-1 px-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 size={10} className="animate-spin" />
+              ) : (
+                <DoorClosed size={10} />
+              )}
+              Đóng cửa
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleOpenDoor(doorId, targetRoom)}
+              disabled={isLoading || !isPrereqMet}
+              className={`py-1 px-3 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                isPrereqMet
+                  ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400'
+                  : 'bg-slate-900 border-slate-850 text-slate-600 cursor-not-allowed'
+              }`}
+            >
+              {isLoading ? (
+                <Loader2 size={10} className="animate-spin" />
+              ) : (
+                <DoorOpen size={10} />
+              )}
+              Mở cửa
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAdminRoom = (roomId: string, name: string, desc: string, relatedDoors: string[]) => {
+    const isRoomOpen = roomStates[roomId]?.isOpen ?? true;
+    const isLoading = roomLoading === roomId;
+    const hasOpenDoor = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
+
+    return (
+      <div
+        key={roomId}
+        className={`p-4 rounded-xl border transition-all w-full max-w-2xl mx-auto ${
+          isRoomOpen
+            ? 'bg-cyan-500/5 border-cyan-500/20'
+            : 'bg-slate-900/10 border-slate-850 opacity-60'
+        }`}
+      >
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">🏛️</span>
+            <div>
+              <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                <span className={`w-2 h-2 rounded-full ${isRoomOpen ? 'bg-cyan-400 shadow-lg shadow-cyan-500/50' : 'bg-slate-600'}`} />
+                {name}
+              </h4>
+              <p className="text-[10px] text-slate-500 mt-1">{desc}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {isRoomOpen && (
+              <button
+                type="button"
+                onClick={() => handleTeleportAll(roomId)}
+                className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+              >
+                <Compass size={12} />
+                Dịch chuyển mọi người
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => handleToggleRoom(roomId, isRoomOpen)}
+              disabled={isLoading || (isRoomOpen && hasOpenDoor)}
+              className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                isRoomOpen
+                  ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed'
+                  : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
+              }`}
+              title={isRoomOpen && hasOpenDoor ? 'Vui lòng đóng các cửa liên quan trước khi tắt phòng' : ''}
+            >
+              {isLoading ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <Power size={12} />
+              )}
+              {isRoomOpen ? 'Tắt phòng' : 'Bật phòng'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === 'sjkc21jdx2k23') {
+      sessionStorage.setItem('admin_authorized', 'true');
+      setIsAuthorized(true);
+      setAuthError('');
+    } else {
+      setAuthError('Mật khẩu không chính xác! Vui lòng thử lại.');
+    }
+  };
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-[#07070a] text-slate-100 flex flex-col justify-center items-center relative overflow-hidden px-4">
+        {/* Background decoration */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-40">
+          <div className="absolute top-[20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-amber-500/10 blur-[100px]" />
+          <div className="absolute bottom-[20%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-cyan-500/10 blur-[100px]" />
+        </div>
+
+        <div className="relative z-10 w-full max-w-md bg-slate-950/60 border border-slate-900 rounded-3xl p-8 shadow-2xl backdrop-blur-md">
+          <div className="flex flex-col items-center gap-4 text-center mb-6">
+            <div className="w-14 h-14 bg-amber-500/10 border border-amber-500/20 text-amber-500 rounded-2xl flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+              <Lock size={24} />
+            </div>
+            <div>
+              <h2 className="font-sans font-bold text-lg tracking-wider text-white uppercase">XÁC THỰC QUẢN TRỊ VIÊN</h2>
+              <p className="text-xs text-slate-500 mt-1">Hệ thống yêu cầu mật khẩu để truy cập CMS Quản trị</p>
+            </div>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mật khẩu</label>
+              <input
+                type="password"
+                required
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="Nhập mật khẩu truy cập..."
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all placeholder:text-slate-600"
+              />
+            </div>
+
+            {authError && (
+              <p className="text-[11px] text-rose-500 font-semibold bg-rose-500/10 border border-rose-500/15 p-2.5 rounded-lg text-center">
+                ⚠️ {authError}
+              </p>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => router.push('/')}
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white py-2.5 rounded-xl text-xs font-bold border border-slate-800 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <ArrowLeft size={14} />
+                Quay lại
+              </button>
+              <button
+                type="submit"
+                className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-[0_0_20px_rgba(245,158,11,0.2)] flex items-center justify-center gap-1.5"
+              >
+                Xác nhận
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#07070a] flex flex-col justify-center items-center gap-4 text-slate-200">
@@ -320,171 +570,72 @@ export default function AdminDashboard() {
 
       <main className="relative z-10 flex-1 w-full max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-        {/* ═══ PANEL ĐIỀU KHIỂN PHÒNG & CỬA (Real-time) ═══ */}
-        <div className="bg-slate-950/40 border border-slate-900 rounded-2xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-900">
-          
-          {/* CỘT TRÁI: QUẢN LÝ PHÒNG (Room Management) */}
-          <div className="p-4 flex flex-col space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-3">
-              <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-wide flex items-center gap-2">
-                <Power size={14} />
-                Quản Lý Phòng Triển Lãm (Bật/Tắt)
+        {/* ═══ PANEL ĐIỀU KHIỂN PHÒNG & CỬA (Real-time Timeline Flow) ═══ */}
+        <div className="bg-slate-950/40 border border-slate-900 rounded-2xl p-6 shadow-xl space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-900 pb-3">
+            <div className="flex items-center gap-2">
+              <Compass size={16} className="text-amber-500" />
+              <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wide">
+                Bố Cục Sơ Đồ & Điều Khiển Không Gian Bảo Tàng (Lobby ➡️ Cửa ➡️ Phòng)
               </h3>
-              <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${adminSocket?.connected ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/15 text-red-400 border border-red-500/20'}`}>
-                {adminSocket?.connected ? '🟢 Trực tuyến' : '🔴 Ngoại tuyến'}
-              </span>
             </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              {[
-                { id: 'gallery-subsidy', name: 'Phòng 01: Bao Cấp Việt Nam', desc: 'Thời kỳ kinh tế bao cấp (1976-1985)' },
-                { id: 'gallery-paintings', name: 'Phòng 02: Tranh Hội Họa', desc: 'Trưng bày bộ sưu tập tranh hội họa 2D' },
-                { id: 'gallery-sculptures', name: 'Phòng 03: Điêu Khắc 3D', desc: 'Trưng bày các mô hình tượng điêu khắc 3D' },
-                { id: 'gallery-ceramics', name: 'Phòng 04: Gốm Sứ Hội Nhập', desc: 'Không gian trưng bày gốm sứ & hành trình hội nhập kinh tế' },
-              ].map((room) => {
-                const isRoomOpen = roomStates[room.id]?.isOpen ?? true;
-                const isLoading = roomLoading === room.id;
-                
-                const relatedDoors = room.id === 'gallery-subsidy'
-                  ? ['door-room1', 'door-room2']
-                  : room.id === 'gallery-paintings'
-                  ? ['door-room2', 'door-room3']
-                  : room.id === 'gallery-sculptures'
-                  ? ['door-room3', 'door-room4']
-                  : ['door-room4'];
-                const hasOpenDoor = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
-
-                return (
-                  <div
-                    key={room.id}
-                    className={`p-4 rounded-xl border transition-all ${
-                      isRoomOpen
-                        ? 'bg-cyan-500/5 border-cyan-500/20'
-                        : 'bg-slate-900/10 border-slate-800/80 opacity-60'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <h4 className="text-xs font-bold text-white flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${isRoomOpen ? 'bg-cyan-400 shadow-lg shadow-cyan-500/50' : 'bg-slate-600'}`} />
-                          {room.name}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 mt-1">{room.desc}</p>
-                      </div>
-
-                      <button
-                        onClick={() => handleToggleRoom(room.id, isRoomOpen)}
-                        disabled={isLoading || (isRoomOpen && hasOpenDoor)}
-                        className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          isRoomOpen
-                            ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed'
-                            : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
-                        }`}
-                        title={isRoomOpen && hasOpenDoor ? 'Vui lòng đóng các cửa liên quan trước khi tắt phòng' : ''}
-                      >
-                        {isLoading ? (
-                          <Loader2 size={12} className="animate-spin" />
-                        ) : (
-                          <Power size={12} />
-                        )}
-                        {isRoomOpen ? 'Tắt phòng' : 'Bật phòng'}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${adminSocket?.connected ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/15 text-red-400 border border-red-500/20'}`}>
+              {adminSocket?.connected ? '🟢 Trực tuyến' : '🔴 Ngoại tuyến'}
+            </span>
           </div>
 
-          {/* CỘT PHẢI: QUẢN LÝ CỬA (Door Management) */}
-          <div className="p-4 flex flex-col space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-900 pb-3">
-              <h3 className="text-sm font-bold text-amber-400 uppercase tracking-wide flex items-center gap-2">
-                <Zap size={14} />
-                Điều Khiển Cửa Nối Phòng (Mở/Đóng)
-              </h3>
+          <div className="flex flex-col gap-6 py-2 relative">
+            {/* 1. SẢNH CHÍNH (LOBBY) */}
+            <div className="p-4 rounded-xl border border-slate-800 bg-slate-900/30 w-full max-w-2xl mx-auto flex items-center justify-between relative">
+              <div className="absolute bottom-[-16px] left-[50%] translate-x-[-50%] w-0.5 h-4 bg-slate-800 pointer-events-none" />
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🏛️</span>
+                <div>
+                  <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)] animate-pulse" />
+                    Sảnh Bảo Tàng (Museum Lobby)
+                  </h4>
+                  <p className="text-[10px] text-slate-500 mt-1">Khu vực trung tâm đón tiếp khách tham quan</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleTeleportAll('lobby')}
+                  className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+                >
+                  <Compass size={12} />
+                  Dịch chuyển mọi người
+                </button>
+                <span className="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold uppercase">
+                  Mặc định bật
+                </span>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              {DOOR_CONFIGS.map((config) => {
-                const state = doorStates[config.doorId];
-                const isOpen = state?.isOpen || false;
-                const isLoading = doorLoading === config.doorId;
+            {/* 2. CỬA 1 */}
+            {renderAdminDoor('door-room1', 'gallery-subsidy', 'Cửa số 01: Sảnh ↔ Phòng 01')}
 
-                // Ràng buộc mở cửa: các phòng liên quan phải bật
-                let isPrereqMet = true;
-                if (config.doorId === 'door-room1') {
-                  isPrereqMet = roomStates['gallery-subsidy']?.isOpen || false;
-                } else if (config.doorId === 'door-room2') {
-                  isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
-                } else if (config.doorId === 'door-room3') {
-                  isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen) || false;
-                } else if (config.doorId === 'door-room4') {
-                  isPrereqMet = (roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
-                }
+            {/* 3. PHÒNG 1 */}
+            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Bao Cấp Việt Nam', 'Khu vực trưng bày thời kỳ kinh tế bao cấp (1976-1985)', ['door-room1', 'door-room2'])}
 
-                return (
-                  <div
-                    key={config.doorId}
-                    className={`p-3 rounded-xl border transition-all ${
-                      isOpen
-                        ? 'bg-emerald-500/5 border-emerald-500/20'
-                        : 'bg-slate-900/30 border-slate-800'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        {isOpen ? (
-                          <DoorOpen size={16} className="text-emerald-400" />
-                        ) : (
-                          <DoorClosed size={16} className="text-slate-500" />
-                        )}
-                        <div>
-                          <h4 className="text-xs font-bold text-white">{config.label}</h4>
-                          {!isPrereqMet && !isOpen && (
-                            <p className="text-[9px] text-amber-500 font-semibold mt-0.5">
-                              ⚠️ Yêu cầu các phòng liên quan phải bật
-                            </p>
-                          )}
-                        </div>
-                      </div>
+            {/* 4. CỬA 2 */}
+            {renderAdminDoor('door-room2', 'gallery-paintings', 'Cửa số 02: Phòng 01 ↔ Phòng 02')}
 
-                      {isOpen ? (
-                        <button
-                          onClick={() => handleCloseDoor(config.doorId)}
-                          disabled={isLoading}
-                          className="py-1.5 px-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 disabled:opacity-50"
-                        >
-                          {isLoading ? (
-                            <Loader2 size={10} className="animate-spin" />
-                          ) : (
-                            <DoorClosed size={10} />
-                          )}
-                          Đóng cửa
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleOpenDoor(config.doorId, config.targetRoom)}
-                          disabled={isLoading || !isPrereqMet}
-                          className={`py-1.5 px-3 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 ${
-                            isPrereqMet
-                              ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400'
-                              : 'bg-slate-900 border-slate-850 text-slate-600 cursor-not-allowed'
-                          }`}
-                        >
-                          {isLoading ? (
-                            <Loader2 size={10} className="animate-spin" />
-                          ) : (
-                            <DoorOpen size={10} />
-                          )}
-                          Mở cửa
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* 5. PHÒNG 2 */}
+            {renderAdminRoom('gallery-paintings', 'Phòng 02: Tranh Hội Họa', 'Bộ sưu tập hội họa tranh vẽ nghệ thuật 2D', ['door-room2', 'door-room3'])}
+
+            {/* 6. CỬA 3 */}
+            {renderAdminDoor('door-room3', 'gallery-ceramics', 'Cửa số 03: Phòng 02 ↔ Phòng 03')}
+
+            {/* 7. PHÒNG 3 */}
+            {renderAdminRoom('gallery-ceramics', 'Phòng 03: Gốm Sứ Hội Nhập', 'Các tác phẩm gốm sứ tinh xảo và câu chuyện làng nghề', ['door-room3', 'door-room4'])}
+
+            {/* 8. CỬA 4 */}
+            {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
+
+            {/* 9. PHÒNG 4 */}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4'])}
           </div>
         </div>
 

@@ -1,4 +1,6 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import { ExhibitionRoom } from './ExhibitionRoom';
 import { ExhibitObject } from './ExhibitObject';
 import { LoadedRoom } from '@/context/MuseumContext';
@@ -26,10 +28,12 @@ interface DynamicRoomProps {
 //   center = 8 + 46/2 = 31  →  offset = 31, spans Z 8..54
 // Phòng 2: bắt đầu Z=54  →  center = 54 + 23 = 77,  spans Z 54..100
 // Phòng 3: bắt đầu Z=100 →  center = 100 + 15 = 115, spans Z 100..130
+// Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..280
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
   'gallery-paintings': { z: 77.35, y: 3.0 },   // Phòng 2: đẩy lùi 0.35 để tránh z-fighting với tường sau phòng 1
   'gallery-ceramics': { z: 115.7, y: 3.0 },    // Phòng 3: giữ khoảng hở nhỏ tương tự với phòng 2
+  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 280)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
@@ -37,12 +41,40 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-subsidy': [0, 3.0, 10.0],           // Spawn gần cửa vào phòng 1 (Z=10)
   'gallery-paintings': [0, 3.0, 56.0],          // Spawn gần cửa vào phòng 2 (Z=56)
   'gallery-ceramics': [0, 3.0, 102.0],          // Spawn gần cửa vào phòng 3 (Z=102)
+  'gallery-market-economy': [0, 3.0, 133.0],   // Spawn gần cửa vào phòng 4 (Z=133)
   'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh
 };
 
 export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
   const { galleryId, exhibits, gallery } = room;
-  console.log(`[DynamicRoom] Render room ${galleryId}, exhibits count: ${exhibits?.length || 0}, isVisible: ${isVisible}`);
+  const groupRef = useRef<THREE.Group>(null);
+
+  // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
+  useFrame((state) => {
+    if (!groupRef.current) return;
+
+    if (!isVisible) {
+      if (groupRef.current.visible) groupRef.current.visible = false;
+      return;
+    }
+
+    const player = state.scene.getObjectByName('lobby-player');
+    if (player) {
+      const playerZ = player.position.z;
+      const roomZ = offsetZ;
+      const dist = Math.abs(playerZ - roomZ);
+
+      // Nếu người chơi ở khoảng cách > 75 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
+      // ta ẩn phòng đi để giảm thiểu tối đa số lệnh vẽ (draw calls) và số lượng đỉnh đa giác.
+      const shouldBeVisible = dist < 75.0;
+      if (groupRef.current.visible !== shouldBeVisible) {
+        groupRef.current.visible = shouldBeVisible;
+        console.log(`[LOD-CULLING] Phòng "${galleryId}" chuyển trạng thái visible = ${shouldBeVisible}`);
+      }
+    } else {
+      if (!groupRef.current.visible) groupRef.current.visible = true;
+    }
+  });
 
   // Build custom settings từ gallery data
   const customSettings = gallery ? {
@@ -56,7 +88,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
   } : undefined;
 
   return (
-    <group position={[0, offsetY, offsetZ]}>
+    <group ref={groupRef} position={[0, offsetY, offsetZ]}>
       <Suspense fallback={null}>
         {/* Phòng triển lãm */}
         <ExhibitionRoom

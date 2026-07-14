@@ -69,7 +69,8 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
       targetYaw.current = realTimeData.yaw;
     }
 
-    const lf = Math.min(1, 12 * delta);
+    // Giảm từ 12 xuống 7 để nội suy vị trí mượt hơn khi tần suất sync qua mạng giảm
+    const lf = Math.min(1, 7 * delta);
     groupRef.current.position.lerp(targetPos.current, lf);
 
     let diff = targetYaw.current - groupRef.current.rotation.y;

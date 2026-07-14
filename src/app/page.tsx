@@ -26,16 +26,16 @@ export default function Home() {
             Khởi nguồn
           </Link>
           <Link
-            href="/gallery/gallery-sculptures"
+            href="/gallery/gallery-ceramics"
+            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
+          >
+            Gốm sứ
+          </Link>
+          <Link
+            href="/gallery/gallery-market-economy"
             className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
           >
             Thị trường
-          </Link>
-          <Link
-            href="/gallery/gallery-sculptures"
-            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Giới hạn
           </Link>
           <Link
             href="/gallery/gallery-paintings"
@@ -90,7 +90,7 @@ export default function Home() {
         </Link>
         <Link
           className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
-          href="/gallery/gallery-sculptures"
+          href="/gallery/gallery-market-economy"
         >
           <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
             <span className="material-symbols-outlined text-xl">
@@ -183,17 +183,9 @@ export default function Home() {
                   Bao Cấp Việt Nam (1976-1985)
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh mối và giải đáp câu đố thời kỳ trước Đổi mới.
+                  Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh
+                  mối và giải đáp câu đố thời kỳ trước Đổi mới.
                 </p>
-                <Link
-                  href="/gallery/gallery-subsidy"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
 
@@ -215,17 +207,9 @@ export default function Home() {
                   Khởi nguồn Trao đổi &amp; Tiền tệ
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá những hình thái sơ khai của thương mại và các bức tranh sơn dầu cổ điển thế giới.
+                  Khám phá những hình thái sơ khai của thương mại và các bức
+                  tranh sơn dầu cổ điển thế giới.
                 </p>
-                <Link
-                  href="/gallery/gallery-paintings"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
 
@@ -247,17 +231,9 @@ export default function Home() {
                   Cỗ máy Thị trường &amp; Tư bản
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và những quy luật ngầm điều hành kinh tế.
+                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và
+                  những quy luật ngầm điều hành kinh tế.
                 </p>
-                <Link
-                  href="/gallery/gallery-ceramics"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
 
@@ -273,7 +249,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
               <div className="relative z-20 flex flex-col gap-4">
                 <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 04
+                  Phòng 03
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
                   Tọa độ Việt Nam &amp; Kỷ nguyên Không biên giới
@@ -282,15 +258,6 @@ export default function Home() {
                   Vị thế của nền kinh tế Việt Nam trong dòng chảy toàn cầu hóa
                   và những thách thức trong kỷ nguyên số.
                 </p>
-                <Link
-                  href="/gallery/gallery-paintings"
-                  className="flex items-center justify-center gap-2 text-white bg-[#725b29]/20 px-6 py-2.5 rounded-full border border-[#725b29]/50 font-bold font-label-sm text-[12px] hover:bg-[#725b29] hover:text-white transition-all uppercase tracking-wider group/btn mt-2 w-fit cursor-pointer"
-                >
-                  Vào phòng
-                  <span className="material-symbols-outlined text-sm group-hover/btn:translate-x-1 transition-transform">
-                    arrow_right_alt
-                  </span>
-                </Link>
               </div>
             </div>
           </div>

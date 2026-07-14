@@ -31,7 +31,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
   const roomLength = customSettings?.room_length ?? activeGallery?.room_length ?? 30;
-  const roomHeight = customSettings?.room_height ?? activeGallery?.room_height ?? 6;
+  const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
   const floorColor = customSettings?.floor_color ?? activeGallery?.floor_color ?? '#4e3629';
   const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
   const wainscotingColor = customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#eae5dc';
@@ -162,34 +162,34 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
 
         {/* --- TƯỜNG TRƯỚC (Front Wall with Doorway) --- */}
         {/* Tường trước bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2]}>
+        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, -roomLength / 2 + 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường trước bên phải */}
-        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2]}>
+        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, -roomLength / 2 + 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường trước phía trên cửa */}
-        <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2]}>
+        <mesh position={[0, (roomHeight + 4) / 2, -roomLength / 2 + 0.01]}>
           <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
 
         {/* --- TƯỜNG SAU (Back Wall with Doorway) --- */}
         {/* Tường sau bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2]}>
+        <mesh position={[-(roomWidth / 4 + 1), roomHeight / 2, roomLength / 2 - 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường sau bên phải */}
-        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2]}>
+        <mesh position={[roomWidth / 4 + 1, roomHeight / 2, roomLength / 2 - 0.01]}>
           <boxGeometry args={[roomWidth / 2 - 2, roomHeight, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
         {/* Tường sau phía trên cửa */}
-        <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2]}>
+        <mesh position={[0, (roomHeight + 4) / 2, roomLength / 2 - 0.01]}>
           <boxGeometry args={[4.0, roomHeight - 4.0, 0.2]} />
           <meshStandardMaterial color={wallColor} roughness={0.7} />
         </mesh>
@@ -216,40 +216,40 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
         </mesh>
 
         {/* Wainscoting tường trước bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1.4), 0.6, -roomLength / 2 + 0.14]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 1.2, 0.02]} />
+        <mesh position={[-(roomWidth / 4 + 1.056), 0.6, -roomLength / 2 + 0.01 + 0.112]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
-        <mesh position={[-(roomWidth / 4 + 1.4), 1.2, -roomLength / 2 + 0.16]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 0.06, 0.04]} />
+        <mesh position={[-(roomWidth / 4 + 1.056), 1.2, -roomLength / 2 + 0.01 + 0.124]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
         {/* Wainscoting tường trước bên phải */}
-        <mesh position={[roomWidth / 4 + 1.056, 0.6, -roomLength / 2 + 0.14]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 1.2, 0.02]} />
+        <mesh position={[roomWidth / 4 + 1.056, 0.6, -roomLength / 2 + 0.01 + 0.112]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
-        <mesh position={[roomWidth / 4 + 1.056, 1.2, -roomLength / 2 + 0.16]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 0.06, 0.04]} />
+        <mesh position={[roomWidth / 4 + 1.056, 1.2, -roomLength / 2 + 0.01 + 0.124]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
 
         {/* Wainscoting tường sau bên trái */}
-        <mesh position={[-(roomWidth / 4 + 1.4), 0.6, roomLength / 2 - 0.14]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 1.2, 0.02]} />
+        <mesh position={[-(roomWidth / 4 + 1.056), 0.6, roomLength / 2 - 0.01 - 0.112]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
-        <mesh position={[-(roomWidth / 4 + 1.4), 1.2, roomLength / 2 - 0.16]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 0.06, 0.04]} />
+        <mesh position={[-(roomWidth / 4 + 1.056), 1.2, roomLength / 2 - 0.01 - 0.124]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
         {/* Wainscoting tường sau bên phải */}
-        <mesh position={[roomWidth / 4 + 1.056, 0.6, roomLength / 2 - 0.14]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 1.2, 0.02]} />
+        <mesh position={[roomWidth / 4 + 1.056, 0.6, roomLength / 2 - 0.01 - 0.112]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
-        <mesh position={[roomWidth / 4 + 1.056, 1.2, roomLength / 2 - 0.16]}>
-          <boxGeometry args={[roomWidth / 2 - 2.8, 0.06, 0.04]} />
+        <mesh position={[roomWidth / 4 + 1.056, 1.2, roomLength / 2 - 0.01 - 0.124]}>
+          <boxGeometry args={[roomWidth / 2 - 2.112, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
 

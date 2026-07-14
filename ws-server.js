@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Giới hạn số người tham quan đồng thời tối đa trong một phòng
-const MAX_USERS_PER_ROOM = 30;
+const MAX_USERS_PER_ROOM = 65;
 
 // Lưu trữ thông tin người chơi trực tuyến trong bộ nhớ
 // Cấu trúc: { [socketId]: { id, nickname, galleryId, x, y, z, yaw } }
@@ -13,6 +13,26 @@ const activeUsers = {};
 // Lưu trữ danh sách socket ID xếp hàng chờ cho từng phòng
 // Cấu trúc: { [socketRoom]: [socketId1, socketId2, ...] }
 const waitingQueues = {};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BATCH BROADCAST — Gom vị trí dirty, flush 10Hz thay vì broadcast từng cái
+// Giảm outbound messages từ ~33,000/s → ~6,500/s cho 65 người
+// ═══════════════════════════════════════════════════════════════════════════
+const dirtyUsers = new Set(); // Tập hợp socketId có vị trí thay đổi
+
+setInterval(() => {
+  if (dirtyUsers.size === 0) return;
+  // Gom tất cả user dirty thành 1 mảng
+  const batch = [];
+  for (const sid of dirtyUsers) {
+    if (activeUsers[sid]) batch.push(activeUsers[sid]);
+  }
+  dirtyUsers.clear();
+  if (batch.length > 0) {
+    // Gửi 1 lần duy nhất thay vì N lần riêng lẻ
+    io.to('museum-unified').emit('users-batch-moved', batch);
+  }
+}, 100); // 10Hz flush
 
 // Lưu trữ bảng xếp hạng game gốm sứ trong file/bộ nhớ
 const LEADERBOARD_FILE = path.join(__dirname, 'leaderboard.json');
@@ -38,10 +58,10 @@ const closingTimers = {};
 // Cấu trúc: { [roomId]: { isOpen: boolean } }
 // ═══════════════════════════════════════════════════════════════════════════
 const roomStates = {
-  'gallery-subsidy': { isOpen: true },
-  'gallery-paintings': { isOpen: true },
-  'gallery-sculptures': { isOpen: true },
-  'gallery-ceramics': { isOpen: true }
+  'gallery-subsidy': { isOpen: false },
+  'gallery-paintings': { isOpen: false },
+  'gallery-ceramics': { isOpen: false },
+  'gallery-market-economy': { isOpen: false }
 };
 
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
@@ -97,8 +117,16 @@ const server = http.createServer((req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: '*', // Cho phép kết nối từ mọi client (nhất là localhost:3000)
+    origin: '*',
     methods: ['GET', 'POST']
+  },
+  // Tối ưu cho 65 người — giảm băng thông, tăng độ ổn định
+  pingInterval: 25000,   // 25s thay vì 25s mặc định
+  pingTimeout: 20000,    // 20s timeout
+  transports: ['websocket'], // Bỏ polling, chỉ dùng WebSocket thuần
+  perMessageDeflate: {
+    threshold: 256,      // Nén payload > 256 bytes (batch ~65 users = ~3KB)
+    zlibDeflateOptions: { level: 1 }, // Nén nhanh, ít CPU nhất
   }
 });
 
@@ -134,18 +162,33 @@ io.on('connection', (socket) => {
     leaderboard.push({
       nickname: user.nickname,
       score: data.score,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: data.timeSpent !== undefined ? `${data.timeSpent}s` : '180s'
     });
 
-    // Sắp xếp giảm dần và giữ lại top 10
-    leaderboard.sort((a, b) => b.score - a.score);
+    // Sắp xếp giảm dần theo điểm và tăng dần theo thời gian (giây) làm bài
+    leaderboard.sort((a, b) => {
+      if (b.score !== a.score) {
+        return b.score - a.score;
+      }
+      const aSec = parseInt(a.time) || 180;
+      const bSec = parseInt(b.time) || 180;
+      return aSec - bSec;
+    });
+
     if (leaderboard.length > 10) {
       leaderboard.splice(10);
     }
 
+    // Ghi bảng xếp hạng mới vào file để lưu trữ lâu dài
+    try {
+      fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2), 'utf8');
+    } catch (e) {
+      console.error('Lỗi khi ghi file leaderboard.json:', e);
+    }
+
     // Phát sóng bảng xếp hạng mới nhất cho mọi người
     io.emit('leaderboard-updated', leaderboard);
-    console.log(`[LEADERBOARD] ${user.nickname} gửi điểm: ${data.score}. Bảng xếp hạng đã cập nhật.`);
+    console.log(`[LEADERBOARD] ${user.nickname} gửi điểm: ${data.score}, thời gian: ${data.timeSpent}s. Bảng xếp hạng đã cập nhật.`);
   });
 
   // 1. Khi người chơi tham gia phòng
@@ -180,7 +223,9 @@ io.on('connection', (socket) => {
       y: y || 1.7,
       z: z || 5,
       yaw: yaw || 0,
-      status: ''
+      status: '',
+      score: 0,
+      timeSpent: 9999
     };
 
     if (activeInRoom.length < MAX_USERS_PER_ROOM) {
@@ -232,13 +277,25 @@ io.on('connection', (socket) => {
       user.galleryId = 'gallery-subsidy';
     } else if (data.z > 54.0 && data.z <= 100.0) {
       user.galleryId = 'gallery-paintings';
-    } else if (data.z > 100.0) {
+    } else if (data.z > 100.0 && data.z <= 130.0) {
       user.galleryId = 'gallery-ceramics';
+    } else if (data.z > 130.0 && data.z <= 245.0) {
+      user.galleryId = 'gallery-market-economy';
     }
 
+    // Đánh dấu user này là dirty — sẽ được batch-broadcast sau 100ms
+    dirtyUsers.add(socket.id);
+  });
+
+  // 2.5. Khi người chơi hoàn thành minigame và cập nhật điểm số
+  socket.on('update-score', (data) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+    user.score = data.score;
     const socketRoom = getSocketRoom(user.galleryId);
-    // Phát sóng tọa độ mới cho những người dùng khác trong phòng
-    socket.to(socketRoom).emit('user-moved', user);
+    const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
+    io.to(socketRoom).emit('users-list', usersInRoom);
+    console.log(`[SCORE] ${user.nickname} (${socket.id}) cập nhật điểm: ${user.score}`);
   });
 
   // 3. Khi người chơi gửi tin nhắn Chat
@@ -274,9 +331,9 @@ io.on('connection', (socket) => {
     } else if (doorId === 'door-room2') {
       canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
     } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-sculptures']?.isOpen;
+      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-sculptures']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
+      canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
     }
 
     if (!canOpen) {
@@ -356,9 +413,9 @@ io.on('connection', (socket) => {
       relatedDoors.push('door-room1', 'door-room2');
     } else if (roomId === 'gallery-paintings') {
       relatedDoors.push('door-room2', 'door-room3');
-    } else if (roomId === 'gallery-sculptures') {
-      relatedDoors.push('door-room3', 'door-room4');
     } else if (roomId === 'gallery-ceramics') {
+      relatedDoors.push('door-room3', 'door-room4');
+    } else if (roomId === 'gallery-market-economy') {
       relatedDoors.push('door-room4');
     }
 
@@ -372,10 +429,10 @@ io.on('connection', (socket) => {
     let teleportTo = 'lobby';
     if (roomId === 'gallery-paintings') {
       teleportTo = 'gallery-subsidy';
-    } else if (roomId === 'gallery-sculptures') {
-      teleportTo = 'gallery-paintings';
     } else if (roomId === 'gallery-ceramics') {
-      teleportTo = 'gallery-sculptures';
+      teleportTo = 'gallery-paintings';
+    } else if (roomId === 'gallery-market-economy') {
+      teleportTo = 'gallery-ceramics';
     }
 
     // Đếm số người hiện đang ở trong phòng bị tắt
@@ -409,6 +466,42 @@ io.on('connection', (socket) => {
       }
       roomClosingTimers[roomId] = timer;
     }
+  });
+
+  // 6.5. ADMIN: TELEPORT TOÀN BỘ NGƯỜI CHƠI SANG PHÒNG ĐÍCH
+  socket.on('admin:teleport-all', (data) => {
+    const { targetRoom } = data;
+    console.log(`[ADMIN] Yêu cầu teleport toàn bộ người chơi sang phòng: "${targetRoom}"`);
+
+    // Kiểm tra xem phòng đích có đang bật không
+    if (targetRoom !== 'lobby' && (!roomStates[targetRoom] || !roomStates[targetRoom].isOpen)) {
+      socket.emit('admin:error', { message: 'Không thể dịch chuyển mọi người tới phòng đang tắt!' });
+      return;
+    }
+
+    let spawnPos = { x: 0, y: 0, z: -5.0 }; // lobby mặc định
+    if (targetRoom === 'gallery-subsidy') spawnPos = { x: 0, y: 3.0, z: 10.0 };
+    else if (targetRoom === 'gallery-paintings') spawnPos = { x: 0, y: 3.0, z: 56.0 };
+    else if (targetRoom === 'gallery-ceramics') spawnPos = { x: 0, y: 3.0, z: 102.0 };
+    else if (targetRoom === 'gallery-market-economy') spawnPos = { x: 0, y: 3.0, z: 133.0 };
+
+    let count = 0;
+    Object.keys(activeUsers).forEach(sid => {
+      const u = activeUsers[sid];
+      if (u.galleryId !== targetRoom) {
+        u.galleryId = targetRoom;
+        u.x = spawnPos.x;
+        u.y = spawnPos.y;
+        u.z = spawnPos.z;
+        
+        io.to(sid).emit('admin:teleported-by-force', { targetRoom, spawnPos });
+        count++;
+      }
+    });
+
+    // Cập nhật lại danh sách toàn bộ người chơi cho phòng để đồng bộ client
+    io.emit('users-list', Object.values(activeUsers));
+    console.log(`[ADMIN] Đã ép buộc dịch chuyển ${count} người chơi sang "${targetRoom}"`);
   });
 
   // 7. Khi người chơi ngắt kết nối

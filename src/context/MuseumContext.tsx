@@ -21,6 +21,8 @@ export interface MultiplayerUser {
   yaw: number;
   galleryId: string;
   status?: string;
+  score?: number;
+  timeSpent?: number;
 }
 
 // Vị trí spawn của các phòng trưng bày
@@ -29,6 +31,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
   'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
+  'gallery-market-economy': { x: 0, y: 3.0, z: 133.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -116,6 +119,13 @@ interface MuseumContextType {
   addClue: (clueId: string) => void;
   setRoomOneCompleted: (completed: boolean) => void;
   resetRoomOne: () => void;
+  sittingPosition: { x: number; y: number; z: number; rotationY?: number } | null;
+  setSittingPosition: (pos: { x: number; y: number; z: number; rotationY?: number } | null) => void;
+  sittingPrompt: 'sit' | 'stand' | null;
+  setSittingPrompt: (prompt: 'sit' | 'stand' | null) => void;
+
+  collectedCeramics: string[];
+  addCeramic: (id: string) => void;
 }
 
 export interface GameEvent {
@@ -139,6 +149,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [otherUsers, setOtherUsers] = useState<MultiplayerUser[]>([]);
   const otherUsersPositions = React.useRef<Record<string, MultiplayerUser>>({});
+  const hasJoinedRef = React.useRef<boolean>(false);
+  const loadedRoomIdsRef = React.useRef<Set<string>>(new Set());
   const [socket, setSocket] = useState<Socket | null>(null);
   const [localUserPos, setLocalUserPos] = useState<[number, number, number]>([0, 1.7, 5]);
   const [localUserYaw, setLocalUserYaw] = useState<number>(0);
@@ -150,10 +162,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // ═══ Door & Room State ═══
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
-    'gallery-subsidy': { isOpen: true },
-    'gallery-paintings': { isOpen: true },
-    'gallery-sculptures': { isOpen: true },
-    'gallery-ceramics': { isOpen: true }
+    'gallery-subsidy': { isOpen: false },
+    'gallery-paintings': { isOpen: false },
+    'gallery-ceramics': { isOpen: false },
+    'gallery-market-economy': { isOpen: false }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
@@ -183,6 +195,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // --- Gameplay States ---
   const [cluesCollected, setCluesCollected] = useState<string[]>([]);
   const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
+  const [sittingPosition, setSittingPosition] = useState<{ x: number; y: number; z: number; rotationY?: number } | null>(null);
+  const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
+  const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
 
   // Reset gameplay progress khi đổi người chơi trong phiên hiện tại.
   // Không lưu localStorage để người chơi mới không bị kế thừa sổ điều tra/câu hỏi từ người trước.
@@ -202,18 +217,67 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setRoomOneCompleted(completed);
   }, []);
 
+  // Sync Room 3 gameplay progress (collectedCeramics)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!nickname) {
+      setCollectedCeramics([]);
+      return;
+    }
+
+    const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
+    const savedProgress = localStorage.getItem(progressKey);
+
+    if (!savedProgress) {
+      setCollectedCeramics([]);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(savedProgress) as {
+        collectedCeramics?: string[];
+      };
+      setCollectedCeramics(Array.isArray(parsed.collectedCeramics) ? parsed.collectedCeramics : []);
+    } catch (e) {
+      console.error('Lỗi phân tích tiến trình Room 3:', e);
+      setCollectedCeramics([]);
+    }
+  }, [nickname]);
+
+  const addCeramic = useCallback((ceramicId: string) => {
+    setCollectedCeramics((prev) => {
+      if (prev.includes(ceramicId)) return prev;
+      const updated = [...prev, ceramicId];
+      if (typeof window !== 'undefined' && nickname) {
+        const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
+        localStorage.setItem(progressKey, JSON.stringify({
+          collectedCeramics: updated,
+        }));
+      }
+      return updated;
+    });
+  }, [nickname]);
+
   const resetRoomOne = useCallback(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
+    setCollectedCeramics([]);
     if (typeof window !== 'undefined') {
       // Dọn các key cũ để tránh dữ liệu cũ còn tồn tại trong browser.
       Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('roomOneProgress:') || key.startsWith('museum_room1_failed_quizzes')) {
+        if (
+          key.startsWith('roomOneProgress:') ||
+          key.startsWith('roomThreeProgress:') ||
+          key.startsWith('museum_room1_failed_quizzes')
+        ) {
           localStorage.removeItem(key);
         }
       });
+      // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
+      localStorage.removeItem('collectedCeramics');
     }
   }, []);
 
@@ -270,10 +334,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const currentEvents = orderedEventsRef.current;
           const correctCount = currentEvents.filter((event, idx) => event.sortOrder === idx).length;
           const finalScore = correctCount * 10;
-          
+
           setScore(finalScore);
           setGameState('lost');
-          socket?.emit('submit-score', { score: finalScore });
+          socket?.emit('submit-score', { score: finalScore, timeSpent: 180 });
           socket?.emit('update-status', '');
           return 0;
         }
@@ -302,27 +366,21 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setLastCheckResults(results);
 
     const correctCount = results.filter(r => r === true).length;
-    
-    if (correctCount === 9) {
-      // Đúng hết cả 9 câu -> 100 điểm
-      setScore(100);
-      setGameState('won');
-      socket?.emit('submit-score', { score: 100 });
-      socket?.emit('update-status', '');
-    } else {
-      // Không đúng hết -> mỗi câu đúng được 10 điểm
-      const currentScore = correctCount * 10;
-      setScore(currentScore);
-      // Phạt trừ 5 giây cho mỗi lần check sai thứ tự
-      setTimeLeft((prev) => Math.max(0, prev - 5));
-    }
-  }, [orderedEvents, socket]);
+    const finalScore = correctCount === 9 ? 100 : correctCount * 10;
+
+    const timeSpent = 180 - timeLeft;
+
+    setScore(finalScore);
+    setGameState('won'); // Kết thúc game và chuyển thẳng sang màn hình kết quả luôn
+    socket?.emit('submit-score', { score: finalScore, timeSpent });
+    socket?.emit('update-status', '');
+  }, [orderedEvents, timeLeft, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
-    preset: 'medium',
+    preset: 'low',
     shadows: false,
-    animations: true,
-    maxAvatars: 99,
+    animations: false,
+    maxAvatars: 10,    // Chỉ render 10 avatar gần nhất — đủ thấy nhau, không lag GPU
     reducedLights: false,
   });
 
@@ -379,6 +437,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // TẢI PHÒNG ĐỘNG KHI CỬA MỞ (Dynamic Room Loading)
   // ═══════════════════════════════════════════════════════════════════════════
   const loadRoom = useCallback(async (galleryId: string) => {
+    if (loadedRoomIdsRef.current.has(galleryId)) return;
+    loadedRoomIdsRef.current.add(galleryId);
+
     try {
       const [galleriesRes, exhibitsRes] = await Promise.all([
         fetch('/api/galleries'),
@@ -396,11 +457,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return [...prev, { galleryId, exhibits, gallery }];
       });
     } catch (err) {
+      loadedRoomIdsRef.current.delete(galleryId);
       console.error(`[ROOM-LOAD-ERROR] Lỗi tải phòng "${galleryId}":`, err);
     }
   }, []);
 
   const unloadRoom = useCallback((galleryId: string) => {
+    loadedRoomIdsRef.current.delete(galleryId);
     setLoadedRooms(prev => prev.filter(r => r.galleryId !== galleryId));
     console.log(`[ROOM-UNLOADED] Phòng "${galleryId}" đã được dỡ bỏ.`);
   }, []);
@@ -418,6 +481,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     newSocket.on('connect', () => {
       console.log('Đã kết nối Socket.io server:', newSocket.id);
+      hasJoinedRef.current = false;
     });
 
     // ── Door Events ──
@@ -480,6 +544,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       });
     });
 
+    newSocket.on('admin:teleported-by-force', (data: { targetRoom: string; spawnPos: { x: number; y: number; z: number } }) => {
+      setCurrentRoom(data.targetRoom);
+      setTeleportTarget(data.spawnPos);
+      console.log(`[ADMIN-TELEPORT] Bạn đã bị admin dịch chuyển bắt buộc sang phòng "${data.targetRoom}" tại tọa độ:`, data.spawnPos);
+    });
+
     // ── Multiplayer Events ──
     newSocket.on('join-success', () => {
       setInQueue(false);
@@ -520,6 +590,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       otherUsersPositions.current[user.id] = user;
     });
 
+    // Batch handler — nhận tất cả vị trí thay đổi trong 1 event (10Hz flush từ server)
+    newSocket.on('users-batch-moved', (users: MultiplayerUser[]) => {
+      for (const user of users) {
+        otherUsersPositions.current[user.id] = user;
+      }
+    });
+
     newSocket.on('user-left', (userId: string) => {
       setOtherUsers(prev => prev.filter(u => u.id !== userId));
       delete otherUsersPositions.current[userId];
@@ -547,22 +624,25 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, []);
 
-  // Join room khi có nickname + activeGallery
+  // Join room khi có nickname (chỉ join một lần duy nhất lúc khởi động/kết nối)
   useEffect(() => {
     if (!socket || !socket.connected) return;
-    if (!nickname || !activeGallery) return;
+    if (!nickname) return;
+    if (hasJoinedRef.current) return;
 
-    const spawn = SPAWN_POINTS[activeGallery.id] || { x: 0, y: 3.0, z: -5.0 };
+    hasJoinedRef.current = true;
+    const initialRoomId = activeGallery?.id || 'lobby';
+    const spawn = SPAWN_POINTS[initialRoomId] || { x: 0, y: 3.0, z: -5.0 };
 
     socket.emit('join-room', {
       nickname,
-      galleryId: activeGallery.id,
+      galleryId: initialRoomId,
       x: spawn.x,
       y: 0,
       z: spawn.z,
       yaw: localUserYaw,
     });
-  }, [socket, nickname, activeGallery]);
+  }, [socket, nickname, activeGallery?.id]);
 
   // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình là 'medium' và phòng đó đang bật
   useEffect(() => {
@@ -578,6 +658,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (roomStates['gallery-subsidy']?.isOpen) loadRoom('gallery-subsidy');
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
+      if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 
@@ -592,66 +673,19 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
   }, [settings.preset, roomStates, loadRoom]);
 
-  // Nếu chuyển đổi cấu hình sang 'low', dỡ bỏ ngay những phòng đang tắt hoặc đóng để giải phóng bộ nhớ GPU
-  useEffect(() => {
-    if (settings.preset === 'low') {
-      const allOpenTargets = Object.values(doorStates)
-        .filter(s => s.isOpen)
-        .map(s => s.targetRoom);
-
-      setLoadedRooms(prev => {
-        const filtered = prev.filter(room => roomStates[room.galleryId]?.isOpen && allOpenTargets.includes(room.galleryId));
-        if (filtered.length !== prev.length) {
-          console.log('[ROOM-UNLOADED] [PRESET-SWITCH] Đã dỡ các phòng đóng/tắt để tiết kiệm tài nguyên ở Preset Thấp.');
-        }
-        return filtered;
-      });
-    }
-  }, [settings.preset, doorStates, roomStates]);
-
   // ═══════════════════════════════════════════════════════════════════════════
-  // TỰ ĐỘNG TẢI/DỠ PHÒNG KHI PHÒNG BẬT/TẮT VÀ CỬA MỞ/ĐÓNG
+  // TỰ ĐỘNG TẢI/DỠ PHÒNG TRIỂN LÃM ĐỘNG (GIẢI PHÓNG GPU KHI TẮT PHÒNG)
   // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
-    // 1. Tải phòng động theo trạng thái Bật/Tắt của phòng
+    // Tải phòng vào bộ nhớ/GPU nếu phòng đó được Admin bật, dỡ bỏ ngay lập tức nếu bị tắt
     for (const [galleryId, rState] of Object.entries(roomStates)) {
       if (rState.isOpen) {
-        // Tải phòng khi bật
-        const isDoorOpenOrPreloaded = settings.preset !== 'low' || Object.values(doorStates).some(
-          d => d.targetRoom === galleryId && d.isOpen
-        );
-        if (isDoorOpenOrPreloaded) {
-          loadRoom(galleryId);
-        }
+        loadRoom(galleryId);
       } else {
-        // Dỡ phòng khi tắt ngay lập tức
         unloadRoom(galleryId);
       }
     }
-
-    // 2. Tải/Dỡ phòng khi cửa mở/đóng đối với preset 'low'
-    for (const [doorId, dState] of Object.entries(doorStates)) {
-      if (dState.isOpen && dState.targetRoom) {
-        if (roomStates[dState.targetRoom]?.isOpen) {
-          loadRoom(dState.targetRoom);
-        }
-      }
-
-      if (!dState.isOpen && dState.targetRoom === '' && settings.preset === 'low') {
-        const allOpenTargets = Object.values(doorStates)
-          .filter(s => s.isOpen)
-          .map(s => s.targetRoom);
-
-        setLoadedRooms(prev => prev.filter(room => {
-          if (!roomStates[room.galleryId]?.isOpen || !allOpenTargets.includes(room.galleryId)) {
-            console.log(`[ROOM-UNLOADED] [LOW-PRESET] Phòng "${room.galleryId}" đã được dỡ bỏ khi đóng cửa.`);
-            return false;
-          }
-          return true;
-        }));
-      }
-    }
-  }, [doorStates, roomStates, loadRoom, unloadRoom, settings.preset]);
+  }, [roomStates, loadRoom, unloadRoom]);
 
   return (
     <MuseumContext.Provider
@@ -715,6 +749,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addClue,
         setRoomOneCompleted: handleSetRoomOneCompleted,
         resetRoomOne,
+        sittingPosition,
+        setSittingPosition,
+        sittingPrompt,
+        setSittingPrompt,
+        collectedCeramics,
+        addCeramic,
       }}
     >
       {children}

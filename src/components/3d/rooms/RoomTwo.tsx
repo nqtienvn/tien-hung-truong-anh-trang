@@ -1,43 +1,383 @@
-import React from 'react';
-import * as THREE from 'three';
-import { useMuseum } from '@/context/MuseumContext';
-import { BaseRoom, BaseRoomProps } from './BaseRoom';
+"use client";
 
-export const RoomTwo: React.FC<BaseRoomProps> = ({ 
-  galleryId, 
-  customSettings, 
-  isVisible = true 
+import React, { useState, useMemo } from "react";
+import * as THREE from "three";
+import { useMuseum } from "@/context/MuseumContext";
+import { BaseRoom, BaseRoomProps } from "./BaseRoom";
+
+interface DelegateChairProps {
+  localX: number;
+  localZ: number;
+  localY?: number;
+  rotationY?: number;
+}
+
+const DelegateChair: React.FC<DelegateChairProps> = ({
+  localX,
+  localZ,
+  localY = 0,
+  rotationY = -Math.PI / 2,
 }) => {
-  const { activeGallery } = useMuseum();
+  return (
+    <group position={[localX, localY, localZ]} rotation={[0, rotationY, 0]}>
+      {/* Chân ghế kim loại */}
+      <mesh position={[0, 0.2, 0]}>
+        <cylinderGeometry args={[0.04, 0.04, 0.4, 8]} />
+        <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
+      </mesh>
+      {/* Chân đế sao */}
+      <mesh position={[0, 0.02, 0]}>
+        <cylinderGeometry args={[0.2, 0.2, 0.04, 6]} />
+        <meshStandardMaterial color="#334155" metalness={0.8} roughness={0.2} />
+      </mesh>
+
+      {/* Đệm ngồi màu đỏ */}
+      <mesh position={[0, 0.42, 0]}>
+        <boxGeometry args={[0.68, 0.08, 0.6]} />
+        <meshStandardMaterial color="#7f1d1d" roughness={0.65} />
+      </mesh>
+
+      {/* Tựa lưng ghế */}
+      <mesh position={[0, 0.78, -0.26]} rotation={[0.05, 0, 0]}>
+        <boxGeometry args={[0.65, 0.68, 0.08]} />
+        <meshStandardMaterial color="#7f1d1d" roughness={0.65} />
+      </mesh>
+
+      {/* Tay vịn hai bên */}
+      {[-0.36, 0.36].map((xSide, i) => (
+        <group key={i} position={[xSide, 0.58, 0.05]}>
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[0.04, 0.24, 0.5]} />
+            <meshStandardMaterial color="#1e293b" roughness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.12, 0]}>
+            <boxGeometry args={[0.06, 0.03, 0.52]} />
+            <meshStandardMaterial color="#0f172a" roughness={0.9} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+export const RoomTwo: React.FC<BaseRoomProps> = ({
+  galleryId,
+  customSettings,
+  isVisible = true,
+}) => {
+  const { activeGallery, settings } = useMuseum();
 
   // Đọc cấu hình động hoặc fallback về mặc định
-  const roomHeight = customSettings?.room_height ?? activeGallery?.room_height ?? 6;
-  const wallColor = customSettings?.wall_color ?? activeGallery?.wall_color ?? '#8a1923';
-  const wainscotingColor = customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#eae5dc';
+  const roomHeight =
+    customSettings?.room_height ?? activeGallery?.room_height ?? 6;
+
+  // Tạo texture trình chiếu slide bài học bằng Canvas 2D
+  const slideTexture = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 768;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      // Phông nền trắng tinh tế
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 1024, 768);
+
+      // Viền kép đen lịch sự, chuyên nghiệp
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 12;
+      ctx.strokeRect(20, 20, 984, 728);
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(32, 32, 960, 704);
+
+      // Nội dung trích dẫn duy nhất (cỡ chữ siêu lớn, in đậm để nhìn rõ từ cuối phòng)
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#000000";
+      ctx.font = 'bold 48px "Segoe UI", Arial, sans-serif';
+      
+      ctx.fillText(
+        "Trong những năm gần đây,",
+        512,
+        320,
+      );
+      ctx.fillText(
+        "giá cả nhiều mặt hàng tăng nhanh,",
+        512,
+        395,
+      );
+      ctx.fillText(
+        "đời sống nhân dân gặp nhiều khó khăn.",
+        512,
+        470,
+      );
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, []);
+
+  // Tọa độ X của 5 dãy bàn dọc (xếp từ trái sang phải, tạo thành 5 cột bàn ghế)
+  const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
+
+  // Vị trí Z của 12 ghế trong mỗi cột bàn (gồm 6 ghế dãy trước và 6 ghế dãy sau)
+  const frontChairZs = [-14.5, -12.5, -10.5, -8.5, -6.5, -4.5];
+  const backChairZs = [4.5, 6.5, 8.5, 10.5, 12.5, 14.5];
 
   return (
-    <BaseRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible}>
-        {/* Ghế băng dài cổ điển trong Phòng Tranh */}
-        {[8.0, 18.0].map((zPos, idx) => (
-          <group key={`bench-${idx}`} position={[0, 0, zPos]}>
-            <mesh position={[0, 0.45, 0]}>
-              <boxGeometry args={[4.0, 0.15, 1.2]} />
-              <meshStandardMaterial color="#4e2c1e" roughness={0.5} />
+    <BaseRoom
+      galleryId={galleryId}
+      customSettings={customSettings}
+      isVisible={isVisible}
+    >
+      {/* ═══ 1. KHU VỰC KHÁN ĐÀI BỤC ĐẠI BIỂU DỌC THEO TƯỜNG TRÁI (Local X: -11.5 -> -8.0) ═══ */}
+      <group position={[-9.8, 0, 0]}>
+        {/* Sân khấu gỗ nổi cao 0.4m, chạy dọc theo trục Z */}
+        <mesh position={[0, 0.2, 0]}>
+          <boxGeometry args={[3.2, 0.4, 15.0]} />
+          <meshStandardMaterial color="#2d1a11" roughness={0.4} />
+        </mesh>
+        {/* Thảm đỏ sân khấu */}
+        <mesh position={[0, 0.41, 0]}>
+          <boxGeometry args={[2.9, 0.02, 14.6]} />
+          <meshStandardMaterial color="#991b1b" roughness={0.9} />
+        </mesh>
+
+        {/* Tường vách phông gỗ phía sau sân khấu (ốp sát tường trái X = -11.9) */}
+        <mesh position={[-1.9, 2.7, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <boxGeometry args={[15.0, 5.0, 0.15]} />
+          <meshStandardMaterial color="#311005" roughness={0.6} />
+        </mesh>
+        {/* Tấm phông đỏ giữa bục sân khấu */}
+        <mesh position={[-1.81, 2.7, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <boxGeometry args={[6.0, 4.0, 0.02]} />
+          <meshStandardMaterial color="#b91c1c" roughness={0.9} />
+        </mesh>
+
+        {/* Tượng Bác Hồ đặt trang nghiêm phía bên phải sân khấu (Z > 0) */}
+        <group position={[0.2, 0.4, 3.5]}>
+          <mesh position={[0, 0.5, 0]}>
+            <boxGeometry args={[0.6, 1.0, 0.6]} />
+            <meshStandardMaterial color="#4a2b1b" roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 1.02, 0]}>
+            <boxGeometry args={[0.7, 0.05, 0.7]} />
+            <meshStandardMaterial color="#d4af37" metalness={0.8} />
+          </mesh>
+          <mesh position={[0, 1.4, 0]}>
+            <cylinderGeometry args={[0.13, 0.19, 0.7, 12]} />
+            <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
+          </mesh>
+          <mesh position={[0, 1.8, 0]}>
+            <sphereGeometry args={[0.16, 12, 12]} />
+            <meshStandardMaterial color="#f1f5f9" roughness={0.9} />
+          </mesh>
+        </group>
+
+        {/* Cột cờ hai đầu sân khấu */}
+        {[-5.8, 5.8].map((zPos, idx) => (
+          <group key={`flag-${idx}`} position={[0.2, 0.4, zPos]}>
+            <mesh position={[0, 1.8, 0]}>
+              <cylinderGeometry args={[0.03, 0.03, 3.6, 8]} />
+              <meshStandardMaterial color="#cbd5e1" metalness={0.9} />
             </mesh>
-            <mesh position={[0, 0.32, 0]}>
-              <boxGeometry args={[4.1, 0.1, 1.3]} />
-              <meshStandardMaterial color="#27150c" roughness={0.3} />
-            </mesh>
-            <mesh position={[-1.7, 0.15, 0]}>
-              <boxGeometry args={[0.2, 0.3, 1.1]} />
-              <meshStandardMaterial color="#1b110b" roughness={0.4} />
-            </mesh>
-            <mesh position={[1.7, 0.15, 0]}>
-              <boxGeometry args={[0.2, 0.3, 1.1]} />
-              <meshStandardMaterial color="#1b110b" roughness={0.4} />
+            <mesh
+              position={[0, 3.0, idx === 0 ? -0.5 : 0.5]}
+              rotation={[0, Math.PI / 2, 0]}
+            >
+              <boxGeometry args={[1.0, 0.7, 0.03]} />
+              <meshStandardMaterial color="#b91c1c" roughness={0.8} />
             </mesh>
           </group>
         ))}
+      </group>
+
+      {/* Bàn Chủ tọa Đoàn Chủ tịch quay sang phải */}
+      <group position={[0.6, 0.4, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 0.375, 0]}>
+          <boxGeometry args={[5.2, 0.75, 0.8]} />
+          <meshStandardMaterial color="#7f1d1d" roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.76, 0]}>
+          <boxGeometry args={[5.3, 0.05, 0.85]} />
+          <meshStandardMaterial color="#3f2314" roughness={0.25} />
+        </mesh>
+        {/* Micro cổ ngỗng Chủ tọa */}
+        {[-1.5, 0, 1.5].map((xMic, i) => (
+          <group key={i} position={[xMic, 0.8, -0.2]}>
+            <mesh>
+              <cylinderGeometry args={[0.02, 0.02, 0.15, 8]} />
+              <meshStandardMaterial color="#1e293b" metalness={0.9} />
+            </mesh>
+            <mesh position={[0, 0.14, 0.05]} rotation={[-Math.PI / 4, 0, 0]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.25, 8]} />
+              <meshStandardMaterial color="#0f172a" />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {/* Màn hình LED phẳng khổng lồ đặt trước cột tường bên cạnh sân khấu (Z local = -12.5m và 12.5m) */}
+      {[-12.5, 12.5].map((zPos, idx) => (
+        <group
+          key={`led-wall-${idx}`}
+          position={[-1.64, 3.5, zPos]}
+          rotation={[0, Math.PI / 2, 0]}
+        >
+          {/* Khung viền màn hình */}
+          <mesh>
+            <boxGeometry args={[10.6, 3.9, 0.03]} />
+            <meshStandardMaterial
+              color="#1e293b"
+              roughness={0.8}
+              metalness={0.5}
+            />
+          </mesh>
+          {/* Tấm nền hiển thị slide */}
+          <mesh position={[0, 0, 0.02]}>
+            <planeGeometry args={[10.5, 3.8]} />
+            <meshBasicMaterial
+              map={slideTexture || undefined}
+              color={slideTexture ? "#ffffff" : "#0284c7"}
+            />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Bục phát biểu (Podium) hướng sang bên phải */}
+      <group position={[0.6, 0.4, -3.8]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 0.5, 0]}>
+          <boxGeometry args={[0.5, 1.0, 0.4]} />
+          <meshStandardMaterial color="#5c2d18" roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 1.02, 0.02]} rotation={[Math.PI / 12, 0, 0]}>
+          <boxGeometry args={[0.56, 0.05, 0.46]} />
+          <meshStandardMaterial color="#3f1a0a" roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1.15, 0]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
+          <meshStandardMaterial color="#000" metalness={0.9} />
+        </mesh>
+      </group>
+
+      {/* BẬC THANG BÊ TÔNG HỘI TRƯỜNG (Stepped Platforms) */}
+      <group>
+        {/* Bậc 2 (Column 2) */}
+        <mesh position={[-1.8, 0.15, 0]}>
+          <boxGeometry args={[3.2, 0.3, 34.0]} />
+          <meshStandardMaterial color="#1e293b" roughness={0.9} />
+        </mesh>
+        {/* Bậc 3 (Column 3) */}
+        <mesh position={[1.4, 0.3, 0]}>
+          <boxGeometry args={[3.2, 0.6, 34.0]} />
+          <meshStandardMaterial color="#1e293b" roughness={0.9} />
+        </mesh>
+        {/* Bậc 4 (Column 4) */}
+        <mesh position={[4.6, 0.45, 0]}>
+          <boxGeometry args={[3.2, 0.9, 34.0]} />
+          <meshStandardMaterial color="#1e293b" roughness={0.9} />
+        </mesh>
+        {/* Bậc 5 (Column 5) */}
+        <mesh position={[9.1, 0.6, 0]}>
+          <boxGeometry args={[5.8, 1.2, 34.0]} />
+          <meshStandardMaterial color="#1e293b" roughness={0.9} />
+        </mesh>
+      </group>
+
+      {/* ═══ 2. KHU VỰC GHẾ NGỒI ĐẠI BIỂU DỌC PHÒNG (Bố cục bậc thang 60 ghế) ═══ */}
+      <group>
+        {deskXCoords.map((xCol, colIndex) => {
+          // Hàm tính độ cao bậc dựa theo cột X
+          const getTierY = (xVal: number) => {
+            if (xVal < -3.4) return 0.0;
+            if (xVal < -0.2) return 0.3;
+            if (xVal < 3.0) return 0.6;
+            if (xVal < 6.2) return 0.9;
+            return 1.2;
+          };
+          const tierY = getTierY(xCol);
+
+          return (
+            <group key={`col-${colIndex}`}>
+              {/* BÀN DÃY TRƯỚC */}
+              <group position={[xCol - 1.0, tierY, -9.5]}>
+                <mesh position={[0, 0.35, 0]}>
+                  <boxGeometry args={[0.5, 0.7, 11.0]} />
+                  <meshStandardMaterial color="#653b1b" roughness={0.4} />
+                </mesh>
+                <mesh position={[0, 0.725, 0]}>
+                  <boxGeometry args={[0.56, 0.05, 11.06]} />
+                  <meshStandardMaterial color="#3a1e0b" roughness={0.3} />
+                </mesh>
+                {frontChairZs.map((zChair, idx) => (
+                  <group
+                    key={`term-front-${idx}`}
+                    position={[0.05, 0.75, zChair - -9.5]}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 8]}
+                  >
+                    <mesh position={[0, 0.08, 0]}>
+                      <boxGeometry args={[0.3, 0.2, 0.04]} />
+                      <meshStandardMaterial color="#1e293b" metalness={0.8} />
+                    </mesh>
+                    <mesh position={[0, 0.08, 0.025]}>
+                      <planeGeometry args={[0.26, 0.17]} />
+                      <meshBasicMaterial color="#0891b2" />
+                    </mesh>
+                  </group>
+                ))}
+              </group>
+
+              {/* BÀN DÃY SAU */}
+              <group position={[xCol - 1.0, tierY, 9.5]}>
+                <mesh position={[0, 0.35, 0]}>
+                  <boxGeometry args={[0.5, 0.7, 11.0]} />
+                  <meshStandardMaterial color="#653b1b" roughness={0.4} />
+                </mesh>
+                <mesh position={[0, 0.725, 0]}>
+                  <boxGeometry args={[0.56, 0.05, 11.06]} />
+                  <meshStandardMaterial color="#3a1e0b" roughness={0.3} />
+                </mesh>
+                {backChairZs.map((zChair, idx) => (
+                  <group
+                    key={`term-back-${idx}`}
+                    position={[0.05, 0.75, zChair - 9.5]}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 8]}
+                  >
+                    <mesh position={[0, 0.08, 0]}>
+                      <boxGeometry args={[0.3, 0.2, 0.04]} />
+                      <meshStandardMaterial color="#1e293b" metalness={0.8} />
+                    </mesh>
+                    <mesh position={[0, 0.08, 0.025]}>
+                      <planeGeometry args={[0.26, 0.17]} />
+                      <meshBasicMaterial color="#0891b2" />
+                    </mesh>
+                  </group>
+                ))}
+              </group>
+
+              {/* GHẾ ĐẠI BIỂU */}
+              {frontChairZs.map((zChair, idx) => (
+                <DelegateChair
+                  key={`chair-front-${idx}`}
+                  localX={xCol - 0.4}
+                  localY={tierY}
+                  localZ={zChair}
+                  rotationY={-Math.PI / 2}
+                />
+              ))}
+              {backChairZs.map((zChair, idx) => (
+                <DelegateChair
+                  key={`chair-back-${idx}`}
+                  localX={xCol - 0.4}
+                  localY={tierY}
+                  localZ={zChair}
+                  rotationY={-Math.PI / 2}
+                />
+              ))}
+            </group>
+          );
+        })}
+      </group>
     </BaseRoom>
   );
 };

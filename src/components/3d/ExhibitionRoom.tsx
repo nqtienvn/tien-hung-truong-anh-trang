@@ -2,6 +2,7 @@ import React from 'react';
 import RoomOne from './rooms/RoomOne';
 import RoomTwo from './rooms/RoomTwo';
 import RoomThree from './rooms/RoomThree';
+import RoomFour from './rooms/RoomFour';
 import BaseRoom from './rooms/BaseRoom';
 
 interface ExhibitionRoomProps {
@@ -33,6 +34,10 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = (props) => {
 
   if (galleryId === 'gallery-ceramics') {
     return <RoomThree {...props} />;
+  }
+
+  if (galleryId === 'gallery-market-economy') {
+    return <RoomFour {...props} />;
   }
 
   // Fallback cho phòng mới trong tương lai
