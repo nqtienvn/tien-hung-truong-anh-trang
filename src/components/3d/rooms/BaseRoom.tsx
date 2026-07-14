@@ -196,21 +196,21 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
 
         {/* Ốp gỗ chân tường (Wainscoting) màu kem sáng cao 1.2m */}
         {/* Wainscoting tường trái */}
-        <mesh position={[-roomWidth / 2 + 0.112, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[-roomWidth / 2 + 0.14, 0.6, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
-        <mesh position={[-roomWidth / 2 + 0.124, 1.2, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[-roomWidth / 2 + 0.16, 1.2, 0]} rotation={[0, Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>
 
         {/* Wainscoting tường phải */}
-        <mesh position={[roomWidth / 2 - 0.112, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <mesh position={[roomWidth / 2 - 0.14, 0.6, 0]} rotation={[0, -Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, 1.2, 0.02]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.5} />
         </mesh>
-        <mesh position={[roomWidth / 2 - 0.124, 1.2, 0]} rotation={[0, -Math.PI / 2, 0]}>
+        <mesh position={[roomWidth / 2 - 0.16, 1.2, 0]} rotation={[0, -Math.PI / 2, 0]}>
           <boxGeometry args={[roomLength, 0.06, 0.04]} />
           <meshStandardMaterial color={wainscotingColor} roughness={0.4} />
         </mesh>

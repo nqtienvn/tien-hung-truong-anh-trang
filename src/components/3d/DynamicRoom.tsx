@@ -31,8 +31,8 @@ interface DynamicRoomProps {
 // Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..280
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
-  'gallery-paintings': { z: 77.0, y: 3.0 },    // Phòng 2: Hội họa   (Z 54 → 100)
-  'gallery-ceramics': { z: 115.0, y: 3.0 },    // Phòng 3: Gốm sứ    (Z 100 → 130)
+  'gallery-paintings': { z: 77.35, y: 3.0 },   // Phòng 2: đẩy lùi 0.35 để tránh z-fighting với tường sau phòng 1
+  'gallery-ceramics': { z: 115.7, y: 3.0 },    // Phòng 3: giữ khoảng hở nhỏ tương tự với phòng 2
   'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 280)
 };
 
@@ -118,7 +118,12 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
     <group ref={groupRef} position={[0, offsetY, offsetZ]}>
       <Suspense fallback={null}>
         {/* Phòng triển lãm */}
-        <ExhibitionRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} />
+        <ExhibitionRoom
+          galleryId={galleryId}
+          customSettings={customSettings}
+          isVisible={isVisible}
+          ropeBarriersConfig={gallery?.rope_barriers_config}
+        />
 
         {/* Các hiện vật trong phòng - Load từ từ từng cái một để giảm lag */}
         {exhibits.slice(0, visibleCount).map((exhibit) => (

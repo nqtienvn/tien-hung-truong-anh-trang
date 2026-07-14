@@ -18,13 +18,14 @@ interface ExhibitionRoomProps {
   };
   isVisible?: boolean;
   onRopeClick?: (ropeIndex: number) => void;
+  ropeBarriersConfig?: string;
 }
 
 export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = (props) => {
   const { galleryId } = props;
 
   if (galleryId === 'gallery-subsidy') {
-    return <RoomOne {...props} />;
+    return <RoomOne {...props} ropeBarriersConfig={props.ropeBarriersConfig} />;
   }
 
   if (galleryId === 'gallery-paintings') {

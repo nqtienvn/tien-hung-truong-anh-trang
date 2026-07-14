@@ -58,11 +58,16 @@ const VelvetRopeBarrier: React.FC<{
   );
 };
 
-export const RoomOne: React.FC<BaseRoomProps> = ({ 
+type RoomOneProps = BaseRoomProps & {
+  ropeBarriersConfig?: string;
+};
+
+export const RoomOne: React.FC<RoomOneProps> = ({ 
   galleryId, 
   customSettings, 
   isVisible = true,
-  onRopeClick
+  onRopeClick,
+  ropeBarriersConfig
 }) => {
   const { activeGallery } = useMuseum();
 
@@ -71,7 +76,7 @@ export const RoomOne: React.FC<BaseRoomProps> = ({
   const DEFAULT_ROPE = { xOffset: 0, zOffset: 0 };
   let ropeConfigs: Array<{ xOffset: number; zOffset: number }> = Array(6).fill(DEFAULT_ROPE);
   try {
-    const raw = (customSettings as any)?.rope_barriers_config ?? activeGallery?.rope_barriers_config;
+    const raw = ropeBarriersConfig ?? (customSettings as any)?.rope_barriers_config ?? activeGallery?.rope_barriers_config;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length === 6) ropeConfigs = parsed;
@@ -94,147 +99,8 @@ export const RoomOne: React.FC<BaseRoomProps> = ({
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={overriddenSettings} isVisible={isVisible}>
-      {/* 1. TƯỜNG NGĂN CHIA PHÒNG CHỮ S - PHÂN ĐOẠN 1 (Z = 3.0) */}
-      <group>
-        {/* Mảnh tường trái (X: -12 đến -5) */}
-        <mesh position={[-8.5, roomHeight / 2, 3.0]}>
-          <boxGeometry args={[7.0, roomHeight, 0.4]} />
-          <meshStandardMaterial color={wallColor} roughness={0.8} />
-        </mesh>
-        {/* Trụ ốp góc trái */}
-        <mesh position={[-12.0 + 0.05, roomHeight / 2, 3.0]}>
-          <boxGeometry args={[0.1, roomHeight, 0.48]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.9} />
-        </mesh>
-        {/* Trụ ốp cổng trái */}
-        <mesh position={[-5.0 - 0.05, roomHeight / 2, 3.0]}>
-          <boxGeometry args={[0.1, roomHeight, 0.48]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.9} />
-        </mesh>
-        
-        {/* Wainscoting mặt trước & sau */}
-        <mesh position={[-8.5, 0.6, 3.0 - 0.212]}>
-          <boxGeometry args={[7.0, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.7} />
-        </mesh>
-        <mesh position={[-8.5, 1.2, 3.0 - 0.224]}>
-          <boxGeometry args={[7.0, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.6} />
-        </mesh>
-        <mesh position={[-8.5, 0.6, 3.0 + 0.212]}>
-          <boxGeometry args={[7.0, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.7} />
-        </mesh>
-        <mesh position={[-8.5, 1.2, 3.0 + 0.224]}>
-          <boxGeometry args={[7.0, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.6} />
-        </mesh>
-
-        {/* Mảnh tường phải (X: -2 đến 12) */}
-        <mesh position={[5.0, roomHeight / 2, 3.0]}>
-          <boxGeometry args={[14.0, roomHeight, 0.4]} />
-          <meshStandardMaterial color={wallColor} roughness={0.8} />
-        </mesh>
-        <mesh position={[-2.0 + 0.05, roomHeight / 2, 3.0]}>
-          <boxGeometry args={[0.1, roomHeight, 0.48]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.9} />
-        </mesh>
-        <mesh position={[12.0 - 0.05, roomHeight / 2, 3.0]}>
-          <boxGeometry args={[0.1, roomHeight, 0.48]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.9} />
-        </mesh>
-
-        {/* Wainscoting mặt trước & sau */}
-        <mesh position={[5.0, 0.6, 3.0 - 0.212]}>
-          <boxGeometry args={[14.0, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.7} />
-        </mesh>
-        <mesh position={[5.0, 1.2, 3.0 - 0.224]}>
-          <boxGeometry args={[14.0, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.6} />
-        </mesh>
-        <mesh position={[5.0, 0.6, 3.0 + 0.212]}>
-          <boxGeometry args={[14.0, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.7} />
-        </mesh>
-        <mesh position={[5.0, 1.2, 3.0 + 0.224]}>
-          <boxGeometry args={[14.0, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.6} />
-        </mesh>
-
-        {/* Tường trên cổng rỗng (X: -5 đến -2) */}
-        <mesh position={[-3.5, (roomHeight + 3.5) / 2, 3.0]}>
-          <boxGeometry args={[3.0, roomHeight - 3.5, 0.4]} />
-          <meshStandardMaterial color={wallColor} roughness={0.8} />
-        </mesh>
-      </group>
-
-      {/* 2. VÁCH NGĂN TRUNG TÂM PHÒNG (Z = 13.0) */}
-      <group>
-        <mesh position={[0, 2.0, 13.0]}>
-          <boxGeometry args={[12.0, 4.0, 0.4]} />
-          <meshStandardMaterial color={wallColor} roughness={0.8} />
-        </mesh>
-        <mesh position={[-6.0, 2.0, 13.0]}>
-          <boxGeometry args={[0.1, 4.0, 0.48]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.9} />
-        </mesh>
-        <mesh position={[6.0, 2.0, 13.0]}>
-          <boxGeometry args={[0.1, 4.0, 0.48]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.9} />
-        </mesh>
-
-        {/* Wainscoting */}
-        <mesh position={[0, 0.6, 13.0 - 0.212]}>
-          <boxGeometry args={[12.0, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.7} />
-        </mesh>
-        <mesh position={[0, 1.2, 13.0 - 0.224]}>
-          <boxGeometry args={[12.0, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 0.6, 13.0 + 0.212]}>
-          <boxGeometry args={[12.0, 1.2, 0.02]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.7} />
-        </mesh>
-        <mesh position={[0, 1.2, 13.0 + 0.224]}>
-          <boxGeometry args={[12.0, 0.06, 0.04]} />
-          <meshStandardMaterial color={wainscotingColor} roughness={0.6} />
-        </mesh>
-
-        {/* Bàn trưng bày bằng gỗ cổ bày chiếc Đài Radio và bình hoa */}
-        <group position={[0, 0, 13.0 - 0.45]}>
-          <mesh position={[0, 0.75, 0]}>
-            <boxGeometry args={[2.2, 0.1, 0.65]} />
-            <meshStandardMaterial color="#4e2e1e" roughness={0.3} />
-          </mesh>
-          {/* Chân bàn */}
-          {[-0.9, 0.9].map((x, i) => (
-            <mesh key={i} position={[x, 0.35, 0]}>
-              <cylinderGeometry args={[0.07, 0.07, 0.7, 8]} />
-              <meshStandardMaterial color="#361f14" roughness={0.4} />
-            </mesh>
-          ))}
-          {/* Mô hình Radio cổ mộc mạc làm đồ decor */}
-          <group position={[0, 0.9, 0]}>
-            <mesh>
-              <boxGeometry args={[0.5, 0.24, 0.2]} />
-              <meshStandardMaterial color="#8d6e63" roughness={0.5} />
-            </mesh>
-            <mesh position={[0.15, 0, 0.105]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.05, 0.05, 0.02, 12]} />
-              <meshStandardMaterial color="#cfd8dc" roughness={0.2} />
-            </mesh>
-            <mesh position={[-0.12, 0, 0.101]}>
-              <planeGeometry args={[0.2, 0.15]} />
-              <meshStandardMaterial color="#1e1e1e" roughness={0.9} />
-            </mesh>
-          </group>
-        </group>
-      </group>
-
-      {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = 8.0 & Z = 18.0) */}
-      {[8.0, 18.0].map((z) => (
+      {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = -12.0 & Z = 12.0) */}
+      {[-12.0, 12.0].map((z) => (
         <group key={z} position={[0, 0, z]}>
           <mesh position={[0, 0.45, 0]}>
             <boxGeometry args={[3.2, 0.08, 0.8]} />
@@ -249,8 +115,8 @@ export const RoomOne: React.FC<BaseRoomProps> = ({
         </group>
       ))}
 
-      {/* 4. CỤM GHẾ NGỒI GIỮA PHÒNG - tạo cảm giác phòng triển lãm có điểm nghỉ chân */}
-      {[-16.5, -10.5, -4.5].map((z, index) => (
+      {/* 4. CỤM GHẾ NGỒI GIỮA PHÒNG - tạo cảm giác phòng triển lãm có điểm nghỉ chân (phân bố đều tại Z = -4.0, Z = 4.0) */}
+      {[-4.0, 4.0].map((z, index) => (
         <group key={`central-bench-${z}`} position={[0, 0, z]} rotation={[0, index % 2 === 0 ? 0 : Math.PI, 0]}>
           <mesh position={[0, 0.52, 0]}>
             <boxGeometry args={[4.0, 0.12, 0.82]} />
@@ -275,10 +141,14 @@ export const RoomOne: React.FC<BaseRoomProps> = ({
         </group>
       ))}
 
-      {/* 5. BÀN TRANG TRÍ GỌN VỚI LỌ HOA - đặt lệch bên để không cản lối */}
+      {/* 5. BÀN TRANG TRÍ GỌN VỚI LỌ HOA - đặt lệch bên để không cản lối (mỗi bên 3 bàn phân bố đều tại Z = -16.0, Z = 0.0, Z = 16.0) */}
       {[
-        { x: -7.2, z: -13.2 },
-        { x: 7.2, z: -7.2 },
+        { x: -7.2, z: -16.0 },
+        { x: -7.2, z: 0.0 },
+        { x: -7.2, z: 16.0 },
+        { x: 7.2, z: -16.0 },
+        { x: 7.2, z: 0.0 },
+        { x: 7.2, z: 16.0 },
       ].map((item, index) => (
         <group key={`decor-table-${index}`} position={[item.x, 0, item.z]}>
           <mesh position={[0, 0.64, 0]}>
@@ -318,12 +188,12 @@ export const RoomOne: React.FC<BaseRoomProps> = ({
       ))}
 
       {/* 6. HÀNG RÀO DÂY NHUNG ĐỎ TRƯỚC DÃY TRANH - từng dây có offset riêng */}
-      <VelvetRopeBarrier side="left" zPoints={[-18, -12]} xOffset={ropeConfigs[0].xOffset} zOffset={ropeConfigs[0].zOffset} onClick={() => onRopeClick?.(0)} />
-      <VelvetRopeBarrier side="left" zPoints={[-8, -2]} xOffset={ropeConfigs[1].xOffset} zOffset={ropeConfigs[1].zOffset} onClick={() => onRopeClick?.(1)} />
-      <VelvetRopeBarrier side="left" zPoints={[2, 8]} xOffset={ropeConfigs[2].xOffset} zOffset={ropeConfigs[2].zOffset} onClick={() => onRopeClick?.(2)} />
-      <VelvetRopeBarrier side="right" zPoints={[-18, -12]} xOffset={-ropeConfigs[3].xOffset} zOffset={ropeConfigs[3].zOffset} onClick={() => onRopeClick?.(3)} />
-      <VelvetRopeBarrier side="right" zPoints={[-8, -2]} xOffset={-ropeConfigs[4].xOffset} zOffset={ropeConfigs[4].zOffset} onClick={() => onRopeClick?.(4)} />
-      <VelvetRopeBarrier side="right" zPoints={[2, 8]} xOffset={-ropeConfigs[5].xOffset} zOffset={ropeConfigs[5].zOffset} onClick={() => onRopeClick?.(5)} />
+      <VelvetRopeBarrier side="left" zPoints={[-19, -13]} xOffset={ropeConfigs[0].xOffset} zOffset={ropeConfigs[0].zOffset} onClick={() => onRopeClick?.(0)} />
+      <VelvetRopeBarrier side="left" zPoints={[-3, 3]} xOffset={ropeConfigs[1].xOffset} zOffset={ropeConfigs[1].zOffset} onClick={() => onRopeClick?.(1)} />
+      <VelvetRopeBarrier side="left" zPoints={[13, 19]} xOffset={ropeConfigs[2].xOffset} zOffset={ropeConfigs[2].zOffset} onClick={() => onRopeClick?.(2)} />
+      <VelvetRopeBarrier side="right" zPoints={[-19, -13]} xOffset={-ropeConfigs[3].xOffset} zOffset={ropeConfigs[3].zOffset} onClick={() => onRopeClick?.(3)} />
+      <VelvetRopeBarrier side="right" zPoints={[-3, 3]} xOffset={-ropeConfigs[4].xOffset} zOffset={ropeConfigs[4].zOffset} onClick={() => onRopeClick?.(4)} />
+      <VelvetRopeBarrier side="right" zPoints={[13, 19]} xOffset={-ropeConfigs[5].xOffset} zOffset={ropeConfigs[5].zOffset} onClick={() => onRopeClick?.(5)} />
     </BaseRoom>
   );
 };
