@@ -431,10 +431,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [orderedEvents, timeLeft, socket]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
-    preset: 'low',
+    preset: 'medium',
     shadows: false,
-    animations: false,
-    maxAvatars: 10,    // Chỉ render 10 avatar gần nhất — đủ thấy nhau, không lag GPU
+    animations: true,
+    maxAvatars: 99,    // Cho phép hiển thị tối đa 99 người để 64 người thấy nhau
     reducedLights: false,
   });
 
