@@ -126,7 +126,6 @@ const PaintingComponent: React.FC<{
   exhibit: Exhibit;
   isSelected: boolean;
   hovered: boolean;
-  setHovered: (h: boolean) => void;
   setSelectedExhibit: (e: Exhibit | null) => void;
   setExhibitModalMode: (mode: "game" | "info") => void;
   language: "vi" | "en";
@@ -138,7 +137,6 @@ const PaintingComponent: React.FC<{
   exhibit,
   isSelected,
   hovered,
-  setHovered,
   setSelectedExhibit,
   setExhibitModalMode,
   language,
@@ -147,6 +145,7 @@ const PaintingComponent: React.FC<{
   groupRef,
   onClick,
 }) => {
+  const { settings } = useMuseum();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
   const matRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -165,6 +164,7 @@ const PaintingComponent: React.FC<{
   }, [texture, textureError]);
 
   useFrame((state) => {
+    if (!isNear) return;
     if (!hotspotRef.current) return;
     const pulse = 1 + Math.sin(state.clock.elapsedTime * 4.5) * 0.18;
     hotspotRef.current.scale.set(pulse, pulse, 1);
@@ -216,23 +216,7 @@ const PaintingComponent: React.FC<{
         ]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
       >
-        <mesh
-          onPointerDown={(e) => {
-            if (!isVisible || !isNear) return;
-            e.stopPropagation();
-            if (onClick) onClick(exhibit);
-            else {
-              setExhibitModalMode("game");
-              setSelectedExhibit(exhibit);
-            }
-          }}
-          onPointerOver={(e) => {
-            if (!isVisible || !isNear) return;
-            e.stopPropagation();
-            setHovered(true);
-          }}
-          onPointerOut={() => setHovered(false)}
-        >
+        <mesh>
           <boxGeometry
             args={[exhibit.scale_x + 0.2, exhibit.scale_y + 0.2, 0.15]}
           />
@@ -243,8 +227,17 @@ const PaintingComponent: React.FC<{
           />
         </mesh>
 
+        <mesh position={[0, 0, 0.08]}>
+          <planeGeometry args={[exhibit.scale_x, exhibit.scale_y]} />
+          <meshBasicMaterial
+            ref={matRef}
+            color="#1a1a1a"
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+
         <mesh
-          position={[0, 0, 0.08]}
+          position={[0, 0, 0.13]}
           onPointerDown={(e) => {
             if (!isVisible || !isNear) return;
             e.stopPropagation();
@@ -257,8 +250,10 @@ const PaintingComponent: React.FC<{
         >
           <planeGeometry args={[exhibit.scale_x, exhibit.scale_y]} />
           <meshBasicMaterial
-            ref={matRef}
-            color="#1a1a1a"
+            transparent
+            opacity={0}
+            depthWrite={false}
+            colorWrite={false}
             side={THREE.DoubleSide}
           />
         </mesh>
@@ -266,18 +261,20 @@ const PaintingComponent: React.FC<{
         <group
           position={[0, -exhibit.scale_y / 2 - 0.55, 0.35]}
           rotation={[-Math.PI / 10, 0, 0]}
-          onPointerDown={(e) => {
-            if (!isVisible || !isNear) return;
-            e.stopPropagation();
-            if (onClick) onClick(exhibit);
-            else {
-              setExhibitModalMode("info");
-              setSelectedExhibit(exhibit);
-            }
-          }}
         >
-          <mesh position={[0, 0, 0.14]}>
-            <planeGeometry args={[2.25, 1.05]} />
+          <mesh
+            position={[0, 0, 0.48]}
+            onPointerDown={(e) => {
+              if (!isVisible || !isNear) return;
+              e.stopPropagation();
+              if (onClick) onClick(exhibit);
+              else {
+                setExhibitModalMode("info");
+                setSelectedExhibit(exhibit);
+              }
+            }}
+          >
+            <planeGeometry args={[1.82, 0.64]} />
             <meshBasicMaterial
               transparent
               opacity={0}
@@ -350,38 +347,52 @@ const PaintingComponent: React.FC<{
             </Html>
           )}
 
-          {/* Vòng tròn hiệu ứng chỉ hiển thị khi ở xa */}
-          {!isNear && (
-            <group ref={hotspotRef} position={[0, 0.02, 0.065]}>
-              <mesh>
-                <circleGeometry args={[0.075, 28]} />
-                <meshBasicMaterial
-                  color="#ef4444"
-                  transparent
-                  opacity={0.9}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-              <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]}>
-                <ringGeometry args={[0.095, 0.125, 28]} />
-                <meshBasicMaterial
-                  color="#f87171"
-                  transparent
-                  opacity={0.32}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-              <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]}>
-                <ringGeometry args={[0.13, 0.15, 28]} />
-                <meshBasicMaterial
-                  color="#fecaca"
-                  transparent
-                  opacity={0.16}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-            </group>
-          )}
+          {/* Vòng tròn hiệu ứng nằm ngay trên mặt bảng tên */}
+          <group
+            ref={hotspotRef}
+            position={[0, 0.02, 0.08]}
+          >
+            {/* Hitbox thật: box có độ dày, phủ đúng hồng tâm để raycast bắt ổn định */}
+            <mesh position={[0, 0, 0.045]}>
+              <boxGeometry args={[1.25, 0.62, 0.08]} />
+              <meshBasicMaterial
+                transparent
+                opacity={0.001}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+            <mesh position={[0, 0, 0.09]}>
+              <circleGeometry args={[0.075, 28]} />
+              <meshBasicMaterial
+                color="#ef4444"
+                transparent
+                opacity={0.9}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+            <mesh position={[0, 0, 0.095]} scale={[1.55, 1.55, 1]}>
+              <ringGeometry args={[0.095, 0.125, 28]} />
+              <meshBasicMaterial
+                color="#f87171"
+                transparent
+                opacity={0.32}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+            <mesh position={[0, 0, 0.1]} scale={[2.05, 2.05, 1]}>
+              <ringGeometry args={[0.13, 0.15, 28]} />
+              <meshBasicMaterial
+                color="#fecaca"
+                transparent
+                opacity={0.16}
+                depthWrite={false}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          </group>
         </group>
       </group>
 
@@ -393,14 +404,16 @@ const PaintingComponent: React.FC<{
         ]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
       >
-        <spotLight
-          position={[0, 3, 2]}
-          target-position={[0, 0, 0]}
-          intensity={isVisible ? 5 : 0}
-          distance={8}
-          angle={Math.PI / 6}
-          penumbra={0.5}
-        />
+        {!settings.reducedLights && (
+          <spotLight
+            position={[0, 3, 2]}
+            target-position={[0, 0, 0]}
+            intensity={isVisible ? 4 : 0}
+            distance={7}
+            angle={Math.PI / 6}
+            penumbra={0.5}
+          />
+        )}
       </group>
     </group>
   );
@@ -411,7 +424,6 @@ const SculptureComponent: React.FC<{
   exhibit: Exhibit;
   isSelected: boolean;
   hovered: boolean;
-  setHovered: (h: boolean) => void;
   setSelectedExhibit: (e: Exhibit | null) => void;
   language: "vi" | "en";
   meshRef: React.RefObject<THREE.Group | null>;
@@ -423,7 +435,6 @@ const SculptureComponent: React.FC<{
   exhibit,
   isSelected,
   hovered,
-  setHovered,
   setSelectedExhibit,
   language,
   meshRef,
@@ -432,6 +443,8 @@ const SculptureComponent: React.FC<{
   groupRef,
   onClick,
 }) => {
+  const { settings } = useMuseum();
+
   return (
     <group>
       {/* Group meshes: luôn hiển thị để người chơi thấy tượng trong phòng */}
@@ -443,22 +456,27 @@ const SculptureComponent: React.FC<{
           exhibit.coordinate_z,
         ]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
-        onClick={(e) => {
-          if (!isVisible || !isNear) return;
-          e.stopPropagation();
-          if (onClick) {
-            onClick(exhibit);
-          } else {
-            setSelectedExhibit(exhibit);
-          }
-        }}
-        onPointerOver={(e) => {
-          if (!isVisible || !isNear) return;
-          e.stopPropagation();
-          setHovered(true);
-        }}
-        onPointerOut={() => setHovered(false)}
       >
+        <mesh
+          position={[0, 0.35, 0]}
+          onPointerDown={(e) => {
+            if (!isVisible || !isNear) return;
+            e.stopPropagation();
+            if (onClick) {
+              onClick(exhibit);
+            } else {
+              setSelectedExhibit(exhibit);
+            }
+          }}
+        >
+          <boxGeometry args={[1.4, 1.8, 1.4]} />
+          <meshBasicMaterial
+            transparent
+            opacity={0}
+            depthWrite={false}
+            colorWrite={false}
+          />
+        </mesh>
         <group ref={meshRef}>
           {exhibit.model_3d_url === "procedural-torusknot" && (
             /* Vòng xoắn hoàng kim */
@@ -550,14 +568,16 @@ const SculptureComponent: React.FC<{
         ]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
       >
-        <spotLight
-          position={[0, 4, 0]}
-          target-position={[0, 0, 0]}
-          intensity={isVisible ? 6 : 0}
-          distance={6}
-          angle={Math.PI / 6}
-          penumbra={0.3}
-        />
+        {!settings.reducedLights && (
+          <spotLight
+            position={[0, 4, 0]}
+            target-position={[0, 0, 0]}
+            intensity={isVisible ? 5 : 0}
+            distance={6}
+            angle={Math.PI / 6}
+            penumbra={0.3}
+          />
+        )}
       </group>
     </group>
   );
@@ -570,7 +590,7 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
 }) => {
   const { selectedExhibit, setSelectedExhibit, setExhibitModalMode, language } =
     useMuseum();
-  const [hovered, setHovered] = useState(false);
+  const hovered = false;
   const meshRef = useRef<THREE.Group>(null);
   const isSelected = selectedExhibit?.id === exhibit.id;
 
@@ -578,6 +598,7 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
   const [isNear, setIsNear] = useState(false);
   const worldPos = useRef(new THREE.Vector3()).current;
   const playerPos = useRef(new THREE.Vector3()).current;
+  const lastProximityCheck = useRef(0);
 
   // Xoay các tượng điêu khắc 3D tự động để tạo chuyển động sinh động
   useFrame((state) => {
@@ -592,15 +613,16 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
     }
 
     // Tính khoảng cách đến nhân vật người chơi để hiển thị nút Xem chi tiết
-    if (isVisible && groupRef.current) {
+    const elapsed = state.clock.elapsedTime;
+    if (isVisible && groupRef.current && elapsed - lastProximityCheck.current > 0.18) {
+      lastProximityCheck.current = elapsed;
       const player =
         state.scene.getObjectByName("player-character") ||
         state.scene.getObjectByName("lobby-player");
       if (player) {
         groupRef.current.getWorldPosition(worldPos);
         player.getWorldPosition(playerPos);
-        const dist = worldPos.distanceTo(playerPos);
-        const near = dist < 5.0; // Khoảng cách 5 mét
+        const near = worldPos.distanceToSquared(playerPos) < 25; // Khoảng cách 5 mét
         if (near !== isNear) {
           setIsNear(near);
         }
@@ -623,7 +645,6 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
         exhibit={exhibit}
         isSelected={isSelected}
         hovered={hovered}
-        setHovered={setHovered}
         setSelectedExhibit={setSelectedExhibit}
         language={language}
         meshRef={meshRef}
@@ -639,7 +660,6 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
         exhibit={exhibit}
         isSelected={isSelected}
         hovered={hovered}
-        setHovered={setHovered}
         setSelectedExhibit={setSelectedExhibit}
         setExhibitModalMode={setExhibitModalMode}
         language={language}

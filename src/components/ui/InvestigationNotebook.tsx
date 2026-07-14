@@ -142,10 +142,13 @@ export const InvestigationNotebook: React.FC = () => {
       }
     });
 
-    setScore(currentScore);
+    const clueBonus = cluesCollected.length;
+    const totalScore = Math.min(20, currentScore + clueBonus);
+
+    setScore(totalScore);
     setIncorrectQuestions(incorrects);
 
-    if (currentScore === 20) {
+    if (totalScore >= 20) {
       setFinalQuestionOpen(true);
       setShowError(false);
       confetti({ particleCount: 80, spread: 60 });
@@ -211,7 +214,7 @@ export const InvestigationNotebook: React.FC = () => {
       {/* NOTEBOOK MODAL SCREEN */}
       {isOpen && (
         <div className="absolute inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 pointer-events-auto">
-          <div className="w-full max-w-4xl h-[85vh] bg-[#fbf9f5] border border-[#d8d3c5] rounded-3xl shadow-2xl overflow-hidden flex flex-col text-slate-800 relative select-none animate-fade-in font-serif">
+          <div className="w-full max-w-4xl h-[85vh] bg-[#fbf9f5] border border-[#d8d3c5] rounded-3xl shadow-2xl overflow-hidden flex flex-col text-slate-800 relative select-none animate-fade-in font-sans">
             
             {/* Lớp vân giấy cũ cổ điển */}
             <div className="absolute inset-0 bg-[radial-gradient(#ebe5d8_1px,transparent_1px)] [background-size:16px_16px] opacity-40 pointer-events-none" />
@@ -221,7 +224,7 @@ export const InvestigationNotebook: React.FC = () => {
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">📒</span>
                 <div>
-                  <h2 className="text-lg font-bold font-serif text-[#4e3629]">
+                  <h2 className="text-lg font-bold font-sans text-[#4e3629]">
                     {language === 'vi' ? 'SỔ TAY ĐIỀU TRA LỊCH SỬ' : 'HISTORICAL INVESTIGATION NOTEBOOK'}
                   </h2>
                   <p className="text-[10px] uppercase tracking-widest text-[#725b29] font-mono leading-none mt-1">
@@ -248,19 +251,13 @@ export const InvestigationNotebook: React.FC = () => {
                 1. Manh mối hiện vật ({cluesCollected.length}/6)
               </button>
               <button
-                onClick={() => {
-                  if (cluesCollected.length < 6) {
-                    alert(language === 'vi' ? 'Hãy thu thập đủ 6 manh mối để mở khóa Bảng suy luận!' : 'Collect all 6 clues to unlock the Deduction page!');
-                    return;
-                  }
-                  setActiveTab('deduction');
-                }}
+                onClick={() => setActiveTab('deduction')}
                 className={`flex-1 py-3 text-xs font-mono font-bold uppercase tracking-wider transition-colors cursor-pointer relative ${
                   activeTab === 'deduction' ? 'bg-[#fbf9f5] text-[#725b29] border-b-2 border-b-amber-600' : 'text-slate-500 hover:text-slate-800'
-                } ${cluesCollected.length < 6 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                }`}
               >
                 2. Bảng suy luận cuối phòng
-                {cluesCollected.length < 6 && <span className="absolute right-4 text-[10px]">🔒</span>}
+                {cluesCollected.length < 6 && <span className="absolute right-4 text-[10px] text-amber-700">-{6 - cluesCollected.length}đ</span>}
               </button>
             </div>
 
@@ -306,7 +303,7 @@ export const InvestigationNotebook: React.FC = () => {
                           <div className="mt-3">
                             {collected ? (
                               <div className="space-y-2">
-                                <p className="text-sm font-bold text-[#725b29] font-serif">
+                                <p className="text-sm font-bold text-[#725b29] font-sans">
                                   🔍 Manh mối: {item.clue}
                                 </p>
                                 <p className="text-xs text-slate-600 leading-relaxed font-sans text-justify">
@@ -330,7 +327,7 @@ export const InvestigationNotebook: React.FC = () => {
                     <div className="pt-4 flex justify-center">
                       <button
                         onClick={() => setActiveTab('deduction')}
-                        className="bg-amber-600 hover:bg-amber-700 text-white font-serif font-bold text-sm py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
+                        className="bg-amber-600 hover:bg-amber-700 text-white font-sans font-bold text-sm py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
                       >
                         Tiến hành Bảng suy luận ngay
                         <ChevronRight size={16} />
@@ -353,7 +350,7 @@ export const InvestigationNotebook: React.FC = () => {
                         <span className="text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-full font-bold uppercase tracking-widest font-mono">
                           HỒ SƠ ĐÃ HOÀN THÀNH (20/20 ĐIỂM)
                         </span>
-                        <h3 className="text-2xl font-bold font-serif text-[#1e4620] mt-2">
+                        <h3 className="text-2xl font-bold font-sans text-[#1e4620] mt-2">
                           Đã giải mã Phòng 01 thành công!
                         </h3>
                         <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed font-sans max-w-md mx-auto">
@@ -361,7 +358,7 @@ export const InvestigationNotebook: React.FC = () => {
                         </p>
                       </div>
 
-                      <div className="bg-white/80 border border-emerald-100 p-5 rounded-2xl text-left space-y-3 font-serif">
+                      <div className="bg-white/80 border border-emerald-100 p-5 rounded-2xl text-left space-y-3 font-sans">
                         <h4 className="text-sm font-bold text-emerald-950 uppercase border-b border-emerald-100 pb-1 font-mono">
                           KẾT LUẬN CỦA ĐIỀU TRA VIÊN
                         </h4>
@@ -398,7 +395,7 @@ export const InvestigationNotebook: React.FC = () => {
                             Nhiệm vụ cuối phòng: Hoàn thành hồ sơ điều tra
                           </h4>
                           <p className="text-xs text-slate-700 leading-relaxed text-justify font-sans">
-                            Ghép nối từng <b>Vấn đề cần điều tra</b> bên dưới với các <b>Bằng chứng (Hiện vật)</b> tương ứng trong phòng trưng bày và đưa ra <b>Kết luận nhóm</b> chính xác nhất. Mỗi câu trả lời đúng giúp đạt 4 điểm. Cần đạt 20 điểm tuyệt đối để mở câu hỏi kết luận.
+                            Ghép nối từng <b>Vấn đề cần điều tra</b> với các <b>Bằng chứng (Hiện vật)</b> tương ứng và chọn <b>Kết luận nhóm</b>. Mỗi câu đúng đạt 4 điểm. Mỗi manh mối đã thu thập cộng thêm 1 điểm thưởng, nên thiếu vật phẩm vẫn được suy luận nhưng điểm tối đa sẽ thấp hơn.
                           </p>
                         </div>
                       </div>
@@ -417,7 +414,7 @@ export const InvestigationNotebook: React.FC = () => {
                               </div>
                             )}
                             
-                            <h4 className="text-sm font-bold text-[#725b29] font-serif pr-16 leading-relaxed">
+                            <h4 className="text-sm font-bold text-[#725b29] font-sans pr-16 leading-relaxed">
                               Câu hỏi {q.id}: {q.question}
                             </h4>
 
@@ -433,7 +430,7 @@ export const InvestigationNotebook: React.FC = () => {
                                     <button
                                       key={exhId}
                                       onClick={() => toggleEvidence(q.id, exhId)}
-                                      className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer font-serif ${
+                                      className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer font-sans ${
                                         isSelected 
                                           ? 'bg-amber-600 border-amber-600 text-white font-bold' 
                                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
@@ -454,7 +451,7 @@ export const InvestigationNotebook: React.FC = () => {
                               <select
                                 value={selectedConclusions[q.id]}
                                 onChange={(e) => handleConclusionChange(q.id, e.target.value)}
-                                className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-350 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-amber-600 font-serif leading-relaxed"
+                                className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-350 rounded-xl px-3 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-amber-600 font-sans leading-relaxed"
                               >
                                 <option value="">-- Chọn kết luận tương ứng --</option>
                                 {CONCLUSION_OPTIONS.map((opt, oIdx) => (
@@ -471,7 +468,7 @@ export const InvestigationNotebook: React.FC = () => {
                         <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl flex items-center gap-2.5 text-rose-800">
                           <AlertCircle size={18} />
                           <span className="text-xs font-mono font-bold">
-                            Lập luận chưa chính xác (Điểm: {score}/20). Vui lòng kiểm tra lại những câu đánh dấu ❌.
+                            Lập luận chưa đủ điểm (Điểm: {score}/20, gồm {cluesCollected.length}/6 điểm manh mối). Bạn vẫn có thể chỉnh lại suy luận hoặc thu thập thêm vật phẩm.
                           </span>
                         </div>
                       )}
@@ -481,7 +478,7 @@ export const InvestigationNotebook: React.FC = () => {
                         <div className="pt-2 flex justify-center">
                           <button
                             onClick={handleCheckDeduction}
-                            className="bg-amber-600 hover:bg-amber-700 text-white font-serif font-bold text-sm py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
+                            className="bg-amber-600 hover:bg-amber-700 text-white font-sans font-bold text-sm py-4 px-10 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2"
                           >
                             Kiểm tra kết quả suy luận
                           </button>
@@ -496,10 +493,10 @@ export const InvestigationNotebook: React.FC = () => {
                           </div>
                           
                           <div className="space-y-2">
-                            <h3 className="text-base font-bold font-serif text-[#725b29] leading-relaxed">
+                            <h3 className="text-base font-bold font-sans text-[#725b29] leading-relaxed">
                               CÂU HỎI KẾT LUẬN PHÒNG:
                             </h3>
-                            <p className="text-sm font-bold text-slate-900 font-serif leading-relaxed">
+                            <p className="text-sm font-bold text-slate-900 font-sans leading-relaxed">
                               Dựa trên toàn bộ các chứng cứ lịch sử đã thu thập, theo bạn: Nền kinh tế Việt Nam giai đoạn 1976–1985 có vận hành theo cơ chế thị trường hay không?
                             </p>
                           </div>
@@ -507,7 +504,7 @@ export const InvestigationNotebook: React.FC = () => {
                           <div className="space-y-2">
                             <button
                               onClick={() => setFinalAnswer('yes')}
-                              className={`w-full text-left p-3.5 rounded-xl border text-xs leading-relaxed font-serif transition-all cursor-pointer ${
+                              className={`w-full text-left p-3.5 rounded-xl border text-xs leading-relaxed font-sans transition-all cursor-pointer ${
                                 finalAnswer === 'yes'
                                   ? 'bg-rose-50 border-rose-300 text-rose-900 font-bold'
                                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -517,7 +514,7 @@ export const InvestigationNotebook: React.FC = () => {
                             </button>
                             <button
                               onClick={() => setFinalAnswer('no')}
-                              className={`w-full text-left p-3.5 rounded-xl border text-xs leading-relaxed font-serif transition-all cursor-pointer ${
+                              className={`w-full text-left p-3.5 rounded-xl border text-xs leading-relaxed font-sans transition-all cursor-pointer ${
                                 finalAnswer === 'no'
                                   ? 'bg-emerald-50 border-emerald-300 text-emerald-950 font-bold'
                                   : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
@@ -530,7 +527,7 @@ export const InvestigationNotebook: React.FC = () => {
                           <div className="flex justify-center pt-2">
                             <button
                               onClick={handleFinalSubmit}
-                              className="bg-slate-900 hover:bg-slate-800 text-white font-serif font-bold text-xs py-3 px-8 rounded-full transition-transform hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-wider font-mono"
+                              className="bg-slate-900 hover:bg-slate-800 text-white font-sans font-bold text-xs py-3 px-8 rounded-full transition-transform hover:scale-105 active:scale-95 cursor-pointer uppercase tracking-wider font-mono"
                             >
                               Nộp kết luận điều tra
                             </button>

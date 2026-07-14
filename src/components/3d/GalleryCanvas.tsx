@@ -177,20 +177,7 @@ const CameraLerpController: React.FC = () => {
       if (t > 0 && t < minT) minT = t;
     }
 
-    // 2. Va chạm với tường ngăn tại Z = 3.0 (Paintings divider wall)
-    if (dirHelper.z !== 0) {
-      const wallZ = pz > 3.0 ? 3.24 : 2.76;
-      const t = (wallZ - pz) / dirHelper.z;
-      if (t > 0 && t < minT) {
-        const intersectX = px + t * dirHelper.x;
-        // Chặn camera nếu giao điểm nằm ngoài khoảng cổng mở phía bên trái (X < -5.0 hoặc X > -2.0)
-        if (intersectX < -5.0 || intersectX > -2.0) {
-          minT = t;
-        }
-      }
-    }
-
-    // 3. Va chạm với tường ngăn tại Z = -3.0 (Sculptures divider wall)
+    // 2. Va chạm với tường ngăn tại Z = -3.0 (Sculptures divider wall)
     if (dirHelper.z !== 0) {
       const wallZ = pz > -3.0 ? -2.76 : -3.24;
       const t = (wallZ - pz) / dirHelper.z;
@@ -198,19 +185,6 @@ const CameraLerpController: React.FC = () => {
         const intersectX = px + t * dirHelper.x;
         // Chặn camera nếu giao điểm nằm ngoài khoảng cổng mở phía bên phải (X < 2.0 hoặc X > 5.0)
         if (intersectX < 2.0 || intersectX > 5.0) {
-          minT = t;
-        }
-      }
-    }
-
-    // 4. Va chạm với vách ngăn phụ tại Z = 13.0 (Sub-divider wall)
-    if (dirHelper.z !== 0) {
-      const wallZ = pz > 13.0 ? 13.224 : 12.776;
-      const t = (wallZ - pz) / dirHelper.z;
-      if (t > 0 && t < minT) {
-        const intersectX = px + t * dirHelper.x;
-        // Chặn camera nếu giao điểm nằm trong chiều rộng vách ngăn (X từ -6.2 đến 6.2)
-        if (intersectX > -6.2 && intersectX < 6.2) {
           minT = t;
         }
       }

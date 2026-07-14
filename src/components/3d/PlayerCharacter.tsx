@@ -45,6 +45,7 @@ export const PlayerCharacter: React.FC = () => {
   });
 
   const lastUpdate = useRef(0);
+  const lastSent = useRef({ x: Number.NaN, y: Number.NaN, z: Number.NaN, yaw: Number.NaN });
   const isSculptures = activeGallery?.id === "gallery-sculptures";
 
   // Cache vectors for useFrame to prevent GC pauses
@@ -116,15 +117,7 @@ export const PlayerCharacter: React.FC = () => {
 
     // ── Phòng 1: gallery-paintings ──────────────────────────────────────────
     if (galleryId === 'gallery-paintings') {
-      // 1. Tường ngăn tại Z = 3.0: Cổng mở X từ -5.0 đến -2.0
-      if (z > 2.7 && z < 3.3) {
-        if (x < -5.0 || x > -2.0) return true;
-      }
-
-      // 2. Vách ngăn phụ tại Z = 13.0
-      if (x > -6.3 && x < 6.3 && z > 12.6 && z < 13.4) return true;
-
-      // 3. Ghế băng tại Z = 8.0 và Z = 18.0
+      // Ghế băng tại Z = 8.0 và Z = 18.0
       if (x > -2.3 && x < 2.3 && z > 7.3 && z < 8.7) return true;
       if (x > -2.3 && x < 2.3 && z > 17.3 && z < 18.7) return true;
     }
@@ -255,13 +248,24 @@ export const PlayerCharacter: React.FC = () => {
     // Gửi tọa độ qua socket (20Hz)
     const now = state.clock.getElapsedTime() * 1000;
     if (now - lastUpdate.current > 50) {
-      if (socket && socket.connected) {
+      const sent = lastSent.current;
+      const movedEnough =
+        Math.abs(playerRef.current.position.x - sent.x) > 0.01 ||
+        Math.abs(playerRef.current.position.y - sent.y) > 0.01 ||
+        Math.abs(playerRef.current.position.z - sent.z) > 0.01 ||
+        Math.abs(playerRef.current.rotation.y - sent.yaw) > 0.01;
+
+      if (movedEnough && socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
           y: playerRef.current.position.y - baseY, // Gửi tọa độ Y logic (bàn chân chạm đất)
           z: playerRef.current.position.z,
           yaw: playerRef.current.rotation.y,
         });
+        sent.x = playerRef.current.position.x;
+        sent.y = playerRef.current.position.y;
+        sent.z = playerRef.current.position.z;
+        sent.yaw = playerRef.current.rotation.y;
       }
       lastUpdate.current = now;
     }

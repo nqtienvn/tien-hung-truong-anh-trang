@@ -7,7 +7,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
   customSettings,
   isVisible = true,
 }) => {
-  const { activeGallery } = useMuseum();
+  const { activeGallery, settings } = useMuseum();
 
   const roomHeight = customSettings?.room_height ?? activeGallery?.room_height ?? 8;
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 30;
@@ -25,6 +25,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
 
   // Chiều cao đèn rọi
   const spotY = roomHeight - 1.0;
+  const showSpotLights = !settings.reducedLights;
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} showPilasters={false}>
@@ -33,7 +34,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
           ĐÈN RỌI TRANH — TƯỜNG TRÁI (x = -halfW)
           3 spotlight rọi từ trần xuống mỗi vị trí tranh
       ============================================================ */}
-      {sideZPositions.map((zPos, idx) => (
+      {showSpotLights && sideZPositions.map((zPos, idx) => (
         <spotLight
           key={`spot-left-${idx}`}
           position={[-halfW + 1.5, spotY, zPos]}
@@ -49,7 +50,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
       {/* ============================================================
           ĐÈN RỌI TRANH — TƯỜNG PHẢI (x = +halfW)
       ============================================================ */}
-      {sideZPositions.map((zPos, idx) => (
+      {showSpotLights && sideZPositions.map((zPos, idx) => (
         <spotLight
           key={`spot-right-${idx}`}
           position={[halfW - 1.5, spotY, zPos]}
@@ -66,7 +67,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
           ĐÈN RỌI TRANH — TƯỜNG CỬA VÀO (z = -halfL)
           2 spotlight cho 2 tranh hai bên cửa
       ============================================================ */}
-      {doorXPositions.map((xPos, idx) => (
+      {showSpotLights && doorXPositions.map((xPos, idx) => (
         <spotLight
           key={`spot-door-${idx}`}
           position={[xPos, spotY, -halfL + 1.5]}
@@ -83,7 +84,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
           ĐÈN RỌI TRANH — TƯỜNG CUỐI SAU (z = +halfL)
           2 spotlight cho 2 tranh hai bên cửa sau
       ============================================================ */}
-      {doorXPositions.map((xPos, idx) => (
+      {showSpotLights && doorXPositions.map((xPos, idx) => (
         <spotLight
           key={`spot-back-${idx}`}
           position={[xPos, spotY, halfL - 1.5]}

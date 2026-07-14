@@ -184,77 +184,38 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [cluesCollected, setCluesCollected] = useState<string[]>([]);
   const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
 
-  // Sync gameplay progress theo từng người chơi (nickname)
+  // Reset gameplay progress khi đổi người chơi trong phiên hiện tại.
+  // Không lưu localStorage để người chơi mới không bị kế thừa sổ điều tra/câu hỏi từ người trước.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!nickname) {
-      setCluesCollected([]);
-      setRoomOneCompleted(false);
-      return;
-    }
-
-    const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
-    const savedProgress = localStorage.getItem(progressKey);
-
-    if (!savedProgress) {
-      setCluesCollected([]);
-      setRoomOneCompleted(false);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(savedProgress) as {
-        cluesCollected?: string[];
-        roomOneCompleted?: boolean;
-      };
-      setCluesCollected(Array.isArray(parsed.cluesCollected) ? parsed.cluesCollected : []);
-      setRoomOneCompleted(Boolean(parsed.roomOneCompleted));
-    } catch (e) {
-      console.error('Lỗi phân tích tiến trình Sổ điều tra:', e);
-      setCluesCollected([]);
-      setRoomOneCompleted(false);
-    }
+    setCluesCollected([]);
+    setRoomOneCompleted(false);
   }, [nickname]);
 
   const addClue = useCallback((clueId: string) => {
     setCluesCollected((prev) => {
       if (prev.includes(clueId)) return prev;
-      const updated = [...prev, clueId];
-      if (typeof window !== 'undefined' && nickname) {
-        const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
-        localStorage.setItem(progressKey, JSON.stringify({
-          cluesCollected: updated,
-          roomOneCompleted,
-        }));
-      }
-      return updated;
+      return [...prev, clueId];
     });
-  }, [nickname, roomOneCompleted]);
+  }, []);
 
   const handleSetRoomOneCompleted = useCallback((completed: boolean) => {
     setRoomOneCompleted(completed);
-    if (typeof window !== 'undefined' && nickname) {
-      const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
-      localStorage.setItem(progressKey, JSON.stringify({
-        cluesCollected,
-        roomOneCompleted: completed,
-      }));
-    }
-  }, [cluesCollected, nickname]);
+  }, []);
 
   const resetRoomOne = useCallback(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
     if (typeof window !== 'undefined') {
-      if (nickname) {
-        localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
-      }
-      // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
+      // Dọn các key cũ để tránh dữ liệu cũ còn tồn tại trong browser.
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('roomOneProgress:') || key.startsWith('museum_room1_failed_quizzes')) {
+          localStorage.removeItem(key);
+        }
+      });
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
     }
-  }, [nickname]);
+  }, []);
 
   const clearTeleport = useCallback(() => setTeleportTarget(null), []);
 

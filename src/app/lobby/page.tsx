@@ -302,26 +302,7 @@ const LobbyPlayer: React.FC = () => {
         // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
 
-        // 1. Vách ngăn Z = 3.0 local (Global Z = 34.0, độ dày Z: 33.7 -> 34.3)
-        // Khoảng trống đi qua là X từ -5.0 đến -2.0. Chặn các vị trí khác.
-        if (z > 33.7 && z < 34.3) {
-          const inOpening = x > -5.0 && x < -2.0;
-          if (!inOpening) return true;
-        }
-
-        // 2. Vách ngăn Z = 13.0 local (Global Z = 44.0, độ dày Z: 43.7 -> 44.3)
-        // Chặn nếu đi qua tường X từ -6.0 đến 6.0
-        if (z > 43.7 && z < 44.3) {
-          const hitWall = x > -6.0 && x < 6.0;
-          if (hitWall) return true;
-        }
-
-        // 3. Bàn gỗ bày đài Radio cổ (Global Z = 43.55, X: -1.2 -> 1.2, Z: 43.1 -> 44.0)
-        if (z > 43.1 && z < 44.0 && x > -1.2 && x < 1.2) {
-          return true;
-        }
-
-        // 4. Ghế gỗ băng cũ trong phòng (local Z = 8.0 & 18.0 => Global Z = 39.0 & 49.0)
+        // 1. Ghế gỗ băng cũ trong phòng (local Z = 8.0 & 18.0 => Global Z = 39.0 & 49.0)
         // Khi đang nhảy cao hơn mặt ghế thì cho vượt qua.
         const canJumpOverBench = currentY > 3.75;
         if (!canJumpOverBench && z > 38.5 && z < 39.5 && x > -1.7 && x < 1.7) {
