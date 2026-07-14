@@ -249,6 +249,10 @@ const LobbyCameraController: React.FC = () => {
     const py = player.position.y;
     const pz = player.position.z;
 
+    let sitOffsetX = 0;
+    let sitOffsetZ = 0;
+    let sitOffsetY = 0;
+
     // Giới hạn hướng xoay ngang của đầu tối đa 90 độ sang 2 bên khi ngồi ghế
     if (sittingPosition && sittingPosition.rotationY !== undefined) {
       const bodyYaw = sittingPosition.rotationY;
@@ -257,6 +261,11 @@ const LobbyCameraController: React.FC = () => {
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
       theta.current = forwardTheta + clampedDiff;
+
+      // Dịch camera ra phía trước mặt 0.35m để tránh che khuất, và nâng cao thêm 0.08m
+      sitOffsetX = -0.35 * Math.sin(forwardTheta);
+      sitOffsetZ = -0.35 * Math.cos(forwardTheta);
+      sitOffsetY = 0.08;
     }
 
     // Nếu đang Zoom hoặc Ngồi (First Person), đặt camera cao ngang tầm mắt/đầu thật của nhân vật (1.12m)
@@ -325,8 +334,8 @@ const LobbyCameraController: React.FC = () => {
       maxZ = 279.8;
     }
 
-    const camX = Math.max(minX, Math.min(maxX, px + xOff));
-    const camZ = Math.max(minZ, Math.min(maxZ, pz + zOff));
+    const camX = Math.max(minX, Math.min(maxX, px + xOff + sitOffsetX));
+    const camZ = Math.max(minZ, Math.min(maxZ, pz + zOff + sitOffsetZ));
 
     // Tính toán độ cao sàn nhà thực tế tại vị trí camera để kẹp độ cao tối thiểu
     const groundYAtCam = getLobbyGroundY(camX, camZ, doorStates);
@@ -338,7 +347,7 @@ const LobbyCameraController: React.FC = () => {
       const activeRoomHeight = activeGallery?.room_height ?? 6.0;
       maxCamY = 3.0 + activeRoomHeight - 0.5;
     }
-    const camY = Math.max(minCamY, Math.min(maxCamY, targetHeight + yOff));
+    const camY = Math.max(minCamY, Math.min(maxCamY, targetHeight + yOff + sitOffsetY));
 
     targetCamPos.set(camX, camY, camZ);
 

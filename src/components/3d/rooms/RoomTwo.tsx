@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import * as THREE from "three";
 import { useMuseum } from "@/context/MuseumContext";
 import { BaseRoom, BaseRoomProps } from "./BaseRoom";
+import { Html } from "@react-three/drei";
 
 interface DelegateChairProps {
   localX: number;
@@ -65,7 +66,17 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
   customSettings,
   isVisible = true,
 }) => {
-  const { activeGallery, settings } = useMuseum();
+  const { activeGallery, settings, nickname, sittingPosition, otherUsers } = useMuseum();
+
+  const getSittingUserNickname = (chairX: number, chairZ: number) => {
+    if (sittingPosition && Math.abs(sittingPosition.x - chairX) < 0.1 && Math.abs(sittingPosition.z - chairZ) < 0.1) {
+      return nickname;
+    }
+    const found = otherUsers.find(u => 
+      Math.abs(u.x - chairX) < 0.15 && Math.abs(u.z - chairZ) < 0.15
+    );
+    return found ? found.nickname : null;
+  };
 
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomHeight =
@@ -452,26 +463,81 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                   <meshStandardMaterial color="#3a1e0b" roughness={0.3} />
                 </mesh>
                 {/* 6 Terminal điện tử cho đại biểu dãy trước */}
-                {frontChairZs.map((zChair, idx) => (
-                  <group
-                    key={`term-front-${idx}`}
-                    position={[0.05, 0.75, zChair - -9.5]}
-                    rotation={[0, -Math.PI / 2, -Math.PI / 8]}
-                  >
-                    <mesh position={[0, 0.08, 0]}>
-                      <boxGeometry args={[0.3, 0.2, 0.04]} />
-                      <meshStandardMaterial color="#1e293b" metalness={0.8} />
-                    </mesh>
-                    <mesh position={[0, 0.08, 0.025]}>
-                      <planeGeometry args={[0.26, 0.17]} />
-                      <meshBasicMaterial color="#0891b2" />
-                    </mesh>
-                    <mesh position={[0, 0.01, -0.05]}>
-                      <cylinderGeometry args={[0.015, 0.015, 0.05, 8]} />
-                      <meshStandardMaterial color="#334155" />
-                    </mesh>
-                  </group>
-                ))}
+                {frontChairZs.map((zChair, idx) => {
+                  const chairX = xCol - 0.4;
+                  const chairZ = zChair;
+                  const sittingName = getSittingUserNickname(chairX, chairZ);
+                  return (
+                    <group
+                      key={`term-front-${idx}`}
+                      position={[0.05, 0.75, zChair - -9.5]}
+                      rotation={[0, -Math.PI / 2, -Math.PI / 8]}
+                    >
+                      <mesh position={[0, 0.08, 0]}>
+                        <boxGeometry args={[0.3, 0.2, 0.04]} />
+                        <meshStandardMaterial color="#1e293b" metalness={0.8} />
+                      </mesh>
+                      <mesh position={[0, 0.08, 0.022]}>
+                        <planeGeometry args={[0.26, 0.17]} />
+                        <meshStandardMaterial color="#0f172a" emissive={sittingName ? "#22d3ee" : "#334155"} emissiveIntensity={1.2} roughness={0.2} />
+                      </mesh>
+                      <Html
+                        position={[0, 0.082, 0.024]}
+                        transform
+                        occlude
+                        distanceFactor={0.4}
+                        className="select-none pointer-events-none"
+                      >
+                        <div style={{
+                          width: '90px',
+                          height: '60px',
+                          background: '#0f172a',
+                          border: `1px solid ${sittingName ? '#06b6d4' : '#334155'}`,
+                          borderRadius: '4px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '4px',
+                          boxSizing: 'border-box',
+                          color: '#cffafe',
+                          fontFamily: 'monospace',
+                          textAlign: 'center'
+                        }}>
+                          {sittingName ? (
+                            <>
+                              <div style={{ fontSize: '6px', color: '#22d3ee', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #1e293b', paddingBottom: '2px' }}>
+                                🎤 ĐẠI BIỂU ĐANG HỌP
+                              </div>
+                              <div style={{ fontSize: '8px', fontWeight: 900, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: '2px 0' }}>
+                                {sittingName}
+                              </div>
+                              <div style={{ fontSize: '5px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                                <span style={{ width: '4px', height: '4px', background: '#10b981', borderRadius: '50%', display: 'inline-block' }}></span>
+                                KẾT NỐI ONLINE
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ fontSize: '6px', color: '#94a3b8', textTransform: 'uppercase', borderBottom: '1px solid #1e293b', paddingBottom: '2px' }}>
+                                HỆ THỐNG ĐẠI BIỂU
+                              </div>
+                              <div style={{ fontSize: '7px', fontWeight: 'bold', color: '#38bdf8', margin: '3px 0' }}>
+                                GHẾ TRỐNG
+                              </div>
+                              <div style={{ fontSize: '5px', color: '#64748b' }}>
+                                	ẤN F ĐỂ NGỒI HỌP
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </Html>
+                      <mesh position={[0, 0.01, -0.05]}>
+                        <cylinderGeometry args={[0.015, 0.015, 0.05, 8]} />
+                        <meshStandardMaterial color="#334155" />
+                      </mesh>
+                    </group>
+                  );
+                })}
               </group>
 
               {/* BÀN DÃY SAU (Back block: Dịch trái 1.0m để sát sạt lan can) */}
@@ -487,26 +553,81 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                   <meshStandardMaterial color="#3a1e0b" roughness={0.3} />
                 </mesh>
                 {/* 6 Terminal điện tử cho đại biểu dãy sau */}
-                {backChairZs.map((zChair, idx) => (
-                  <group
-                    key={`term-back-${idx}`}
-                    position={[0.05, 0.75, zChair - 9.5]}
-                    rotation={[0, -Math.PI / 2, -Math.PI / 8]}
-                  >
-                    <mesh position={[0, 0.08, 0]}>
-                      <boxGeometry args={[0.3, 0.2, 0.04]} />
-                      <meshStandardMaterial color="#1e293b" metalness={0.8} />
-                    </mesh>
-                    <mesh position={[0, 0.08, 0.025]}>
-                      <planeGeometry args={[0.26, 0.17]} />
-                      <meshBasicMaterial color="#0891b2" />
-                    </mesh>
-                    <mesh position={[0, 0.01, -0.05]}>
-                      <cylinderGeometry args={[0.015, 0.015, 0.05, 8]} />
-                      <meshStandardMaterial color="#334155" />
-                    </mesh>
-                  </group>
-                ))}
+                {backChairZs.map((zChair, idx) => {
+                  const chairX = xCol - 0.4;
+                  const chairZ = zChair;
+                  const sittingName = getSittingUserNickname(chairX, chairZ);
+                  return (
+                    <group
+                      key={`term-back-${idx}`}
+                      position={[0.05, 0.75, zChair - 9.5]}
+                      rotation={[0, -Math.PI / 2, -Math.PI / 8]}
+                    >
+                      <mesh position={[0, 0.08, 0]}>
+                        <boxGeometry args={[0.3, 0.2, 0.04]} />
+                        <meshStandardMaterial color="#1e293b" metalness={0.8} />
+                      </mesh>
+                      <mesh position={[0, 0.08, 0.022]}>
+                        <planeGeometry args={[0.26, 0.17]} />
+                        <meshStandardMaterial color="#0f172a" emissive={sittingName ? "#22d3ee" : "#334155"} emissiveIntensity={1.2} roughness={0.2} />
+                      </mesh>
+                      <Html
+                        position={[0, 0.082, 0.024]}
+                        transform
+                        occlude
+                        distanceFactor={0.4}
+                        className="select-none pointer-events-none"
+                      >
+                        <div style={{
+                          width: '90px',
+                          height: '60px',
+                          background: '#0f172a',
+                          border: `1px solid ${sittingName ? '#06b6d4' : '#334155'}`,
+                          borderRadius: '4px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          padding: '4px',
+                          boxSizing: 'border-box',
+                          color: '#cffafe',
+                          fontFamily: 'monospace',
+                          textAlign: 'center'
+                        }}>
+                          {sittingName ? (
+                            <>
+                              <div style={{ fontSize: '6px', color: '#22d3ee', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid #1e293b', paddingBottom: '2px' }}>
+                                🎤 ĐẠI BIỂU ĐANG HỌP
+                              </div>
+                              <div style={{ fontSize: '8px', fontWeight: 900, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', margin: '2px 0' }}>
+                                {sittingName}
+                              </div>
+                              <div style={{ fontSize: '5px', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
+                                <span style={{ width: '4px', height: '4px', background: '#10b981', borderRadius: '50%', display: 'inline-block' }}></span>
+                                KẾT NỐI ONLINE
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ fontSize: '6px', color: '#94a3b8', textTransform: 'uppercase', borderBottom: '1px solid #1e293b', paddingBottom: '2px' }}>
+                                HỆ THỐNG ĐẠI BIỂU
+                              </div>
+                              <div style={{ fontSize: '7px', fontWeight: 'bold', color: '#38bdf8', margin: '3px 0' }}>
+                                GHẾ TRỐNG
+                              </div>
+                              <div style={{ fontSize: '5px', color: '#64748b' }}>
+                                	ẤN F ĐỂ NGỒI HỌP
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </Html>
+                      <mesh position={[0, 0.01, -0.05]}>
+                        <cylinderGeometry args={[0.015, 0.015, 0.05, 8]} />
+                        <meshStandardMaterial color="#334155" />
+                      </mesh>
+                    </group>
+                  );
+                })}
               </group>
 
               {/* ═══ ĐẶT GHẾ ĐẠI BIỂU TƯƠNG TÁC (Dịch sang trái localX={xCol - 0.4}) ═══ */}
