@@ -32,6 +32,9 @@ export const PlayerCharacter: React.FC = () => {
     nickname,
     settings,
     miniGameOpen,
+    roomOneLocked,
+    welcomeModalOpen,
+    roomOneCompleted
   } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
 
@@ -53,6 +56,7 @@ export const PlayerCharacter: React.FC = () => {
   });
 
   const lastUpdate = useRef(0);
+  const lastSent = useRef({ x: Number.NaN, y: Number.NaN, z: Number.NaN, yaw: Number.NaN });
   // Cache vectors for useFrame to prevent GC pauses
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
@@ -196,7 +200,7 @@ export const PlayerCharacter: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
-    if (selectedExhibit || !nickname || miniGameOpen) return;
+    if (selectedExhibit || !nickname || miniGameOpen || (roomOneLocked && !roomOneCompleted) || welcomeModalOpen) return;
 
     const { w, a, s, d, shift } = keysPressed.current;
 
@@ -303,13 +307,24 @@ export const PlayerCharacter: React.FC = () => {
     // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
     if (now - lastUpdate.current > 80) {
-      if (socket && socket.connected) {
+      const sent = lastSent.current;
+      const movedEnough =
+        Math.abs(playerRef.current.position.x - sent.x) > 0.01 ||
+        Math.abs(playerRef.current.position.y - sent.y) > 0.01 ||
+        Math.abs(playerRef.current.position.z - sent.z) > 0.01 ||
+        Math.abs(playerRef.current.rotation.y - sent.yaw) > 0.01;
+
+      if (movedEnough && socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
           y: playerRef.current.position.y - baseY, // Gửi tọa độ Y logic (bàn chân chạm đất)
           z: playerRef.current.position.z,
           yaw: playerRef.current.rotation.y,
         });
+        sent.x = playerRef.current.position.x;
+        sent.y = playerRef.current.position.y;
+        sent.z = playerRef.current.position.z;
+        sent.yaw = playerRef.current.rotation.y;
       }
       lastUpdate.current = now;
     }

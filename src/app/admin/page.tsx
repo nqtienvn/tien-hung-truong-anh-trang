@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
-import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
+import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Clock, Users, Award, X } from 'lucide-react';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
@@ -56,6 +56,8 @@ export default function AdminDashboard() {
     'gallery-market-economy': { isOpen: true }
   });
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
+  const [roomOnePlayers, setRoomOnePlayers] = useState<any[]>([]);
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
 
   // Kết nối Socket.io cho admin
   useEffect(() => {
@@ -70,6 +72,11 @@ export default function AdminDashboard() {
     sock.on('connect', () => {
       console.log('[ADMIN] Connected to WS:', sock.id);
       sock.emit('admin:get-door-status');
+      sock.emit('admin:get-room1-players');
+    });
+
+    sock.on('admin:room1-players-update', (players: any[]) => {
+      setRoomOnePlayers(players);
     });
 
     sock.on('door-states', (states: Record<string, DoorState>) => {
@@ -159,26 +166,6 @@ export default function AdminDashboard() {
   const handleToggleRoom = (roomId: string, currentOpen: boolean) => {
     if (!adminSocket) return;
 
-    // Ràng buộc kiểm tra trước khi tắt phòng: Các cửa liên quan phải đóng
-    if (currentOpen) {
-      const relatedDoors = [];
-      if (roomId === 'gallery-subsidy') {
-        relatedDoors.push('door-room1', 'door-room2');
-      } else if (roomId === 'gallery-paintings') {
-        relatedDoors.push('door-room2', 'door-room3');
-      } else if (roomId === 'gallery-ceramics') {
-        relatedDoors.push('door-room3', 'door-room4');
-      } else if (roomId === 'gallery-market-economy') {
-        relatedDoors.push('door-room4');
-      }
-
-      const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
-      if (isAnyDoorOpen) {
-        alert('Vui lòng đóng tất cả các cửa liên quan đến phòng này trước khi tắt!');
-        return;
-      }
-    }
-
     setRoomLoading(roomId);
     adminSocket.emit('admin:toggle-room', { roomId, isOpen: !currentOpen });
   };
@@ -195,6 +182,20 @@ export default function AdminDashboard() {
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
     if (window.confirm(confirmMsg)) {
       adminSocket.emit('admin:teleport-all', { targetRoom });
+    }
+  };
+
+  const handleStartRoomOneCountdown = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu đếm ngược 7 giây cho tất cả người chơi trong Phòng 1?')) {
+      adminSocket.emit('admin:start-room1-countdown');
+    }
+  };
+
+  const handleForceEndRoomOne = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bạn có chắc chắn muốn KẾT THÚC trò chơi Phòng 1 và TÍNH ĐIỂM lập tức cho mọi người?')) {
+      adminSocket.emit('admin:force-end-room1');
     }
   };
 
@@ -420,26 +421,60 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-2">
             {isRoomOpen && (
-              <button
-                type="button"
-                onClick={() => handleTeleportAll(roomId)}
-                className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
-              >
-                <Compass size={12} />
-                Dịch chuyển mọi người
-              </button>
+              <>
+                {roomId === 'gallery-subsidy' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (adminSocket) {
+                          adminSocket.emit('admin:get-room1-players');
+                        }
+                        setIsResultsModalOpen(true);
+                      }}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
+                    >
+                      <Users size={12} />
+                      Danh sách kết quả
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomOneCountdown}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-violet-500/10 hover:bg-violet-500/25 border border-violet-500/25 text-violet-400"
+                    >
+                      <Clock size={12} />
+                      Bắt đầu đếm ngược (7s)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleForceEndRoomOne}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400"
+                    >
+                      <Power size={12} />
+                      Kết thúc & Tính điểm
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleTeleportAll(roomId)}
+                  className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+                >
+                  <Compass size={12} />
+                  Dịch chuyển mọi người
+                </button>
+              </>
             )}
 
             <button
               type="button"
               onClick={() => handleToggleRoom(roomId, isRoomOpen)}
-              disabled={isLoading || (isRoomOpen && hasOpenDoor)}
+              disabled={isLoading}
               className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                 isRoomOpen
-                  ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed'
+                  ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400'
                   : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
               }`}
-              title={isRoomOpen && hasOpenDoor ? 'Vui lòng đóng các cửa liên quan trước khi tắt phòng' : ''}
             >
               {isLoading ? (
                 <Loader2 size={12} className="animate-spin" />
@@ -905,6 +940,104 @@ export default function AdminDashboard() {
 
         </div>
       </main>
+
+      {/* MODAL DANH SÁCH KẾT QUẢ PHÒNG 1 REALTIME */}
+      {isResultsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm uppercase tracking-wider">
+                <Users size={16} />
+                <span>Tiến độ & Kết quả Giải mật Phòng 01</span>
+              </div>
+              <button
+                onClick={() => setIsResultsModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Content / Table */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              {roomOnePlayers.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  Không có người chơi nào đang ở trong Phòng 01 (Bao cấp).
+                </div>
+              ) : (
+                <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800 tracking-wider">
+                        <th className="py-3 px-4">Đặc vụ</th>
+                        <th className="py-3 px-4 text-center">Trạng thái</th>
+                        <th className="py-3 px-4 text-center">Manh mối</th>
+                        <th className="py-3 px-4 text-center">Điểm máy</th>
+                        <th className="py-3 px-4 text-center">Thời gian</th>
+                        <th className="py-3 px-4 text-center font-bold text-cyan-400">Tổng điểm</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-850 text-slate-350">
+                      {roomOnePlayers.map((p) => {
+                        return (
+                          <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
+                            <td className="py-3 px-4 font-medium text-white max-w-[120px] truncate">
+                              {p.nickname}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {p.completed ? (
+                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Đã Stamp
+                                </span>
+                              ) : p.ready ? (
+                                <span className="bg-violet-500/10 border border-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase animate-pulse">
+                                  Đang chơi
+                                </span>
+                              ) : (
+                                <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Đợi bắt đầu
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-slate-300">
+                              {p.cluesCollectedCount}/6 vật
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono text-slate-400">
+                              {p.baseScore}đ
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono text-slate-400">
+                              {p.completed ? `${p.timeSpent}s` : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-cyan-400">
+                              {p.completed ? `${p.baseScore}đ` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
+              <span className="text-[10px] text-slate-500 font-mono">
+                Số người trong Phòng 01: {roomOnePlayers.length}
+              </span>
+              <button
+                onClick={() => setIsResultsModalOpen(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

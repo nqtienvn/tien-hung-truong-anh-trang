@@ -160,46 +160,9 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           <meshStandardMaterial color="#311005" roughness={0.6} />
         </mesh>
         {/* Tấm phông đỏ giữa bục sân khấu */}
-        <mesh position={[-1.8, 2.9, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[6.5, 3.8, 0.05]} />
-          <meshStandardMaterial color="#b91c1c" roughness={0.8} />
-        </mesh>
-
-        {/* Quốc huy mạ vàng mô phỏng ở trung tâm phông đỏ */}
-        <mesh position={[-1.75, 3.5, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <cylinderGeometry args={[0.6, 0.6, 0.05, 24]} />
-          <meshStandardMaterial
-            color="#d4af37"
-            metalness={0.9}
-            roughness={0.1}
-          />
-        </mesh>
-        {/* Ngôi sao vàng nhỏ phía trên quốc huy */}
-        <mesh position={[-1.7, 3.5, 0]} rotation={[0, 0, -Math.PI / 2]}>
-          <coneGeometry args={[0.2, 0.5, 4]} />
-          <meshStandardMaterial
-            color="#fef08a"
-            emissive="#eab308"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-
-        {/* Khẩu hiệu vàng: "ĐẠI HỘI ĐẠI BIỂU HỘI NGHỊ DIÊN HỒNG" */}
-        <mesh position={[-1.75, 1.8, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[4.5, 0.15, 0.02]} />
-          <meshStandardMaterial
-            color="#d4af37"
-            metalness={0.8}
-            roughness={0.2}
-          />
-        </mesh>
-        <mesh position={[-1.75, 1.5, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <boxGeometry args={[3.2, 0.12, 0.02]} />
-          <meshStandardMaterial
-            color="#d4af37"
-            metalness={0.8}
-            roughness={0.2}
-          />
+        <mesh position={[-1.81, 2.7, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <boxGeometry args={[6.0, 4.0, 0.02]} />
+          <meshStandardMaterial color="#b91c1c" roughness={0.9} />
         </mesh>
 
         {/* Tượng Bác Hồ đặt trang nghiêm phía bên phải sân khấu (Z > 0) */}
@@ -238,74 +201,74 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
             </mesh>
           </group>
         ))}
+      </group>
 
-        {/* Bàn Chủ tọa Đoàn Chủ tịch quay sang phải */}
-        <group position={[0.6, 0.4, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh position={[0, 0.375, 0]}>
-            <boxGeometry args={[5.2, 0.75, 0.8]} />
-            <meshStandardMaterial color="#7f1d1d" roughness={0.4} />
-          </mesh>
-          <mesh position={[0, 0.76, 0]}>
-            <boxGeometry args={[5.3, 0.05, 0.85]} />
-            <meshStandardMaterial color="#3f2314" roughness={0.25} />
-          </mesh>
-          {/* Micro cổ ngỗng Chủ tọa */}
-          {[-1.5, 0, 1.5].map((xMic, i) => (
-            <group key={i} position={[xMic, 0.8, -0.2]}>
-              <mesh>
-                <cylinderGeometry args={[0.02, 0.02, 0.15, 8]} />
-                <meshStandardMaterial color="#1e293b" metalness={0.9} />
-              </mesh>
-              <mesh position={[0, 0.14, 0.05]} rotation={[-Math.PI / 4, 0, 0]}>
-                <cylinderGeometry args={[0.008, 0.008, 0.25, 8]} />
-                <meshStandardMaterial color="#0f172a" />
-              </mesh>
-            </group>
-          ))}
-        </group>
-
-        {/* Màn hình LED phẳng khổng lồ đặt trước cột tường bên cạnh sân khấu (Z local = -12.5m và 12.5m) */}
-        {[-12.5, 12.5].map((zPos, idx) => (
-          <group
-            key={`led-wall-${idx}`}
-            position={[-1.64, 3.5, zPos]}
-            rotation={[0, Math.PI / 2, 0]}
-          >
-            {/* Khung viền màn hình */}
+      {/* Bàn Chủ tọa Đoàn Chủ tịch quay sang phải */}
+      <group position={[-9.2, 0.4, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 0.375, 0]}>
+          <boxGeometry args={[5.2, 0.75, 0.8]} />
+          <meshStandardMaterial color="#7f1d1d" roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 0.76, 0]}>
+          <boxGeometry args={[5.3, 0.05, 0.85]} />
+          <meshStandardMaterial color="#3f2314" roughness={0.25} />
+        </mesh>
+        {/* Micro cổ ngỗng Chủ tọa */}
+        {[-1.5, 0, 1.5].map((xMic, i) => (
+          <group key={i} position={[xMic, 0.8, -0.2]}>
             <mesh>
-              <boxGeometry args={[10.6, 3.9, 0.03]} />
-              <meshStandardMaterial
-                color="#1e293b"
-                roughness={0.8}
-                metalness={0.5}
-              />
+              <cylinderGeometry args={[0.02, 0.02, 0.15, 8]} />
+              <meshStandardMaterial color="#1e293b" metalness={0.9} />
             </mesh>
-            {/* Tấm nền hiển thị slide */}
-            <mesh position={[0, 0, 0.02]}>
-              <planeGeometry args={[10.5, 3.8]} />
-              <meshBasicMaterial
-                map={slideTexture || undefined}
-                color={slideTexture ? "#ffffff" : "#0284c7"}
-              />
+            <mesh position={[0, 0.14, 0.05]} rotation={[-Math.PI / 4, 0, 0]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.25, 8]} />
+              <meshStandardMaterial color="#0f172a" />
             </mesh>
           </group>
         ))}
+      </group>
 
-        {/* Bục phát biểu (Podium) hướng sang bên phải */}
-        <group position={[0.6, 0.4, -3.8]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh position={[0, 0.5, 0]}>
-            <boxGeometry args={[0.5, 1.0, 0.4]} />
-            <meshStandardMaterial color="#5c2d18" roughness={0.3} />
+      {/* Màn hình LED phẳng khổng lồ đặt trước cột tường bên cạnh sân khấu (Z local = -12.5m và 12.5m) */}
+      {[-12.5, 12.5].map((zPos, idx) => (
+        <group
+          key={`led-wall-${idx}`}
+          position={[-11.8, 3.5, zPos]}
+          rotation={[0, Math.PI / 2, 0]}
+        >
+          {/* Khung viền màn hình */}
+          <mesh>
+            <boxGeometry args={[10.6, 3.9, 0.03]} />
+            <meshStandardMaterial
+              color="#1e293b"
+              roughness={0.8}
+              metalness={0.5}
+            />
           </mesh>
-          <mesh position={[0, 1.02, 0.02]} rotation={[Math.PI / 12, 0, 0]}>
-            <boxGeometry args={[0.56, 0.05, 0.46]} />
-            <meshStandardMaterial color="#3f1a0a" roughness={0.2} />
-          </mesh>
-          <mesh position={[0, 1.15, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
-            <meshStandardMaterial color="#000" metalness={0.9} />
+          {/* Tấm nền hiển thị slide */}
+          <mesh position={[0, 0, 0.02]}>
+            <planeGeometry args={[10.5, 3.8]} />
+            <meshBasicMaterial
+              map={slideTexture || undefined}
+              color={slideTexture ? "#ffffff" : "#0284c7"}
+            />
           </mesh>
         </group>
+      ))}
+
+      {/* Bục phát biểu (Podium) hướng sang bên phải */}
+      <group position={[-9.2, 0.4, -3.8]} rotation={[0, Math.PI / 2, 0]}>
+        <mesh position={[0, 0.5, 0]}>
+          <boxGeometry args={[0.5, 1.0, 0.4]} />
+          <meshStandardMaterial color="#5c2d18" roughness={0.3} />
+        </mesh>
+        <mesh position={[0, 1.02, 0.02]} rotation={[Math.PI / 12, 0, 0]}>
+          <boxGeometry args={[0.56, 0.05, 0.46]} />
+          <meshStandardMaterial color="#3f1a0a" roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 1.15, 0]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
+          <meshStandardMaterial color="#000" metalness={0.9} />
+        </mesh>
       </group>
 
       {/* BẬC THANG BÊ TÔNG HỘI TRƯỜNG (Stepped Platforms) */}
@@ -341,34 +304,24 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           { x: 6.2, tierY: 0.9 },
         ].map((rail, rIdx) => (
           <group key={`railing-${rIdx}`} position={[rail.x, rail.tierY, 0]}>
-            {/* Cả 2 phần lan can: Dãy trước (Z: -14.5 -> -4.5) và Dãy sau (Z: 4.5 -> 14.5) */}
-            {[-9.5, 9.5].map((zCenter, sIdx) => (
+            {/* Cả 2 phần lan can: Dãy trước (Z: -17.0 -> -4.5) và Dãy sau (Z: 4.5 -> 17.0) */}
+            {[-10.75, 10.75].map((zCenter, sIdx) => (
               <group key={`sec-${sIdx}`} position={[0, 0, zCenter]}>
                 {/* Tấm kính cường lực bảo vệ trong suốt */}
                 <mesh position={[0, 0.4, 0]}>
-                  <boxGeometry args={[0.02, 0.65, 10.0]} />
-                  <meshStandardMaterial
-                    color="#0891b2"
-                    transparent
-                    opacity={0.25}
-                    roughness={0.1}
-                    metalness={0.8}
-                  />
+                  <boxGeometry args={[0.02, 0.65, 12.5]} />
+                  <meshStandardMaterial color="#0891b2" transparent opacity={0.25} roughness={0.1} metalness={0.8} />
                 </mesh>
                 {/* Tay vịn bằng gỗ sồi sang trọng */}
                 <mesh position={[0, 0.74, 0]}>
-                  <boxGeometry args={[0.06, 0.04, 10.05]} />
+                  <boxGeometry args={[0.06, 0.04, 12.55]} />
                   <meshStandardMaterial color="#2d1708" roughness={0.3} />
                 </mesh>
                 {/* Trụ kim loại vững chắc nâng đỡ kính */}
-                {[-5.0, -2.5, 0, 2.5, 5.0].map((zPost, pIdx) => (
+                {[-6.25, -3.125, 0, 3.125, 6.25].map((zPost, pIdx) => (
                   <mesh key={`post-${pIdx}`} position={[0, 0.36, zPost]}>
                     <boxGeometry args={[0.04, 0.72, 0.04]} />
-                    <meshStandardMaterial
-                      color="#475569"
-                      roughness={0.3}
-                      metalness={0.7}
-                    />
+                    <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
                   </mesh>
                 ))}
               </group>
@@ -387,20 +340,11 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
         ].map((rail, rIdx) => (
           <group key={`end-rail-${rIdx}`} position={[0, 0, 0]}>
             {[-17.0, 17.0].map((zPos, sIdx) => (
-              <group
-                key={`end-sec-${sIdx}`}
-                position={[rail.xCenter, rail.tierY, zPos]}
-              >
+              <group key={`end-sec-${sIdx}`} position={[rail.xCenter, rail.tierY, zPos]}>
                 {/* Tấm kính cường lực bảo vệ */}
                 <mesh position={[0, 0.4, 0]}>
                   <boxGeometry args={[rail.width, 0.65, 0.02]} />
-                  <meshStandardMaterial
-                    color="#0891b2"
-                    transparent
-                    opacity={0.25}
-                    roughness={0.1}
-                    metalness={0.8}
-                  />
+                  <meshStandardMaterial color="#0891b2" transparent opacity={0.25} roughness={0.1} metalness={0.8} />
                 </mesh>
                 {/* Tay vịn gỗ sồi sẫm màu */}
                 <mesh position={[0, 0.74, 0]}>
@@ -408,27 +352,21 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                   <meshStandardMaterial color="#2d1708" roughness={0.3} />
                 </mesh>
                 {/* Trụ đỡ kim loại */}
-                {rail.width > 4.0
-                  ? [-2.4, 0, 2.4].map((xPost, pIdx) => (
-                      <mesh key={`post-${pIdx}`} position={[xPost, 0.36, 0]}>
-                        <boxGeometry args={[0.04, 0.72, 0.04]} />
-                        <meshStandardMaterial
-                          color="#475569"
-                          roughness={0.3}
-                          metalness={0.7}
-                        />
-                      </mesh>
-                    ))
-                  : [-1.2, 1.2].map((xPost, pIdx) => (
-                      <mesh key={`post-${pIdx}`} position={[xPost, 0.36, 0]}>
-                        <boxGeometry args={[0.04, 0.72, 0.04]} />
-                        <meshStandardMaterial
-                          color="#475569"
-                          roughness={0.3}
-                          metalness={0.7}
-                        />
-                      </mesh>
-                    ))}
+                {rail.width > 4.0 ? (
+                  [-2.4, 0, 2.4].map((xPost, pIdx) => (
+                    <mesh key={`post-${pIdx}`} position={[xPost, 0.36, 0]}>
+                      <boxGeometry args={[0.04, 0.72, 0.04]} />
+                      <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
+                    </mesh>
+                  ))
+                ) : (
+                  [-1.2, 1.2].map((xPost, pIdx) => (
+                    <mesh key={`post-${pIdx}`} position={[xPost, 0.36, 0]}>
+                      <boxGeometry args={[0.04, 0.72, 0.04]} />
+                      <meshStandardMaterial color="#475569" roughness={0.3} metalness={0.7} />
+                    </mesh>
+                  ))
+                )}
               </group>
             ))}
           </group>
@@ -450,14 +388,12 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
 
           return (
             <group key={`col-${colIndex}`}>
-              {/* BÀN DÃY TRƯỚC (Front block: Dịch trái 1.0m để sát sạt lan can) */}
+              {/* BÀN DÃY TRƯỚC */}
               <group position={[xCol - 1.0, tierY, -9.5]}>
-                {/* Che chân bàn vải đỏ */}
                 <mesh position={[0, 0.35, 0]}>
                   <boxGeometry args={[0.5, 0.7, 11.0]} />
                   <meshStandardMaterial color="#653b1b" roughness={0.4} />
                 </mesh>
-                {/* Mặt bàn gỗ */}
                 <mesh position={[0, 0.725, 0]}>
                   <boxGeometry args={[0.56, 0.05, 11.06]} />
                   <meshStandardMaterial color="#3a1e0b" roughness={0.3} />
@@ -540,14 +476,12 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                 })}
               </group>
 
-              {/* BÀN DÃY SAU (Back block: Dịch trái 1.0m để sát sạt lan can) */}
+              {/* BÀN DÃY SAU */}
               <group position={[xCol - 1.0, tierY, 9.5]}>
-                {/* Che chân bàn vải đỏ */}
                 <mesh position={[0, 0.35, 0]}>
                   <boxGeometry args={[0.5, 0.7, 11.0]} />
                   <meshStandardMaterial color="#653b1b" roughness={0.4} />
                 </mesh>
-                {/* Mặt bàn gỗ */}
                 <mesh position={[0, 0.725, 0]}>
                   <boxGeometry args={[0.56, 0.05, 11.06]} />
                   <meshStandardMaterial color="#3a1e0b" roughness={0.3} />
@@ -630,8 +564,7 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                 })}
               </group>
 
-              {/* ═══ ĐẶT GHẾ ĐẠI BIỂU TƯƠNG TÁC (Dịch sang trái localX={xCol - 0.4}) ═══ */}
-              {/* Dãy trước */}
+              {/* GHẾ ĐẠI BIỂU */}
               {frontChairZs.map((zChair, idx) => (
                 <DelegateChair
                   key={`chair-front-${idx}`}
@@ -641,7 +574,6 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
                   rotationY={-Math.PI / 2}
                 />
               ))}
-              {/* Dãy sau */}
               {backChairZs.map((zChair, idx) => (
                 <DelegateChair
                   key={`chair-back-${idx}`}

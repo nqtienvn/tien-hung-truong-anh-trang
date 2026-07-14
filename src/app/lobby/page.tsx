@@ -402,7 +402,7 @@ const LobbyPlayer: React.FC = () => {
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -517,47 +517,32 @@ const LobbyPlayer: React.FC = () => {
         // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
 
-        // 1. Vách ngăn Z = 3.0 local (Global Z = 34.0, độ dày Z: 33.7 -> 34.3)
-        // Khoảng trống đi qua là X từ -5.0 đến -2.0. Chặn các vị trí khác.
-        if (z > 33.7 && z < 34.3) {
-          const inOpening = x > -5.0 && x < -2.0;
-          if (!inOpening) return true;
-        }
-
-        // 2. Vách ngăn Z = 13.0 local (Global Z = 44.0, độ dày Z: 43.7 -> 44.3)
-        // Chặn nếu đi qua tường X từ -6.0 đến 6.0
-        if (z > 43.7 && z < 44.3) {
-          const hitWall = x > -6.0 && x < 6.0;
-          if (hitWall) return true;
-        }
-
-        // 3. Bàn gỗ bày đài Radio cổ (Global Z = 43.55, X: -1.2 -> 1.2, Z: 43.1 -> 44.0)
-        if (z > 43.1 && z < 44.0 && x > -1.2 && x < 1.2) {
-          return true;
-        }
-
-        // 4. Ghế gỗ băng cũ trong phòng (local Z = 8.0 & 18.0 => Global Z = 39.0 & 49.0)
+        // 1. Ghế gỗ băng cũ trong phòng (local Z = -12.0 & 12.0 => Global Z = 19.0 & 43.0)
         // Khi đang nhảy cao hơn mặt ghế thì cho vượt qua.
         const canJumpOverBench = currentY > 3.75;
-        if (!canJumpOverBench && z > 38.5 && z < 39.5 && x > -1.7 && x < 1.7) {
+        if (!canJumpOverBench && z > 18.5 && z < 19.5 && x > -1.7 && x < 1.7) {
           return true;
         }
-        if (!canJumpOverBench && z > 48.5 && z < 49.5 && x > -1.7 && x < 1.7) {
+        if (!canJumpOverBench && z > 42.5 && z < 43.5 && x > -1.7 && x < 1.7) {
           return true;
         }
 
-        // 5. Dãy ghế ngồi giữa phòng (local Z = -16.5, -10.5, -4.5 => Global Z = 14.5, 20.5, 26.5)
-        const centralBenchZs = [14.5, 20.5, 26.5];
+        // 5. Dãy ghế ngồi giữa phòng (local Z = -4.0, 4.0 => Global Z = 27.0, 35.0)
+        const centralBenchZs = [27.0, 35.0];
         for (const benchZ of centralBenchZs) {
           if (!canJumpOverBench && z > benchZ - 0.65 && z < benchZ + 0.65 && x > -2.15 && x < 2.15) {
             return true;
           }
         }
 
-        // 6. Bàn lọ hoa trang trí: vẫn chặn để không xuyên qua bàn.
+        // 6. Bàn lọ hoa trang trí (mỗi bên 3 bàn => Global Z = 15.0, 31.0, 47.0)
         const decorTables = [
-          { x: -7.2, z: 17.8 },
-          { x: 7.2, z: 23.8 },
+          { x: -7.2, z: 15.0 },
+          { x: -7.2, z: 31.0 },
+          { x: -7.2, z: 47.0 },
+          { x: 7.2, z: 15.0 },
+          { x: 7.2, z: 31.0 },
+          { x: 7.2, z: 47.0 },
         ];
         for (const table of decorTables) {
           const dx = x - table.x;
@@ -727,6 +712,7 @@ const LobbyPlayer: React.FC = () => {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (shouldIgnoreKeyboard(e.target)) return;
+      if ((roomOneLocked && !roomOneCompleted) || welcomeModalOpen) return;
 
       if (e.code === 'KeyF') {
         e.preventDefault();
@@ -796,7 +782,7 @@ const LobbyPlayer: React.FC = () => {
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit) return;
+    if (selectedExhibit || (roomOneLocked && !roomOneCompleted) || welcomeModalOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {

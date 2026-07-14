@@ -37,19 +37,19 @@ export const MuseumLobby: React.FC = () => {
       </mesh>
       <gridHelper
         args={[L, 40, '#3d2817', '#2d1f10']}
-        position={[0, 0.005, 0]}
+        position={[0, 0.008, 0]}
       />
 
       {/* ═══════════════════════════════════════════════════════════════
           2. THẢM ĐỎ TRẢI DỌC TRỤC CHÍNH (Red Carpet)
       ═══════════════════════════════════════════════════════════════ */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -2.5]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -2.5]}>
         <planeGeometry args={[4.5, 13]} />
         <meshStandardMaterial color={redCarpet} roughness={0.92} metalness={0} />
       </mesh>
       {/* Viền vàng hai bên thảm */}
       {[-2.35, 2.35].map((x) => (
-        <mesh key={`carpet-trim-${x}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.016, -2.5]}>
+        <mesh key={`carpet-trim-${x}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.025, -2.5]}>
           <planeGeometry args={[0.12, 13]} />
           <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
         </mesh>
@@ -70,51 +70,51 @@ export const MuseumLobby: React.FC = () => {
         <boxGeometry args={[13.0, H, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
-      {/* Tường sau phía dưới cửa (X: -2 đến 2, Y: 0 đến 3.0) - Dưới Mezzanine */}
-      <mesh position={[0, 1.5, 8.0]}>
+      {/* Tường sau phía dưới cửa (X: -2 đến 2, Y: 0 đến 3.0) */}
+      <mesh position={[0, 1.5, 8.12]}>
         <boxGeometry args={[4.0, 3.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
-      {/* Tường sau phía trên cửa (X: -2 đến 2, Y: 7.0 đến 12) - Trên Door 1 */}
-      <mesh position={[0, 9.5, 8.0]}>
+      {/* Tường sau phía trên cửa */}
+      <mesh position={[0, 9.5, 8.12]}>
         <boxGeometry args={[4.0, 5.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
 
       {/* Hai hốc lõm trang trí tường sau đối xứng ở hai bên (lattice panels) */}
       {/* Hốc trái */}
-      <mesh position={[-9.5, H * 0.6, 7.84]}>
+      <mesh position={[-9.5, H * 0.6, 7.82]}>
         <boxGeometry args={[7.0, 4.0, 0.02]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
       </mesh>
       {/* Lưới trang trí hốc trái */}
       {Array.from({ length: 9 }).map((_, i) => (
-        <mesh key={`wall-lattice-l-h-${i}`} position={[-9.5, 4.8 + i * 0.5, 7.83]}>
+          <mesh key={`wall-lattice-l-h-${i}`} position={[-9.5, 4.8 + i * 0.5, 7.81]}>
           <boxGeometry args={[7.0, 0.03, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
       ))}
       {Array.from({ length: 15 }).map((_, i) => (
-        <mesh key={`wall-lattice-l-v-${i}`} position={[-13.0 + i * 0.5, 6.8, 7.83]}>
+          <mesh key={`wall-lattice-l-v-${i}`} position={[-13.0 + i * 0.5, 6.8, 7.81]}>
           <boxGeometry args={[0.03, 4.0, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
       ))}
 
       {/* Hốc phải */}
-      <mesh position={[9.5, H * 0.6, 7.84]}>
+      <mesh position={[9.5, H * 0.6, 7.82]}>
         <boxGeometry args={[7.0, 4.0, 0.02]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
       </mesh>
       {/* Lưới trang trí hốc phải */}
       {Array.from({ length: 9 }).map((_, i) => (
-        <mesh key={`wall-lattice-r-h-${i}`} position={[9.5, 4.8 + i * 0.5, 7.83]}>
+          <mesh key={`wall-lattice-r-h-${i}`} position={[9.5, 4.8 + i * 0.5, 7.81]}>
           <boxGeometry args={[7.0, 0.03, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
       ))}
       {Array.from({ length: 15 }).map((_, i) => (
-        <mesh key={`wall-lattice-r-v-${i}`} position={[6.0 + i * 0.5, 6.8, 7.83]}>
+          <mesh key={`wall-lattice-r-v-${i}`} position={[6.0 + i * 0.5, 6.8, 7.81]}>
           <boxGeometry args={[0.03, 4.0, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
@@ -139,16 +139,16 @@ export const MuseumLobby: React.FC = () => {
 
       {/* --- CỬA GỖ LỐI VÀO LỚN (Z = -10) --- */}
       <group position={[0, 0, -L / 2]}>
-        {/* Khung cửa gỗ bao quanh */}
-        <mesh position={[0, 4.0, 0.05]}>
+        {/* Khung cửa gỗ bao quanh - đẩy về phía sảnh để không chồng tường */}
+        <mesh position={[0, 4.0, 0.12]}>
           <boxGeometry args={[10.2, 8.1, 0.45]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.55} />
         </mesh>
         
         {/* Cánh cửa bên trái */}
         <group position={[-2.45, 3.95, 0.1]}>
-          {/* Thân cửa chính */}
-          <mesh>
+          {/* Thân cửa chính - đẩy ra phía trước để không chồng khung */}
+          <mesh position={[0, 0, 0.06]}>
             <boxGeometry args={[4.8, 7.8, 0.15]} />
             <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
           </mesh>
@@ -193,8 +193,8 @@ export const MuseumLobby: React.FC = () => {
 
         {/* Cánh cửa bên phải */}
         <group position={[2.45, 3.95, 0.1]}>
-          {/* Thân cửa chính */}
-          <mesh>
+          {/* Thân cửa chính - đẩy ra phía trước để không chồng khung */}
+          <mesh position={[0, 0, 0.06]}>
             <boxGeometry args={[4.8, 7.8, 0.15]} />
             <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
           </mesh>
