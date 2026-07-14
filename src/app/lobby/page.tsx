@@ -1583,6 +1583,29 @@ export default function LobbyPage() {
                 </div>
               </div>
 
+              {/* Option: Max Visible Players */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block">
+                  {language === 'vi' ? 'Giới hạn số lượng người chơi hiển thị' : 'Visible Players Limit'}
+                </span>
+                <div className="grid grid-cols-5 gap-1.5 text-center">
+                  {([0, 10, 30, 64, 99] as const).map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => updateSettings({ maxAvatars: count })}
+                      className={`text-[10px] font-mono font-bold py-1.5 px-0.5 rounded-lg border transition-all cursor-pointer ${
+                        settings.maxAvatars === count 
+                          ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-black shadow-sm' 
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-750'
+                      }`}
+                    >
+                      {count === 99 ? (language === 'vi' ? 'Tất cả' : 'All') : count}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Preset Description Card */}
               <div className="bg-slate-900/50 border border-slate-800/80 p-4 rounded-2xl space-y-3">
                 <span className="text-[9px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
