@@ -1045,6 +1045,7 @@ export default function LobbyPage() {
   // ── Summary Minigame state (Room 4) ──
   const [mgOpen, setMgOpen] = useState(false);
   const [mgStep, setMgStep] = useState<'rules' | 'game' | 'complete'>('rules');
+  const [mgHasProgress, setMgHasProgress] = useState(false);
   const [mgIndex, setMgIndex] = useState(0);
   const [mgScore, setMgScore] = useState(0);
   const [mgDragOver, setMgDragOver] = useState<string | null>(null);
@@ -1087,26 +1088,7 @@ export default function LobbyPage() {
 
     if (questionTimeLeft <= 0) {
       setMgFeedback('timeout');
-      
-      const timerComplete = setTimeout(() => {
-        setMgFeedback(null);
-        setMgEarnedPoints(null);
-        if (mgIndex < mgQuestions.length - 1) {
-          setMgIndex(prev => prev + 1);
-          setQuestionTimeLeft(15);
-        } else {
-          setMgStep('complete');
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('minigame_played_gallery_four', 'true');
-            localStorage.setItem('minigame_score_gallery_four', mgScore.toString());
-          }
-          if (socket && socket.connected) {
-            socket.emit('update-score', { score: mgScore });
-          }
-        }
-      }, 1200);
-
-      return () => clearTimeout(timerComplete);
+      return;
     }
 
     const interval = setTimeout(() => {
@@ -1114,7 +1096,35 @@ export default function LobbyPage() {
     }, 1000);
 
     return () => clearTimeout(interval);
-  }, [mgStep, mgFeedback, questionTimeLeft, mgIndex, mgQuestions.length, mgOpen, mgScore, socket]);
+  }, [mgStep, mgFeedback, questionTimeLeft, mgOpen]);
+
+  // Tự động chuyển câu hỏi khi bị hết giờ (timeout)
+  useEffect(() => {
+    if (mgFeedback !== 'timeout' || mgStep !== 'game' || !mgOpen) {
+      return;
+    }
+
+    const timerComplete = setTimeout(() => {
+      setMgFeedback(null);
+      setMgEarnedPoints(null);
+      if (mgIndex < mgQuestions.length - 1) {
+        setMgIndex(prev => prev + 1);
+        setQuestionTimeLeft(15);
+      } else {
+        setMgStep('complete');
+        setMgHasProgress(false);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('minigame_played_gallery_four', 'true');
+          localStorage.setItem('minigame_score_gallery_four', mgScore.toString());
+        }
+        if (socket && socket.connected) {
+          socket.emit('update-score', { score: mgScore });
+        }
+      }
+    }, 1200);
+
+    return () => clearTimeout(timerComplete);
+  }, [mgStep, mgFeedback, mgIndex, mgQuestions.length, mgOpen, mgScore, socket]);
 
   // Listen for CustomEvent from RoomFour
   useEffect(() => {
@@ -1132,17 +1142,38 @@ export default function LobbyPage() {
           }
         }
       } else {
-        setMgStep('rules');
-        setMgIndex(0);
-        setMgScore(0);
-        setMgFeedback(null);
-        setQuestionTimeLeft(15);
-        setMgEarnedPoints(null);
+        if (mgHasProgress) {
+          setMgStep('rules');
+        } else {
+          setMgStep('rules');
+          setMgIndex(0);
+          setMgScore(0);
+          setMgFeedback(null);
+          setQuestionTimeLeft(15);
+          setMgEarnedPoints(null);
+        }
       }
     };
     window.addEventListener('openSummaryMinigame', handler);
     return () => window.removeEventListener('openSummaryMinigame', handler);
-  }, [socket, setMiniGameOpen]);
+  }, [socket, setMiniGameOpen, mgHasProgress]);
+
+  const handleCloseMinigame = () => {
+    setMgOpen(false);
+    setMiniGameOpen(false);
+    setMgStep('rules');
+    setMgIndex(0);
+    setMgScore(0);
+    setMgFeedback(null);
+    setQuestionTimeLeft(15);
+    setMgEarnedPoints(null);
+    setMgHasProgress(false);
+  };
+
+  const handleCloseMinigameWithoutReset = () => {
+    setMgOpen(false);
+    setMiniGameOpen(false);
+  };
 
   const handleMgAnswer = (catId: string) => {
     if (mgFeedback !== null || questionTimeLeft <= 0) return;
@@ -1169,6 +1200,7 @@ export default function LobbyPage() {
         setQuestionTimeLeft(15);
       } else {
         setMgStep('complete');
+        setMgHasProgress(false);
         if (typeof window !== 'undefined') {
           localStorage.setItem('minigame_played_gallery_four', 'true');
           localStorage.setItem('minigame_score_gallery_four', nextScore.toString());
@@ -1547,6 +1579,37 @@ export default function LobbyPage() {
                 <span style={{ fontSize: '20px' }}>🏆</span>
                 <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>THỬ THÁCH KINH TẾ ĐỊNH HƯỚNG XHCN</span>
               </div>
+              <button
+                onClick={handleCloseMinigameWithoutReset}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #334155',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#ef4444';
+                  e.currentTarget.style.color = '#ef4444';
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#334155';
+                  e.currentTarget.style.color = '#94a3b8';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                ✕ {language === 'vi' ? 'Đóng' : 'Close'}
+              </button>
             </div>
 
             {/* RULES */}
@@ -1571,17 +1634,29 @@ export default function LobbyPage() {
                   ))}
                 </div>
                 <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Tổng điểm tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
-                <button 
-                  onClick={() => {
-                    setMgQuestions(shuffleQuestions(MG_SITUATIONS));
-                    setMgStep('game');
-                    setQuestionTimeLeft(15);
-                    setMgEarnedPoints(null);
-                  }} 
-                  style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
-                >
-                  🚀 Bắt đầu chơi
-                </button>
+                {mgHasProgress ? (
+                  <button 
+                    onClick={() => {
+                      setMgStep('game');
+                    }} 
+                    style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
+                  >
+                    ▶️ {language === 'vi' ? `Tiếp tục chơi (Câu ${mgIndex + 1})` : `Continue (Q${mgIndex + 1})`}
+                  </button>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      setMgQuestions(shuffleQuestions(MG_SITUATIONS));
+                      setMgStep('game');
+                      setQuestionTimeLeft(15);
+                      setMgEarnedPoints(null);
+                      setMgHasProgress(true);
+                    }} 
+                    style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
+                  >
+                    🚀 {language === 'vi' ? 'Bắt đầu chơi' : 'Start Game'}
+                  </button>
+                )}
               </div>
             )}
 
@@ -1734,7 +1809,7 @@ export default function LobbyPage() {
                   </p>
 
                   <div style={{ display: 'flex', gap: '16px' }}>
-                    <button onClick={() => { setMgOpen(false); setMiniGameOpen(false); }} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
+                    <button onClick={handleCloseMinigame} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
                   </div>
                 </div>
               );
