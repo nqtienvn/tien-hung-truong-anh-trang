@@ -140,6 +140,13 @@ interface MuseumContextType {
   roomOneSessionResults: any[] | null;
   setRoomOneSessionResults: (results: any[] | null) => void;
 
+  // --- Room 2 Conference Session Synchronizer ---
+  roomTwoSessionState: 'waiting' | 'session1';
+  roomTwoDocOpen: boolean;
+  setRoomTwoDocOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  roomTwoScore: number | null;
+  setRoomTwoScore: React.Dispatch<React.SetStateAction<number | null>>;
+
   // --- Welcome Modal Status ---
   welcomeModalOpen: boolean;
   setWelcomeModalOpen: (open: boolean) => void;
@@ -197,6 +204,11 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomOneState, setRoomOneState] = useState<'waiting' | 'countdown' | 'started'>('waiting');
   const [roomOneStartTimestamp, setRoomOneStartTimestamp] = useState<number | null>(null);
   const [roomOneSessionResults, setRoomOneSessionResults] = useState<any[] | null>(null);
+
+  // --- Room 2 Conference Session Synchronizer ---
+  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1'>('waiting');
+  const [roomTwoDocOpen, setRoomTwoDocOpen] = useState<boolean>(false);
+  const [roomTwoScore, setRoomTwoScore] = useState<number | null>(null);
 
   // --- Welcome Modal Status ---
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
@@ -693,6 +705,19 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setRoomOneCompleted(true);
     });
 
+    // ── Room 2 Conference Session Sync Events ──
+    newSocket.on('room2:state-sync', (data: { roomTwoSessionState: 'waiting' | 'session1' }) => {
+      setRoomTwoSessionState(data.roomTwoSessionState);
+    });
+
+    newSocket.on('room2:session1-start', () => {
+      setRoomTwoSessionState('session1');
+    });
+
+    newSocket.on('room2:submit-success', (data: { score: number }) => {
+      setRoomTwoScore(data.score);
+    });
+
     setSocket(newSocket);
 
     return () => {
@@ -797,6 +822,14 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [activeGallery?.id, roomOneState]);
 
+  // Reset Room 2 states when leaving Room 2
+  useEffect(() => {
+    if (currentRoom !== 'gallery-paintings') {
+      setRoomTwoDocOpen(false);
+      setRoomTwoScore(null);
+    }
+  }, [currentRoom]);
+
   return (
     <MuseumContext.Provider
       value={{
@@ -876,6 +909,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         roomOneStartTimestamp,
         roomOneSessionResults,
         setRoomOneSessionResults,
+
+        // --- Room 2 Conference Session Synchronizer ---
+        roomTwoSessionState,
+        roomTwoDocOpen,
+        setRoomTwoDocOpen,
+        roomTwoScore,
+        setRoomTwoScore,
 
         // --- Welcome Modal Status ---
         welcomeModalOpen,

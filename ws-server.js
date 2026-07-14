@@ -69,6 +69,9 @@ let roomOneState = 'waiting'; // 'waiting', 'countdown', 'started'
 let roomOneCountdownTimer = null;
 let roomOneStartTimestamp = null;
 
+// Trạng thái đồng bộ của phòng 2 (Hội nghị)
+let roomTwoSessionState = 'waiting'; // 'waiting', 'session1'
+
 const updateRoomOneReadyStatus = () => {
   // Tìm tất cả user đang ở trong phòng 1
   const usersInRoomOne = Object.values(activeUsers).filter(
@@ -124,6 +127,19 @@ const broadcastRoomOnePlayers = () => {
   
   io.emit('admin:room1-players-update', usersInRoomOne);
 };
+const broadcastRoomTwoPlayers = () => {
+  const usersInRoomTwo = Object.values(activeUsers)
+    .filter(u => u.galleryId === 'gallery-paintings' && u.nickname)
+    .map(u => ({
+      socketId: u.id,
+      nickname: u.nickname,
+      submitted: u.room2Score !== undefined,
+      score: u.room2Score || 0
+    }));
+  
+  io.emit('admin:room2-players-update', usersInRoomTwo);
+};
+
 
 // Thời gian đếm ngược trước khi đóng cửa hoàn toàn (ms)
 const DOOR_CLOSE_COUNTDOWN_MS = 5000;
@@ -379,6 +395,15 @@ io.on('connection', (socket) => {
       if (oldRoom === 'gallery-subsidy') {
         updateRoomOneReadyStatus();
         broadcastRoomOnePlayers();
+      }
+
+      if (newRoom === 'gallery-paintings') {
+        socket.emit('room2:state-sync', { roomTwoSessionState });
+        broadcastRoomTwoPlayers();
+      }
+      
+      if (oldRoom === 'gallery-paintings') {
+        broadcastRoomTwoPlayers();
       }
     }
 
@@ -737,6 +762,44 @@ io.on('connection', (socket) => {
     }
   });
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ROOM 2: CONFERENCE SESSION SYNC EVENTS
+  // ═══════════════════════════════════════════════════════════════════════════
+  socket.on('admin:start-room2-session1', () => {
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ nhất ở Phòng 2 từ admin.');
+    roomTwoSessionState = 'session1';
+    io.emit('room2:session1-start');
+    broadcastRoomTwoPlayers();
+  });
+
+  socket.on('admin:get-room2-players', () => {
+    broadcastRoomTwoPlayers();
+  });
+
+  socket.on('room2:submit-score', (data) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+
+    const val = data.value || 0;
+    
+    // Tính điểm dựa trên mức lựa chọn của nhóm (khoảng giá trị của slider)
+    let calculatedScore = 0;
+    if (val >= 0 && val <= 30) calculatedScore = 2;
+    else if (val >= 31 && val <= 50) calculatedScore = 5;
+    else if (val >= 51 && val <= 70) calculatedScore = 8;
+    else if (val >= 71 && val <= 80) calculatedScore = 12;
+    else if (val >= 81 && val <= 90) calculatedScore = 15;
+    else if (val >= 91 && val <= 100) calculatedScore = 10;
+
+    user.room2Score = calculatedScore;
+    user.score = (user.score || 0) + calculatedScore;
+
+    console.log(`[ROOM-2-SUBMIT] ${user.nickname} nộp đánh giá: ${val}. Điểm đạt: ${calculatedScore}`);
+    
+    socket.emit('room2:submit-success', { score: calculatedScore });
+    broadcastRoomTwoPlayers();
+  });
+
   const roomClosingTimers = {};
 
   socket.on('admin:toggle-room', (data) => {
@@ -892,6 +955,10 @@ io.on('connection', (socket) => {
       if (galleryId === 'gallery-subsidy') {
         updateRoomOneReadyStatus();
         broadcastRoomOnePlayers();
+      }
+
+      if (galleryId === 'gallery-paintings') {
+        broadcastRoomTwoPlayers();
       }
 
       // C. Tự động duyệt người đầu tiên trong hàng chờ (nếu có)

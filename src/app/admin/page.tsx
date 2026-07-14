@@ -57,7 +57,10 @@ export default function AdminDashboard() {
   });
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
   const [roomOnePlayers, setRoomOnePlayers] = useState<any[]>([]);
+  const [roomTwoPlayers, setRoomTwoPlayers] = useState<any[]>([]);
+  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1'>('waiting');
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+  const [isRoomTwoResultsModalOpen, setIsRoomTwoResultsModalOpen] = useState(false);
 
   // Kết nối Socket.io cho admin
   useEffect(() => {
@@ -73,10 +76,23 @@ export default function AdminDashboard() {
       console.log('[ADMIN] Connected to WS:', sock.id);
       sock.emit('admin:get-door-status');
       sock.emit('admin:get-room1-players');
+      sock.emit('admin:get-room2-players');
     });
 
     sock.on('admin:room1-players-update', (players: any[]) => {
       setRoomOnePlayers(players);
+    });
+
+    sock.on('admin:room2-players-update', (players: any[]) => {
+      setRoomTwoPlayers(players);
+    });
+
+    sock.on('room2:session1-start', () => {
+      setRoomTwoSessionState('session1');
+    });
+
+    sock.on('room2:state-sync', (data: { roomTwoSessionState: 'waiting' | 'session1' }) => {
+      setRoomTwoSessionState(data.roomTwoSessionState);
     });
 
     sock.on('door-states', (states: Record<string, DoorState>) => {
@@ -196,6 +212,13 @@ export default function AdminDashboard() {
     if (!adminSocket) return;
     if (window.confirm('Bạn có chắc chắn muốn KẾT THÚC trò chơi Phòng 1 và TÍNH ĐIỂM lập tức cho mọi người?')) {
       adminSocket.emit('admin:force-end-room1');
+    }
+  };
+
+  const handleStartRoomTwoSessionOne = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Khai mạc Đại hội VI và bắt đầu Phiên họp thứ nhất ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session1');
     }
   };
 
@@ -452,6 +475,36 @@ export default function AdminDashboard() {
                     >
                       <Power size={12} />
                       Kết thúc & Tính điểm
+                    </button>
+                  </>
+                )}
+                {roomId === 'gallery-paintings' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (adminSocket) {
+                          adminSocket.emit('admin:get-room2-players');
+                        }
+                        setIsRoomTwoResultsModalOpen(true);
+                      }}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
+                    >
+                      <Users size={12} />
+                      Đại biểu & Biểu quyết
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionOne}
+                      disabled={roomTwoSessionState === 'session1'}
+                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                        roomTwoSessionState === 'session1'
+                          ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                          : 'bg-emerald-500/10 hover:bg-emerald-500/25 border-emerald-500/25 text-emerald-400 cursor-pointer'
+                      }`}
+                    >
+                      <Zap size={12} />
+                      {roomTwoSessionState === 'session1' ? 'Đã bắt đầu Phiên 1' : 'Bắt đầu Phiên 1'}
                     </button>
                   </>
                 )}
@@ -1029,6 +1082,87 @@ export default function AdminDashboard() {
               </span>
               <button
                 onClick={() => setIsResultsModalOpen(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+      {/* MODAL DANH SÁCH KẾT QUẢ PHÒNG 2 REALTIME */}
+      {isRoomTwoResultsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
+                <Users size={16} />
+                <span>Đại biểu & Biểu quyết Phòng 02</span>
+              </div>
+              <button
+                onClick={() => setIsRoomTwoResultsModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Content / Table */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              {roomTwoPlayers.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  Không có đại biểu nào đang ở trong Phòng 02 (Đại hội VI).
+                </div>
+              ) : (
+                <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800 tracking-wider">
+                        <th className="py-3 px-4">Đại biểu</th>
+                        <th className="py-3 px-4 text-center">Trạng thái biểu quyết</th>
+                        <th className="py-3 px-4 text-center font-bold text-amber-400">Điểm đạt</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-850 text-slate-350">
+                      {roomTwoPlayers.map((p) => {
+                        return (
+                          <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
+                            <td className="py-3 px-4 font-medium text-white max-w-[150px] truncate">
+                              {p.nickname}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {p.submitted ? (
+                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Đã nộp đánh giá
+                                </span>
+                              ) : (
+                                <span className="bg-amber-500/10 border border-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase animate-pulse">
+                                  Đang biểu quyết
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-amber-400">
+                              {p.submitted ? `+${p.score}đ` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
+              <span className="text-[10px] text-slate-500 font-mono">
+                Số đại biểu trong Phòng 02: {roomTwoPlayers.length}
+              </span>
+              <button
+                onClick={() => setIsRoomTwoResultsModalOpen(false)}
                 className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
               >
                 Đóng

@@ -68,6 +68,59 @@ const GALLERY_CONFIGS: Record<string, {
       </div>
     ),
   },
+  'gallery-paintings': {
+    headerTitle: 'PHÒNG 02 • ĐẠI HỘI VI (12/1986)',
+    welcomeTitle: 'Thư Mời Hội Nghị',
+    introText: (
+      <>
+        <span className="italic">Chủ đề: </span>
+        <strong>Đại hội Đảng lần thứ VI.</strong>
+        <span className="italic"> Tháng 12 năm 1986. Đất nước đang đứng trước nhiều khó khăn về kinh tế và đời sống. Bạn là thành viên của một nhóm đại biểu tham dự Đại hội VI. Trước khi đưa ra quyết định quan trọng, nhiệm vụ của các bạn là phân tích tình hình đất nước và đưa ra đề xuất phát triển kinh tế.</span>
+      </>
+    ),
+    steps: [
+      {
+        icon: <Search size={28} className="text-amber-600" />,
+        title: '① Chọn ghế đại biểu',
+        desc: 'Di chuyển đến khu vực bàn ghế đại biểu họp trong hội trường và chọn một ghế trống bất kỳ.',
+      },
+      {
+        icon: <FileCheck size={28} className="text-amber-600" />,
+        title: '② Ngồi vào vị trí',
+        desc: 'Khi đứng gần ghế đại biểu, nhấn phím F để ngồi xuống chuẩn bị tham dự phiên họp.',
+      },
+      {
+        icon: <BookOpen size={28} className="text-amber-600" />,
+        title: '③ Mở tài liệu phiên họp',
+        desc: 'Nhấn phím E khi đang ngồi để mở màn hình báo cáo tài liệu họp trước mặt bạn.',
+      },
+      {
+        icon: <Sparkles size={28} className="text-amber-600" />,
+        title: '④ Đánh giá & Kiến nghị',
+        desc: 'Khi admin bắt đầu phiên thứ nhất, nghiên cứu báo cáo và kéo thanh đánh giá mức độ nghiêm trọng từ 0 đến 100 để gửi biểu quyết.',
+      },
+    ],
+    summary: (
+      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">📝</span>
+          <span>Phân tích tình hình kinh tế</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🪑</span>
+          <span>Ấn F để ngồi, ấn E mở tài liệu</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">📊</span>
+          <span>Đánh giá khủng hoảng 0 - 100</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🏆</span>
+          <span>Gửi biểu quyết để nhận điểm</span>
+        </div>
+      </div>
+    ),
+  },
   'gallery-ceramics': {
     headerTitle: 'PHÒNG 03 • HỘI NHẬP QUỐC TẾ',
     welcomeTitle: 'Chào mừng đến Phòng Hội Nhập!',

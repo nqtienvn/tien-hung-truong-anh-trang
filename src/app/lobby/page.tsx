@@ -15,6 +15,7 @@ import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
+import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 
 // ── Summary Minigame data (mirrored from RoomFour constants) ──
@@ -134,11 +135,16 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const { doorStates, activeGallery, sittingPosition } = useMuseum();
+  const { doorStates, activeGallery, sittingPosition, roomTwoDocOpen } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
   const isZooming = useRef(false);
+  const roomTwoDocOpenRef = useRef(false);
+
+  useEffect(() => {
+    roomTwoDocOpenRef.current = !!roomTwoDocOpen;
+  }, [roomTwoDocOpen]);
 
   const targetCamPos = useRef(new THREE.Vector3()).current;
   const targetLookAt = useRef(new THREE.Vector3()).current;
@@ -196,6 +202,7 @@ const LobbyCameraController: React.FC = () => {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (roomTwoDocOpenRef.current) return;
       const isLeftButtonHeld = (e.buttons & 1) === 1;
       if (!isLeftButtonHeld || !isInsideCanvas(e)) {
         if (!isLeftButtonHeld) isMouseDown.current = false;
@@ -257,10 +264,17 @@ const LobbyCameraController: React.FC = () => {
     if (sittingPosition && sittingPosition.rotationY !== undefined) {
       const bodyYaw = sittingPosition.rotationY;
       const forwardTheta = bodyYaw + Math.PI; // Bù 180 độ vì camera hướng ngược chiều với mặt trước của body mặc định
-      let diff = theta.current - forwardTheta;
-      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-      const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
-      theta.current = forwardTheta + clampedDiff;
+      
+      if (roomTwoDocOpenRef.current) {
+        // Khóa hướng nhìn thẳng về phía trước khi đang mở màn hình tài liệu
+        theta.current = forwardTheta;
+        phi.current = Math.PI / 2;
+      } else {
+        let diff = theta.current - forwardTheta;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
+        theta.current = forwardTheta + clampedDiff;
+      }
 
       // Dịch camera ra phía trước mặt 0.35m để tránh che khuất, và nâng cao thêm 0.08m
       sitOffsetX = -0.35 * Math.sin(forwardTheta);
@@ -402,7 +416,7 @@ const LobbyPlayer: React.FC = () => {
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -714,6 +728,15 @@ const LobbyPlayer: React.FC = () => {
       if (shouldIgnoreKeyboard(e.target)) return;
       const isRoomOneLocked = playerRef.current && playerRef.current.position.z > 8.0 && playerRef.current.position.z <= 54.0 && roomOneLocked && !roomOneCompleted;
       if (isRoomOneLocked || welcomeModalOpen) return;
+
+      if (e.code === 'KeyE') {
+        e.preventDefault();
+        // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 2
+        if (sittingPositionRef.current && playerRef.current && playerRef.current.position.z > 54.0 && playerRef.current.position.z <= 100.0) {
+          setRoomTwoDocOpen((prev: boolean) => !prev);
+        }
+        return;
+      }
 
       if (e.code === 'KeyF') {
         e.preventDefault();
@@ -1846,6 +1869,9 @@ export default function LobbyPage() {
       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
 
+      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}
+      <RoomTwoDocumentModal />
+
       {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
       {sittingPrompt && (
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 bg-slate-950/95 border-2 border-cyan-500/30 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl animate-bounce">
@@ -1857,7 +1883,11 @@ export default function LobbyPage() {
             {sittingPrompt === 'sit' ? (
               language === 'vi' ? 'Ấn F để ngồi' : 'Press F to Sit'
             ) : (
-              language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
+              currentRoom === 'gallery-paintings' ? (
+                language === 'vi' ? 'Ấn F để đứng dậy | Ấn E để mở/đóng tài liệu' : 'Press F to Stand Up | Press E to open/close document'
+              ) : (
+                language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
+              )
             )}
           </span>
         </div>
