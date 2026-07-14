@@ -85,7 +85,20 @@ const MultiplayerAvatarItem: React.FC<MultiplayerAvatarItemProps> = ({
     const amp = 0.45,
       spd = 10;
 
-    if (isMoving.current && settings.animations) {
+    const isSitting = !!(realTimeData?.isSitting || user.isSitting);
+
+    if (isSitting) {
+      if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI / 2.0;
+      if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.PI / 2.0;
+      if (leftArmRef.current) {
+        leftArmRef.current.rotation.x = -Math.PI / 4.0;
+        leftArmRef.current.rotation.z = 0.1;
+      }
+      if (rightArmRef.current) {
+        rightArmRef.current.rotation.x = -Math.PI / 4.0;
+        rightArmRef.current.rotation.z = -0.1;
+      }
+    } else if (isMoving.current && settings.animations) {
       leftLegRef.current &&
         (leftLegRef.current.rotation.x = Math.sin(t * spd) * amp);
       rightLegRef.current &&

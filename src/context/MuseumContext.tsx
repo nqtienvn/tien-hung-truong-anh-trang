@@ -23,6 +23,7 @@ export interface MultiplayerUser {
   status?: string;
   score?: number;
   timeSpent?: number;
+  isSitting?: boolean;
 }
 
 // Vị trí spawn của các phòng trưng bày

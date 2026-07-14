@@ -134,7 +134,7 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const { doorStates, activeGallery } = useMuseum();
+  const { doorStates, activeGallery, sittingPosition } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
@@ -248,14 +248,21 @@ const LobbyCameraController: React.FC = () => {
     const px = player.position.x;
     const py = player.position.y;
     const pz = player.position.z;
-    const targetHeight = py + 0.6;
 
-    // Khi zoom, thu nhỏ khoảng cách camera về 0 (góc nhìn thứ nhất) để không bị cản bởi đầu nhân vật
-    const idealDist = isZooming.current ? 0.0 : 5.5;
+    // Nếu đang Zoom hoặc Ngồi (First Person), đặt camera cao ngang tầm mắt/đầu thật của nhân vật (1.12m)
+    // Nếu đi lại bình thường (Third Person), đặt camera nhìn vào vùng lưng/cổ (0.6m)
+    const isFirstPerson = !!(isZooming.current || sittingPosition);
+    const targetHeight = py + (isFirstPerson ? 1.12 : 0.6);
 
-    // Ẩn người chơi nếu camera zoom lại gần (dưới 2 mét) để tránh hiện tượng xuyên mặt/đầu nhân vật
-    const camToPlayerDist = camera.position.distanceTo(player.position);
-    player.visible = !isZooming.current || (camToPlayerDist > 1.8);
+    // Khi zoom hoặc khi đang ngồi ghế, thu nhỏ khoảng cách camera về 0 (góc nhìn thứ nhất) để không bị cản bởi đầu nhân vật
+    const idealDist = isFirstPerson ? 0.0 : 5.5;
+
+    // Khi zoom thì ẩn nhân vật để tránh clipping, nhưng khi ngồi thì vẫn hiện nhân vật (chỉ ẩn đầu) để người chơi nhìn thấy tay chân, thân thể mình
+    if (isZooming.current) {
+      player.visible = false;
+    } else {
+      player.visible = true;
+    }
 
     const xOff = idealDist * Math.sin(theta.current) * Math.sin(phi.current);
     const yOff = idealDist * Math.cos(phi.current);
@@ -325,8 +332,8 @@ const LobbyCameraController: React.FC = () => {
 
     targetCamPos.set(camX, camY, camZ);
 
-    // Khi zoom, hướng nhìn của camera sẽ nhìn thẳng ra phía trước tầm nhìn thay vì nhìn vào đầu nhân vật
-    if (isZooming.current) {
+    // Khi zoom hoặc đang ngồi ghế, hướng nhìn của camera sẽ nhìn thẳng ra phía trước tầm nhìn thay vì nhìn vào đầu nhân vật
+    if (isZooming.current || sittingPosition) {
       const lookAtX = px - 10 * Math.sin(theta.current) * Math.sin(phi.current);
       const lookAtY = targetHeight - 10 * Math.cos(phi.current);
       const lookAtZ = pz - 10 * Math.cos(theta.current) * Math.sin(phi.current);
@@ -827,16 +834,19 @@ const LobbyPlayer: React.FC = () => {
         rightArmRef.current.rotation.z = -0.1;
       }
 
+      // Phát tọa độ ngồi cố định góc nhìn cho người khác (nhưng local camera vẫn tự do xoay góc nhìn thứ nhất)
       const now = state.clock.getElapsedTime() * 1000;
       if (now - lastUpdate.current > 80) {
         socket?.emit('move', {
           x: sittingPosition.x,
-          y: sittingPosition.y,
+          y: sittingPosition.y - baseY, // Gửi tọa độ Y tương đối để server đồng bộ đúng độ cao
           z: sittingPosition.z,
-          yaw: playerRef.current.rotation.y,
+          yaw: sittingPosition.rotationY !== undefined ? sittingPosition.rotationY : -Math.PI / 2, // Gửi yaw cố định của ghế
+          isSitting: true,
         });
         lastUpdate.current = now;
       }
+
       return;
     }
 
@@ -960,6 +970,7 @@ const LobbyPlayer: React.FC = () => {
           y: playerRef.current.position.y - baseY, // Gửi tọa độ Y logic (bàn chân chạm đất)
           z: playerRef.current.position.z,
           yaw: playerRef.current.rotation.y,
+          isSitting: false,
         });
       }
       lastUpdate.current = now;
@@ -989,10 +1000,12 @@ const LobbyPlayer: React.FC = () => {
     <group ref={playerRef} name="lobby-player">
       {isPawn ? (
         <group scale={1.6}>
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[0.18, 20, 20]} />
-            <meshStandardMaterial {...skinProps} />
-          </mesh>
+          {!sittingPosition && (
+            <mesh position={[0, 0.7, 0]}>
+              <sphereGeometry args={[0.18, 20, 20]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          )}
           <mesh position={[0, 0.48, 0]}>
             <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
             <meshStandardMaterial {...skinProps} />
@@ -1008,10 +1021,12 @@ const LobbyPlayer: React.FC = () => {
         </group>
       ) : (
         <group scale={1.6}>
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[HEAD_R, 28, 28]} />
-            <meshStandardMaterial {...skinProps} />
-          </mesh>
+          {!sittingPosition && (
+            <mesh position={[0, 0.7, 0]}>
+              <sphereGeometry args={[HEAD_R, 28, 28]} />
+              <meshStandardMaterial {...skinProps} />
+            </mesh>
+          )}
           <mesh position={[0, 0.28, 0]}>
             <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
             <meshStandardMaterial {...skinProps} />
