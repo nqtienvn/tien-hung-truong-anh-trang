@@ -26,7 +26,23 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
   showPilasters = true,
   children 
 }) => {
-  const { activeGallery, settings } = useMuseum();
+  const { activeGallery, settings, currentRoom } = useMuseum();
+
+  // Xác định các phòng kề cận với currentRoom để bật đèn rọi/pointLight (Ngăn ánh sáng chồng lấn chói mắt)
+  const isAdjacent = React.useMemo(() => {
+    if (!currentRoom) return false;
+    if (currentRoom === galleryId) return true;
+
+    const adjacencies: Record<string, string[]> = {
+      'lobby': ['gallery-subsidy'],
+      'gallery-subsidy': ['lobby', 'gallery-paintings'],
+      'gallery-paintings': ['gallery-subsidy', 'gallery-ceramics'],
+      'gallery-ceramics': ['gallery-paintings', 'gallery-market-economy'],
+      'gallery-market-economy': ['gallery-ceramics'],
+    };
+
+    return adjacencies[currentRoom]?.includes(galleryId) ?? false;
+  }, [currentRoom, galleryId]);
 
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
@@ -44,6 +60,8 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
     <group>
       {/* Hộp chứa meshes, được ẩn/hiện tức thì mà không unmount để tránh lag WebGL */}
       <group visible={isVisible}>
+        {/* Ánh sáng môi trường ấm áp cho từng phòng */}
+        <ambientLight intensity={currentRoom === galleryId ? (galleryId === 'gallery-paintings' ? 0.76 : 0.55) : 0} color="#fff5e6" />
         {/* 1. SÀN NHÀ & THẢM TRẢI SÀN (Floor & Center Carpet) */}
         {floorType === 'wood' && (
           <>
@@ -298,7 +316,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
       {settings.reducedLights ? (
         <directionalLight
           position={[0, roomHeight - 1.0, 0]}
-          intensity={isVisible ? 2.5 : 0}
+          intensity={isVisible && isAdjacent ? (galleryId === 'gallery-paintings' ? 3.5 : 2.5) : 0}
           color="#fff1e0"
         />
       ) : (
@@ -310,8 +328,8 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
           <pointLight 
             key={`hall-light-source-${idx}`}
             position={[0, roomHeight - 1.0, zPos]}
-            intensity={isVisible ? (settings.preset === 'low' ? 7.0 : 4.5) : 0} 
-            distance={roomLength * (settings.preset === 'low' ? 0.9 : 0.6)} 
+            intensity={isVisible && isAdjacent ? (galleryId === 'gallery-paintings' ? (settings.preset === 'low' ? 9.5 : 6.5) : (settings.preset === 'low' ? 7.0 : 4.5)) : 0} 
+            distance={roomLength * (galleryId === 'gallery-paintings' ? (settings.preset === 'low' ? 1.15 : 0.8) : (settings.preset === 'low' ? 0.9 : 0.6))} 
             color="#fff1e0" 
           />
         ))

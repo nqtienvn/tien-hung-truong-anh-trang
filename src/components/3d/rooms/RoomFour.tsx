@@ -2345,7 +2345,8 @@ const MINIGAME_CATEGORIES = [
 ];
 
 export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, isVisible = true }) => {
-  const { activeGallery, language } = useMuseum();
+  const { activeGallery, language, currentRoom } = useMuseum();
+  const isAdjacent = currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-ceramics';
   const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
 
   const modifiedSettings = {
@@ -2503,9 +2504,9 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
     <BaseRoomPlain galleryId={galleryId} customSettings={modifiedSettings} isVisible={isVisible}>
 
       {/* ── Global Lighting ── */}
-      <ambientLight intensity={entranceLight} />
-      <directionalLight position={[5, 10, 5]} intensity={0.55} />
-      <pointLight position={[0, roomHeight - 1, 0]} intensity={isVisible ? 2.8 : 0} distance={38} color="#ffffff" />
+      <ambientLight intensity={currentRoom === 'gallery-market-economy' ? entranceLight : 0} />
+      <directionalLight position={[5, 10, 5]} intensity={isVisible && isAdjacent ? 0.55 : 0} />
+      <pointLight position={[0, roomHeight - 1, 0]} intensity={isVisible && isAdjacent ? 2.8 : 0} distance={38} color="#ffffff" />
 
       {/* ── Zone 1 — Đa Thành Phần Kinh Tế ── */}
       {isVisible && (

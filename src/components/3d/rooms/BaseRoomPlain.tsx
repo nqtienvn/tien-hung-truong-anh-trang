@@ -288,7 +288,23 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
   isVisible = true,
   children
 }) => {
-  const { activeGallery, setSelectedExhibit, language } = useMuseum();
+  const { activeGallery, setSelectedExhibit, language, currentRoom } = useMuseum();
+
+  // Xác định các phòng kề cận với currentRoom để bật đèn rọi/pointLight (Ngăn ánh sáng chồng lấn chói mắt)
+  const isAdjacent = React.useMemo(() => {
+    if (!currentRoom) return false;
+    if (currentRoom === galleryId) return true;
+
+    const adjacencies: Record<string, string[]> = {
+      'lobby': ['gallery-subsidy'],
+      'gallery-subsidy': ['lobby', 'gallery-paintings'],
+      'gallery-paintings': ['gallery-subsidy', 'gallery-ceramics'],
+      'gallery-ceramics': ['gallery-paintings', 'gallery-market-economy'],
+      'gallery-market-economy': ['gallery-ceramics'],
+    };
+
+    return adjacencies[currentRoom]?.includes(galleryId) ?? false;
+  }, [currentRoom, galleryId]);
 
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
@@ -695,7 +711,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
         <pointLight
           key={`hall-light-source-${idx}`}
           position={[0, roomHeight - 1.0, zPos + zOffset]}
-          intensity={isVisible ? 4.5 : 0}
+          intensity={isVisible && isAdjacent ? 4.5 : 0}
           distance={roomLength * 0.6}
           color="#fff1e0"
         />

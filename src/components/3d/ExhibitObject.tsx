@@ -11,6 +11,128 @@ interface ExhibitObjectProps {
   onClick?: (exhibit: Exhibit) => void;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// STATIC GEOMETRIES & MATERIALS FOR REUSE (CÁCH B)
+// ═══════════════════════════════════════════════════════════════
+const pedestalLegGeom = new THREE.CylinderGeometry(0.025, 0.025, 0.72, 12);
+const pedestalBaseGeom = new THREE.BoxGeometry(1.25, 0.08, 0.34);
+const frameBackGeom = new THREE.BoxGeometry(1.9, 0.72, 0.05);
+const canvasBackGeom = new THREE.BoxGeometry(1.74, 0.56, 0.035);
+const circleHotspotGeom = new THREE.CircleGeometry(0.075, 28);
+const ringHotspotMidGeom = new THREE.RingGeometry(0.095, 0.125, 28);
+const ringHotspotOuterGeom = new THREE.RingGeometry(0.13, 0.15, 28);
+
+const torusKnotGeom = new THREE.TorusKnotGeometry(0.4, 0.12, 120, 16);
+const octahedronGeom = new THREE.OctahedronGeometry(0.5);
+const helixCylinderGeom = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 16);
+const helixSphereGeom = new THREE.SphereGeometry(0.08, 16, 16);
+const baseRingGeom = new THREE.RingGeometry(0.45, 0.5, 32);
+
+const pedestalLegMat = new THREE.MeshStandardMaterial({
+  color: "#15100c",
+  roughness: 0.35,
+  metalness: 0.72,
+});
+const pedestalBaseMat = new THREE.MeshStandardMaterial({
+  color: "#16100b",
+  roughness: 0.42,
+  metalness: 0.55,
+});
+const frameBackMat = new THREE.MeshStandardMaterial({
+  color: "#17120d",
+  roughness: 0.5,
+  metalness: 0.18,
+});
+const canvasBackMat = new THREE.MeshStandardMaterial({
+  color: "#f1e3c7",
+  roughness: 0.82,
+  metalness: 0.02,
+});
+
+const hotspotInnerMat = new THREE.MeshBasicMaterial({
+  color: "#ef4444",
+  transparent: true,
+  opacity: 0.9,
+  side: THREE.DoubleSide,
+});
+const hotspotMidMat = new THREE.MeshBasicMaterial({
+  color: "#f87171",
+  transparent: true,
+  opacity: 0.32,
+  side: THREE.DoubleSide,
+});
+const hotspotOuterMat = new THREE.MeshBasicMaterial({
+  color: "#fecaca",
+  transparent: true,
+  opacity: 0.16,
+  side: THREE.DoubleSide,
+});
+
+const torusNormalMat = new THREE.MeshStandardMaterial({
+  color: "#c59b27",
+  roughness: 0.1,
+  metalness: 0.95,
+});
+const torusHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#ffd700",
+  roughness: 0.1,
+  metalness: 0.95,
+});
+
+const octahedronNormalMat = new THREE.MeshStandardMaterial({
+  color: "#06b6d4",
+  roughness: 0.05,
+  metalness: 0.9,
+  transparent: true,
+  opacity: 0.85,
+});
+const octahedronHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#a5f3fc",
+  roughness: 0.05,
+  metalness: 0.9,
+  transparent: true,
+  opacity: 0.85,
+});
+
+const helixCylinderMat = new THREE.MeshStandardMaterial({
+  color: "#661966",
+  metalness: 0.8,
+  roughness: 0.2,
+});
+const helixSphereRedMat = new THREE.MeshStandardMaterial({
+  color: "#e11d48",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+const helixSphereRedHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#fb7185",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+const helixSphereBlueMat = new THREE.MeshStandardMaterial({
+  color: "#0284c7",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+const helixSphereBlueHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#38bdf8",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+
+const baseRingNormalMat = new THREE.MeshBasicMaterial({
+  color: "#475569",
+  side: THREE.DoubleSide,
+});
+const baseRingHoveredMat = new THREE.MeshBasicMaterial({
+  color: "#fff",
+  side: THREE.DoubleSide,
+});
+const baseRingSelectedMat = new THREE.MeshBasicMaterial({
+  color: "#d4af37",
+  side: THREE.DoubleSide,
+});
+
 // Hàm tự động vẽ tranh thủ công giả lập thời bao cấp khi gặp lỗi CORS tải ảnh từ Unsplash
 function createProceduralTexture(title: string, id: string): string {
   if (typeof window === "undefined") return "";
@@ -284,46 +406,11 @@ const PaintingComponent: React.FC<{
               side={THREE.DoubleSide}
             />
           </mesh>
-          <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-            <meshStandardMaterial
-              color="#15100c"
-              roughness={0.35}
-              metalness={0.72}
-            />
-          </mesh>
-          <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-            <meshStandardMaterial
-              color="#15100c"
-              roughness={0.35}
-              metalness={0.72}
-            />
-          </mesh>
-          <mesh position={[0, -0.62, -0.28]}>
-            <boxGeometry args={[1.25, 0.08, 0.34]} />
-            <meshStandardMaterial
-              color="#16100b"
-              roughness={0.42}
-              metalness={0.55}
-            />
-          </mesh>
-          <mesh position={[0, 0, -0.015]}>
-            <boxGeometry args={[1.9, 0.72, 0.05]} />
-            <meshStandardMaterial
-              color="#17120d"
-              roughness={0.5}
-              metalness={0.18}
-            />
-          </mesh>
-          <mesh position={[0, 0, 0.02]}>
-            <boxGeometry args={[1.74, 0.56, 0.035]} />
-            <meshStandardMaterial
-              color="#f1e3c7"
-              roughness={0.82}
-              metalness={0.02}
-            />
-          </mesh>
+          <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]} geometry={pedestalLegGeom} material={pedestalLegMat} />
+          <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]} geometry={pedestalLegGeom} material={pedestalLegMat} />
+          <mesh position={[0, -0.62, -0.28]} geometry={pedestalBaseGeom} material={pedestalBaseMat} />
+          <mesh position={[0, 0, -0.015]} geometry={frameBackGeom} material={frameBackMat} />
+          <mesh position={[0, 0, 0.02]} geometry={canvasBackGeom} material={canvasBackMat} />
 
           {/* Nội dung thông tin trên bảng khi đứng gần */}
           {isNear && (
@@ -352,33 +439,9 @@ const PaintingComponent: React.FC<{
           {/* Vòng tròn hiệu ứng chỉ hiển thị khi ở xa */}
           {!isNear && (
             <group ref={hotspotRef} position={[0, 0.02, 0.065]}>
-              <mesh>
-                <circleGeometry args={[0.075, 28]} />
-                <meshBasicMaterial
-                  color="#ef4444"
-                  transparent
-                  opacity={0.9}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-              <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]}>
-                <ringGeometry args={[0.095, 0.125, 28]} />
-                <meshBasicMaterial
-                  color="#f87171"
-                  transparent
-                  opacity={0.32}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-              <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]}>
-                <ringGeometry args={[0.13, 0.15, 28]} />
-                <meshBasicMaterial
-                  color="#fecaca"
-                  transparent
-                  opacity={0.16}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
+              <mesh geometry={circleHotspotGeom} material={hotspotInnerMat} />
+              <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]} geometry={ringHotspotMidGeom} material={hotspotMidMat} />
+              <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]} geometry={ringHotspotOuterGeom} material={hotspotOuterMat} />
             </group>
           )}
         </group>
@@ -396,7 +459,7 @@ const PaintingComponent: React.FC<{
           <spotLight
             position={[0, 3, 2]}
             target-position={[0, 0, 0]}
-            intensity={isVisible ? 5 : 0}
+            intensity={isVisible ? (isNear ? 5.0 : 1.2) : 0}
             distance={8}
             angle={Math.PI / 6}
             penumbra={0.5}
@@ -484,41 +547,24 @@ const SculptureComponent: React.FC<{
         <group ref={meshRef}>
           {exhibit.model_3d_url === "procedural-torusknot" && (
             /* Vòng xoắn hoàng kim */
-            <mesh>
-              <torusKnotGeometry args={[0.4, 0.12, 120, 16]} />
-              <meshStandardMaterial
-                color={hovered || isSelected ? "#ffd700" : "#c59b27"}
-                roughness={0.1}
-                metalness={0.95}
-              />
-            </mesh>
+            <mesh
+              geometry={torusKnotGeom}
+              material={hovered || isSelected ? torusHoveredMat : torusNormalMat}
+            />
           )}
 
           {exhibit.model_3d_url === "procedural-octahedron" && (
             /* Tinh thể đa diện */
-            <mesh>
-              <octahedronGeometry args={[0.5]} />
-              <meshStandardMaterial
-                color={hovered || isSelected ? "#a5f3fc" : "#06b6d4"}
-                roughness={0.05}
-                metalness={0.9}
-                transparent
-                opacity={0.85}
-              />
-            </mesh>
+            <mesh
+              geometry={octahedronGeom}
+              material={hovered || isSelected ? octahedronHoveredMat : octahedronNormalMat}
+            />
           )}
 
           {exhibit.model_3d_url === "procedural-helix" && (
             /* Trụ xoắn sinh học ghép từ các sphere */
             <group>
-              <mesh>
-                <cylinderGeometry args={[0.08, 0.08, 1.2, 16]} />
-                <meshStandardMaterial
-                  color="#661966ff"
-                  metalness={0.8}
-                  roughness={0.2}
-                />
-              </mesh>
+              <mesh geometry={helixCylinderGeom} material={helixCylinderMat} />
               {Array.from({ length: 10 }).map((_, idx) => {
                 const angle = (idx / 10) * Math.PI * 4;
                 const y = -0.5 + idx / 9;
@@ -530,22 +576,8 @@ const SculptureComponent: React.FC<{
 
                 return (
                   <group key={idx}>
-                    <mesh position={[x1, y, z1]}>
-                      <sphereGeometry args={[0.08, 16, 16]} />
-                      <meshStandardMaterial
-                        color={hovered || isSelected ? "#fb7185" : "#e11d48"}
-                        roughness={0.1}
-                        metalness={0.5}
-                      />
-                    </mesh>
-                    <mesh position={[x2, y, z2]}>
-                      <sphereGeometry args={[0.08, 16, 16]} />
-                      <meshStandardMaterial
-                        color={hovered || isSelected ? "#38bdf8" : "#0284c7"}
-                        roughness={0.1}
-                        metalness={0.5}
-                      />
-                    </mesh>
+                    <mesh position={[x1, y, z1]} geometry={helixSphereGeom} material={hovered || isSelected ? helixSphereRedHoveredMat : helixSphereRedMat} />
+                    <mesh position={[x2, y, z2]} geometry={helixSphereGeom} material={hovered || isSelected ? helixSphereBlueHoveredMat : helixSphereBlueMat} />
                   </group>
                 );
               })}
@@ -779,13 +811,12 @@ const SculptureComponent: React.FC<{
         </group>
 
         {/* Vòng tròn hiệu ứng hào quang phát sáng dưới chân tượng */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.38, 0]}>
-          <ringGeometry args={[0.45, 0.5, 32]} />
-          <meshBasicMaterial
-            color={isSelected ? "#d4af37" : hovered ? "#fff" : "#475569"}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.38, 0]}
+          geometry={baseRingGeom}
+          material={isSelected ? baseRingSelectedMat : hovered ? baseRingHoveredMat : baseRingNormalMat}
+        />
       </group>
 
       {/* Đèn spotlight rọi tượng: luôn trong scene graph để tránh recompilation, chỉ đổi intensity, loại bỏ để tránh lag */}
@@ -801,7 +832,7 @@ const SculptureComponent: React.FC<{
           <spotLight
             position={[0, 4, 0]}
             target-position={[0, 0, 0]}
-            intensity={isVisible ? 5 : 0}
+            intensity={isVisible ? (isNear ? 5.0 : 1.2) : 0}
             distance={6}
             angle={Math.PI / 6}
             penumbra={0.3}
