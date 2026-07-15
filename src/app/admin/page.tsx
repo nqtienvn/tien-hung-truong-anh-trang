@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
-import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power } from 'lucide-react';
+import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Clock, Users, Award, X } from 'lucide-react';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
@@ -12,7 +12,6 @@ const DOOR_CONFIGS = [
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
   { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
   { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
-  { doorId: 'door-room5', targetRoom: 'lobby', label: 'Cửa 5: Phòng 04 ↔ Sảnh chờ', color: 'amber' },
 ];
 
 interface DoorState {
@@ -57,6 +56,11 @@ export default function AdminDashboard() {
     'gallery-market-economy': { isOpen: true }
   });
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
+  const [roomOnePlayers, setRoomOnePlayers] = useState<any[]>([]);
+  const [roomTwoPlayers, setRoomTwoPlayers] = useState<any[]>([]);
+  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed'>('waiting');
+  const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
+  const [isRoomTwoResultsModalOpen, setIsRoomTwoResultsModalOpen] = useState(false);
 
   // Kết nối Socket.io cho admin
   useEffect(() => {
@@ -71,6 +75,24 @@ export default function AdminDashboard() {
     sock.on('connect', () => {
       console.log('[ADMIN] Connected to WS:', sock.id);
       sock.emit('admin:get-door-status');
+      sock.emit('admin:get-room1-players');
+      sock.emit('admin:get-room2-players');
+    });
+
+    sock.on('admin:room1-players-update', (players: any[]) => {
+      setRoomOnePlayers(players);
+    });
+
+    sock.on('admin:room2-players-update', (players: any[]) => {
+      setRoomTwoPlayers(players);
+    });
+
+    sock.on('room2:session1-start', () => {
+      setRoomTwoSessionState('session1');
+    });
+
+    sock.on('room2:state-sync', (data: { roomTwoSessionState: 'waiting' | 'session1' }) => {
+      setRoomTwoSessionState(data.roomTwoSessionState);
     });
 
     sock.on('door-states', (states: Record<string, DoorState>) => {
@@ -118,24 +140,6 @@ export default function AdminDashboard() {
 
   const handleOpenDoor = (doorId: string, targetRoom: string) => {
     if (!adminSocket) return;
-
-    // Ràng buộc kiểm tra trước khi mở cửa
-    let canOpen = true;
-    if (doorId === 'door-room1') {
-      canOpen = roomStates['gallery-subsidy']?.isOpen;
-    } else if (doorId === 'door-room2') {
-      canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
-    } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
-    } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
-    }
-
-    if (!canOpen) {
-      alert('Không thể mở cửa khi các phòng liên quan chưa được bật!');
-      return;
-    }
-
     setDoorLoading(doorId);
     adminSocket.emit('admin:open-door', { doorId, targetRoom });
   };
@@ -157,32 +161,6 @@ export default function AdminDashboard() {
     adminSocket.emit('admin:close-door', { doorId, teleportTo });
   };
 
-  const handleToggleRoom = (roomId: string, currentOpen: boolean) => {
-    if (!adminSocket) return;
-
-    // Ràng buộc kiểm tra trước khi tắt phòng: Các cửa liên quan phải đóng
-    if (currentOpen) {
-      const relatedDoors = [];
-      if (roomId === 'gallery-subsidy') {
-        relatedDoors.push('door-room1', 'door-room2');
-      } else if (roomId === 'gallery-paintings') {
-        relatedDoors.push('door-room2', 'door-room3');
-      } else if (roomId === 'gallery-ceramics') {
-        relatedDoors.push('door-room3', 'door-room4');
-      } else if (roomId === 'gallery-market-economy') {
-        relatedDoors.push('door-room4', 'door-room5');
-      }
-
-      const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
-      if (isAnyDoorOpen) {
-        alert('Vui lòng đóng tất cả các cửa liên quan đến phòng này trước khi tắt!');
-        return;
-      }
-    }
-
-    setRoomLoading(roomId);
-    adminSocket.emit('admin:toggle-room', { roomId, isOpen: !currentOpen });
-  };
 
   const handleTeleportAll = (targetRoom: string) => {
     if (!adminSocket) return;
@@ -196,6 +174,55 @@ export default function AdminDashboard() {
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
     if (window.confirm(confirmMsg)) {
       adminSocket.emit('admin:teleport-all', { targetRoom });
+    }
+  };
+
+  const handleStartRoomOneCountdown = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu đếm ngược 7 giây cho tất cả người chơi trong Phòng 1?')) {
+      adminSocket.emit('admin:start-room1-countdown');
+    }
+  };
+
+  const handleForceEndRoomOne = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bạn có chắc chắn muốn KẾT THÚC trò chơi Phòng 1 và TÍNH ĐIỂM lập tức cho mọi người?')) {
+      adminSocket.emit('admin:force-end-room1');
+    }
+  };
+
+  const handleStartRoomTwoSessionOne = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Khai mạc Đại hội VI và bắt đầu Phiên họp thứ nhất ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session1');
+    }
+  };
+
+  const handleStartRoomTwoSessionTwo = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu Phiên họp thứ hai (Báo cáo sản xuất) ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session2');
+    }
+  };
+
+  const handleStartRoomTwoSessionThree = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu Phiên họp thứ ba (Báo cáo nông nghiệp) ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session3');
+    }
+  };
+
+  const handleStartRoomTwoSessionFour = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Bắt đầu Phiên họp thứ tư (Đường lối phát triển) ở Phòng 2?')) {
+      adminSocket.emit('admin:start-room2-session4');
+    }
+  };
+
+  const handleStartRoomTwoCompleted = () => {
+    if (!adminSocket) return;
+    if (window.confirm('Chốt nội dung Đại hội VI và mở cửa Phòng 3 sang phòng Gốm sứ?')) {
+      adminSocket.emit('admin:start-room2-completed');
     }
   };
 
@@ -421,34 +448,127 @@ export default function AdminDashboard() {
 
           <div className="flex items-center gap-2">
             {isRoomOpen && (
-              <button
-                type="button"
-                onClick={() => handleTeleportAll(roomId)}
-                className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
-              >
-                <Compass size={12} />
-                Dịch chuyển mọi người
-              </button>
+              <>
+                {roomId === 'gallery-subsidy' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (adminSocket) {
+                          adminSocket.emit('admin:get-room1-players');
+                        }
+                        setIsResultsModalOpen(true);
+                      }}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
+                    >
+                      <Users size={12} />
+                      Danh sách kết quả
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomOneCountdown}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-violet-500/10 hover:bg-violet-500/25 border border-violet-500/25 text-violet-400"
+                    >
+                      <Clock size={12} />
+                      Bắt đầu đếm ngược (7s)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleForceEndRoomOne}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400"
+                    >
+                      <Power size={12} />
+                      Kết thúc & Tính điểm
+                    </button>
+                  </>
+                )}
+                {roomId === 'gallery-paintings' && (
+                  <div className="flex flex-wrap gap-1.5 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (adminSocket) {
+                          adminSocket.emit('admin:get-room2-players');
+                        }
+                        setIsRoomTwoResultsModalOpen(true);
+                      }}
+                      className="px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
+                    >
+                      <Users size={10} />
+                      Đại biểu
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionOne}
+                      disabled={roomTwoSessionState === 'session1'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session1'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 1
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionTwo}
+                      disabled={roomTwoSessionState === 'session2'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session2'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 2
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionThree}
+                      disabled={roomTwoSessionState === 'session3'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session3'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 3
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoSessionFour}
+                      disabled={roomTwoSessionState === 'session4'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'session4'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
+                      }`}
+                    >
+                      Phiên 4
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleStartRoomTwoCompleted}
+                      disabled={roomTwoSessionState === 'completed'}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        roomTwoSessionState === 'completed'
+                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
+                          : 'bg-amber-500/10 hover:bg-amber-500/25 border-amber-500/25 text-amber-400 cursor-pointer'
+                      }`}
+                    >
+                      Chốt Đổi Mới
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleTeleportAll(roomId)}
+                  className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-amber-500/10 hover:bg-amber-500/25 border border-amber-500/25 text-amber-400"
+                >
+                  <Compass size={12} />
+                  Dịch chuyển mọi người
+                </button>
+              </>
             )}
-
-            <button
-              type="button"
-              onClick={() => handleToggleRoom(roomId, isRoomOpen)}
-              disabled={isLoading || (isRoomOpen && hasOpenDoor)}
-              className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                isRoomOpen
-                  ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400 disabled:opacity-50 disabled:cursor-not-allowed'
-                  : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
-              }`}
-              title={isRoomOpen && hasOpenDoor ? 'Vui lòng đóng các cửa liên quan trước khi tắt phòng' : ''}
-            >
-              {isLoading ? (
-                <Loader2 size={12} className="animate-spin" />
-              ) : (
-                <Power size={12} />
-              )}
-              {isRoomOpen ? 'Tắt phòng' : 'Bật phòng'}
-            </button>
           </div>
         </div>
       </div>
@@ -636,10 +756,7 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
 
             {/* 9. PHÒNG 4 */}
-            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Phòng thị trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4', 'door-room5'])}
-            
-            {/* 10. CỬA 5 */}
-            {renderAdminDoor('door-room5', 'lobby', 'Cửa số 05: Phòng 04 ↔ Sảnh chờ')}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4'])}
           </div>
         </div>
 
@@ -909,6 +1026,205 @@ export default function AdminDashboard() {
 
         </div>
       </main>
+
+      {/* MODAL DANH SÁCH KẾT QUẢ PHÒNG 1 REALTIME */}
+      {isResultsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm uppercase tracking-wider">
+                <Users size={16} />
+                <span>Tiến độ & Kết quả Giải mật Phòng 01</span>
+              </div>
+              <button
+                onClick={() => setIsResultsModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Content / Table */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              {roomOnePlayers.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  Không có người chơi nào đang ở trong Phòng 01 (Bao cấp).
+                </div>
+              ) : (
+                <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[10px] uppercase border-b border-slate-800 tracking-wider">
+                        <th className="py-3 px-4">Đặc vụ</th>
+                        <th className="py-3 px-4 text-center">Trạng thái</th>
+                        <th className="py-3 px-4 text-center">Manh mối</th>
+                        <th className="py-3 px-4 text-center">Điểm máy</th>
+                        <th className="py-3 px-4 text-center">Thời gian</th>
+                        <th className="py-3 px-4 text-center font-bold text-cyan-400">Tổng điểm</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-850 text-slate-350">
+                      {roomOnePlayers.map((p) => {
+                        return (
+                          <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
+                            <td className="py-3 px-4 font-medium text-white max-w-[120px] truncate">
+                              {p.nickname}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              {p.completed ? (
+                                <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Đã Stamp
+                                </span>
+                              ) : p.ready ? (
+                                <span className="bg-violet-500/10 border border-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase animate-pulse">
+                                  Đang chơi
+                                </span>
+                              ) : (
+                                <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Đợi bắt đầu
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-slate-300">
+                              {p.cluesCollectedCount}/6 vật
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono text-slate-400">
+                              {p.baseScore}đ
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono text-slate-400">
+                              {p.completed ? `${p.timeSpent}s` : '-'}
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-cyan-400">
+                              {p.completed ? `${p.baseScore}đ` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
+              <span className="text-[10px] text-slate-500 font-mono">
+                Số người trong Phòng 01: {roomOnePlayers.length}
+              </span>
+              <button
+                onClick={() => setIsResultsModalOpen(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+      {/* MODAL DANH SÁCH KẾT QUẢ PHÒNG 2 REALTIME */}
+      {isRoomTwoResultsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
+            
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
+                <Users size={16} />
+                <span>Đại biểu & Biểu quyết Phòng 02 (Đại hội VI)</span>
+              </div>
+              <button
+                onClick={() => setIsRoomTwoResultsModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Content / Table */}
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
+              {roomTwoPlayers.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  Không có đại biểu nào đang ở trong Phòng 02 (Đại hội VI).
+                </div>
+              ) : (
+                <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[9px] uppercase border-b border-slate-800 tracking-wider">
+                        <th className="py-3 px-4">Đại biểu</th>
+                        <th className="py-3 px-3 text-center">Phiên 1 (Giá)</th>
+                        <th className="py-3 px-3 text-center">Phiên 2 (Sản xuất)</th>
+                        <th className="py-3 px-3 text-center">Phiên 3 (Nông nghiệp)</th>
+                        <th className="py-3 px-3 text-center">Phiên 4 (Đường lối)</th>
+                        <th className="py-3 px-4 text-center font-bold text-amber-400">Tổng điểm</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-850 text-slate-350">
+                      {roomTwoPlayers.map((p) => {
+                        return (
+                          <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
+                            <td className="py-3 px-4 font-medium text-white max-w-[120px] truncate">
+                              {p.nickname}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted1 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score1}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted2 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score2}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted3 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score3}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3 text-center font-mono">
+                              {p.submitted4 ? (
+                                <span className="text-emerald-400 font-bold">+{p.score4}đ</span>
+                              ) : (
+                                <span className="text-slate-600 font-normal">Chờ</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-amber-400">
+                              {p.totalScore || 0}đ
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
+              <span className="text-[10px] text-slate-500 font-mono">
+                Số đại biểu trong Phòng 02: {roomTwoPlayers.length}
+              </span>
+              <button
+                onClick={() => setIsRoomTwoResultsModalOpen(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10px] py-2 px-4 rounded-lg transition-colors cursor-pointer uppercase tracking-wider"
+              >
+                Đóng
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
