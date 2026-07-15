@@ -78,7 +78,7 @@ export const MarketEconomyQuest: React.FC = () => {
                     {language === 'vi' ? 'SỔ TAY KHẢO SÁT KINH TẾ' : 'ECONOMIC SURVEY LOG'}
                   </h2>
                   <p className="text-[10px] uppercase tracking-widest text-cyan-400 font-mono leading-none mt-1">
-                    {language === 'vi' ? 'Phòng 04 • Kinh tế thị trường' : 'Room 04 • Market Economy'}
+                    {language === 'vi' ? 'Phòng 04 • Phòng thị trường' : 'Room 04 • Market Room'}
                   </p>
                 </div>
               </div>

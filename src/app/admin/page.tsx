@@ -12,6 +12,7 @@ const DOOR_CONFIGS = [
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
   { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
   { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
+  { doorId: 'door-room5', targetRoom: 'lobby', label: 'Cửa 5: Phòng 04 ↔ Sảnh chờ', color: 'amber' },
 ];
 
 interface DoorState {
@@ -169,7 +170,7 @@ export default function AdminDashboard() {
       } else if (roomId === 'gallery-ceramics') {
         relatedDoors.push('door-room3', 'door-room4');
       } else if (roomId === 'gallery-market-economy') {
-        relatedDoors.push('door-room4');
+        relatedDoors.push('door-room4', 'door-room5');
       }
 
       const isAnyDoorOpen = relatedDoors.some(doorId => doorStates[doorId]?.isOpen);
@@ -635,7 +636,10 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
 
             {/* 9. PHÒNG 4 */}
-            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4'])}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Phòng thị trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4', 'door-room5'])}
+            
+            {/* 10. CỬA 5 */}
+            {renderAdminDoor('door-room5', 'lobby', 'Cửa số 05: Phòng 04 ↔ Sảnh chờ')}
           </div>
         </div>
 

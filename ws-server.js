@@ -334,6 +334,8 @@ io.on('connection', (socket) => {
       canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
     } else if (doorId === 'door-room4') {
       canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
+    } else if (doorId === 'door-room5') {
+      canOpen = roomStates['gallery-market-economy']?.isOpen;
     }
 
     if (!canOpen) {

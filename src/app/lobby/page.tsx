@@ -89,6 +89,13 @@ const DOOR_CONFIGS = [
     rotation: [0, Math.PI, 0] as [number, number, number],
     label: 'Phòng 04: Hội nhập',
   },
+  {
+    doorId: 'door-room5',
+    targetRoom: 'lobby',
+    position: [0, 3.0, 235.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Lối ra sảnh',
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -292,21 +299,21 @@ const LobbyCameraController: React.FC = () => {
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
-      maxZ = isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8;
+      maxZ = isDoor3Open ? (isDoor4Open ? 234.8 : 129.8) : 99.8;
     }
     else if (pz > 100.0 && pz <= 130.0) {
       // Đang ở Phòng 3 (Gốm sứ)
       minX = -14.5;
       maxX = 14.5;
       minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
-      maxZ = isDoor4Open ? 279.8 : 129.8;
+      maxZ = isDoor4Open ? 234.8 : 129.8;
     }
-    else if (pz > 130.0 && pz <= 280.0) {
+    else if (pz > 130.0 && pz <= 235.0) {
       // Đang ở Phòng 4 (Kinh tế thị trường)
       minX = -8.5;
       maxX = 8.5;
       minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
-      maxZ = 279.8;
+      maxZ = 234.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff));
@@ -621,8 +628,8 @@ const LobbyPlayer: React.FC = () => {
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 280.0) ──
-      if (z > 130.0 && z <= 280.0) {
+      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 235.0) ──
+      if (z > 130.0 && z <= 235.0) {
         // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
         if (z < 130.6) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
@@ -632,8 +639,11 @@ const LobbyPlayer: React.FC = () => {
         // Biên giới tường bên (rộng 18m, X = ±9m)
         if (x < -8.7 || x > 8.7) return true;
 
-        // Tường sau phòng 4 (Z = 280.0)
-        if (z > 279.3) return true;
+        // Tường sau phòng 4 (Z = 235.0) — Chỉ chặn nếu cửa 5 ĐÓNG
+        if (z > 234.3) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
         return false;
       }
 
@@ -887,8 +897,16 @@ const LobbyPlayer: React.FC = () => {
       setCurrentRoom('gallery-paintings');
     } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
       setCurrentRoom('gallery-ceramics');
-    } else if (curPos.z > 130.0 && curPos.z <= 280.0) {
+    } else if (curPos.z > 130.0 && curPos.z <= 235.0) {
       setCurrentRoom('gallery-market-economy');
+    } else if (curPos.z > 235.0) {
+      // Dịch chuyển ngược lại Sảnh chính khi đi qua cửa ra
+      curPos.set(0, baseY, -5.0);
+      setCurrentRoom('lobby');
+      if (playerRef.current) {
+        playerRef.current.position.set(0, baseY, -5.0);
+        playerRef.current.rotation.set(0, 0, 0);
+      }
     }
 
     // Arm/Leg swing
