@@ -61,7 +61,8 @@ const roomStates = {
   'gallery-subsidy': { isOpen: true },
   'gallery-paintings': { isOpen: true },
   'gallery-ceramics': { isOpen: true },
-  'gallery-market-economy': { isOpen: true }
+  'gallery-market-economy': { isOpen: true },
+  'gallery-three': { isOpen: true }
 };
 
 // Trạng thái đồng bộ của phòng 1
@@ -384,8 +385,10 @@ io.on('connection', (socket) => {
       newRoom = 'gallery-paintings';
     } else if (data.z > 100.0 && data.z <= 130.0) {
       newRoom = 'gallery-ceramics';
-    } else if (data.z > 130.0 && data.z <= 245.0) {
+    } else if (data.z > 130.0 && data.z <= 280.0) {
       newRoom = 'gallery-market-economy';
+    } else if (data.z > 280.0) {
+      newRoom = 'gallery-three';
     }
 
     if (newRoom !== oldRoom) {
@@ -914,6 +917,7 @@ io.on('connection', (socket) => {
     else if (targetRoom === 'gallery-paintings') spawnPos = { x: 0, y: 3.0, z: 56.0 };
     else if (targetRoom === 'gallery-ceramics') spawnPos = { x: 0, y: 3.0, z: 102.0 };
     else if (targetRoom === 'gallery-market-economy') spawnPos = { x: 0, y: 3.0, z: 133.0 };
+    else if (targetRoom === 'gallery-three') spawnPos = { x: 0, y: 3.0, z: 282.0 };
 
     let count = 0;
     Object.keys(activeUsers).forEach(sid => {

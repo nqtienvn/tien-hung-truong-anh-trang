@@ -300,7 +300,8 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
       'gallery-subsidy': ['lobby', 'gallery-paintings'],
       'gallery-paintings': ['gallery-subsidy', 'gallery-ceramics'],
       'gallery-ceramics': ['gallery-paintings', 'gallery-market-economy'],
-      'gallery-market-economy': ['gallery-ceramics'],
+      'gallery-market-economy': ['gallery-ceramics', 'gallery-three'],
+      'gallery-three': ['gallery-market-economy'],
     };
 
     return adjacencies[currentRoom]?.includes(galleryId) ?? false;

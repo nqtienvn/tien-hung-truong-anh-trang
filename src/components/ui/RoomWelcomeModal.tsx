@@ -16,7 +16,7 @@ const GALLERY_CONFIGS: Record<string, {
   summary: React.ReactNode;
 }> = {
   'gallery-subsidy': {
-    headerTitle: 'PHÒNG 01 • VIỆT NAM 1976–1985',
+    headerTitle: 'PHÒNG 01 • PHÒNG BAO CẤP',
     welcomeTitle: 'Chào mừng đến Phòng Bao Cấp!',
     introText: (
       <>
@@ -69,8 +69,8 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-paintings': {
-    headerTitle: 'PHÒNG 02 • ĐẠI HỘI VI (12/1986)',
-    welcomeTitle: 'Thư Mời Hội Nghị',
+    headerTitle: 'PHÒNG 02 • PHÒNG ĐỔI MỚI',
+    welcomeTitle: 'Chào mừng đến Phòng Đổi Mới!',
     introText: (
       <>
         <span className="italic">Chủ đề: </span>
@@ -122,7 +122,7 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-ceramics': {
-    headerTitle: 'PHÒNG 03 • HỘI NHẬP QUỐC TẾ',
+    headerTitle: 'PHÒNG 03 • PHÒNG HỘI NHẬP',
     welcomeTitle: 'Chào mừng đến Phòng Hội Nhập!',
     introText: (
       <>

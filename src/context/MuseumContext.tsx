@@ -34,6 +34,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
   'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
   'gallery-market-economy': { x: 0, y: 3.0, z: 133.0 },
+  'gallery-three': { x: 0, y: 3.0, z: 282.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -195,7 +196,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
     'gallery-ceramics': { isOpen: true },
-    'gallery-market-economy': { isOpen: true }
+    'gallery-market-economy': { isOpen: true },
+    'gallery-three': { isOpen: true }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
@@ -226,21 +228,37 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [leaderboard, setLeaderboard] = useState<Array<{ nickname: string; score: number; time: string }>>([]);
   const [hasPlayed, setHasPlayedState] = useState<boolean>(false);
 
+  // Load hasPlayed from localStorage when nickname changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const played = localStorage.getItem('museum_has_played_game');
+    if (typeof window !== 'undefined' && nickname) {
+      const played = localStorage.getItem(`museum_has_played_game_${nickname}`);
       if (played === 'true') {
         setHasPlayedState(true);
+        const savedState = localStorage.getItem(`museum_game_state_${nickname}`) as 'won' | 'lost' | null;
+        const savedScore = localStorage.getItem(`museum_game_score_${nickname}`);
+        const savedTimeLeft = localStorage.getItem(`museum_game_time_left_${nickname}`);
+        
+        if (savedState) setGameState(savedState);
+        if (savedScore) setScore(parseInt(savedScore) || 0);
+        if (savedTimeLeft) setTimeLeft(parseInt(savedTimeLeft) || 0);
+      } else {
+        setHasPlayedState(false);
+        setGameState('idle');
+        setScore(0);
+        setTimeLeft(180);
       }
+    } else {
+      setHasPlayedState(false);
+      setGameState('idle');
     }
-  }, []);
+  }, [nickname]);
 
   const setHasPlayed = useCallback((val: boolean) => {
     setHasPlayedState(val);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('museum_has_played_game', val ? 'true' : 'false');
+    if (typeof window !== 'undefined' && nickname) {
+      localStorage.setItem(`museum_has_played_game_${nickname}`, val ? 'true' : 'false');
     }
-  }, []);
+  }, [nickname]);
 
   // --- Gameplay States ---
   const [cluesCollected, setCluesCollected] = useState<string[]>([]);
@@ -391,6 +409,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
           setScore(finalScore);
           setGameState('lost');
+          setHasPlayed(true);
+          if (typeof window !== 'undefined' && nickname) {
+            localStorage.setItem(`museum_game_state_${nickname}`, 'lost');
+            localStorage.setItem(`museum_game_score_${nickname}`, finalScore.toString());
+            localStorage.setItem(`museum_game_time_left_${nickname}`, '0');
+          }
           socket?.emit('submit-score', { score: finalScore, timeSpent: 180 });
           socket?.emit('update-status', '');
           return 0;
@@ -400,7 +424,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState, socket]);
+  }, [gameState, socket, nickname, setHasPlayed]);
 
   // Tráo đổi vị trí giữa 2 ô sự kiện
   const swapEvents = useCallback((idx1: number, idx2: number) => {
@@ -426,9 +450,15 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setScore(finalScore);
     setGameState('won'); // Kết thúc game và chuyển thẳng sang màn hình kết quả luôn
+    setHasPlayed(true);
+    if (typeof window !== 'undefined' && nickname) {
+      localStorage.setItem(`museum_game_state_${nickname}`, 'won');
+      localStorage.setItem(`museum_game_score_${nickname}`, finalScore.toString());
+      localStorage.setItem(`museum_game_time_left_${nickname}`, timeLeft.toString());
+    }
     socket?.emit('submit-score', { score: finalScore, timeSpent });
     socket?.emit('update-status', '');
-  }, [orderedEvents, timeLeft, socket]);
+  }, [orderedEvents, timeLeft, socket, nickname, setHasPlayed]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
     preset: 'medium',
@@ -792,6 +822,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
       if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
+      if (roomStates['gallery-three']?.isOpen) loadRoom('gallery-three');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 

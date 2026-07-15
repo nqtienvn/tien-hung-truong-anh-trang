@@ -256,15 +256,8 @@ export const MiniGameModal: React.FC = () => {
 
               <div className="flex gap-2 w-full pt-1">
                 <button
-                  onClick={initializeGame}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <RotateCcw size={14} />
-                  {language === 'vi' ? 'Chơi lại' : 'Play Again'}
-                </button>
-                <button
                   onClick={() => setMiniGameOpen(false)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/10"
                 >
                   {language === 'vi' ? 'Hoàn thành' : 'Done'}
                 </button>
@@ -337,16 +330,9 @@ export const MiniGameModal: React.FC = () => {
               <div className="flex gap-2 w-full pt-1">
                 <button
                   onClick={() => setMiniGameOpen(false)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/10"
                 >
                   {language === 'vi' ? 'Thoát' : 'Exit'}
-                </button>
-                <button
-                  onClick={initializeGame}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <RotateCcw size={14} />
-                  {language === 'vi' ? 'Thử lại' : 'Retry'}
                 </button>
               </div>
             </div>

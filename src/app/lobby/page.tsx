@@ -65,7 +65,7 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở tường sau sảnh, tầng 2 (Y=3, Z=8)
     position: [0, 3.0, 8.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 01: Bao cấp',
+    label: 'Phòng 01: Phòng Bao Cấp',
   },
   {
     doorId: 'door-room2',
@@ -73,21 +73,28 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở cuối phòng 1 (Y=3, Z=54) nối sang phòng 2
     position: [0, 3.0, 54.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Hội họa',
+    label: 'Phòng 02: Phòng Đổi Mới',
   },
   {
     doorId: 'door-room3',
     targetRoom: 'gallery-ceramics',
     position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Gốm sứ',
+    label: 'Phòng 03: Phòng Hội Nhập',
   },
   {
     doorId: 'door-room4',
     targetRoom: 'gallery-market-economy',
     position: [0, 3.0, 130.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 04: Hội nhập',
+    label: 'Phòng 04: Phòng Thị Trường',
+  },
+  {
+    doorId: 'door-room5',
+    targetRoom: 'gallery-three',
+    position: [0, 3.0, 280.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 05: Phòng Thành Quả',
   },
 ];
 
@@ -101,8 +108,8 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room1',
     check: (x: number, z: number) => z >= 6.0 && z <= 8.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 10.0] as [number, number, number],
-    promptVi: 'vào Phòng 01: Bao cấp Việt Nam',
-    promptEn: 'enter Room 01: Vietnam Subsidy Period'
+    promptVi: 'vào Phòng 01: Phòng Bao Cấp',
+    promptEn: 'enter Room 01: Subsidy Room'
   },
   {
     id: 'room1-to-lobby',
@@ -122,8 +129,8 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room2',
     check: (x: number, z: number) => z >= 52.0 && z <= 54.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 56.0] as [number, number, number],
-    promptVi: 'vào Phòng 02: Hội họa cổ điển',
-    promptEn: 'enter Room 02: Classical Paintings'
+    promptVi: 'vào Phòng 02: Phòng Đổi Mới',
+    promptEn: 'enter Room 02: Doi Moi Room'
   },
   {
     id: 'room2-to-room1',
@@ -143,8 +150,8 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room3',
     check: (x: number, z: number) => z >= 98.0 && z <= 100.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 102.0] as [number, number, number],
-    promptVi: 'vào Phòng 03: Gốm sứ hội nhập',
-    promptEn: 'enter Room 03: Integration Ceramics'
+    promptVi: 'vào Phòng 03: Phòng Hội Nhập',
+    promptEn: 'enter Room 03: Integration Room'
   },
   {
     id: 'room3-to-room2',
@@ -164,7 +171,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room4',
     check: (x: number, z: number) => z >= 128.0 && z <= 130.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 133.0] as [number, number, number],
-    promptVi: 'vào Phòng 04: Kinh tế thị trường',
+    promptVi: 'vào Phòng 04: Phòng Thị Trường',
     promptEn: 'enter Room 04: Market Economy'
   },
   {
@@ -176,6 +183,27 @@ const INTERACTIVE_DOORS = [
     spawnPos: [0, 3.0, 128.0] as [number, number, number],
     promptVi: 'quay lại Phòng 03',
     promptEn: 'return to Room 03'
+  },
+  // --- ROOM 4 <-> ROOM 5 ---
+  {
+    id: 'room4-to-room5',
+    fromRoom: 'gallery-market-economy',
+    toRoom: 'gallery-three',
+    doorId: 'door-room5',
+    check: (x: number, z: number) => z >= 278.0 && z <= 280.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 282.0] as [number, number, number],
+    promptVi: 'vào Phòng 05: Phòng Thành Quả',
+    promptEn: 'enter Room 05: Achievements Room'
+  },
+  {
+    id: 'room5-to-room4',
+    fromRoom: 'gallery-three',
+    toRoom: 'gallery-market-economy',
+    doorId: 'door-room5',
+    check: (x: number, z: number) => z >= 280.0 && z <= 282.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 278.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 04',
+    promptEn: 'return to Room 04'
   }
 ];
 
@@ -394,6 +422,7 @@ const LobbyCameraController: React.FC = () => {
     const isDoor2Open = doorStates['door-room2']?.isOpen || false;
     const isDoor3Open = doorStates['door-room3']?.isOpen || false;
     const isDoor4Open = doorStates['door-room4']?.isOpen || false;
+    const isDoor5Open = doorStates['door-room5']?.isOpen || false;
 
     let minX = -LOBBY_W / 2 + 0.5; // -14.5
     let maxX = LOBBY_W / 2 - 0.5;  // 14.5
@@ -405,35 +434,42 @@ const LobbyCameraController: React.FC = () => {
       minX = -LOBBY_W / 2 + 0.5;
       maxX = LOBBY_W / 2 - 0.5;
       minZ = -9.4;
-      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8) : 53.8) : 7.8;
+      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8) : 53.8) : 7.8;
     } 
     else if (pz > 8.0 && pz <= 54.0) {
       // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor1Open ? -9.4 : 8.2;
-      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8) : 53.8;
+      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8) : 53.8;
     } 
     else if (pz > 54.0 && pz <= 100.0) {
       // Đang ở Phòng 2
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
-      maxZ = isDoor3Open ? (isDoor4Open ? 279.8 : 129.8) : 99.8;
+      maxZ = isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8;
     } 
     else if (pz > 100.0 && pz <= 130.0) {
       // Đang ở Phòng 3 (Gốm sứ)
       minX = -14.5;
       maxX = 14.5;
       minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
-      maxZ = isDoor4Open ? 279.8 : 129.8;
+      maxZ = isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8;
     } 
     else if (pz > 130.0 && pz <= 280.0) {
       // Đang ở Phòng 4 (Kinh tế thị trường)
       minX = -8.5;
       maxX = 8.5;
       minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
-      maxZ = 279.8;
+      maxZ = isDoor5Open ? 329.8 : 279.8;
+    }
+    else if (pz > 280.0 && pz <= 330.0) {
+      // Đang ở Phòng 5 (Thành quả)
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = isDoor5Open ? (isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2) : 280.2;
+      maxZ = 329.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff + sitOffsetX));
@@ -593,8 +629,10 @@ const LobbyPlayer: React.FC<{
         activeRoom = 'gallery-paintings';
       } else if (playerZ > 100.0 && playerZ <= 130.0) {
         activeRoom = 'gallery-ceramics';
-      } else if (playerZ > 130.0) {
+      } else if (playerZ > 130.0 && playerZ <= 280.0) {
         activeRoom = 'gallery-market-economy';
+      } else if (playerZ > 280.0) {
+        activeRoom = 'gallery-three';
       }
 
       // Ranh giới vật lý cứng giữa các phòng triển lãm để ngăn người chơi đi bộ xuyên phòng (bắt buộc nhấn E)
@@ -602,7 +640,8 @@ const LobbyPlayer: React.FC<{
       if (activeRoom === 'gallery-subsidy' && (z < 8.3 || z > 53.7)) return true;
       if (activeRoom === 'gallery-paintings' && (z < 54.3 || z > 99.7)) return true;
       if (activeRoom === 'gallery-ceramics' && (z < 100.3 || z > 129.7)) return true;
-      if (activeRoom === 'gallery-market-economy' && z < 130.3) return true;
+      if (activeRoom === 'gallery-market-economy' && (z < 130.3 || z > 279.7)) return true;
+      if (activeRoom === 'gallery-three' && z < 280.3) return true;
 
       // ── VÙNG SẢNH (Lobby) ──
       if (z <= 8.0) {
@@ -813,7 +852,20 @@ const LobbyPlayer: React.FC<{
         if (x < -8.7 || x > 8.7) return true;
 
         // Tường sau phòng 4 (Z = 280.0)
-        if (z > 279.3) return true;
+        if (z > 279.3) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
+        return false;
+      }
+
+      // ── PHÒNG TRIỂN LÃM 5 (gallery-three: Z 280.0 -> 330.0) ──
+      if (z > 280.0 && z <= 330.0) {
+        if (z < 280.6) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
+        if (x < -11.7 || x > 11.7) return true;
         return false;
       }
 
@@ -1485,10 +1537,11 @@ export default function LobbyPage() {
     }
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
-      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
-      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Gốm sứ hội nhập' },
-      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Kinh tế thị trường' },
+      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
+      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
+      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1549,6 +1602,7 @@ export default function LobbyPage() {
                   if (config.doorId === 'door-room2') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-paintings';
                   if (config.doorId === 'door-room3') return currentRoom === 'gallery-paintings' || currentRoom === 'gallery-ceramics';
                   if (config.doorId === 'door-room4') return currentRoom === 'gallery-ceramics' || currentRoom === 'gallery-market-economy';
+                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-three';
                   return false;
                 }).map((config) => (
                   <DoorPortal

@@ -181,7 +181,7 @@ export const CeramicsCollection: React.FC = () => {
                     {language === 'vi' ? 'ALBUM BỘ SƯU TẬP LỊCH SỬ' : 'HISTORICAL ART ALBUM'}
                   </h2>
                   <p className="text-[10px] uppercase tracking-widest text-amber-400 font-mono leading-none mt-1">
-                    {language === 'vi' ? 'Phòng 03 • Hành trình Hội nhập' : 'Room 03 • Integration Journey'}
+                    {language === 'vi' ? 'Phòng 03 • Phòng Hội Nhập' : 'Room 03 • Integration Room'}
                   </p>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export const CeramicsCollection: React.FC = () => {
             {/* Footer */}
             <div className="bg-slate-900 border-t border-slate-850 px-6 py-3 flex items-center justify-between text-[10px] font-mono text-slate-500 relative z-10">
               <span>Đại học FPT - MLN122 Project</span>
-              <span>{language === 'vi' ? 'Phòng 03: Gốm sứ hội nhập' : 'Room 03: Ceramics & Integration'}</span>
+              <span>{language === 'vi' ? 'Phòng 03: Phòng Hội Nhập' : 'Room 03: Integration Room'}</span>
             </div>
           </div>
         </div>
