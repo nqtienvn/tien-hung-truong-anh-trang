@@ -65,7 +65,7 @@ export const PlayerCharacter: React.FC = () => {
       if (activeGallery?.id === "gallery-ceramics") {
         spawnZ = -10;
       } else if (activeGallery?.id === "gallery-market-economy") {
-        spawnZ = -29.0; // Điểm bắt đầu cục bộ của Room 4
+        spawnZ = -50.0; // Điểm bắt đầu cục bộ của Room 4
       }
       playerRef.current.position.set(0, baseY, spawnZ);
     }
@@ -146,7 +146,7 @@ export const PlayerCharacter: React.FC = () => {
 
     // ── Phòng 4: gallery-market-economy ──────────────────────────────────────
     if (galleryId === "gallery-market-economy") {
-      const zPositions = [-18, -10, -2, 6, 14, 22];
+      const zPositions = [-50, -35, -20, -5, 10];
       for (const pZ of zPositions) {
         if (z > pZ - 0.35 && z < pZ + 0.35) {
           // Lối đi mở rộng 6m ở chính giữa (-3.0 đến 3.0). Bị chặn nếu nằm ở hai bên.

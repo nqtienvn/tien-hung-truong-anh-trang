@@ -517,7 +517,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           const partitionWidth = (roomWidth - carpetWidth) / 2;
           const partitionX = (carpetWidth + partitionWidth) / 2;
 
-          return [-50, -35, -20, -5, 10, 25].map((zPos, i) => {
+          return [-50, -35, -20, -5, 10].map((zPos, i) => {
             return (
               <group key={`partition-${i}`}>
                 {/* Vách ngăn bên trái */}
