@@ -10,9 +10,10 @@ import { useMuseum } from '@/context/MuseumContext';
  * Hệ trục: X [-15, 15], Z [-10, 10], Y [0, 12]
  */
 export const MuseumLobby: React.FC = () => {
-  const { settings } = useMuseum();
+  const { settings, currentRoom } = useMuseum();
+  const isLobbyLightActive = currentRoom === 'lobby' || currentRoom === 'gallery-subsidy';
   const W = 30;   // Chiều rộng (trục X)
-  const L = 20;   // Chiều dài (trục Z)
+  const L = 18;   // Chiều dài rút ngắn thành 18m để không đè lên Room 1 (Z=8)
   const H = 12;   // Chiều cao (trục Y)
 
   // Bảng màu kiến trúc
@@ -31,25 +32,25 @@ export const MuseumLobby: React.FC = () => {
       {/* ═══════════════════════════════════════════════════════════════
           1. SÀN NHÀ GỖ SỌC (Wood Strip Floor)
       ═══════════════════════════════════════════════════════════════ */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -1.0]}>
         <planeGeometry args={[W, L]} />
         <meshStandardMaterial color={woodFloor} roughness={0.35} metalness={0.1} />
       </mesh>
       <gridHelper
-        args={[L, 40, '#3d2817', '#2d1f10']}
-        position={[0, 0.005, 0]}
+        args={[L, 36, '#3d2817', '#2d1f10']}
+        position={[0, 0.008, -1.0]}
       />
 
       {/* ═══════════════════════════════════════════════════════════════
           2. THẢM ĐỎ TRẢI DỌC TRỤC CHÍNH (Red Carpet)
       ═══════════════════════════════════════════════════════════════ */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, -2.5]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -2.5]}>
         <planeGeometry args={[4.5, 13]} />
         <meshStandardMaterial color={redCarpet} roughness={0.92} metalness={0} />
       </mesh>
       {/* Viền vàng hai bên thảm */}
       {[-2.35, 2.35].map((x) => (
-        <mesh key={`carpet-trim-${x}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.016, -2.5]}>
+        <mesh key={`carpet-trim-${x}`} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.025, -2.5]}>
           <planeGeometry args={[0.12, 13]} />
           <meshStandardMaterial color={goldAccent} metalness={0.85} roughness={0.15} />
         </mesh>
@@ -70,51 +71,51 @@ export const MuseumLobby: React.FC = () => {
         <boxGeometry args={[13.0, H, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
-      {/* Tường sau phía dưới cửa (X: -2 đến 2, Y: 0 đến 3.0) - Dưới Mezzanine */}
-      <mesh position={[0, 1.5, 8.0]}>
+      {/* Tường sau phía dưới cửa (X: -2 đến 2, Y: 0 đến 3.0) */}
+      <mesh position={[0, 1.5, 8.12]}>
         <boxGeometry args={[4.0, 3.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
-      {/* Tường sau phía trên cửa (X: -2 đến 2, Y: 7.0 đến 12) - Trên Door 1 */}
-      <mesh position={[0, 9.5, 8.0]}>
+      {/* Tường sau phía trên cửa */}
+      <mesh position={[0, 9.5, 8.12]}>
         <boxGeometry args={[4.0, 5.0, 0.3]} />
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
 
       {/* Hai hốc lõm trang trí tường sau đối xứng ở hai bên (lattice panels) */}
       {/* Hốc trái */}
-      <mesh position={[-9.5, H * 0.6, 7.84]}>
+      <mesh position={[-9.5, H * 0.6, 7.82]}>
         <boxGeometry args={[7.0, 4.0, 0.02]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
       </mesh>
       {/* Lưới trang trí hốc trái */}
       {Array.from({ length: 9 }).map((_, i) => (
-        <mesh key={`wall-lattice-l-h-${i}`} position={[-9.5, 4.8 + i * 0.5, 7.83]}>
+          <mesh key={`wall-lattice-l-h-${i}`} position={[-9.5, 4.8 + i * 0.5, 7.81]}>
           <boxGeometry args={[7.0, 0.03, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
       ))}
       {Array.from({ length: 15 }).map((_, i) => (
-        <mesh key={`wall-lattice-l-v-${i}`} position={[-13.0 + i * 0.5, 6.8, 7.83]}>
+          <mesh key={`wall-lattice-l-v-${i}`} position={[-13.0 + i * 0.5, 6.8, 7.81]}>
           <boxGeometry args={[0.03, 4.0, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
       ))}
 
       {/* Hốc phải */}
-      <mesh position={[9.5, H * 0.6, 7.84]}>
+      <mesh position={[9.5, H * 0.6, 7.82]}>
         <boxGeometry args={[7.0, 4.0, 0.02]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
       </mesh>
       {/* Lưới trang trí hốc phải */}
       {Array.from({ length: 9 }).map((_, i) => (
-        <mesh key={`wall-lattice-r-h-${i}`} position={[9.5, 4.8 + i * 0.5, 7.83]}>
+          <mesh key={`wall-lattice-r-h-${i}`} position={[9.5, 4.8 + i * 0.5, 7.81]}>
           <boxGeometry args={[7.0, 0.03, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
       ))}
       {Array.from({ length: 15 }).map((_, i) => (
-        <mesh key={`wall-lattice-r-v-${i}`} position={[6.0 + i * 0.5, 6.8, 7.83]}>
+          <mesh key={`wall-lattice-r-v-${i}`} position={[6.0 + i * 0.5, 6.8, 7.81]}>
           <boxGeometry args={[0.03, 4.0, 0.03]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
         </mesh>
@@ -139,16 +140,16 @@ export const MuseumLobby: React.FC = () => {
 
       {/* --- CỬA GỖ LỐI VÀO LỚN (Z = -10) --- */}
       <group position={[0, 0, -L / 2]}>
-        {/* Khung cửa gỗ bao quanh */}
-        <mesh position={[0, 4.0, 0.05]}>
+        {/* Khung cửa gỗ bao quanh - đẩy về phía sảnh để không chồng tường */}
+        <mesh position={[0, 4.0, 0.12]}>
           <boxGeometry args={[10.2, 8.1, 0.45]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.55} />
         </mesh>
         
         {/* Cánh cửa bên trái */}
         <group position={[-2.45, 3.95, 0.1]}>
-          {/* Thân cửa chính */}
-          <mesh>
+          {/* Thân cửa chính - đẩy ra phía trước để không chồng khung */}
+          <mesh position={[0, 0, 0.06]}>
             <boxGeometry args={[4.8, 7.8, 0.15]} />
             <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
           </mesh>
@@ -193,8 +194,8 @@ export const MuseumLobby: React.FC = () => {
 
         {/* Cánh cửa bên phải */}
         <group position={[2.45, 3.95, 0.1]}>
-          {/* Thân cửa chính */}
-          <mesh>
+          {/* Thân cửa chính - đẩy ra phía trước để không chồng khung */}
+          <mesh position={[0, 0, 0.06]}>
             <boxGeometry args={[4.8, 7.8, 0.15]} />
             <meshStandardMaterial color="#3e2723" roughness={0.35} metalness={0.1} />
           </mesh>
@@ -240,16 +241,16 @@ export const MuseumLobby: React.FC = () => {
 
       {/* --- Tường trái (X = -15) - TƯỜNG KÍNH LỚN --- */}
       {/* Khung kính dọc */}
-      {Array.from({ length: 5 }).map((_, i) => (
-        <mesh key={`glass-vframe-${i}`} position={[-W / 2, H / 2, -L / 2 + i * 5]}>
+      {[-10.0, -5.5, -1.0, 3.5, 8.0].map((zPos, i) => (
+        <mesh key={`glass-vframe-${i}`} position={[-W / 2, H / 2, zPos]}>
           <boxGeometry args={[0.15, H, 0.15]} />
           <meshStandardMaterial color={metalGray} metalness={0.85} roughness={0.25} />
         </mesh>
       ))}
       {/* Tấm kính */}
-      {Array.from({ length: 4 }).map((_, i) => (
-        <mesh key={`glass-panel-${i}`} position={[-W / 2 + 0.05, H / 2, -L / 2 + 2.5 + i * 5]} rotation={[0, Math.PI / 2, 0]}>
-          <planeGeometry args={[4.6, H - 0.5]} />
+      {[-7.75, -3.25, 1.25, 5.75].map((zPos, i) => (
+        <mesh key={`glass-panel-${i}`} position={[-W / 2 + 0.05, H / 2, zPos]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[4.5, H - 0.5]} />
           <meshStandardMaterial
             color={glassColor}
             transparent
@@ -262,14 +263,14 @@ export const MuseumLobby: React.FC = () => {
       ))}
       {/* Khung kính ngang */}
       {[3, 6, 9].map((y) => (
-        <mesh key={`glass-hframe-${y}`} position={[-W / 2 + 0.05, y, 0]}>
+        <mesh key={`glass-hframe-${y}`} position={[-W / 2 + 0.05, y, -1.0]}>
           <boxGeometry args={[0.15, 0.06, L]} />
           <meshStandardMaterial color={metalGray} metalness={0.85} roughness={0.25} />
         </mesh>
       ))}
 
       {/* --- Tường phải (X = +15) - Tường đá sa thạch tối --- */}
-      <mesh position={[W / 2, H / 2, 0]} rotation={[0, -Math.PI / 2, 0]}>
+      <mesh position={[W / 2, H / 2, -1.0]} rotation={[0, -Math.PI / 2, 0]}>
         <boxGeometry args={[L, H, 0.3]} />
         <meshStandardMaterial color={sandstoneAlt} roughness={0.75} />
       </mesh>
@@ -508,20 +509,20 @@ export const MuseumLobby: React.FC = () => {
           7. TRẦN TRANG TRÍ LƯỚI (Lattice Ceiling)
       ═══════════════════════════════════════════════════════════════ */}
       {/* Tấm trần chính (bán trong suốt) */}
-      <mesh position={[0, H - 0.1, 0]}>
+      <mesh position={[0, H - 0.1, -1.0]}>
         <boxGeometry args={[W, 0.08, L]} />
         <meshStandardMaterial color={sandstoneDark} roughness={0.8} transparent opacity={0.7} />
       </mesh>
       {/* Thanh lưới ngang (chạy dọc X) */}
       {Array.from({ length: 21 }).map((_, i) => (
-        <mesh key={`ceil-bar-x-${i}`} position={[0, H - 0.25, -L / 2 + i * (L / 20)]}>
+        <mesh key={`ceil-bar-x-${i}`} position={[0, H - 0.25, -1.0 - L / 2 + i * (L / 20)]}>
           <boxGeometry args={[W, 0.05, 0.05]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.6} />
         </mesh>
       ))}
       {/* Thanh lưới dọc (chạy dọc Z) */}
       {Array.from({ length: 31 }).map((_, i) => (
-        <mesh key={`ceil-bar-z-${i}`} position={[-W / 2 + i * (W / 30), H - 0.25, 0]}>
+        <mesh key={`ceil-bar-z-${i}`} position={[-W / 2 + i * (W / 30), H - 0.25, -1.0]}>
           <boxGeometry args={[0.05, 0.05, L]} />
           <meshStandardMaterial color={sandstoneDark} roughness={0.6} />
         </mesh>
@@ -629,17 +630,17 @@ export const MuseumLobby: React.FC = () => {
           11. HỆ THỐNG CHIẾU SÁNG (Lighting System)
       ═══════════════════════════════════════════════════════════════ */}
       {/* Ánh sáng môi trường ấm */}
-      <ambientLight intensity={0.45} color="#fff5e6" />
+      <ambientLight intensity={currentRoom === 'lobby' ? 0.45 : 0} color="#fff5e6" />
 
       {/* Ánh nắng tự nhiên xuyên qua tường kính bên trái */}
       <directionalLight
         position={[-12, 10, 0]}
-        intensity={1.2}
+        intensity={isLobbyLightActive ? 1.2 : 0}
         color="#ffe8cc"
       />
 
       {/* Ánh sáng từ trên xuống (giếng trời) */}
-      <directionalLight position={[0, 12, 0]} intensity={settings.reducedLights ? 1.5 : 0.5} color="#fff8f0" />
+      <directionalLight position={[0, 12, 0]} intensity={isLobbyLightActive ? (settings.reducedLights ? 1.5 : 0.5) : 0} color="#fff8f0" />
 
       {/* Hàng đèn spotlight gắn trên trần — giảm số lượng theo preset */}
       {!settings.reducedLights && Array.from({ length: settings.preset === 'low' ? 4 : 10 }).map((_, i) => {
@@ -658,7 +659,7 @@ export const MuseumLobby: React.FC = () => {
             </mesh>
             <pointLight
               position={[x, H - 0.6, -2]}
-              intensity={settings.preset === 'low' ? 5.0 : 3.5}
+              intensity={isLobbyLightActive ? (settings.preset === 'low' ? 5.0 : 3.5) : 0}
               distance={settings.preset === 'low' ? 20 : 14}
               color="#fff1e0"
             />
@@ -681,7 +682,7 @@ export const MuseumLobby: React.FC = () => {
             </mesh>
             <pointLight
               position={[x, H - 0.55, 3]}
-              intensity={2.5}
+              intensity={isLobbyLightActive ? 2.5 : 0}
               distance={12}
               color="#fff1e0"
             />
@@ -692,16 +693,16 @@ export const MuseumLobby: React.FC = () => {
       {/* Ánh sáng xanh nhạt từ tường kính — bỏ ở ultra-low */}
       {!settings.reducedLights && (
         <>
-          <pointLight position={[-14, 6, 0]} intensity={2.5} distance={22} color="#a8d8ea" />
-          <pointLight position={[-14, 3, -5]} intensity={1.5} distance={15} color="#a8d8ea" />
+          <pointLight position={[-14, 6, 0]} intensity={isLobbyLightActive ? 2.5 : 0} distance={22} color="#a8d8ea" />
+          <pointLight position={[-14, 3, -5]} intensity={isLobbyLightActive ? 1.5 : 0} distance={15} color="#a8d8ea" />
         </>
       )}
 
       {/* Ánh sáng ấm khu vực lễ tân — bỏ ở ultra-low */}
       {!settings.reducedLights && (
         <>
-          <pointLight position={[10.5, 3.5, -3]} intensity={2.0} distance={10} color="#ffd54f" />
-          <pointLight position={[10.5, 3.5, 0]} intensity={1.5} distance={8} color="#ffd54f" />
+          <pointLight position={[10.5, 3.5, -3]} intensity={isLobbyLightActive ? 2.0 : 0} distance={10} color="#ffd54f" />
+          <pointLight position={[10.5, 3.5, 0]} intensity={isLobbyLightActive ? 1.5 : 0} distance={8} color="#ffd54f" />
         </>
       )}
     </group>

@@ -171,7 +171,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80")',
+                    'url("/images/room4/anhphong1.jpg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -180,7 +180,7 @@ export default function Home() {
                   Phòng 01
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Bao Cấp Việt Nam (1976-1985)
+                  Phòng Bao Cấp
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
                   Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh
@@ -195,7 +195,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCC_hh3d34wdzjzqhFpCpfo_EbdCst6ktWreBQogw577k2YyEUSN4Mx6oqkomdQ3pwMcwN10o1kW7iewEdEKaZhTah8o-2L9Pjluz9imprWkCKKRWF03PEHcxRvfMjXg4UVMqJ4mV1vaV_9j9vZQrSPdHRjeGXzzpCB6i9nRF1CJgyUg4Eo5ftLbl6ult057rpX88lIcnvFmX0S5hdxIaMPLNDDOjcx1NLRbcKPIHc0calxo0E4aUN81QchEwoixeCmNbDsxgl-qh0")',
+                    'url("/images/room4/anhphong2.jpg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -203,23 +203,22 @@ export default function Home() {
                 <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
                   Phòng 02
                 </span>
-                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Khởi nguồn Trao đổi &amp; Tiền tệ
+                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
+                  Phòng Đổi Mới
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá những hình thái sơ khai của thương mại và các bức
-                  tranh sơn dầu cổ điển thế giới.
+                  Nghiên cứu bối cảnh lịch sử Đại hội VI (12/1986), hóa thân thành đại biểu để thảo luận và đưa ra quyết sách Đổi mới đất nước.
                 </p>
               </div>
             </div>
 
             {/* Room 3 */}
-            <div className="md:col-span-5 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+            <div className="md:col-span-4 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
               <div
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBlIiV8Wmlpprxt79Nw5wJlhBZgXlfbRrGbPN8OIKLl5TvoEILXi3b3WaQRwEvTxjXLkaHdzn9vfsJYpvlTzMyv6swvFtgOuC3wkPqQnOkFKLXOjhl5ouRUvtg7bYiCYbXX5J-irM6v6dzSV82HZ2xcElhuy0_nlh87Wy0bMvkc3MYqk9DEy-TqenAgsJhp7uEPBwTN7Hl9Vv1Yqry9LWGl2jQzVcETsN2fF-ULApfpkKngxexSHiI2_mAltipCBhgjgaXZcXgeTd0")',
+                    'url("/images/room4/anhphong3.jpg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -228,35 +227,56 @@ export default function Home() {
                   Phòng 03
                 </span>
                 <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Cỗ máy Thị trường &amp; Tư bản
+                  Phòng Hội Nhập
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Sự trỗi dậy của công nghiệp, hệ thống ngân hàng phức tạp và
-                  những quy luật ngầm điều hành kinh tế.
+                  Tìm hiểu chặng đường hội nhập kinh tế quốc tế của Việt Nam qua các tác phẩm tranh tư liệu và mini game dòng chảy lịch sử.
                 </p>
               </div>
             </div>
 
             {/* Room 4 */}
-            <div className="md:col-span-7 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+            <div className="md:col-span-4 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
               <div
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB8V5NbwVaHSRdNNh6GL1qWsB-dp-VFfqIOSbG-aTdcZQb7_LwhIJ3hbpANTJ5fGS83veqnJBjfR-z_JR8lw1ctIrmzmn4uKnxqqfMfF91dkzZ2mjM7sUMWfzoVwZ-jc9ErGjNAPKYWCYqyYc-j1Fws9QPbbJB5RNTQ4G3tYvB4A7-pIgBsrlQZDA8UA2vJFiLc6X6PTGfwpV3QlftRJsGm57swa5VG0z5NgZVHlNcoq9rd-JYgXW4ysTRXY5uhzfOwCIWHKz4J9Rg")',
+                    'url("/images/room4/anhphong4.jpg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
               <div className="relative z-20 flex flex-col gap-4">
                 <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 03
+                  Phòng 04
                 </span>
-                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Tọa độ Việt Nam &amp; Kỷ nguyên Không biên giới
+                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
+                  Phòng Thị Trường
                 </h3>
-                <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Vị thế của nền kinh tế Việt Nam trong dòng chảy toàn cầu hóa
-                  và những thách thức trong kỷ nguyên số.
+                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
+                  Khám phá các đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam trong kỷ nguyên mới.
+                </p>
+              </div>
+            </div>
+
+            {/* Room 5 */}
+            <div className="md:col-span-4 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
+              <div
+                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
+                style={{
+                  backgroundImage:
+                    'url("/images/room4/anhphong5.jpg")',
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
+              <div className="relative z-20 flex flex-col gap-4">
+                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
+                  Phòng 05
+                </span>
+                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
+                  Phòng Thành Quả
+                </h3>
+                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
+                  Tổng kết những thành quả, bài học kinh nghiệm và các thách thức trong tiến triển phát triển kinh tế của đất nước.
                 </p>
               </div>
             </div>

@@ -203,6 +203,21 @@ export const DoorPortal: React.FC<DoorPortalProps> = ({
         color="#fff3e0"
       />
 
+      {/* ═══ TẤM CỔNG DỊCH CHUYỂN PHÁT SÁNG (Portal Energy Sheet) ═══ */}
+      {isOpen && (
+        <mesh position={[0, DOOR_HEIGHT / 2, 0]}>
+          <planeGeometry args={[DOOR_WIDTH * 2, DOOR_HEIGHT]} />
+          <meshStandardMaterial 
+            color="#0ea5e9"
+            emissive="#0284c7"
+            emissiveIntensity={3.0}
+            transparent
+            opacity={0.65}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
+
       {/* ═══ BIỂN TÊN PHÒNG (Room Label Sign) ═══ */}
       {label && (
         <group position={[0, DOOR_HEIGHT + FRAME_THICKNESS + 0.5, 0]}>

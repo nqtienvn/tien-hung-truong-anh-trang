@@ -256,15 +256,8 @@ export const MiniGameModal: React.FC = () => {
 
               <div className="flex gap-2 w-full pt-1">
                 <button
-                  onClick={initializeGame}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <RotateCcw size={14} />
-                  {language === 'vi' ? 'Chơi lại' : 'Play Again'}
-                </button>
-                <button
                   onClick={() => setMiniGameOpen(false)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/10"
                 >
                   {language === 'vi' ? 'Hoàn thành' : 'Done'}
                 </button>
@@ -273,24 +266,24 @@ export const MiniGameModal: React.FC = () => {
 
             {/* Cột phải: Bảng xếp hạng trực tuyến */}
             <div className="md:col-span-6 bg-slate-900/40 border border-slate-900 p-5 rounded-2xl space-y-3 text-left self-stretch flex flex-col justify-center">
-              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block border-b border-slate-800 pb-1.5">
+              <span className="text-sm md:text-base text-cyan-400 font-black uppercase tracking-widest block border-b border-slate-800 pb-2">
                 🏆 {language === 'vi' ? 'BẢNG XẾP HẠNG' : 'LEADERBOARD'}
               </span>
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar text-[11px] flex-1">
+              <div className="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar text-sm flex-1">
                 {leaderboard.length === 0 ? (
-                  <p className="text-slate-400 italic text-[10px] text-center py-4">
+                  <p className="text-slate-400 italic text-xs text-center py-4">
                     {language === 'vi' ? 'Chưa có kỷ lục nào.' : 'No records yet.'}
                   </p>
                 ) : (
                   leaderboard.slice(0, 5).map((entry, idx) => (
-                    <div key={idx} className="flex justify-between items-center py-1.5 border-b border-slate-900/30 last:border-0 font-medium">
-                      <span className="text-slate-300 flex items-center gap-1.5">
-                        <span className="font-mono text-slate-400 w-3">#{idx + 1}</span>
+                    <div key={idx} className="flex justify-between items-center py-2.5 border-b border-slate-900/40 last:border-0">
+                      <span className="text-slate-100 flex items-center gap-2.5 text-sm font-black">
+                        <span className="font-mono text-slate-500 w-5 font-bold">#{idx + 1}</span>
                         <span className="truncate max-w-[140px]">{entry.nickname}</span>
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-amber-400 font-bold">{entry.score}</span>
-                        <span className="text-[8px] text-slate-500 font-mono">{entry.time}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-lg text-amber-400 font-black">{entry.score}</span>
+                        <span className="text-xs text-slate-300 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800 font-bold">{entry.time}</span>
                       </div>
                     </div>
                   ))
@@ -337,40 +330,33 @@ export const MiniGameModal: React.FC = () => {
               <div className="flex gap-2 w-full pt-1">
                 <button
                   onClick={() => setMiniGameOpen(false)}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/10"
                 >
                   {language === 'vi' ? 'Thoát' : 'Exit'}
-                </button>
-                <button
-                  onClick={initializeGame}
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 px-4 rounded-xl font-bold text-xs cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <RotateCcw size={14} />
-                  {language === 'vi' ? 'Thử lại' : 'Retry'}
                 </button>
               </div>
             </div>
 
             {/* Cột phải: Bảng xếp hạng trực tuyến */}
             <div className="md:col-span-6 bg-slate-900/40 border border-slate-900 p-5 rounded-2xl space-y-3 text-left self-stretch flex flex-col justify-center">
-              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block border-b border-slate-800 pb-1.5">
+              <span className="text-sm md:text-base text-cyan-400 font-black uppercase tracking-widest block border-b border-slate-800 pb-2">
                 🏆 {language === 'vi' ? 'BẢNG XẾP HẠNG' : 'LEADERBOARD'}
               </span>
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar text-[11px] flex-1">
+              <div className="space-y-1.5 max-h-[160px] overflow-y-auto custom-scrollbar text-sm flex-1">
                 {leaderboard.length === 0 ? (
-                  <p className="text-slate-400 italic text-[10px] text-center py-4">
+                  <p className="text-slate-400 italic text-xs text-center py-4">
                     {language === 'vi' ? 'Chưa có kỷ lục nào.' : 'No records yet.'}
                   </p>
                 ) : (
                   leaderboard.slice(0, 5).map((entry, idx) => (
-                    <div key={idx} className="flex justify-between items-center py-1.5 border-b border-slate-900/30 last:border-0 font-medium">
-                      <span className="text-slate-300 flex items-center gap-1.5">
-                        <span className="font-mono text-slate-400 w-3">#{idx + 1}</span>
+                    <div key={idx} className="flex justify-between items-center py-2.5 border-b border-slate-900/40 last:border-0">
+                      <span className="text-slate-100 flex items-center gap-2.5 text-sm font-black">
+                        <span className="font-mono text-slate-500 w-5 font-bold">#{idx + 1}</span>
                         <span className="truncate max-w-[140px]">{entry.nickname}</span>
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-amber-400 font-bold">{entry.score}</span>
-                        <span className="text-[8px] text-slate-500 font-mono">{entry.time}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-lg text-amber-400 font-black">{entry.score}</span>
+                        <span className="text-xs text-slate-300 font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-800 font-bold">{entry.time}</span>
                       </div>
                     </div>
                   ))

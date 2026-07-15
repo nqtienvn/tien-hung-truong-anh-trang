@@ -23,6 +23,8 @@ export interface MultiplayerUser {
   status?: string;
   score?: number;
   timeSpent?: number;
+  isSitting?: boolean;
+  headYaw?: number;
 }
 
 // Vị trí spawn của các phòng trưng bày
@@ -32,6 +34,7 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
   'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
   'gallery-market-economy': { x: 0, y: 3.0, z: 133.0 },
+  'gallery-three': { x: 0, y: 3.0, z: 282.0 },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -98,6 +101,7 @@ interface MuseumContextType {
   doorClosingAlert: { doorId: string; teleportTo: string; countdownMs: number } | null;
   roomClosingAlert: RoomClosingAlert | null;
   teleportTarget: { x: number; y: number; z: number } | null;
+  setTeleportTarget: (target: { x: number; y: number; z: number } | null) => void;
   clearTeleport: () => void;
   miniGameOpen: boolean;
   setMiniGameOpen: (open: boolean) => void;
@@ -126,9 +130,35 @@ interface MuseumContextType {
 
   collectedCeramics: string[];
   addCeramic: (id: string) => void;
-
   talkedNpcs: string[];
   addTalkedNpc: (npcId: string) => void;
+
+  // --- Room 1 Game Start Synchronizer ---
+  roomOneLocked: boolean;
+  roomOneWaitingPlayers: number;
+  roomOneTotalPlayers: number;
+  roomOneCountdownTime: number;
+  roomOneState: 'waiting' | 'countdown' | 'started';
+  roomOneStartTimestamp: number | null;
+  roomOneSessionResults: any[] | null;
+  setRoomOneSessionResults: (results: any[] | null) => void;
+
+  // --- Room 2 Conference Session Synchronizer ---
+  roomTwoSessionState: 'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed';
+  roomTwoDocOpen: boolean;
+  setRoomTwoDocOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  roomTwoScore: number | null;
+  setRoomTwoScore: React.Dispatch<React.SetStateAction<number | null>>;
+  roomTwoScore2: number | null;
+  setRoomTwoScore2: React.Dispatch<React.SetStateAction<number | null>>;
+  roomTwoScore3: number | null;
+  setRoomTwoScore3: React.Dispatch<React.SetStateAction<number | null>>;
+  roomTwoScore4: number | null;
+  setRoomTwoScore4: React.Dispatch<React.SetStateAction<number | null>>;
+
+  // --- Welcome Modal Status ---
+  welcomeModalOpen: boolean;
+  setWelcomeModalOpen: (open: boolean) => void;
 }
 
 export interface GameEvent {
@@ -165,35 +195,72 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // ═══ Door & Room State ═══
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
-    'gallery-subsidy': { isOpen: false },
-    'gallery-paintings': { isOpen: false },
-    'gallery-ceramics': { isOpen: false },
-    'gallery-market-economy': { isOpen: false }
+    'gallery-subsidy': { isOpen: true },
+    'gallery-paintings': { isOpen: true },
+    'gallery-ceramics': { isOpen: true },
+    'gallery-market-economy': { isOpen: true },
+    'gallery-three': { isOpen: true }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');
   const [doorClosingAlert, setDoorClosingAlert] = useState<{ doorId: string; teleportTo: string; countdownMs: number } | null>(null);
   const [roomClosingAlert, setRoomClosingAlert] = useState<RoomClosingAlert | null>(null);
+
+  // --- Room 1 Game Start Synchronizer ---
+  const [roomOneLocked, setRoomOneLocked] = useState(false);
+  const [roomOneWaitingPlayers, setRoomOneWaitingPlayers] = useState(0);
+  const [roomOneTotalPlayers, setRoomOneTotalPlayers] = useState(0);
+  const [roomOneCountdownTime, setRoomOneCountdownTime] = useState(0);
+  const [roomOneState, setRoomOneState] = useState<'waiting' | 'countdown' | 'started'>('waiting');
+  const [roomOneStartTimestamp, setRoomOneStartTimestamp] = useState<number | null>(null);
+  const [roomOneSessionResults, setRoomOneSessionResults] = useState<any[] | null>(null);
+
+  // --- Room 2 Conference Session Synchronizer ---
+  const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed'>('waiting');
+  const [roomTwoDocOpen, setRoomTwoDocOpen] = useState<boolean>(false);
+  const [roomTwoScore, setRoomTwoScore] = useState<number | null>(null);
+  const [roomTwoScore2, setRoomTwoScore2] = useState<number | null>(null);
+  const [roomTwoScore3, setRoomTwoScore3] = useState<number | null>(null);
+  const [roomTwoScore4, setRoomTwoScore4] = useState<number | null>(null);
+
+  // --- Welcome Modal Status ---
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
   const [miniGameOpen, setMiniGameOpen] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<Array<{ nickname: string; score: number; time: string }>>([]);
   const [hasPlayed, setHasPlayedState] = useState<boolean>(false);
 
+  // Load hasPlayed from localStorage when nickname changes
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const played = localStorage.getItem('museum_has_played_game');
+    if (typeof window !== 'undefined' && nickname) {
+      const played = localStorage.getItem(`museum_has_played_game_${nickname}`);
       if (played === 'true') {
         setHasPlayedState(true);
+        const savedState = localStorage.getItem(`museum_game_state_${nickname}`) as 'won' | 'lost' | null;
+        const savedScore = localStorage.getItem(`museum_game_score_${nickname}`);
+        const savedTimeLeft = localStorage.getItem(`museum_game_time_left_${nickname}`);
+        
+        if (savedState) setGameState(savedState);
+        if (savedScore) setScore(parseInt(savedScore) || 0);
+        if (savedTimeLeft) setTimeLeft(parseInt(savedTimeLeft) || 0);
+      } else {
+        setHasPlayedState(false);
+        setGameState('idle');
+        setScore(0);
+        setTimeLeft(180);
       }
+    } else {
+      setHasPlayedState(false);
+      setGameState('idle');
     }
-  }, []);
+  }, [nickname]);
 
   const setHasPlayed = useCallback((val: boolean) => {
     setHasPlayedState(val);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('museum_has_played_game', val ? 'true' : 'false');
+    if (typeof window !== 'undefined' && nickname) {
+      localStorage.setItem(`museum_has_played_game_${nickname}`, val ? 'true' : 'false');
     }
-  }, []);
+  }, [nickname]);
 
   // --- Gameplay States ---
   const [cluesCollected, setCluesCollected] = useState<string[]>([]);
@@ -203,64 +270,27 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
   const [talkedNpcs, setTalkedNpcs] = useState<string[]>([]);
 
-  // Sync gameplay progress theo từng người chơi (nickname)
+  // Reset gameplay progress khi đổi người chơi trong phiên hiện tại.
+  // Không lưu localStorage để người chơi mới không bị kế thừa sổ điều tra/câu hỏi từ người trước.
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!nickname) {
-      setCluesCollected([]);
-      setRoomOneCompleted(false);
-      return;
-    }
-
-    const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
-    const savedProgress = localStorage.getItem(progressKey);
-
-    if (!savedProgress) {
-      setCluesCollected([]);
-      setRoomOneCompleted(false);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(savedProgress) as {
-        cluesCollected?: string[];
-        roomOneCompleted?: boolean;
-      };
-      setCluesCollected(Array.isArray(parsed.cluesCollected) ? parsed.cluesCollected : []);
-      setRoomOneCompleted(Boolean(parsed.roomOneCompleted));
-    } catch (e) {
-      console.error('Lỗi phân tích tiến trình Sổ điều tra:', e);
-      setCluesCollected([]);
-      setRoomOneCompleted(false);
-    }
+    setCluesCollected([]);
+    setRoomOneCompleted(false);
   }, [nickname]);
 
   const addClue = useCallback((clueId: string) => {
     setCluesCollected((prev) => {
       if (prev.includes(clueId)) return prev;
       const updated = [...prev, clueId];
-      if (typeof window !== 'undefined' && nickname) {
-        const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
-        localStorage.setItem(progressKey, JSON.stringify({
-          cluesCollected: updated,
-          roomOneCompleted,
-        }));
+      if (socket && socket.connected) {
+        socket.emit('room1:update-clues-count', { count: updated.length });
       }
       return updated;
     });
-  }, [nickname, roomOneCompleted]);
+  }, [socket]);
 
   const handleSetRoomOneCompleted = useCallback((completed: boolean) => {
     setRoomOneCompleted(completed);
-    if (typeof window !== 'undefined' && nickname) {
-      const progressKey = `roomOneProgress:${nickname.trim().toLowerCase()}`;
-      localStorage.setItem(progressKey, JSON.stringify({
-        cluesCollected,
-        roomOneCompleted: completed,
-      }));
-    }
-  }, [cluesCollected, nickname]);
+  }, []);
 
   // Sync Room 3 gameplay progress (collectedCeramics)
   useEffect(() => {
@@ -357,13 +387,23 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         localStorage.removeItem(`roomThreeProgress:${nickname.trim().toLowerCase()}`);
         localStorage.removeItem(`roomFourProgress:${nickname.trim().toLowerCase()}`);
       }
+      Object.keys(localStorage).forEach((key) => {
+        if (
+          key.startsWith('roomOneProgress:') ||
+          key.startsWith('roomThreeProgress:') ||
+          key.startsWith('roomFourProgress:') ||
+          key.startsWith('museum_room1_failed_quizzes')
+        ) {
+          localStorage.removeItem(key);
+        }
+      });
       // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
       localStorage.removeItem('collectedCeramics');
       localStorage.removeItem('roomFourProgress');
     }
-  }, [nickname]);
+  }, []);
 
   const clearTeleport = useCallback(() => setTeleportTarget(null), []);
 
@@ -421,6 +461,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
           setScore(finalScore);
           setGameState('lost');
+          setHasPlayed(true);
+          if (typeof window !== 'undefined' && nickname) {
+            localStorage.setItem(`museum_game_state_${nickname}`, 'lost');
+            localStorage.setItem(`museum_game_score_${nickname}`, finalScore.toString());
+            localStorage.setItem(`museum_game_time_left_${nickname}`, '0');
+          }
           socket?.emit('submit-score', { score: finalScore, timeSpent: 180 });
           socket?.emit('update-status', '');
           return 0;
@@ -430,7 +476,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState, socket]);
+  }, [gameState, socket, nickname, setHasPlayed]);
 
   // Tráo đổi vị trí giữa 2 ô sự kiện
   const swapEvents = useCallback((idx1: number, idx2: number) => {
@@ -456,15 +502,21 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     setScore(finalScore);
     setGameState('won'); // Kết thúc game và chuyển thẳng sang màn hình kết quả luôn
+    setHasPlayed(true);
+    if (typeof window !== 'undefined' && nickname) {
+      localStorage.setItem(`museum_game_state_${nickname}`, 'won');
+      localStorage.setItem(`museum_game_score_${nickname}`, finalScore.toString());
+      localStorage.setItem(`museum_game_time_left_${nickname}`, timeLeft.toString());
+    }
     socket?.emit('submit-score', { score: finalScore, timeSpent });
     socket?.emit('update-status', '');
-  }, [orderedEvents, timeLeft, socket]);
+  }, [orderedEvents, timeLeft, socket, nickname, setHasPlayed]);
 
   const [settings, setSettings] = useState<GraphicsSettings>({
-    preset: 'low',
+    preset: 'medium',
     shadows: false,
-    animations: false,
-    maxAvatars: 10,    // Chỉ render 10 avatar gần nhất — đủ thấy nhau, không lag GPU
+    animations: true,
+    maxAvatars: 99,    // Cho phép hiển thị tối đa 99 người để 64 người thấy nhau
     reducedLights: false,
   });
 
@@ -697,6 +749,85 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLeaderboard(board);
     });
 
+    // ── Room 1 Multiplayer Sync Events ──
+    newSocket.on('room1:state-sync', (data: { roomOneState: 'waiting' | 'countdown' | 'started'; roomOneStartTimestamp?: number }) => {
+      setRoomOneState(data.roomOneState);
+      if (data.roomOneState !== 'started') {
+        setRoomOneLocked(true);
+      } else {
+        setRoomOneLocked(false);
+      }
+      if (data.roomOneStartTimestamp) {
+        setRoomOneStartTimestamp(data.roomOneStartTimestamp);
+      } else {
+        setRoomOneStartTimestamp(null);
+      }
+    });
+
+    newSocket.on('room1:waiting-status', (data: { readyPlayers: number; totalPlayers: number }) => {
+      setRoomOneState('waiting');
+      setRoomOneWaitingPlayers(data.readyPlayers);
+      setRoomOneTotalPlayers(data.totalPlayers);
+      setRoomOneLocked(true);
+    });
+
+    newSocket.on('room1:countdown-start', (data: { duration: number }) => {
+      setRoomOneState('countdown');
+      setRoomOneCountdownTime(data.duration);
+      setRoomOneLocked(true);
+    });
+
+    newSocket.on('room1:countdown-cancelled', () => {
+      setRoomOneState('waiting');
+      setRoomOneCountdownTime(0);
+      setRoomOneLocked(true);
+    });
+
+    newSocket.on('room1:start-game', (data?: { roomOneStartTimestamp?: number }) => {
+      setRoomOneState('started');
+      setRoomOneCountdownTime(0);
+      setRoomOneLocked(false);
+      setRoomOneStartTimestamp(data?.roomOneStartTimestamp || Date.now());
+      setRoomOneSessionResults(null);
+    });
+
+    newSocket.on('room1:session-ended', (data: { results: any[] }) => {
+      setRoomOneSessionResults(data.results);
+      setRoomOneCompleted(true);
+    });
+
+    // ── Room 2 Conference Session Sync Events ──
+    newSocket.on('room2:state-sync', (data: { roomTwoSessionState: any }) => {
+      setRoomTwoSessionState(data.roomTwoSessionState);
+    });
+
+    newSocket.on('room2:session1-start', () => {
+      setRoomTwoSessionState('session1');
+    });
+
+    newSocket.on('room2:session2-start', () => {
+      setRoomTwoSessionState('session2');
+    });
+
+    newSocket.on('room2:session3-start', () => {
+      setRoomTwoSessionState('session3');
+    });
+
+    newSocket.on('room2:session4-start', () => {
+      setRoomTwoSessionState('session4');
+    });
+
+    newSocket.on('room2:completed-start', () => {
+      setRoomTwoSessionState('completed');
+    });
+
+    newSocket.on('room2:submit-success', (data: { session: number; score: number }) => {
+      if (data.session === 1) setRoomTwoScore(data.score);
+      else if (data.session === 2) setRoomTwoScore2(data.score);
+      else if (data.session === 3) setRoomTwoScore3(data.score);
+      else if (data.session === 4) setRoomTwoScore4(data.score);
+    });
+
     setSocket(newSocket);
 
     return () => {
@@ -743,6 +874,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
       if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
       if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
+      if (roomStates['gallery-three']?.isOpen) loadRoom('gallery-three');
       console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
     }, { timeout: 5000 });
 
@@ -770,6 +902,47 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     }
   }, [roomStates, loadRoom, unloadRoom]);
+
+  // Hiệu ứng đếm ngược Room 1 cục bộ
+  useEffect(() => {
+    if (roomOneState !== 'countdown' || roomOneCountdownTime <= 0) return;
+
+    const timer = setInterval(() => {
+      setRoomOneCountdownTime((t) => {
+        if (t <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [roomOneState, roomOneCountdownTime]);
+
+  // Khóa di chuyển ở Phòng 1 nếu game chưa bắt đầu
+  useEffect(() => {
+    if (activeGallery?.id === 'gallery-subsidy') {
+      if (roomOneState !== 'started') {
+        setRoomOneLocked(true);
+      } else {
+        setRoomOneLocked(false);
+      }
+    } else {
+      setRoomOneLocked(false);
+    }
+  }, [activeGallery?.id, roomOneState]);
+
+  // Reset Room 2 states when leaving Room 2
+  useEffect(() => {
+    if (currentRoom !== 'gallery-paintings') {
+      setRoomTwoDocOpen(false);
+      setRoomTwoScore(null);
+      setRoomTwoScore2(null);
+      setRoomTwoScore3(null);
+      setRoomTwoScore4(null);
+    }
+  }, [currentRoom]);
 
   return (
     <MuseumContext.Provider
@@ -812,6 +985,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         doorClosingAlert,
         roomClosingAlert,
         teleportTarget,
+        setTeleportTarget,
         clearTeleport,
         miniGameOpen,
         setMiniGameOpen,
@@ -841,6 +1015,33 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addCeramic,
         talkedNpcs,
         addTalkedNpc,
+
+        // --- Room 1 Game Start Synchronizer ---
+        roomOneLocked,
+        roomOneWaitingPlayers,
+        roomOneTotalPlayers,
+        roomOneCountdownTime,
+        roomOneState,
+        roomOneStartTimestamp,
+        roomOneSessionResults,
+        setRoomOneSessionResults,
+
+        // --- Room 2 Conference Session Synchronizer ---
+        roomTwoSessionState,
+        roomTwoDocOpen,
+        setRoomTwoDocOpen,
+        roomTwoScore,
+        setRoomTwoScore,
+        roomTwoScore2,
+        setRoomTwoScore2,
+        roomTwoScore3,
+        setRoomTwoScore3,
+        roomTwoScore4,
+        setRoomTwoScore4,
+
+        // --- Welcome Modal Status ---
+        welcomeModalOpen,
+        setWelcomeModalOpen,
       }}
     >
       {children}

@@ -15,6 +15,7 @@ import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
+import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
 
@@ -65,7 +66,7 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở tường sau sảnh, tầng 2 (Y=3, Z=8)
     position: [0, 3.0, 8.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 01: Bao cấp',
+    label: 'Phòng 01: Phòng Bao Cấp',
   },
   {
     doorId: 'door-room2',
@@ -73,29 +74,138 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở cuối phòng 1 (Y=3, Z=54) nối sang phòng 2
     position: [0, 3.0, 54.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Hội họa',
+    label: 'Phòng 02: Phòng Đổi Mới',
   },
   {
     doorId: 'door-room3',
     targetRoom: 'gallery-ceramics',
     position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Gốm sứ',
+    label: 'Phòng 03: Phòng Hội Nhập',
   },
   {
     doorId: 'door-room4',
     targetRoom: 'gallery-market-economy',
     position: [0, 3.0, 130.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 04: Hội nhập',
+    label: 'Phòng 04: Phòng Thị Trường',
   },
   {
     doorId: 'door-room5',
-    targetRoom: 'lobby',
-    position: [0, 3.0, 210.0] as [number, number, number],
+    targetRoom: 'gallery-three',
+    position: [0, 3.0, 280.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Lối ra sảnh',
+    label: 'Phòng 05: Phòng Thành Quả',
   },
+];
+
+// Cấu hình các cổng cửa dịch chuyển tương tác khi đứng gần và nhấn E (Tách phòng độc lập)
+const INTERACTIVE_DOORS = [
+  // --- LOBBY <-> ROOM 1 ---
+  {
+    id: 'lobby-to-room1',
+    fromRoom: 'lobby',
+    toRoom: 'gallery-subsidy',
+    doorId: 'door-room1',
+    check: (x: number, z: number) => z >= 6.0 && z <= 8.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 10.0] as [number, number, number],
+    promptVi: 'vào Phòng 01: Phòng Bao Cấp',
+    promptEn: 'enter Room 01: Subsidy Room'
+  },
+  {
+    id: 'room1-to-lobby',
+    fromRoom: 'gallery-subsidy',
+    toRoom: 'lobby',
+    doorId: 'door-room1',
+    check: (x: number, z: number) => z >= 8.0 && z <= 10.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 0, 6.5] as [number, number, number],
+    promptVi: 'quay lại Sảnh chính',
+    promptEn: 'return to Lobby'
+  },
+  // --- ROOM 1 <-> ROOM 2 ---
+  {
+    id: 'room1-to-room2',
+    fromRoom: 'gallery-subsidy',
+    toRoom: 'gallery-paintings',
+    doorId: 'door-room2',
+    check: (x: number, z: number) => z >= 52.0 && z <= 54.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 56.0] as [number, number, number],
+    promptVi: 'vào Phòng 02: Phòng Đổi Mới',
+    promptEn: 'enter Room 02: Doi Moi Room'
+  },
+  {
+    id: 'room2-to-room1',
+    fromRoom: 'gallery-paintings',
+    toRoom: 'gallery-subsidy',
+    doorId: 'door-room2',
+    check: (x: number, z: number) => z >= 54.0 && z <= 56.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 52.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 01',
+    promptEn: 'return to Room 01'
+  },
+  // --- ROOM 2 <-> ROOM 3 ---
+  {
+    id: 'room2-to-room3',
+    fromRoom: 'gallery-paintings',
+    toRoom: 'gallery-ceramics',
+    doorId: 'door-room3',
+    check: (x: number, z: number) => z >= 98.0 && z <= 100.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 102.0] as [number, number, number],
+    promptVi: 'vào Phòng 03: Phòng Hội Nhập',
+    promptEn: 'enter Room 03: Integration Room'
+  },
+  {
+    id: 'room3-to-room2',
+    fromRoom: 'gallery-ceramics',
+    toRoom: 'gallery-paintings',
+    doorId: 'door-room3',
+    check: (x: number, z: number) => z >= 100.0 && z <= 102.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 98.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 02',
+    promptEn: 'return to Room 02'
+  },
+  // --- ROOM 3 <-> ROOM 4 ---
+  {
+    id: 'room3-to-room4',
+    fromRoom: 'gallery-ceramics',
+    toRoom: 'gallery-market-economy',
+    doorId: 'door-room4',
+    check: (x: number, z: number) => z >= 128.0 && z <= 130.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 133.0] as [number, number, number],
+    promptVi: 'vào Phòng 04: Phòng Thị Trường',
+    promptEn: 'enter Room 04: Market Economy'
+  },
+  {
+    id: 'room4-to-room3',
+    fromRoom: 'gallery-market-economy',
+    toRoom: 'gallery-ceramics',
+    doorId: 'door-room4',
+    check: (x: number, z: number) => z >= 130.0 && z <= 132.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 128.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 03',
+    promptEn: 'return to Room 03'
+  },
+  // --- ROOM 4 <-> ROOM 5 ---
+  {
+    id: 'room4-to-room5',
+    fromRoom: 'gallery-market-economy',
+    toRoom: 'gallery-three',
+    doorId: 'door-room5',
+    check: (x: number, z: number) => z >= 278.0 && z <= 280.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 282.0] as [number, number, number],
+    promptVi: 'vào Phòng 05: Phòng Thành Quả',
+    promptEn: 'enter Room 05: Achievements Room'
+  },
+  {
+    id: 'room5-to-room4',
+    fromRoom: 'gallery-three',
+    toRoom: 'gallery-market-economy',
+    doorId: 'door-room5',
+    check: (x: number, z: number) => z >= 280.0 && z <= 282.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 278.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 04',
+    promptEn: 'return to Room 04'
+  }
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -142,11 +252,16 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const { doorStates, activeGallery } = useMuseum();
+  const { doorStates, activeGallery, sittingPosition, roomTwoDocOpen } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
   const isZooming = useRef(false);
+  const roomTwoDocOpenRef = useRef(false);
+
+  useEffect(() => {
+    roomTwoDocOpenRef.current = !!roomTwoDocOpen;
+  }, [roomTwoDocOpen]);
 
   const targetCamPos = useRef(new THREE.Vector3()).current;
   const targetLookAt = useRef(new THREE.Vector3()).current;
@@ -204,6 +319,7 @@ const LobbyCameraController: React.FC = () => {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
+      if (roomTwoDocOpenRef.current) return;
       const isLeftButtonHeld = (e.buttons & 1) === 1;
       if (!isLeftButtonHeld || !isInsideCanvas(e)) {
         if (!isLeftButtonHeld) isMouseDown.current = false;
@@ -256,14 +372,47 @@ const LobbyCameraController: React.FC = () => {
     const px = player.position.x;
     const py = player.position.y;
     const pz = player.position.z;
-    const targetHeight = py + 0.6;
 
-    // Khi zoom, thu nhỏ khoảng cách camera về 0 (góc nhìn thứ nhất) để không bị cản bởi đầu nhân vật
-    const idealDist = isZooming.current ? 0.0 : 5.5;
+    let sitOffsetX = 0;
+    let sitOffsetZ = 0;
+    let sitOffsetY = 0;
 
-    // Ẩn người chơi nếu camera zoom lại gần (dưới 2 mét) để tránh hiện tượng xuyên mặt/đầu nhân vật
-    const camToPlayerDist = camera.position.distanceTo(player.position);
-    player.visible = !isZooming.current || (camToPlayerDist > 1.8);
+    // Giới hạn hướng xoay ngang của đầu tối đa 90 độ sang 2 bên khi ngồi ghế
+    if (sittingPosition && sittingPosition.rotationY !== undefined) {
+      const bodyYaw = sittingPosition.rotationY;
+      const forwardTheta = bodyYaw + Math.PI; // Bù 180 độ vì camera hướng ngược chiều với mặt trước của body mặc định
+      
+      if (roomTwoDocOpenRef.current) {
+        // Khóa hướng nhìn thẳng về phía trước khi đang mở màn hình tài liệu
+        theta.current = forwardTheta;
+        phi.current = Math.PI / 2;
+      } else {
+        let diff = theta.current - forwardTheta;
+        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+        const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
+        theta.current = forwardTheta + clampedDiff;
+      }
+
+      // Dịch camera ra phía trước mặt 0.35m để tránh che khuất, và nâng cao thêm 0.08m
+      sitOffsetX = -0.35 * Math.sin(forwardTheta);
+      sitOffsetZ = -0.35 * Math.cos(forwardTheta);
+      sitOffsetY = 0.08;
+    }
+
+    // Nếu đang Zoom hoặc Ngồi (First Person), đặt camera cao ngang tầm mắt/đầu thật của nhân vật (1.12m)
+    // Nếu đi lại bình thường (Third Person), đặt camera nhìn vào vùng lưng/cổ (0.6m)
+    const isFirstPerson = !!(isZooming.current || sittingPosition);
+    const targetHeight = py + (isFirstPerson ? 1.12 : 0.6);
+
+    // Khi zoom hoặc khi đang ngồi ghế, thu nhỏ khoảng cách camera về 0 (góc nhìn thứ nhất) để không bị cản bởi đầu nhân vật
+    const idealDist = isFirstPerson ? 0.0 : 5.5;
+
+    // Khi zoom thì ẩn nhân vật để tránh clipping, nhưng khi ngồi thì vẫn hiện nhân vật (chỉ ẩn đầu) để người chơi nhìn thấy tay chân, thân thể mình
+    if (isZooming.current) {
+      player.visible = false;
+    } else {
+      player.visible = true;
+    }
 
     const xOff = idealDist * Math.sin(theta.current) * Math.sin(phi.current);
     const yOff = idealDist * Math.cos(phi.current);
@@ -274,6 +423,7 @@ const LobbyCameraController: React.FC = () => {
     const isDoor2Open = doorStates['door-room2']?.isOpen || false;
     const isDoor3Open = doorStates['door-room3']?.isOpen || false;
     const isDoor4Open = doorStates['door-room4']?.isOpen || false;
+    const isDoor5Open = doorStates['door-room5']?.isOpen || false;
 
     let minX = -LOBBY_W / 2 + 0.5; // -14.5
     let maxX = LOBBY_W / 2 - 0.5;  // 14.5
@@ -285,39 +435,46 @@ const LobbyCameraController: React.FC = () => {
       minX = -LOBBY_W / 2 + 0.5;
       maxX = LOBBY_W / 2 - 0.5;
       minZ = -9.4;
-      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 209.8 : 129.8) : 99.8) : 53.8) : 7.8;
-    }
+      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8) : 53.8) : 7.8;
+    } 
     else if (pz > 8.0 && pz <= 54.0) {
       // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor1Open ? -9.4 : 8.2;
-      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? 209.8 : 129.8) : 99.8) : 53.8;
-    }
+      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8) : 53.8;
+    } 
     else if (pz > 54.0 && pz <= 100.0) {
       // Đang ở Phòng 2
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
-      maxZ = isDoor3Open ? (isDoor4Open ? 209.8 : 129.8) : 99.8;
-    }
+      maxZ = isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8;
+    } 
     else if (pz > 100.0 && pz <= 130.0) {
       // Đang ở Phòng 3 (Gốm sứ)
       minX = -14.5;
       maxX = 14.5;
       minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
-      maxZ = isDoor4Open ? 209.8 : 129.8;
-    }
-    else if (pz > 130.0 && pz <= 210.0) {
+      maxZ = isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8;
+    } 
+    else if (pz > 130.0 && pz <= 280.0) {
       // Đang ở Phòng 4 (Kinh tế thị trường)
       minX = -8.5;
       maxX = 8.5;
       minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
-      maxZ = 209.8;
+      maxZ = isDoor5Open ? 329.8 : 279.8;
+    }
+    else if (pz > 280.0 && pz <= 330.0) {
+      // Đang ở Phòng 5 (Thành quả)
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = isDoor5Open ? (isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2) : 280.2;
+      maxZ = 329.8;
     }
 
-    const camX = Math.max(minX, Math.min(maxX, px + xOff));
-    const camZ = Math.max(minZ, Math.min(maxZ, pz + zOff));
+    const camX = Math.max(minX, Math.min(maxX, px + xOff + sitOffsetX));
+    const camZ = Math.max(minZ, Math.min(maxZ, pz + zOff + sitOffsetZ));
 
     // Tính toán độ cao sàn nhà thực tế tại vị trí camera để kẹp độ cao tối thiểu
     const groundYAtCam = getLobbyGroundY(camX, camZ, doorStates);
@@ -329,12 +486,12 @@ const LobbyCameraController: React.FC = () => {
       const activeRoomHeight = activeGallery?.room_height ?? 6.0;
       maxCamY = 3.0 + activeRoomHeight - 0.5;
     }
-    const camY = Math.max(minCamY, Math.min(maxCamY, targetHeight + yOff));
+    const camY = Math.max(minCamY, Math.min(maxCamY, targetHeight + yOff + sitOffsetY));
 
     targetCamPos.set(camX, camY, camZ);
 
-    // Khi zoom, hướng nhìn của camera sẽ nhìn thẳng ra phía trước tầm nhìn thay vì nhìn vào đầu nhân vật
-    if (isZooming.current) {
+    // Khi zoom hoặc đang ngồi ghế, hướng nhìn của camera sẽ nhìn thẳng ra phía trước tầm nhìn thay vì nhìn vào đầu nhân vật
+    if (isZooming.current || sittingPosition) {
       const lookAtX = px - 10 * Math.sin(theta.current) * Math.sin(phi.current);
       const lookAtY = targetHeight - 10 * Math.cos(phi.current);
       const lookAtZ = pz - 10 * Math.cos(theta.current) * Math.sin(phi.current);
@@ -371,7 +528,21 @@ const RoomPrecompiler: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 // NHÂN VẬT NGƯỜI CHƠI TRONG SẢNH + PHÒNG (Player Character)
 // ═══════════════════════════════════════════════════════════════════════════
-const LobbyPlayer: React.FC = () => {
+const LobbyPlayer: React.FC<{
+  onActiveDoorChange: (door: any) => void;
+  activeDoor: any;
+  activeDoorRef: React.RefObject<any>;
+  transitionLoading: boolean;
+  onTransitionLoadingChange: (loading: boolean) => void;
+  onTransitionRoomNameChange: (name: string) => void;
+}> = ({
+  onActiveDoorChange,
+  activeDoor,
+  activeDoorRef,
+  transitionLoading,
+  onTransitionLoadingChange,
+  onTransitionRoomNameChange,
+}) => {
   const playerRef = useRef<THREE.Group>(null);
   const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
   const isMoving = useRef(false);
@@ -382,8 +553,9 @@ const LobbyPlayer: React.FC = () => {
   const rightLegRef = useRef<THREE.Group>(null);
   const leftArmRef = useRef<THREE.Group>(null);
   const rightArmRef = useRef<THREE.Group>(null);
+  const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, clearTeleport, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -449,6 +621,29 @@ const LobbyPlayer: React.FC = () => {
    */
   const checkCollision = useCallback(
     (x: number, z: number, currentY: number): boolean => {
+      // Tự động phát hiện phòng hiện tại dựa trên tọa độ Z thực tế của người chơi (khắc phục lỗi khóa di chuyển do trễ state React)
+      const playerZ = playerRef.current ? playerRef.current.position.z : 0;
+      let activeRoom = 'lobby';
+      if (playerZ > 8.0 && playerZ <= 54.0) {
+        activeRoom = 'gallery-subsidy';
+      } else if (playerZ > 54.0 && playerZ <= 100.0) {
+        activeRoom = 'gallery-paintings';
+      } else if (playerZ > 100.0 && playerZ <= 130.0) {
+        activeRoom = 'gallery-ceramics';
+      } else if (playerZ > 130.0 && playerZ <= 280.0) {
+        activeRoom = 'gallery-market-economy';
+      } else if (playerZ > 280.0) {
+        activeRoom = 'gallery-three';
+      }
+
+      // Ranh giới vật lý cứng giữa các phòng triển lãm để ngăn người chơi đi bộ xuyên phòng (bắt buộc nhấn E)
+      if (activeRoom === 'lobby' && z > 7.7) return true;
+      if (activeRoom === 'gallery-subsidy' && (z < 8.3 || z > 53.7)) return true;
+      if (activeRoom === 'gallery-paintings' && (z < 54.3 || z > 99.7)) return true;
+      if (activeRoom === 'gallery-ceramics' && (z < 100.3 || z > 129.7)) return true;
+      if (activeRoom === 'gallery-market-economy' && (z < 130.3 || z > 279.7)) return true;
+      if (activeRoom === 'gallery-three' && z < 280.3) return true;
+
       // ── VÙNG SẢNH (Lobby) ──
       if (z <= 8.0) {
         // Biên giới sảnh
@@ -498,47 +693,32 @@ const LobbyPlayer: React.FC = () => {
         // Tường chính bên trái/phải
         if (x < -11.7 || x > 11.7) return true;
 
-        // 1. Vách ngăn Z = 3.0 local (Global Z = 34.0, độ dày Z: 33.7 -> 34.3)
-        // Khoảng trống đi qua là X từ -5.0 đến -2.0. Chặn các vị trí khác.
-        if (z > 33.7 && z < 34.3) {
-          const inOpening = x > -5.0 && x < -2.0;
-          if (!inOpening) return true;
-        }
-
-        // 2. Vách ngăn Z = 13.0 local (Global Z = 44.0, độ dày Z: 43.7 -> 44.3)
-        // Chặn nếu đi qua tường X từ -6.0 đến 6.0
-        if (z > 43.7 && z < 44.3) {
-          const hitWall = x > -6.0 && x < 6.0;
-          if (hitWall) return true;
-        }
-
-        // 3. Bàn gỗ bày đài Radio cổ (Global Z = 43.55, X: -1.2 -> 1.2, Z: 43.1 -> 44.0)
-        if (z > 43.1 && z < 44.0 && x > -1.2 && x < 1.2) {
-          return true;
-        }
-
-        // 4. Ghế gỗ băng cũ trong phòng (local Z = 8.0 & 18.0 => Global Z = 39.0 & 49.0)
+        // 1. Ghế gỗ băng cũ trong phòng (local Z = -12.0 & 12.0 => Global Z = 19.0 & 43.0)
         // Khi đang nhảy cao hơn mặt ghế thì cho vượt qua.
         const canJumpOverBench = currentY > 3.75;
-        if (!canJumpOverBench && z > 38.5 && z < 39.5 && x > -1.7 && x < 1.7) {
+        if (!canJumpOverBench && z > 18.5 && z < 19.5 && x > -1.7 && x < 1.7) {
           return true;
         }
-        if (!canJumpOverBench && z > 48.5 && z < 49.5 && x > -1.7 && x < 1.7) {
+        if (!canJumpOverBench && z > 42.5 && z < 43.5 && x > -1.7 && x < 1.7) {
           return true;
         }
 
-        // 5. Dãy ghế ngồi giữa phòng (local Z = -16.5, -10.5, -4.5 => Global Z = 14.5, 20.5, 26.5)
-        const centralBenchZs = [14.5, 20.5, 26.5];
+        // 5. Dãy ghế ngồi giữa phòng (local Z = -4.0, 4.0 => Global Z = 27.0, 35.0)
+        const centralBenchZs = [27.0, 35.0];
         for (const benchZ of centralBenchZs) {
           if (!canJumpOverBench && z > benchZ - 0.65 && z < benchZ + 0.65 && x > -2.15 && x < 2.15) {
             return true;
           }
         }
 
-        // 6. Bàn lọ hoa trang trí: vẫn chặn để không xuyên qua bàn.
+        // 6. Bàn lọ hoa trang trí (mỗi bên 3 bàn => Global Z = 15.0, 31.0, 47.0)
         const decorTables = [
-          { x: -7.2, z: 17.8 },
-          { x: 7.2, z: 23.8 },
+          { x: -7.2, z: 15.0 },
+          { x: -7.2, z: 31.0 },
+          { x: -7.2, z: 47.0 },
+          { x: 7.2, z: 15.0 },
+          { x: 7.2, z: 31.0 },
+          { x: 7.2, z: 47.0 },
         ];
         for (const table of decorTables) {
           const dx = x - table.x;
@@ -569,9 +749,8 @@ const LobbyPlayer: React.FC = () => {
         // Chặn các bàn đại biểu và ghế trong Phòng 2 (X xoay dọc, 5 dãy bàn bậc thang)
         const localZ = z - 77.0;
         const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
-
-        // Chặn bục sân khấu bên trái (local X: -12.0 đến -7.6, local Z: -7.5 đến 7.5)
-        if (x < -7.6 && localZ > -7.5 && localZ < 7.5) return true;
+        // Chặn bục sân khấu bên trái và lan can 2 đầu sân khấu (local X: -12.0 đến -7.6, local Z: -7.6 đến 7.6)
+        if (x < -7.6 && localZ > -7.6 && localZ < 7.6) return true;
 
         // Chặn các dãy bàn dọc
         for (const rowX of deskXCoords) {
@@ -621,6 +800,39 @@ const LobbyPlayer: React.FC = () => {
 
         if (x < -14.7 || x > 14.7) return true;
 
+        // 1. Va chạm với máy chơi game tại X = 8.0, Z = 128.6 (global)
+        if (x > 6.6 && x < 9.4 && z > 127.4 && z < 129.5) {
+          return true;
+        }
+
+        // 2. Va chạm với hàng rào bên trái (X = -13.2)
+        if (x < -12.4) {
+          if ((z > 104.2 && z < 109.8) || (z > 112.2 && z < 117.8) || (z > 120.2 && z < 125.8)) {
+            return true;
+          }
+        }
+
+        // 3. Va chạm với hàng rào bên phải (X = 13.2)
+        if (x > 12.4) {
+          if ((z > 104.2 && z < 109.8) || (z > 112.2 && z < 117.8) || (z > 120.2 && z < 125.8)) {
+            return true;
+          }
+        }
+
+        // 4. Va chạm với hàng rào cửa vào trước (Z = 101.8 global)
+        if (z < 102.6) {
+          if ((x > -10.8 && x < -5.2) || (x > 5.2 && x < 10.8)) {
+            return true;
+          }
+        }
+
+        // 5. Va chạm với hàng rào phía sau bên trái (Z = 128.2 global)
+        if (z > 127.4) {
+          if (x > -10.8 && x < -5.2) {
+            return true;
+          }
+        }
+
         if (z > 129.3) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
@@ -628,8 +840,8 @@ const LobbyPlayer: React.FC = () => {
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 210.0) ──
-      if (z > 130.0 && z <= 210.0) {
+      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 280.0) ──
+      if (z > 130.0 && z <= 280.0) {
         // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
         if (z < 130.6) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
@@ -639,11 +851,21 @@ const LobbyPlayer: React.FC = () => {
         // Biên giới tường bên (rộng 18m, X = ±9m)
         if (x < -8.7 || x > 8.7) return true;
 
-        // Tường sau phòng 4 (Z = 210.0) — Chỉ chặn nếu cửa 5 ĐÓNG
-        if (z > 209.3) {
+        // Tường sau phòng 4 (Z = 280.0)
+        if (z > 279.3) {
           const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor5) return true;
         }
+        return false;
+      }
+
+      // ── PHÒNG TRIỂN LÃM 5 (gallery-three: Z 280.0 -> 330.0) ──
+      if (z > 280.0 && z <= 330.0) {
+        if (z < 280.6) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
+        if (x < -11.7 || x > 11.7) return true;
         return false;
       }
 
@@ -678,6 +900,36 @@ const LobbyPlayer: React.FC = () => {
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (shouldIgnoreKeyboard(e.target)) return;
+
+      if (e.code === 'KeyE') {
+        e.preventDefault();
+        if (sittingPositionRef.current) {
+          // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 2
+          if (playerRef.current && playerRef.current.position.z > 54.0 && playerRef.current.position.z <= 100.0) {
+            setRoomTwoDocOpen((prev: boolean) => !prev);
+          }
+        } else if (activeDoorRef.current) {
+          const door = activeDoorRef.current;
+          const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
+          onTransitionRoomNameChange(targetRoomName);
+          onTransitionLoadingChange(true);
+
+          setTimeout(() => {
+            // Dịch chuyển người chơi tới vị trí spawn của phòng mới
+            setTeleportTarget({
+              x: door.spawnPos[0],
+              y: door.spawnPos[1],
+              z: door.spawnPos[2]
+            });
+            setCurrentRoom(door.toRoom);
+
+            setTimeout(() => {
+              onTransitionLoadingChange(false);
+            }, 800);
+          }, 1200);
+        }
+        return;
+      }
 
       if (e.code === 'KeyF') {
         e.preventDefault();
@@ -747,7 +999,7 @@ const LobbyPlayer: React.FC = () => {
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit) return;
+    if (selectedExhibit || transitionLoading) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -787,11 +1039,33 @@ const LobbyPlayer: React.FC = () => {
       }
     }
 
+    // Kiểm tra khoảng cách đến các cửa dịch chuyển tương tác
+    let foundDoor = null;
+    if (!sittingPosition) {
+      for (const door of INTERACTIVE_DOORS) {
+        if (door.fromRoom === currentRoom && door.check(pPos.x, pPos.z)) {
+          if (doorStates[door.doorId]?.isOpen) {
+            foundDoor = door;
+            break;
+          }
+        }
+      }
+    }
+
+    if (foundDoor) {
+      if (activeDoor?.id !== foundDoor.id) {
+        onActiveDoorChange(foundDoor);
+      }
+    } else {
+      if (activeDoor !== null) {
+        onActiveDoorChange(null);
+      }
+    }
+
     if (sittingPosition) {
       playerRef.current.position.set(sittingPosition.x, sittingPosition.y, sittingPosition.z);
-      if (sittingPosition.rotationY !== undefined) {
-        playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, sittingPosition.rotationY, 0.15);
-      }
+      const bodyYaw = sittingPosition.rotationY !== undefined ? sittingPosition.rotationY : -Math.PI / 2;
+      playerRef.current.rotation.y = THREE.MathUtils.lerp(playerRef.current.rotation.y, bodyYaw, 0.15);
 
       // Xoay chân gập vuông góc 90 độ về phía trước và để tay đặt lên đùi
       if (leftLegRef.current) leftLegRef.current.rotation.x = -Math.PI / 2.0;
@@ -805,16 +1079,32 @@ const LobbyPlayer: React.FC = () => {
         rightArmRef.current.rotation.z = -0.1;
       }
 
-      const now = state.clock.getElapsedTime();
-      if (now - lastUpdate.current > 0.08) {
+      // Tính góc xoay đầu thực tế của camera so với hướng thẳng của thân
+      const camDir = new THREE.Vector3();
+      state.camera.getWorldDirection(camDir);
+      const camYaw = Math.atan2(-camDir.x, -camDir.z);
+      let hDiff = camYaw - (bodyYaw + Math.PI); // Bù 180 độ vì camera hướng ngược chiều với mặt trước của body mặc định
+      hDiff = Math.atan2(Math.sin(hDiff), Math.cos(hDiff));
+
+      // Xoay đầu local (mặc dù local head bị ẩn khi ngồi để tránh clip camera, nhưng vẫn quay đúng hướng)
+      if (headRef.current) {
+        headRef.current.rotation.y = hDiff;
+      }
+
+      // Phát tọa độ ngồi cố định góc nhìn thân cho người khác, kèm góc xoay đầu relative
+      const now = state.clock.getElapsedTime() * 1000;
+      if (now - lastUpdate.current > 80) {
         socket?.emit('move', {
           x: sittingPosition.x,
-          y: sittingPosition.y,
+          y: sittingPosition.y - baseY, // Gửi tọa độ Y tương đối để server đồng bộ đúng độ cao
           z: sittingPosition.z,
-          yaw: playerRef.current.rotation.y,
+          yaw: bodyYaw, // Gửi yaw cố định của ghế
+          isSitting: true,
+          headYaw: hDiff, // Gửi góc xoay ngang relative của đầu
         });
         lastUpdate.current = now;
       }
+
       return;
     }
 
@@ -937,6 +1227,11 @@ const LobbyPlayer: React.FC = () => {
       }
     }
 
+    // Trả đầu về vị trí thẳng khi đứng dậy/đi lại
+    if (headRef.current) {
+      headRef.current.rotation.y += (0 - headRef.current.rotation.y) * 0.15;
+    }
+
     // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
     if (now - lastUpdate.current > 80) {
@@ -946,6 +1241,7 @@ const LobbyPlayer: React.FC = () => {
           y: playerRef.current.position.y - baseY, // Gửi tọa độ Y logic (bàn chân chạm đất)
           z: playerRef.current.position.z,
           yaw: playerRef.current.rotation.y,
+          isSitting: false,
         });
       }
       lastUpdate.current = now;
@@ -975,10 +1271,24 @@ const LobbyPlayer: React.FC = () => {
     <group ref={playerRef} name="lobby-player">
       {isPawn ? (
         <group scale={1.6}>
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[0.18, 20, 20]} />
-            <meshStandardMaterial {...skinProps} />
-          </mesh>
+          {!sittingPosition && (
+            <group ref={headRef} position={[0, 0.7, 0]}>
+              <mesh>
+                <sphereGeometry args={[0.18, 20, 20]} />
+                <meshStandardMaterial {...skinProps} />
+              </mesh>
+              {/* Mắt trái */}
+              <mesh position={[-0.06, 0.04, 0.16]}>
+                <sphereGeometry args={[0.025, 12, 12]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+              {/* Mắt phải */}
+              <mesh position={[0.06, 0.04, 0.16]}>
+                <sphereGeometry args={[0.025, 12, 12]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+            </group>
+          )}
           <mesh position={[0, 0.48, 0]}>
             <cylinderGeometry args={[0.12, 0.12, 0.06, 16]} />
             <meshStandardMaterial {...skinProps} />
@@ -994,10 +1304,24 @@ const LobbyPlayer: React.FC = () => {
         </group>
       ) : (
         <group scale={1.6}>
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[HEAD_R, 28, 28]} />
-            <meshStandardMaterial {...skinProps} />
-          </mesh>
+          {!sittingPosition && (
+            <group ref={headRef} position={[0, 0.7, 0]}>
+              <mesh>
+                <sphereGeometry args={[HEAD_R, 28, 28]} />
+                <meshStandardMaterial {...skinProps} />
+              </mesh>
+              {/* Mắt trái */}
+              <mesh position={[-0.07, 0.05, 0.20]}>
+                <sphereGeometry args={[0.03, 16, 16]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+              {/* Mắt phải */}
+              <mesh position={[0.07, 0.05, 0.20]}>
+                <sphereGeometry args={[0.03, 16, 16]} />
+                <meshBasicMaterial color="#000000" />
+              </mesh>
+            </group>
+          )}
           <mesh position={[0, 0.28, 0]}>
             <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
             <meshStandardMaterial {...skinProps} />
@@ -1048,6 +1372,9 @@ export default function LobbyPage() {
     loadedRooms,
     roomClosingAlert,
     currentRoom,
+    setCurrentRoom,
+    setTeleportTarget,
+    clearTeleport,
     socket,
     updatePreset,
     updateSettings,
@@ -1060,6 +1387,15 @@ export default function LobbyPage() {
   const [inputError, setInputError] = useState('');
   const [entered, setEntered] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  // Trạng thái chuyển phòng mượt mà qua màn hình loading (Tách không gian các phòng độc lập)
+  const [transitionLoading, setTransitionLoading] = useState(false);
+  const [transitionRoomName, setTransitionRoomName] = useState('');
+  const [activeDoorInfo, setActiveDoorInfo] = useState<any | null>(null);
+  const activeDoorInfoRef = useRef<any>(null);
+  useEffect(() => {
+    activeDoorInfoRef.current = activeDoorInfo;
+  }, [activeDoorInfo]);
 
   // ── Summary Minigame state (Room 4) ──
   const [mgOpen, setMgOpen] = useState(false);
@@ -1241,10 +1577,11 @@ export default function LobbyPage() {
     }
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
-      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Bao cấp Việt Nam' },
-      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Hội họa cổ điển' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Gốm sứ hội nhập' },
-      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Kinh tế thị trường' },
+      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
+      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
+      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1280,11 +1617,18 @@ export default function LobbyPage() {
               <fog attach="fog" args={['#0d0d12', settings.preset === 'ultra-low' ? 10 : settings.preset === 'low' ? 20 : 30, settings.preset === 'ultra-low' ? 60 : settings.preset === 'low' ? 80 : 120]} />
 
               <Suspense fallback={null}>
-                {/* Sảnh bảo tàng */}
-                <MuseumLobby />
+                {/* Sảnh bảo tàng - Chỉ render khi người chơi đang ở Sảnh để tối ưu hóa hiệu năng vẽ */}
+                {currentRoom === 'lobby' && <MuseumLobby />}
 
-                {/* Nhân vật người chơi */}
-                <LobbyPlayer />
+                {/* Nhân vật người chơi với các prop tương tác chuyển phòng */}
+                <LobbyPlayer
+                  onActiveDoorChange={setActiveDoorInfo}
+                  activeDoor={activeDoorInfo}
+                  activeDoorRef={activeDoorInfoRef}
+                  transitionLoading={transitionLoading}
+                  onTransitionLoadingChange={setTransitionLoading}
+                  onTransitionRoomNameChange={setTransitionRoomName}
+                />
 
                 {/* Multiplayer avatars */}
                 <MultiplayerAvatars />
@@ -1292,8 +1636,15 @@ export default function LobbyPage() {
                 {/* Bộ precompiler ép GPU tải trước vật liệu */}
                 <RoomPrecompiler />
 
-                {/* ═══ CỬA NỐI PHÒNG (Door Portals) ═══ */}
-                {DOOR_CONFIGS.map((config) => (
+                {/* ═══ CỬA NỐI PHÒNG (Door Portals) - Chỉ render cửa thuộc phòng hiện tại ═══ */}
+                {DOOR_CONFIGS.filter(config => {
+                  if (config.doorId === 'door-room1') return currentRoom === 'lobby' || currentRoom === 'gallery-subsidy';
+                  if (config.doorId === 'door-room2') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-paintings';
+                  if (config.doorId === 'door-room3') return currentRoom === 'gallery-paintings' || currentRoom === 'gallery-ceramics';
+                  if (config.doorId === 'door-room4') return currentRoom === 'gallery-ceramics' || currentRoom === 'gallery-market-economy';
+                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-three';
+                  return false;
+                }).map((config) => (
                   <DoorPortal
                     key={config.doorId}
                     doorId={config.doorId}
@@ -1304,13 +1655,14 @@ export default function LobbyPage() {
                   />
                 ))}
 
-                {/* ═══ PHÒNG TRIỂN LÃM ĐỘNG (Dynamic Rooms) ═══ */}
+                {/* ═══ PHÒNG TRIỂN LÃM ĐỘNG (Dynamic Rooms) - Chỉ render phòng hoạt động hiện tại ═══ */}
                 {loadedRooms.map((room) => {
                   const offset = ROOM_OFFSETS[room.galleryId];
                   if (!offset) return null;
 
-                  // Xác định xem phòng này có đang mở/visible không dựa trên trạng thái bật/tắt phòng của admin
-                  const isVisible = roomStates[room.galleryId]?.isOpen || false;
+                  // Tách biệt hoàn toàn không gian các phòng (chỉ render phòng hiện tại)
+                  const isVisible = currentRoom === room.galleryId;
+                  if (!isVisible) return null;
 
                   return (
                     <DynamicRoom
@@ -1318,7 +1670,7 @@ export default function LobbyPage() {
                       room={room}
                       offsetZ={offset.z}
                       offsetY={offset.y}
-                      isVisible={isVisible}
+                      isVisible={true}
                     />
                   );
                 })}
@@ -1509,6 +1861,29 @@ export default function LobbyPage() {
                       {presetName === 'ultra-low' && (language === 'vi' ? 'Siêu Thấp' : 'Ultra Low')}
                       {presetName === 'low' && (language === 'vi' ? 'Thấp' : 'Low')}
                       {presetName === 'medium' && (language === 'vi' ? 'Trung Bình' : 'Medium')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Option: Max Visible Players */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest block">
+                  {language === 'vi' ? 'Giới hạn số lượng người chơi hiển thị' : 'Visible Players Limit'}
+                </span>
+                <div className="grid grid-cols-5 gap-1.5 text-center">
+                  {([0, 10, 30, 64, 99] as const).map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => updateSettings({ maxAvatars: count })}
+                      className={`text-[10px] font-mono font-bold py-1.5 px-0.5 rounded-lg border transition-all cursor-pointer ${
+                        settings.maxAvatars === count 
+                          ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-black shadow-sm' 
+                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-750'
+                      }`}
+                    >
+                      {count === 99 ? (language === 'vi' ? 'Tất cả' : 'All') : count}
                     </button>
                   ))}
                 </div>
@@ -1843,6 +2218,9 @@ export default function LobbyPage() {
       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
 
+      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}
+      <RoomTwoDocumentModal />
+
       {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
       {sittingPrompt && (
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 bg-slate-950/95 border-2 border-cyan-500/30 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl animate-bounce">
@@ -1854,9 +2232,60 @@ export default function LobbyPage() {
             {sittingPrompt === 'sit' ? (
               language === 'vi' ? 'Ấn F để ngồi' : 'Press F to Sit'
             ) : (
-              language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
+              currentRoom === 'gallery-paintings' ? (
+                language === 'vi' ? 'Ấn F để đứng dậy | Ấn E để mở/đóng tài liệu' : 'Press F to Stand Up | Press E to open/close document'
+              ) : (
+                language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
+              )
             )}
           </span>
+        </div>
+      )}
+
+      {/* ═══ HUD HƯỚNG DẪN DỊCH CHUYỂN PHÒNG (E) ═══ */}
+      {activeDoorInfo && !transitionLoading && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 bg-slate-950/95 border-2 border-amber-500/30 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl animate-bounce">
+          <span className="flex h-3.5 w-3.5 relative">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+          </span>
+          <span className="text-xs font-black tracking-wider text-slate-100 uppercase font-mono">
+            {language === 'vi' ? (
+              <>Ấn <span className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded font-black text-xs mx-1">E</span> để {activeDoorInfo.promptVi}</>
+            ) : (
+              <>Press <span className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded font-black text-xs mx-1">E</span> to {activeDoorInfo.promptEn}</>
+            )}
+          </span>
+        </div>
+      )}
+
+      {/* ═══ MÀN HÌNH CHỜ CHUYỂN PHÒNG (Transition Loading Overlay) ═══ */}
+      {transitionLoading && (
+        <div className="absolute inset-0 z-50 bg-[#07070a] flex flex-col items-center justify-center text-center select-none pointer-events-auto">
+          {/* Vòng sáng trang trí nền */}
+          <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full bg-amber-500/10 blur-[130px] pointer-events-none" />
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-cyan-500/10 blur-[110px] pointer-events-none" />
+
+          <div className="flex flex-col items-center gap-6 relative z-10">
+            {/* Vòng xoay spinner */}
+            <div className="w-16 h-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin relative">
+              <div className="absolute inset-0 rounded-full border border-amber-500/10 animate-ping opacity-30" />
+            </div>
+
+            <div className="space-y-3">
+              <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+              </span>
+              <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                {transitionRoomName}
+              </h2>
+              <p className="text-slate-400 text-xs font-semibold italic animate-pulse">
+                {language === 'vi'
+                  ? 'Đang chuẩn bị không gian triển lãm 3D...'
+                  : 'Preparing 3D exhibition space...'}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

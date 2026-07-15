@@ -1,4 +1,4 @@
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ExhibitionRoom } from './ExhibitionRoom';
@@ -31,9 +31,10 @@ interface DynamicRoomProps {
 // Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..220
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
-  'gallery-paintings': { z: 77.0, y: 3.0 },    // Phòng 2: Hội họa   (Z 54 → 100)
-  'gallery-ceramics': { z: 115.0, y: 3.0 },    // Phòng 3: Gốm sứ    (Z 100 → 130)
-  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 220)
+  'gallery-paintings': { z: 77.35, y: 3.0 },   // Phòng 2: đẩy lùi 0.35 để tránh z-fighting với tường sau phòng 1
+  'gallery-ceramics': { z: 115.7, y: 3.0 },    // Phòng 3: giữ khoảng hở nhỏ tương tự với phòng 2
+  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 280)
+  'gallery-three': { z: 305.0, y: 3.0 },       // Phòng 5: Thành quả (Z 280 → 330)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
@@ -42,12 +43,40 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-paintings': [0, 3.0, 56.0],          // Spawn gần cửa vào phòng 2 (Z=56)
   'gallery-ceramics': [0, 3.0, 102.0],          // Spawn gần cửa vào phòng 3 (Z=102)
   'gallery-market-economy': [0, 3.0, 133.0],   // Spawn gần cửa vào phòng 4 (Z=133)
+  'gallery-three': [0, 3.0, 282.0],            // Spawn gần cửa vào phòng 5 (Z=282)
   'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh
 };
 
 export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
   const { galleryId, exhibits, gallery } = room;
   const groupRef = useRef<THREE.Group>(null);
+
+  // Cơ chế đếm số hiện vật được phép hiển thị để load từ từ (staggered loading)
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  // Khi phòng được hiển thị, tăng dần số lượng hiện vật để tránh giật lag đột ngột
+  useEffect(() => {
+    if (!isVisible) {
+      setVisibleCount(0);
+      return;
+    }
+
+    // Đặt cái đầu tiên ngay lập tức
+    setVisibleCount(1);
+
+    // Cứ mỗi 150ms mount thêm 1 hiện vật để chia đều tải tải lưới (geometry) và tải hoạ tiết (texture)
+    const interval = setInterval(() => {
+      setVisibleCount((prev) => {
+        if (prev >= exhibits.length) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 1;
+      });
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [isVisible, exhibits.length]);
 
   // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
   useFrame((state) => {
@@ -64,9 +93,9 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
       const roomZ = offsetZ;
       const dist = Math.abs(playerZ - roomZ);
 
-      // Nếu người chơi ở khoảng cách > 75 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
+      // Nếu người chơi ở khoảng cách > 48 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
       // ta ẩn phòng đi để giảm thiểu tối đa số lệnh vẽ (draw calls) và số lượng đỉnh đa giác.
-      const shouldBeVisible = dist < 75.0;
+      const shouldBeVisible = dist < 48.0;
       if (groupRef.current.visible !== shouldBeVisible) {
         groupRef.current.visible = shouldBeVisible;
         console.log(`[LOD-CULLING] Phòng "${galleryId}" chuyển trạng thái visible = ${shouldBeVisible}`);
@@ -91,10 +120,15 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
     <group ref={groupRef} position={[0, offsetY, offsetZ]}>
       <Suspense fallback={null}>
         {/* Phòng triển lãm */}
-        <ExhibitionRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} />
+        <ExhibitionRoom
+          galleryId={galleryId}
+          customSettings={customSettings}
+          isVisible={isVisible}
+          ropeBarriersConfig={gallery?.rope_barriers_config}
+        />
 
-        {/* Các hiện vật trong phòng */}
-        {exhibits.map((exhibit) => (
+        {/* Các hiện vật trong phòng - Load từ từ từng cái một để giảm lag */}
+        {exhibits.slice(0, visibleCount).map((exhibit) => (
           <ExhibitObject key={exhibit.id} exhibit={exhibit} isVisible={isVisible} />
         ))}
       </Suspense>

@@ -32,6 +32,9 @@ export const PlayerCharacter: React.FC = () => {
     nickname,
     settings,
     miniGameOpen,
+    roomOneLocked,
+    welcomeModalOpen,
+    roomOneCompleted
   } = useMuseum();
   const playerRef = useRef<THREE.Group>(null);
 
@@ -53,6 +56,7 @@ export const PlayerCharacter: React.FC = () => {
   });
 
   const lastUpdate = useRef(0);
+  const lastSent = useRef({ x: Number.NaN, y: Number.NaN, z: Number.NaN, yaw: Number.NaN });
   // Cache vectors for useFrame to prevent GC pauses
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
@@ -139,8 +143,41 @@ export const PlayerCharacter: React.FC = () => {
       if (x > -2.3 && x < 2.3 && z > 17.3 && z < 18.7) return true;
     }
 
-    // ── Phòng 3: gallery-ceramics — hoàn toàn trống, không vật cản ──────────
+    // ── Phòng 3: gallery-ceramics ──────────────────────────────────────────
     if (galleryId === "gallery-ceramics") {
+      // 1. Va chạm với máy chơi game tại X = 8.0, Z = 13.6 (local)
+      if (x > 6.6 && x < 9.4 && z > 12.4 && z < 14.5) {
+        return true;
+      }
+
+      // 2. Va chạm với hàng rào bên trái (X = -13.2)
+      if (x < -12.4) {
+        if ((z > -10.8 && z < -5.2) || (z > -2.8 && z < 2.8) || (z > 5.2 && z < 10.8)) {
+          return true;
+        }
+      }
+
+      // 3. Va chạm với hàng rào bên phải (X = 13.2)
+      if (x > 12.4) {
+        if ((z > -10.8 && z < -5.2) || (z > -2.8 && z < 2.8) || (z > 5.2 && z < 10.8)) {
+          return true;
+        }
+      }
+
+      // 4. Va chạm với hàng rào cửa vào trước (Z = -13.2)
+      if (z < -12.4) {
+        if ((x > -10.8 && x < -5.2) || (x > 5.2 && x < 10.8)) {
+          return true;
+        }
+      }
+
+      // 5. Va chạm với hàng rào phía sau bên trái (Z = 13.2)
+      if (z > 12.4) {
+        if (x > -10.8 && x < -5.2) {
+          return true;
+        }
+      }
+
       return false;
     }
 
@@ -265,13 +302,24 @@ export const PlayerCharacter: React.FC = () => {
     // Gửi tọa độ qua socket (12.5Hz — tối ưu mượt mà và nhẹ tải cho 65 người)
     const now = state.clock.getElapsedTime() * 1000;
     if (now - lastUpdate.current > 80) {
-      if (socket && socket.connected) {
+      const sent = lastSent.current;
+      const movedEnough =
+        Math.abs(playerRef.current.position.x - sent.x) > 0.01 ||
+        Math.abs(playerRef.current.position.y - sent.y) > 0.01 ||
+        Math.abs(playerRef.current.position.z - sent.z) > 0.01 ||
+        Math.abs(playerRef.current.rotation.y - sent.yaw) > 0.01;
+
+      if (movedEnough && socket && socket.connected) {
         socket.emit("move", {
           x: playerRef.current.position.x,
           y: playerRef.current.position.y - baseY, // Gửi tọa độ Y logic (bàn chân chạm đất)
           z: playerRef.current.position.z,
           yaw: playerRef.current.rotation.y,
         });
+        sent.x = playerRef.current.position.x;
+        sent.y = playerRef.current.position.y;
+        sent.z = playerRef.current.position.z;
+        sent.yaw = playerRef.current.rotation.y;
       }
       lastUpdate.current = now;
     }

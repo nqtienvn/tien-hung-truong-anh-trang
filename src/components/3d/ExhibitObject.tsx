@@ -11,6 +11,128 @@ interface ExhibitObjectProps {
   onClick?: (exhibit: Exhibit) => void;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// STATIC GEOMETRIES & MATERIALS FOR REUSE (CÁCH B)
+// ═══════════════════════════════════════════════════════════════
+const pedestalLegGeom = new THREE.CylinderGeometry(0.025, 0.025, 0.72, 12);
+const pedestalBaseGeom = new THREE.BoxGeometry(1.25, 0.08, 0.34);
+const frameBackGeom = new THREE.BoxGeometry(1.9, 0.72, 0.05);
+const canvasBackGeom = new THREE.BoxGeometry(1.74, 0.56, 0.035);
+const circleHotspotGeom = new THREE.CircleGeometry(0.075, 28);
+const ringHotspotMidGeom = new THREE.RingGeometry(0.095, 0.125, 28);
+const ringHotspotOuterGeom = new THREE.RingGeometry(0.13, 0.15, 28);
+
+const torusKnotGeom = new THREE.TorusKnotGeometry(0.4, 0.12, 120, 16);
+const octahedronGeom = new THREE.OctahedronGeometry(0.5);
+const helixCylinderGeom = new THREE.CylinderGeometry(0.08, 0.08, 1.2, 16);
+const helixSphereGeom = new THREE.SphereGeometry(0.08, 16, 16);
+const baseRingGeom = new THREE.RingGeometry(0.45, 0.5, 32);
+
+const pedestalLegMat = new THREE.MeshStandardMaterial({
+  color: "#15100c",
+  roughness: 0.35,
+  metalness: 0.72,
+});
+const pedestalBaseMat = new THREE.MeshStandardMaterial({
+  color: "#16100b",
+  roughness: 0.42,
+  metalness: 0.55,
+});
+const frameBackMat = new THREE.MeshStandardMaterial({
+  color: "#17120d",
+  roughness: 0.5,
+  metalness: 0.18,
+});
+const canvasBackMat = new THREE.MeshStandardMaterial({
+  color: "#f1e3c7",
+  roughness: 0.82,
+  metalness: 0.02,
+});
+
+const hotspotInnerMat = new THREE.MeshBasicMaterial({
+  color: "#ef4444",
+  transparent: true,
+  opacity: 0.9,
+  side: THREE.DoubleSide,
+});
+const hotspotMidMat = new THREE.MeshBasicMaterial({
+  color: "#f87171",
+  transparent: true,
+  opacity: 0.32,
+  side: THREE.DoubleSide,
+});
+const hotspotOuterMat = new THREE.MeshBasicMaterial({
+  color: "#fecaca",
+  transparent: true,
+  opacity: 0.16,
+  side: THREE.DoubleSide,
+});
+
+const torusNormalMat = new THREE.MeshStandardMaterial({
+  color: "#c59b27",
+  roughness: 0.1,
+  metalness: 0.95,
+});
+const torusHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#ffd700",
+  roughness: 0.1,
+  metalness: 0.95,
+});
+
+const octahedronNormalMat = new THREE.MeshStandardMaterial({
+  color: "#06b6d4",
+  roughness: 0.05,
+  metalness: 0.9,
+  transparent: true,
+  opacity: 0.85,
+});
+const octahedronHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#a5f3fc",
+  roughness: 0.05,
+  metalness: 0.9,
+  transparent: true,
+  opacity: 0.85,
+});
+
+const helixCylinderMat = new THREE.MeshStandardMaterial({
+  color: "#661966",
+  metalness: 0.8,
+  roughness: 0.2,
+});
+const helixSphereRedMat = new THREE.MeshStandardMaterial({
+  color: "#e11d48",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+const helixSphereRedHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#fb7185",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+const helixSphereBlueMat = new THREE.MeshStandardMaterial({
+  color: "#0284c7",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+const helixSphereBlueHoveredMat = new THREE.MeshStandardMaterial({
+  color: "#38bdf8",
+  roughness: 0.1,
+  metalness: 0.5,
+});
+
+const baseRingNormalMat = new THREE.MeshBasicMaterial({
+  color: "#475569",
+  side: THREE.DoubleSide,
+});
+const baseRingHoveredMat = new THREE.MeshBasicMaterial({
+  color: "#fff",
+  side: THREE.DoubleSide,
+});
+const baseRingSelectedMat = new THREE.MeshBasicMaterial({
+  color: "#d4af37",
+  side: THREE.DoubleSide,
+});
+
 // Hàm tự động vẽ tranh thủ công giả lập thời bao cấp khi gặp lỗi CORS tải ảnh từ Unsplash
 function createProceduralTexture(title: string, id: string): string {
   if (typeof window === "undefined") return "";
@@ -126,7 +248,6 @@ const PaintingComponent: React.FC<{
   exhibit: Exhibit;
   isSelected: boolean;
   hovered: boolean;
-  setHovered: (h: boolean) => void;
   setSelectedExhibit: (e: Exhibit | null) => void;
   setExhibitModalMode: (mode: "game" | "info") => void;
   language: "vi" | "en";
@@ -138,7 +259,6 @@ const PaintingComponent: React.FC<{
   exhibit,
   isSelected,
   hovered,
-  setHovered,
   setSelectedExhibit,
   setExhibitModalMode,
   language,
@@ -147,6 +267,7 @@ const PaintingComponent: React.FC<{
   groupRef,
   onClick,
 }) => {
+  const { settings } = useMuseum();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
   const matRef = useRef<THREE.MeshBasicMaterial>(null);
@@ -229,9 +350,8 @@ const PaintingComponent: React.FC<{
           onPointerOver={(e) => {
             if (!isVisible || !isNear) return;
             e.stopPropagation();
-            setHovered(true);
+            // Ở component ngoài, hovered do cha kiểm soát bằng state hoặc prop
           }}
-          onPointerOut={() => setHovered(false)}
         >
           <boxGeometry
             args={[exhibit.scale_x + 0.2, exhibit.scale_y + 0.2, 0.15]}
@@ -286,46 +406,11 @@ const PaintingComponent: React.FC<{
               side={THREE.DoubleSide}
             />
           </mesh>
-          <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-            <meshStandardMaterial
-              color="#15100c"
-              roughness={0.35}
-              metalness={0.72}
-            />
-          </mesh>
-          <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-            <meshStandardMaterial
-              color="#15100c"
-              roughness={0.35}
-              metalness={0.72}
-            />
-          </mesh>
-          <mesh position={[0, -0.62, -0.28]}>
-            <boxGeometry args={[1.25, 0.08, 0.34]} />
-            <meshStandardMaterial
-              color="#16100b"
-              roughness={0.42}
-              metalness={0.55}
-            />
-          </mesh>
-          <mesh position={[0, 0, -0.015]}>
-            <boxGeometry args={[1.9, 0.72, 0.05]} />
-            <meshStandardMaterial
-              color="#17120d"
-              roughness={0.5}
-              metalness={0.18}
-            />
-          </mesh>
-          <mesh position={[0, 0, 0.02]}>
-            <boxGeometry args={[1.74, 0.56, 0.035]} />
-            <meshStandardMaterial
-              color="#f1e3c7"
-              roughness={0.82}
-              metalness={0.02}
-            />
-          </mesh>
+          <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]} geometry={pedestalLegGeom} material={pedestalLegMat} />
+          <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]} geometry={pedestalLegGeom} material={pedestalLegMat} />
+          <mesh position={[0, -0.62, -0.28]} geometry={pedestalBaseGeom} material={pedestalBaseMat} />
+          <mesh position={[0, 0, -0.015]} geometry={frameBackGeom} material={frameBackMat} />
+          <mesh position={[0, 0, 0.02]} geometry={canvasBackGeom} material={canvasBackMat} />
 
           {/* Nội dung thông tin trên bảng khi đứng gần */}
           {isNear && (
@@ -354,33 +439,9 @@ const PaintingComponent: React.FC<{
           {/* Vòng tròn hiệu ứng chỉ hiển thị khi ở xa */}
           {!isNear && (
             <group ref={hotspotRef} position={[0, 0.02, 0.065]}>
-              <mesh>
-                <circleGeometry args={[0.075, 28]} />
-                <meshBasicMaterial
-                  color="#ef4444"
-                  transparent
-                  opacity={0.9}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-              <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]}>
-                <ringGeometry args={[0.095, 0.125, 28]} />
-                <meshBasicMaterial
-                  color="#f87171"
-                  transparent
-                  opacity={0.32}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-              <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]}>
-                <ringGeometry args={[0.13, 0.15, 28]} />
-                <meshBasicMaterial
-                  color="#fecaca"
-                  transparent
-                  opacity={0.16}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
+              <mesh geometry={circleHotspotGeom} material={hotspotInnerMat} />
+              <mesh position={[0, 0, 0.005]} scale={[1.55, 1.55, 1]} geometry={ringHotspotMidGeom} material={hotspotMidMat} />
+              <mesh position={[0, 0, 0.01]} scale={[2.05, 2.05, 1]} geometry={ringHotspotOuterGeom} material={hotspotOuterMat} />
             </group>
           )}
         </group>
@@ -394,14 +455,16 @@ const PaintingComponent: React.FC<{
         ]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
       >
-        <spotLight
-          position={[0, 3, 2]}
-          target-position={[0, 0, 0]}
-          intensity={isVisible ? 5 : 0}
-          distance={8}
-          angle={Math.PI / 6}
-          penumbra={0.5}
-        />
+        {!settings.reducedLights && (
+          <spotLight
+            position={[0, 3, 2]}
+            target-position={[0, 0, 0]}
+            intensity={isVisible ? (isNear ? 5.0 : 1.2) : 0}
+            distance={8}
+            angle={Math.PI / 6}
+            penumbra={0.5}
+          />
+        )}
       </group>
     </group>
   );
@@ -412,8 +475,8 @@ const SculptureComponent: React.FC<{
   exhibit: Exhibit;
   isSelected: boolean;
   hovered: boolean;
-  setHovered: (h: boolean) => void;
   setSelectedExhibit: (e: Exhibit | null) => void;
+  setExhibitModalMode?: (mode: "game" | "info") => void;
   language: "vi" | "en";
   meshRef: React.RefObject<THREE.Group | null>;
   isVisible?: boolean;
@@ -424,8 +487,8 @@ const SculptureComponent: React.FC<{
   exhibit,
   isSelected,
   hovered,
-  setHovered,
   setSelectedExhibit,
+  setExhibitModalMode,
   language,
   meshRef,
   isVisible = true,
@@ -433,6 +496,25 @@ const SculptureComponent: React.FC<{
   groupRef,
   onClick,
 }) => {
+  const { settings } = useMuseum();
+
+  const rgbMaterial = React.useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color("#f43f5e"),
+      emissive: new THREE.Color("#f43f5e"),
+      emissiveIntensity: 3.0,
+      toneMapped: false,
+    });
+  }, []);
+
+  useFrame((state) => {
+    if (exhibit.model_3d_url === "procedural-arcade") {
+      const hue = (state.clock.getElapsedTime() * 0.25) % 1.0;
+      rgbMaterial.color.setHSL(hue, 1.0, 0.5);
+      rgbMaterial.emissive.setHSL(hue, 1.0, 0.5);
+    }
+  });
+
   return (
     <group>
       {/* Group meshes: luôn hiển thị để người chơi thấy tượng trong phòng */}
@@ -450,54 +532,39 @@ const SculptureComponent: React.FC<{
           if (onClick) {
             onClick(exhibit);
           } else {
+            if (exhibit.id === "vn-back-right") {
+              setExhibitModalMode?.("game");
+            }
             setSelectedExhibit(exhibit);
           }
         }}
         onPointerOver={(e) => {
           if (!isVisible || !isNear) return;
           e.stopPropagation();
-          setHovered(true);
+          // Hover do parent kiểm soát hoặc bỏ qua nếu không dùng state
         }}
-        onPointerOut={() => setHovered(false)}
       >
         <group ref={meshRef}>
           {exhibit.model_3d_url === "procedural-torusknot" && (
             /* Vòng xoắn hoàng kim */
-            <mesh>
-              <torusKnotGeometry args={[0.4, 0.12, 120, 16]} />
-              <meshStandardMaterial
-                color={hovered || isSelected ? "#ffd700" : "#c59b27"}
-                roughness={0.1}
-                metalness={0.95}
-              />
-            </mesh>
+            <mesh
+              geometry={torusKnotGeom}
+              material={hovered || isSelected ? torusHoveredMat : torusNormalMat}
+            />
           )}
 
           {exhibit.model_3d_url === "procedural-octahedron" && (
             /* Tinh thể đa diện */
-            <mesh>
-              <octahedronGeometry args={[0.5]} />
-              <meshStandardMaterial
-                color={hovered || isSelected ? "#a5f3fc" : "#06b6d4"}
-                roughness={0.05}
-                metalness={0.9}
-                transparent
-                opacity={0.85}
-              />
-            </mesh>
+            <mesh
+              geometry={octahedronGeom}
+              material={hovered || isSelected ? octahedronHoveredMat : octahedronNormalMat}
+            />
           )}
 
           {exhibit.model_3d_url === "procedural-helix" && (
             /* Trụ xoắn sinh học ghép từ các sphere */
             <group>
-              <mesh>
-                <cylinderGeometry args={[0.08, 0.08, 1.2, 16]} />
-                <meshStandardMaterial
-                  color="#0f0f12"
-                  metalness={0.8}
-                  roughness={0.2}
-                />
-              </mesh>
+              <mesh geometry={helixCylinderGeom} material={helixCylinderMat} />
               {Array.from({ length: 10 }).map((_, idx) => {
                 const angle = (idx / 10) * Math.PI * 4;
                 const y = -0.5 + idx / 9;
@@ -509,37 +576,247 @@ const SculptureComponent: React.FC<{
 
                 return (
                   <group key={idx}>
-                    <mesh position={[x1, y, z1]}>
-                      <sphereGeometry args={[0.08, 16, 16]} />
-                      <meshStandardMaterial
-                        color={hovered || isSelected ? "#fb7185" : "#e11d48"}
-                        roughness={0.1}
-                        metalness={0.5}
-                      />
-                    </mesh>
-                    <mesh position={[x2, y, z2]}>
-                      <sphereGeometry args={[0.08, 16, 16]} />
-                      <meshStandardMaterial
-                        color={hovered || isSelected ? "#38bdf8" : "#0284c7"}
-                        roughness={0.1}
-                        metalness={0.5}
-                      />
-                    </mesh>
+                    <mesh position={[x1, y, z1]} geometry={helixSphereGeom} material={hovered || isSelected ? helixSphereRedHoveredMat : helixSphereRedMat} />
+                    <mesh position={[x2, y, z2]} geometry={helixSphereGeom} material={hovered || isSelected ? helixSphereBlueHoveredMat : helixSphereBlueMat} />
                   </group>
                 );
               })}
             </group>
           )}
+
+          {exhibit.model_3d_url === "procedural-arcade" && (
+            <group position={[0, -0.38, 0]} scale={[2.2, 2.2, 2.2]}>
+              {/* Thân tủ máy chính giữa */}
+              <mesh position={[0, 0.4, 0]}>
+                <boxGeometry args={[0.86, 0.8, 0.74]} />
+                <meshStandardMaterial color="#ec4899" roughness={0.4} />
+              </mesh>
+
+              {/* Vách hông TRÁI (Left Side Wing Panel) */}
+              <group>
+                <mesh position={[-0.44, 0.4, 0]}>
+                  <boxGeometry args={[0.03, 0.8, 0.8]} />
+                  <meshStandardMaterial color="#ec4899" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[-0.44, 1.2, -0.1]}>
+                  <boxGeometry args={[0.03, 0.8, 0.6]} />
+                  <meshStandardMaterial color="#ec4899" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[-0.44, 1.15, 0.25]}>
+                  <boxGeometry args={[0.03, 0.9, 0.12]} />
+                  <meshStandardMaterial color="#ec4899" roughness={0.3} metalness={0.4} />
+                </mesh>
+
+                {/* Dải đèn Neon viền hông trái (Left Neon Contour) */}
+                <mesh position={[-0.46, 0.4, 0.41]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.8, 8]} />
+                </mesh>
+                <mesh position={[-0.46, 0.85, 0.31]} rotation={[Math.PI / 6, 0, 0]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.28, 8]} />
+                </mesh>
+                <mesh position={[-0.46, 1.3, 0.19]} rotation={[-Math.PI / 16, 0, 0]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.8, 8]} />
+                </mesh>
+                <mesh position={[-0.46, 1.73, 0.2]} rotation={[Math.PI / 5, 0, 0]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.32, 8]} />
+                </mesh>
+              </group>
+
+              {/* Vách hông PHẢI (Right Side Wing Panel) */}
+              <group>
+                <mesh position={[0.44, 0.4, 0]}>
+                  <boxGeometry args={[0.03, 0.8, 0.8]} />
+                  <meshStandardMaterial color="#ec4899" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[0.44, 1.2, -0.1]}>
+                  <boxGeometry args={[0.03, 0.8, 0.6]} />
+                  <meshStandardMaterial color="#ec4899" roughness={0.3} metalness={0.4} />
+                </mesh>
+                <mesh position={[0.44, 1.15, 0.25]}>
+                  <boxGeometry args={[0.03, 0.9, 0.12]} />
+                  <meshStandardMaterial color="#ec4899" roughness={0.3} metalness={0.4} />
+                </mesh>
+
+                {/* Dải đèn Neon viền hông phải (Right Neon Contour) */}
+                <mesh position={[0.46, 0.4, 0.41]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.8, 8]} />
+                </mesh>
+                <mesh position={[0.46, 0.85, 0.31]} rotation={[Math.PI / 6, 0, 0]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.28, 8]} />
+                </mesh>
+                <mesh position={[0.46, 1.3, 0.19]} rotation={[-Math.PI / 16, 0, 0]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.8, 8]} />
+                </mesh>
+                <mesh position={[0.46, 1.73, 0.2]} rotation={[Math.PI / 5, 0, 0]} material={rgbMaterial}>
+                  <cylinderGeometry args={[0.01, 0.01, 0.32, 8]} />
+                </mesh>
+              </group>
+
+              {/* Cửa nhét xu (Coin Door) phía dưới */}
+              <group>
+                <mesh position={[0, 0.4, 0.38]}>
+                  <boxGeometry args={[0.45, 0.42, 0.02]} />
+                  <meshStandardMaterial color="#0c0c12" roughness={0.7} metalness={0.9} />
+                </mesh>
+                {/* 2 Khe phát sáng màu hồng neon khi nhét xu (Coin insert slot lights) */}
+                <mesh position={[-0.1, 0.46, 0.395]} material={rgbMaterial}>
+                  <boxGeometry args={[0.06, 0.07, 0.018]} />
+                </mesh>
+                <mesh position={[0.1, 0.46, 0.395]} material={rgbMaterial}>
+                  <boxGeometry args={[0.06, 0.07, 0.018]} />
+                </mesh>
+              </group>
+
+              {/* Bảng điều khiển màu hồng neon phát sáng (Control Panel Board) */}
+              <group>
+                <mesh position={[0, 0.81, 0.2]} rotation={[-Math.PI / 12, 0, 0]}>
+                  <boxGeometry args={[0.86, 0.06, 0.4]} />
+                  <meshStandardMaterial color="#ec4899" emissive="#ec4899" emissiveIntensity={1.5} toneMapped={false} />
+                </mesh>
+
+                {/* Joystick 1 (Trái - Orange) */}
+                <group position={[-0.2, 0.88, 0.25]} rotation={[-Math.PI / 12, 0, 0]}>
+                  <mesh>
+                    <cylinderGeometry args={[0.008, 0.008, 0.12, 8]} />
+                    <meshStandardMaterial color="#e2e8f0" metalness={0.95} />
+                  </mesh>
+                  <mesh position={[0, 0.07, 0]}>
+                    <sphereGeometry args={[0.038, 16, 16]} />
+                    <meshStandardMaterial color="#f97316" roughness={0.15} />
+                  </mesh>
+                </group>
+
+                {/* Joystick 2 (Phải - Orange) */}
+                <group position={[0.2, 0.88, 0.25]} rotation={[-Math.PI / 12, 0, 0]}>
+                  <mesh>
+                    <cylinderGeometry args={[0.008, 0.008, 0.12, 8]} />
+                    <meshStandardMaterial color="#e2e8f0" metalness={0.95} />
+                  </mesh>
+                  <mesh position={[0, 0.07, 0]}>
+                    <sphereGeometry args={[0.038, 16, 16]} />
+                    <meshStandardMaterial color="#f97316" roughness={0.15} />
+                  </mesh>
+                </group>
+
+                {/* Hàng nút bấm Player 1 (Màu vàng/xanh phát sáng) */}
+                <group position={[-0.06, 0.84, 0.22]} rotation={[-Math.PI / 12, 0, 0]}>
+                  <mesh position={[-0.06, 0, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#eab308" />
+                  </mesh>
+                  <mesh position={[-0.02, 0, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#cbd5e1" />
+                  </mesh>
+                  <mesh position={[-0.06, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#eab308" />
+                  </mesh>
+                  <mesh position={[-0.02, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#eab308" />
+                  </mesh>
+                </group>
+
+                {/* Hàng nút bấm Player 2 (Màu vàng/xanh phát sáng) */}
+                <group position={[0.06, 0.84, 0.22]} rotation={[-Math.PI / 12, 0, 0]}>
+                  <mesh position={[0.02, 0, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#eab308" />
+                  </mesh>
+                  <mesh position={[0.06, 0, 0.04]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#cbd5e1" />
+                  </mesh>
+                  <mesh position={[0.02, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#eab308" />
+                  </mesh>
+                  <mesh position={[0.06, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                    <cylinderGeometry args={[0.016, 0.016, 0.012, 8]} />
+                    <meshBasicMaterial color="#eab308" />
+                  </mesh>
+                </group>
+              </group>
+
+              {/* Thùng loa và giá đỡ màn hình phía trên */}
+              <mesh position={[0, 1.3, -0.16]}>
+                <boxGeometry args={[0.86, 0.82, 0.44]} />
+                <meshStandardMaterial color="#ec4899" roughness={0.5} />
+              </mesh>
+
+              {/* Màn hình Bezel và màn hình phát sáng chính (Neon Bezel & Screen HUD) */}
+              <group position={[0, 1.28, 0.18]} rotation={[-Math.PI / 12, 0, 0]}>
+                {/* Viền bezel tối */}
+                <mesh>
+                  <boxGeometry args={[0.82, 0.64, 0.02]} />
+                  <meshStandardMaterial color="#07070b" roughness={0.7} />
+                </mesh>
+                {/* Màn hình chính màu cyan phát sáng (Screen Glass) */}
+                <mesh position={[0, 0, 0.015]}>
+                  <planeGeometry args={[0.74, 0.48]} />
+                  <meshStandardMaterial color="#0284c7" emissive="#0284c7" emissiveIntensity={1.4} toneMapped={false} />
+                </mesh>
+                {/* Khung HUD 1 (Trò chơi ở giữa - màu hồng sậm) */}
+                <mesh position={[0, -0.02, 0.02]}>
+                  <planeGeometry args={[0.56, 0.36]} />
+                  <meshStandardMaterial color="#db2777" emissive="#db2777" emissiveIntensity={1.0} toneMapped={false} />
+                </mesh>
+                {/* Dải thông số trên cùng (Cyan neon bar) */}
+                <mesh position={[0, 0.17, 0.02]}>
+                  <planeGeometry args={[0.66, 0.05]} />
+                  <meshStandardMaterial color="#06b6d4" emissive="#06b6d4" emissiveIntensity={1.6} toneMapped={false} />
+                </mesh>
+              </group>
+
+              {/* Hộp đèn Bảng hiệu trên cùng (Marquee Box) */}
+              <mesh position={[0, 1.76, -0.06]}>
+                <boxGeometry args={[0.86, 0.22, 0.44]} />
+                <meshStandardMaterial color="#ec4899" />
+              </mesh>
+
+              {/* Biển hiệu Arcade phát sáng (Neon Marquee Sign) */}
+              <group position={[0, 1.76, 0.22]}>
+                <mesh material={rgbMaterial}>
+                  <planeGeometry args={[0.82, 0.18]} />
+                </mesh>
+
+                {/* Dữ liệu Chữ Neon Cursive viết tay "Arcade" sử dụng HTML + CSS text-shadow */}
+                <Html
+                  position={[0, 0.01, 0.015]}
+                  center
+                  transform
+                  occlude
+                  distanceFactor={0.88}
+                  className="pointer-events-none select-none"
+                >
+                  <div style={{
+                    fontFamily: "'Pacifico', cursive",
+                    fontSize: '28px',
+                    color: '#fffbeb',
+                    textShadow: '0 0 4px #ea580c, 0 0 12px #ea580c, 0 0 24px #ea580c',
+                    whiteSpace: 'nowrap',
+                    transform: 'rotate(-2deg)'
+                  }}>
+                    <style dangerouslySetInnerHTML={{
+                      __html: `
+                    @import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+                  `}} />
+                    Arcade
+                  </div>
+                </Html>
+              </group>
+            </group>
+          )}
         </group>
 
         {/* Vòng tròn hiệu ứng hào quang phát sáng dưới chân tượng */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.38, 0]}>
-          <ringGeometry args={[0.45, 0.5, 32]} />
-          <meshBasicMaterial
-            color={isSelected ? "#d4af37" : hovered ? "#fff" : "#475569"}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.38, 0]}
+          geometry={baseRingGeom}
+          material={isSelected ? baseRingSelectedMat : hovered ? baseRingHoveredMat : baseRingNormalMat}
+        />
       </group>
 
       {/* Đèn spotlight rọi tượng: luôn trong scene graph để tránh recompilation, chỉ đổi intensity, loại bỏ để tránh lag */}
@@ -551,14 +828,16 @@ const SculptureComponent: React.FC<{
         ]}
         rotation={[exhibit.rotation_x, exhibit.rotation_y, exhibit.rotation_z]}
       >
-        <spotLight
-          position={[0, 4, 0]}
-          target-position={[0, 0, 0]}
-          intensity={isVisible ? 6 : 0}
-          distance={6}
-          angle={Math.PI / 6}
-          penumbra={0.3}
-        />
+        {!settings.reducedLights && (
+          <spotLight
+            position={[0, 4, 0]}
+            target-position={[0, 0, 0]}
+            intensity={isVisible ? (isNear ? 5.0 : 1.2) : 0}
+            distance={6}
+            angle={Math.PI / 6}
+            penumbra={0.3}
+          />
+        )}
       </group>
     </group>
   );
@@ -571,7 +850,7 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
 }) => {
   const { selectedExhibit, setSelectedExhibit, setExhibitModalMode, language } =
     useMuseum();
-  const [hovered, setHovered] = useState(false);
+  const hovered = false;
   const meshRef = useRef<THREE.Group>(null);
   const isSelected = selectedExhibit?.id === exhibit.id;
 
@@ -579,11 +858,14 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
   const [isNear, setIsNear] = useState(false);
   const worldPos = useRef(new THREE.Vector3()).current;
   const playerPos = useRef(new THREE.Vector3()).current;
+  const lastProximityCheck = useRef(0);
 
   // Xoay các tượng điêu khắc 3D tự động để tạo chuyển động sinh động
   useFrame((state) => {
     if (isVisible && meshRef.current && exhibit.model_3d_url) {
-      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.4;
+      if (exhibit.model_3d_url !== "procedural-arcade") {
+        meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.4;
+      }
       // Thêm chuyển động nhấp nhô nhẹ cho tượng
       if (exhibit.id === "sculpture-octahedron") {
         meshRef.current.position.y =
@@ -593,15 +875,16 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
     }
 
     // Tính khoảng cách đến nhân vật người chơi để hiển thị nút Xem chi tiết
-    if (isVisible && groupRef.current) {
+    const elapsed = state.clock.elapsedTime;
+    if (isVisible && groupRef.current && elapsed - lastProximityCheck.current > 0.18) {
+      lastProximityCheck.current = elapsed;
       const player =
         state.scene.getObjectByName("player-character") ||
         state.scene.getObjectByName("lobby-player");
       if (player) {
         groupRef.current.getWorldPosition(worldPos);
         player.getWorldPosition(playerPos);
-        const dist = worldPos.distanceTo(playerPos);
-        const near = dist < 5.0; // Khoảng cách 5 mét
+        const near = worldPos.distanceToSquared(playerPos) < 25; // Khoảng cách 5 mét
         if (near !== isNear) {
           setIsNear(near);
         }
@@ -624,8 +907,8 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
         exhibit={exhibit}
         isSelected={isSelected}
         hovered={hovered}
-        setHovered={setHovered}
         setSelectedExhibit={setSelectedExhibit}
+        setExhibitModalMode={setExhibitModalMode}
         language={language}
         meshRef={meshRef}
         isVisible={isVisible}
@@ -640,7 +923,6 @@ export const ExhibitObject: React.FC<ExhibitObjectProps> = ({
         exhibit={exhibit}
         isSelected={isSelected}
         hovered={hovered}
-        setHovered={setHovered}
         setSelectedExhibit={setSelectedExhibit}
         setExhibitModalMode={setExhibitModalMode}
         language={language}
