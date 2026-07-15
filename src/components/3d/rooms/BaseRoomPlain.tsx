@@ -190,7 +190,7 @@ const SpawnGuideNPC: React.FC<{ language: string }> = ({ language }) => {
 
   return (
     <group
-      position={[0, 0, -54.5]}
+      position={[0, 0, -60]}
       onClick={handleClick}
       onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { document.body.style.cursor = 'auto'; }}
