@@ -28,12 +28,12 @@ interface DynamicRoomProps {
 //   center = 8 + 46/2 = 31  →  offset = 31, spans Z 8..54
 // Phòng 2: bắt đầu Z=54  →  center = 54 + 23 = 77,  spans Z 54..100
 // Phòng 3: bắt đầu Z=100 →  center = 100 + 15 = 115, spans Z 100..130
-// Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..235
+// Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..220
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
   'gallery-paintings': { z: 77.0, y: 3.0 },    // Phòng 2: Hội họa   (Z 54 → 100)
   'gallery-ceramics': { z: 115.0, y: 3.0 },    // Phòng 3: Gốm sứ    (Z 100 → 130)
-  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 235)
+  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 220)
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng

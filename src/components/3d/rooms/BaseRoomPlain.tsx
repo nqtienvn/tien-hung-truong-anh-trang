@@ -111,7 +111,7 @@ const FIRST_ROOM_EXHIBITS = [
       imageUrl: "/images/room4/container-xuat-khau.jpg"
     },
     right: {
-      titleVi: "Tập đoàn Điện lực EVN (An năng lượng)",
+      titleVi: "Tập đoàn Điện lực EVN (An ninh năng lượng)",
       titleEn: "EVN Electricity Group (Energy Security)",
       descVi: "Tập đoàn Điện lực Việt Nam, bảo đảm an ninh năng lượng quốc gia, cung cấp nguồn điện ổn định cho sản xuất.",
       descEn: "Electricity Vietnam Group, ensuring national energy security and stable power supply for production.",
@@ -288,7 +288,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
   isVisible = true,
   children
 }) => {
-  const { activeGallery, setSelectedExhibit, language } = useMuseum();
+  const { activeGallery, setSelectedExhibit, language, settings } = useMuseum();
 
   // Đọc cấu hình động hoặc fallback về mặc định
   const roomWidth = customSettings?.room_width ?? activeGallery?.room_width ?? 12;
@@ -409,41 +409,38 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
             </mesh>
           )}
 
-          {/* 2. TRẦN NHÀ HÌNH VÒM & GIẾNG TRỜI (Vaulted Ceiling & Glass Skylight) */}
-          {/* Tấm trần vòm nghiêng bên trái */}
-          <mesh position={[leftPanelX, panelHeightY, 0]} rotation={[0, 0, -Math.PI / 12]}>
-            <boxGeometry args={[panelWidth, 0.1, roomLength]} />
-            <meshStandardMaterial color="#334155" roughness={0.7} />
-          </mesh>
-
-          {/* Tấm trần vòm nghiêng bên phải */}
-          <mesh position={[rightPanelX, panelHeightY, 0]} rotation={[0, 0, Math.PI / 12]}>
-            <boxGeometry args={[panelWidth, 0.1, roomLength]} />
-            <meshStandardMaterial color="#334155" roughness={0.7} />
-          </mesh>
-
-          {/* Giếng trời kính giữa trần */}
-          <mesh position={[0, roomHeight, 0]}>
-            <boxGeometry args={[skylightWidth, 0.08, roomLength]} />
+          {/* 2. TRẦN NHÀ PHẲNG & GIẾNG TRỜI (Flat Ceiling & Glass Skylight) */}
+          {/* Tấm trần phẳng toàn phòng */}
+          <mesh position={[0, roomHeight, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[roomWidth, roomLength]} />
             <meshStandardMaterial
-              color="#38bdf8"
-              transparent
-              opacity={0.35}
-              roughness={0.05}
-              metalness={0.9}
+              color="#eae5dc"
+              roughness={0.8}
+              side={THREE.DoubleSide}
             />
           </mesh>
 
-          {/* Khung dầm sắt nâng đỡ giếng trời */}
-          {Array.from({ length: Math.round(roomLength / 6) }).map((_, idx) => {
-            const zPos = -roomLength / 2 + (idx * 6) + 3;
-            return (
-              <mesh key={`ceiling-beam-${idx}`} position={[0, roomHeight - 0.05, zPos]}>
-                <boxGeometry args={[skylightWidth + 0.2, 0.1, 0.15]} />
-                <meshStandardMaterial color="#1e293b" roughness={0.9} />
-              </mesh>
-            );
-          })}
+          {/* Trần giếng trời kính (Skylight) ở chính giữa trục dọc hành lang */}
+          <mesh position={[0, roomHeight - 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[skylightWidth, roomLength]} />
+            <meshStandardMaterial
+              color="#bae6fd"
+              emissive="#bae6fd"
+              emissiveIntensity={1.5}
+              transparent
+              opacity={0.8}
+              roughness={0.1}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+
+          {/* Khung sắt giếng trời cổ điển chạy dọc */}
+          {Array.from({ length: 11 }).map((_, i) => (
+            <mesh key={`skylight-grid-${i}`} position={[0, roomHeight - 0.19, -roomLength / 2 + i * (roomLength / 10)]}>
+              <boxGeometry args={[skylightWidth, 0.05, 0.05]} />
+              <meshStandardMaterial color="#1e293b" roughness={0.9} />
+            </mesh>
+          ))}
           <mesh position={[0, roomHeight - 0.19, 0]}>
             <boxGeometry args={[0.05, 0.05, roomLength]} />
             <meshStandardMaterial color="#1e293b" roughness={0.9} />
@@ -517,7 +514,7 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
           const partitionWidth = (roomWidth - carpetWidth) / 2;
           const partitionX = (carpetWidth + partitionWidth) / 2;
 
-          return [-50, -35, -20, -5, 10].map((zPos, i) => {
+          return [-50].map((zPos, i) => {
             return (
               <group key={`partition-${i}`}>
                 {/* Vách ngăn bên trái */}
@@ -691,15 +688,28 @@ export const BaseRoomPlain: React.FC<BaseRoomProps> = ({
       </group>
 
       {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - ÁNH SÁNG THỰC TẾ */}
-      {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
-        <pointLight
-          key={`hall-light-source-${idx}`}
-          position={[0, roomHeight - 1.0, zPos + zOffset]}
-          intensity={isVisible ? 4.5 : 0}
-          distance={roomLength * 0.6}
+      {/* Ultra-low: chỉ dùng 1 directional light thay vì 5 point lights */}
+      {settings.reducedLights ? (
+        <directionalLight
+          position={[0, roomHeight - 1.0, zOffset]}
+          intensity={isVisible ? 2.5 : 0}
           color="#fff1e0"
         />
-      ))}
+      ) : (
+        // Low: 2 point lights đủ sáng. Medium: 5 point lights đầy đủ.
+        (settings.preset === 'low'
+          ? [0, roomLength * 0.35]
+          : [-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4]
+        ).map((zPos, idx) => (
+          <pointLight
+            key={`hall-light-source-${idx}`}
+            position={[0, roomHeight - 1.0, zPos + zOffset]}
+            intensity={isVisible ? (settings.preset === 'low' ? 7.0 : 4.5) : 0}
+            distance={roomLength * (settings.preset === 'low' ? 0.9 : 0.6)}
+            color="#fff1e0"
+          />
+        ))
+      )}
     </group>
   );
 };

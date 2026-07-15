@@ -83,9 +83,9 @@ const ZONE1_EXHIBITS = [
   {
     id: "zone1-painting-1",
     side: "left",
-    x: -8.9,
-    z: -3.75, // Absolute Z = -46.25
-    rotation: [0, Math.PI / 2, 0],
+    x: -6.75,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Kinh tế cá thể, tiểu chủ",
     titleEn: "Individual & Household Economy",
     descVi: "Kinh tế cá thể, tiểu chủ. Bên cạnh các tập đoàn lớn, hàng triệu hộ kinh doanh cá thể, tiểu thương tại các chợ truyền thống và cửa hàng bán lẻ vẫn đóng vai trò là \"mạch máu\" phân phối hàng hóa len lỏi đến từng khu dân cư, giải quyết việc làm cho lượng lớn lao động tự do.",
@@ -95,9 +95,9 @@ const ZONE1_EXHIBITS = [
   {
     id: "zone1-painting-2",
     side: "left",
-    x: -8.9,
-    z: 3.75, // Absolute Z = -38.75
-    rotation: [0, Math.PI / 2, 0],
+    x: -2.25,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Kinh tế tập thể (Hợp tác xã)",
     titleEn: "Collective Economy (Cooperatives)",
     descVi: "Kinh tế tập thể (Hợp tác xã). Mô hình hợp tác xã kiểu mới không còn gò bó như thời bao cấp. Các hộ nông dân hiện nay liên kết lại để ứng dụng công nghệ cao, đạt chuẩn VietGAP/GlobalGAP, tạo ra sản lượng lớn và tăng sức mạnh đàm phán với các hệ thống siêu thị.",
@@ -106,10 +106,10 @@ const ZONE1_EXHIBITS = [
   },
   {
     id: "zone1-painting-3",
-    side: "right",
-    x: 8.9,
-    z: -3.75, // Absolute Z = -46.25
-    rotation: [0, -Math.PI / 2, 0],
+    side: "left",
+    x: 2.25,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Khởi nghiệp (Startups)",
     titleEn: "Innovative Startups (Startups)",
     descVi: "Khởi nghiệp đổi mới sáng tạo (Startups). Sự vươn lên của các \"kỳ lân\" công nghệ (như MoMo, VNG) minh chứng cho một môi trường kinh tế năng động, nơi trí tuệ và sự sáng tạo của khối kinh tế tư nhân được khuyến khích phát triển mạnh mẽ.",
@@ -118,10 +118,10 @@ const ZONE1_EXHIBITS = [
   },
   {
     id: "zone1-painting-4",
-    side: "right",
-    x: 8.9,
-    z: 3.75, // Absolute Z = -38.75
-    rotation: [0, -Math.PI / 2, 0],
+    side: "left",
+    x: 6.75,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Sự liên kết chuỗi cung ứng",
     titleEn: "Supply Chain Linkage",
     descVi: "Sự liên kết chuỗi cung ứng. Các thành phần kinh tế không hoạt động độc lập mà đan xen lẫn nhau. Các doanh nghiệp tư nhân vừa và nhỏ của Việt Nam đang ngày càng tham gia sâu hơn vào chuỗi cung ứng phụ trợ cho các tập đoàn FDI (như sản xuất linh kiện cho Samsung, Toyota).",
@@ -174,11 +174,11 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
       description: { vi: item.descVi, en: item.descEn },
       model_3d_url: "",
       thumbnail_url: item.imageUrl,
-      coordinate_x: item.x,
+      coordinate_x: -8.9,
       coordinate_y: 2.3,
-      coordinate_z: -42.5 + item.z,
+      coordinate_z: -41.0 + item.x,
       rotation_x: 0,
-      rotation_y: item.rotation[1],
+      rotation_y: Math.PI / 2,
       rotation_z: 0,
       scale_x: 1,
       scale_y: 1,
@@ -189,7 +189,7 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, -42.5]}>
+    <group position={[-4.5, 0, -41.0]} rotation={[0, Math.PI / 2, 0]}>
       {/* ── Pedestal 1: Viettel (State-owned) ── */}
       <group
         position={[-2.2, 0, 0]}
@@ -207,9 +207,9 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
             },
             model_3d_url: "",
             thumbnail_url: "/images/room4/viettel.jpg",
-            coordinate_x: -2.2,
+            coordinate_x: -4.5,
             coordinate_y: 1.0,
-            coordinate_z: -42.5,
+            coordinate_z: -43.2,
             rotation_x: 0,
             rotation_y: 0,
             rotation_z: 0,
@@ -278,9 +278,9 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
             },
             model_3d_url: "",
             thumbnail_url: "/images/room4/vinfast.jpg",
-            coordinate_x: 0,
+            coordinate_x: -4.5,
             coordinate_y: 1.0,
-            coordinate_z: -42.5,
+            coordinate_z: -45.0,
             rotation_x: 0,
             rotation_y: 0,
             rotation_z: 0,
@@ -349,9 +349,9 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
             },
             model_3d_url: "",
             thumbnail_url: "/images/room4/samsung.jpg",
-            coordinate_x: 2.2,
+            coordinate_x: -4.5,
             coordinate_y: 1.0,
-            coordinate_z: -42.5,
+            coordinate_z: -38.8,
             rotation_x: 0,
             rotation_y: 0,
             rotation_z: 0,
@@ -478,10 +478,10 @@ const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language
 const ZONE2_EXHIBITS = [
   {
     id: "zone2-painting-1",
-    side: "left",
-    x: -8.9,
-    z: -3.75, // Absolute Z = -31.25
-    rotation: [0, Math.PI / 2, 0],
+    side: "right",
+    x: -6.75,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Thị trường vốn minh bạch",
     titleEn: "Transparent Capital Market",
     descVi: "Thị trường vốn minh bạch. Sự hình thành và phát triển của Thị trường Chứng khoán Việt Nam (VN-Index) là minh chứng rõ nét cho việc huy động vốn theo nguyên tắc thị trường, nơi các nhà đầu tư tự do mua bán cổ phần dựa trên kỳ vọng và năng lực của doanh nghiệp.",
@@ -490,10 +490,10 @@ const ZONE2_EXHIBITS = [
   },
   {
     id: "zone2-painting-2",
-    side: "left",
-    x: -8.9,
-    z: 3.75, // Absolute Z = -23.75
-    rotation: [0, Math.PI / 2, 0],
+    side: "right",
+    x: -2.25,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Cạnh tranh lành mạnh",
     titleEn: "Fair Market Competition",
     descVi: "Cạnh tranh mang lại lợi ích cho người tiêu dùng. Trên thị trường tự do, các doanh nghiệp phải liên tục tung ra các chương trình khuyến mãi, cải thiện dịch vụ giao hàng và chăm sóc khách hàng để giành thị phần. Sự cạnh tranh khốc liệt này giúp người tiêu dùng được hưởng lợi về giá và chất lượng.",
@@ -503,9 +503,9 @@ const ZONE2_EXHIBITS = [
   {
     id: "zone2-painting-3",
     side: "right",
-    x: 8.9,
-    z: -3.75, // Absolute Z = -31.25
-    rotation: [0, -Math.PI / 2, 0],
+    x: 2.25,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Liên thông giá trị toàn cầu",
     titleEn: "Global Value Integration",
     descVi: "Sự liên thông với thị trường thế giới. Giá xăng dầu tại Việt Nam được điều chỉnh định kỳ dựa trên biến động của giá dầu thô toàn cầu. Điều này phản ánh rõ sự tôn trọng quy luật giá trị và quy luật cung cầu, thay vì Nhà nước bao cấp bù lỗ như trước đây.",
@@ -515,9 +515,9 @@ const ZONE2_EXHIBITS = [
   {
     id: "zone2-painting-4",
     side: "right",
-    x: 8.9,
-    z: 3.75, // Absolute Z = -23.75
-    rotation: [0, -Math.PI / 2, 0],
+    x: 6.75,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Phá vỡ thế độc quyền",
     titleEn: "Breaking Telecom Monopoly",
     descVi: "Phá vỡ thế độc quyền. Lĩnh vực viễn thông là ví dụ điển hình về việc mở cửa thị trường. Sự cạnh tranh giữa Viettel, VNPT, MobiFone... đã làm giá cước viễn thông và Internet tại Việt Nam giảm sâu, trở thành một trong những quốc gia có chi phí tiếp cận Internet rẻ nhất thế giới.",
@@ -614,9 +614,9 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       },
       model_3d_url: "",
       thumbnail_url: "/images/room4/cho-truyen-thong.jpg",
-      coordinate_x: 0,
+      coordinate_x: 4.5,
       coordinate_y: 1.0,
-      coordinate_z: -27.5,
+      coordinate_z: -41.0,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -646,11 +646,11 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       description: { vi: item.descVi, en: item.descEn },
       model_3d_url: "",
       thumbnail_url: item.imageUrl,
-      coordinate_x: item.x,
+      coordinate_x: 8.9,
       coordinate_y: 2.3,
-      coordinate_z: -27.5 + item.z,
+      coordinate_z: -41.0 + item.x,
       rotation_x: 0,
-      rotation_y: item.rotation[1],
+      rotation_y: -Math.PI / 2,
       rotation_z: 0,
       scale_x: 1,
       scale_y: 1,
@@ -661,7 +661,7 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, -27.5]} onClick={handleClick}>
+    <group position={[4.5, 0, -41.0]} rotation={[0, Math.PI / 2, 0]} onClick={handleClick}>
       {/* Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.5, 1.7, 32]} />
@@ -860,10 +860,10 @@ const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
 const ZONE3_EXHIBITS = [
   {
     id: "zone3-painting-1",
-    side: "left",
-    x: -8.9,
-    z: -3.75, // Absolute Z = -16.25
-    rotation: [0, Math.PI / 2, 0],
+    side: "right",
+    x: -6.75,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Ổn định kinh tế vĩ mô",
     titleEn: "Macroeconomic Stability",
     descVi: "Ổn định kinh tế vĩ mô. Bằng các công cụ chính sách tiền tệ (điều chỉnh lãi suất, tỷ giá), Ngân hàng Nhà nước đóng vai trò \"nhạc trưởng\" trong việc kiểm soát lạm phát, giữ giá trị đồng tiền và bảo đảm an toàn cho toàn bộ hệ thống ngân hàng thương mại.",
@@ -872,10 +872,10 @@ const ZONE3_EXHIBITS = [
   },
   {
     id: "zone3-painting-2",
-    side: "left",
-    x: -8.9,
-    z: 3.75, // Absolute Z = -8.75
-    rotation: [0, Math.PI / 2, 0],
+    side: "right",
+    x: -2.25,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Dự trữ quốc gia & Bình ổn giá",
     titleEn: "National Reserves & Price Stabilization",
     descVi: "Dự trữ quốc gia và Bình ổn giá. Khi thị trường gặp cú sốc (do thiên tai, dịch bệnh, đứt gãy chuỗi cung ứng), Nhà nước sẽ tung hàng hóa từ các kho dự trữ (như gạo, xăng dầu, vật tư y tế) để bình ổn giá cả, không để xảy ra tình trạng đầu cơ, găm hàng.",
@@ -885,9 +885,9 @@ const ZONE3_EXHIBITS = [
   {
     id: "zone3-painting-3",
     side: "right",
-    x: 8.9,
-    z: -3.75, // Absolute Z = -16.25
-    rotation: [0, -Math.PI / 2, 0],
+    x: 2.25,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Chính phủ kiến tạo",
     titleEn: "Enabling Government",
     descVi: "Hội nghị đối thoại giữa Chính phủ và cộng đồng doanh nghiệp. Thay vì can thiệp trực tiếp vào kinh doanh, Nhà nước liên tục cải cách thủ tục hành chính, cắt giảm giấy phép con, hỗ trợ miễn giảm thuế và khoanh nợ trong những giai đoạn khó khăn (như đại dịch COVID-19) để tạo môi trường kinh doanh thuận lợi nhất.",
@@ -897,9 +897,9 @@ const ZONE3_EXHIBITS = [
   {
     id: "zone3-painting-4",
     side: "right",
-    x: 8.9,
-    z: 3.75, // Absolute Z = -8.75
-    rotation: [0, -Math.PI / 2, 0],
+    x: 6.75,
+    z: -4.4,
+    rotation: [0, 0, 0],
     titleVi: "Quy hoạch chiến lược dài hạn",
     titleEn: "Long-term Strategic Planning",
     descVi: "Bản đồ quy hoạch vùng Đồng bằng sông Cửu Long thích ứng với biến đổi khí hậu. Thị trường thường chỉ nhìn vào lợi nhuận ngắn hạn. Vì vậy, Nhà nước phải đóng vai trò lập quy hoạch dài hạn, phân bổ nguồn lực quốc gia cho các vùng kinh tế trọng điểm, đồng thời đầu tư vào các dự án chống biến đổi khí hậu để bảo đảm phát triển bền vững.",
@@ -975,9 +975,9 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
       },
       model_3d_url: "",
       thumbnail_url: "/images/room4/cao-toc-bac-nam.jpg",
-      coordinate_x: 0,
+      coordinate_x: 4.5,
       coordinate_y: 1.0,
-      coordinate_z: -12.5,
+      coordinate_z: -25.0,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -1007,11 +1007,11 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
       description: { vi: item.descVi, en: item.descEn },
       model_3d_url: "",
       thumbnail_url: item.imageUrl,
-      coordinate_x: item.x,
+      coordinate_x: 8.9,
       coordinate_y: 2.3,
-      coordinate_z: -12.5 + item.z,
+      coordinate_z: -23.0 + item.x,
       rotation_x: 0,
-      rotation_y: item.rotation[1],
+      rotation_y: -Math.PI / 2,
       rotation_z: 0,
       scale_x: 1,
       scale_y: 1,
@@ -1022,7 +1022,7 @@ const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, lang
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, -12.5]} onClick={handleClick}>
+    <group position={[4.5, 0, -23.0]} rotation={[0, Math.PI / 2, 0]} onClick={handleClick}>
       {/* Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.5, 1.7, 32]} />
@@ -1291,9 +1291,9 @@ const ZONE4_EXHIBITS = [
   {
     id: "zone4-painting-1",
     side: "left",
-    x: -8.9,
-    z: -3.75, // Absolute Z = -1.25
-    rotation: [0, Math.PI / 2, 0],
+    x: -6.75,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Chương trình Nông thôn mới",
     titleEn: "National New Rural Program",
     descVi: "Chương trình Mục tiêu quốc gia Nông thôn mới. Nguồn lực từ tăng trưởng kinh tế được phân bổ để hiện đại hóa bộ mặt nông thôn: xây dựng điện, đường, trường, trạm. Kéo gần khoảng cách phát triển và mức sống giữa khu vực thành thị và nông thôn.",
@@ -1303,9 +1303,9 @@ const ZONE4_EXHIBITS = [
   {
     id: "zone4-painting-2",
     side: "left",
-    x: -8.9,
-    z: 3.75, // Absolute Z = 6.25
-    rotation: [0, Math.PI / 2, 0],
+    x: -2.25,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Nhà ở xã hội",
     titleEn: "Social Housing Policy",
     descVi: "Chính sách an cư cho người lao động. Để người công nhân tạo ra của cải không bị bỏ lại phía sau, Nhà nước đưa ra các gói tín dụng ưu đãi và quy hoạch quỹ đất để phát triển nhà ở xã hội, giúp người thu nhập thấp có cơ hội sở hữu nhà ở an toàn.",
@@ -1314,10 +1314,10 @@ const ZONE4_EXHIBITS = [
   },
   {
     id: "zone4-painting-3",
-    side: "right",
-    x: 8.9,
-    z: -3.75, // Absolute Z = -1.25
-    rotation: [0, -Math.PI / 2, 0],
+    side: "left",
+    x: 2.25,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Phổ cập giáo dục & công nghệ",
     titleEn: "Universal Education & Tech",
     descVi: "Trẻ em vùng miền núi, hải đảo đang sử dụng máy tính bảng để học tập. Công bằng xã hội không chỉ là chia đều của cải, mà quan trọng hơn là \"bình đẳng về cơ hội\". Việc đầu tư cáp quang internet đến vùng sâu vùng xa và các chính sách miễn giảm học phí giúp mọi trẻ em đều có cơ hội tiếp cận tri thức.",
@@ -1326,13 +1326,13 @@ const ZONE4_EXHIBITS = [
   },
   {
     id: "zone4-painting-4",
-    side: "right",
-    x: 8.9,
-    z: 3.75, // Absolute Z = 6.25
-    rotation: [0, -Math.PI / 2, 0],
+    side: "left",
+    x: 6.75,
+    z: 4.4,
+    rotation: [0, Math.PI, 0],
     titleVi: "Chăm lo người yếu thế & có công",
     titleEn: "Caring for the Disadvantaged",
-    descVi: "Cán bộ y tế thăm khám cho Mẹ Việt Nam Anh hùng và người khuyết tật. Một nền kinh tế thị trường nhân văn là nền kinh tế có mạng lưới an sinh xã hội vững chắc. Hàng năm, ngân sách quốc gia luôn dành một phần lớn để chi trả trợ cấp, chăm sóc y tế cho người có công, người cao tuổi neo đơn và người khuyết tật.",
+    descVi: "Cán bộ y tế thăm khám cho Cựu chiến binh và người khuyết tật. Một nền kinh tế thị trường nhân văn là nền kinh tế có mạng lưới an sinh xã hội vững chắc. Hàng năm, ngân sách quốc gia luôn dành một phần lớn để chi trả trợ cấp, chăm sóc y tế cho người có công, người cao tuổi neo đơn và người khuyết tật.",
     descEn: "A humane market economy has a solid social safety net, allocating national budget for subsidies and medical care.",
     imageUrl: "/images/room4/zone4/zone4-4.jpg"
   }
@@ -1386,9 +1386,9 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       },
       model_3d_url: "",
       thumbnail_url: "/images/room4/bao-hiem-y-te.jpg",
-      coordinate_x: 0,
+      coordinate_x: -4.5,
       coordinate_y: 1.0,
-      coordinate_z: 2.5,
+      coordinate_z: -23.0,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -1418,11 +1418,11 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
       description: { vi: item.descVi, en: item.descEn },
       model_3d_url: "",
       thumbnail_url: item.imageUrl,
-      coordinate_x: item.x,
+      coordinate_x: -8.9,
       coordinate_y: 2.3,
-      coordinate_z: 2.5 + item.z,
+      coordinate_z: -23.0 + item.x,
       rotation_x: 0,
-      rotation_y: item.rotation[1],
+      rotation_y: Math.PI / 2,
       rotation_z: 0,
       scale_x: 1,
       scale_y: 1,
@@ -1433,7 +1433,7 @@ const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, languag
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, 2.5]} onClick={handleClick}>
+    <group position={[-4.5, 0, -23.0]} rotation={[0, Math.PI / 2, 0]} onClick={handleClick}>
       {/* Warm Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.5, 1.7, 32]} />
@@ -1790,9 +1790,9 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
       },
       model_3d_url: "",
       thumbnail_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800",
-      coordinate_x: 0,
+      coordinate_x: 0.0,
       coordinate_y: 1.0,
-      coordinate_z: 17.5,
+      coordinate_z: -5.0,
       rotation_x: 0,
       rotation_y: 0,
       rotation_z: 0,
@@ -1824,7 +1824,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
       thumbnail_url: item.imageUrl,
       coordinate_x: item.x,
       coordinate_y: 2.3,
-      coordinate_z: 17.5 + item.z,
+      coordinate_z: -9.5 + item.z,
       rotation_x: 0,
       rotation_y: item.rotation[1],
       rotation_z: 0,
@@ -1837,7 +1837,7 @@ const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isAct
   const isVi = language === 'vi';
 
   return (
-    <group position={[0, 0, 17.5]} onClick={handleClick}>
+    <group position={[0.0, 0, -9.5]} onClick={handleClick}>
       {/* Blue Glow ring */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
         <ringGeometry args={[1.6, 1.8, 32]} />
@@ -2362,7 +2362,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
 
   const modifiedSettings = {
     room_width: customSettings?.room_width ?? activeGallery?.room_width ?? 12,
-    room_length: customSettings?.room_length ?? activeGallery?.room_length ?? 72,
+    room_length: 80, // Thu ngắn phòng lại vừa vặn đến sau NPC Ronaldo (Z = 5.0)
     room_height: roomHeight,
     floor_color: customSettings?.floor_color ?? activeGallery?.floor_color ?? '#1e293b',
     wall_color: customSettings?.wall_color ?? activeGallery?.wall_color ?? '#0f172a',
@@ -2396,7 +2396,15 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
   stepRef.current = step;
 
   // Zone local-Z centers (room local space, offset from ZONE_ABS_OFFSET)
-  const ZONE_LOCAL_Z = [-42.5, -27.5, -12.5, 2.5, 17.5, 32.5];
+  // Zone local positions [x, z]
+  const ZONE_LOCAL_POS = [
+    [-4.5, -41.0], // Zone 1: Ownership
+    [4.5, -41.0],  // Zone 2: Market
+    [4.5, -23.0],  // Zone 3: State regulation
+    [-4.5, -23.0], // Zone 4: Social welfare
+    [0.0, -9.5],   // Zone 5: Global integration
+    [0.0, 2.0]     // Zone 6: Ronaldo
+  ];
 
   useFrame((state) => {
     if (!isVisible) return;
@@ -2416,8 +2424,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
 
     // Per-zone intensity (light up when nearby AND step >= 3)
     let changed = false;
-    ZONE_LOCAL_Z.forEach((zoneZ, i) => {
-      const dist = Math.abs(localZ - zoneZ);
+    ZONE_LOCAL_POS.forEach((zonePos, i) => {
+      const dist = Math.abs(localZ - zonePos[1]);
       const target = (dist < 13 && stepRef.current >= 3) ? 1.0 : 0.0;
       const newVal = THREE.MathUtils.lerp(zoneIntensityRefs.current[i], target, 0.028);
       if (Math.abs(newVal - zoneIntensityRefs.current[i]) > 0.004) {
@@ -2505,8 +2513,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[0]}
           />
           <ZoneNPC
-            position={[3.5, 0.05, -42.5]}
-            rotation={[0, 0, 0]}
+            position={[-2.0, 0.05, -41.0]}
+            rotation={[0, Math.PI / 2, 0]}
             nameVi="Chuyên gia Kinh tế (Sở hữu)"
             nameEn="Economist (Ownership & Sectors)"
             infoVi="Trong nền kinh tế Việt Nam hiện nay tồn tại nhiều loại hình doanh nghiệp: Doanh nghiệp Nhà nước · Doanh nghiệp tư nhân · Doanh nghiệp có vốn đầu tư nước ngoài. Các doanh nghiệp này cùng cạnh tranh và cùng phát triển."
@@ -2522,7 +2530,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
         </>
       )}
 
-      {/* -- Zone 2 - Co Che Thi Truong -- */}
+      {/* -- Zone 2 - Co Che Thi Truote -- */}
       {isVisible && (
         <>
           <Zone2BalanceScale
@@ -2532,8 +2540,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[1]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, -30]}
-            rotation={[0, 0, 0]}
+            position={[2.0, 0.05, -41.0]}
+            rotation={[0, -Math.PI / 2, 0]}
             nameVi="Chuyên gia Kinh tế (Thị trường)"
             nameEn="Economist (Market Mechanism)"
             infoVi="Giá cả hàng hóa và dịch vụ được quyết định bởi quy luật cung - cầu khách quan, không còn bị áp đặt hành chính."
@@ -2559,8 +2567,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[2]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, -12.5]}
-            rotation={[0, 0, 0]}
+            position={[2.0, 0.05, -23.0]}
+            rotation={[0, -Math.PI / 2, 0]}
             nameVi="Chuyên gia Kinh tế (Nhà nước)"
             nameEn="Economist (State Regulation)"
             infoVi="Nhà nước quản lý vĩ mô bằng pháp luật (Luật DN, Thuế), đầu tư hạ tầng thiết yếu (EVN, Cao tốc) để giữ ổn định kinh tế."
@@ -2586,8 +2594,8 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[3]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, 1]}
-            rotation={[0, 0, 0]}
+            position={[-2.0, 0.05, -23.0]}
+            rotation={[0, Math.PI / 2, 0]}
             nameVi="Chuyên gia Kinh tế (An sinh)"
             nameEn="Economist (Social Welfare)"
             infoVi="Mục tiêu của Việt Nam không chỉ là tăng trưởng kinh tế. Mà còn hướng tới nâng cao chất lượng cuộc sống và bảo đảm cơ hội phát triển cho mọi người."
@@ -2613,7 +2621,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
             intensity={zoneIntensities[4]}
           />
           <ZoneNPC
-            position={[2.4, 0.05, 17.5]}
+            position={[2.4, 0.05, -9.5]}
             rotation={[0, 0, 0]}
             nameVi="Chuyên gia Kinh tế (Hội nhập)"
             nameEn="Economist (Global Integration)"
@@ -2633,7 +2641,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, i
       {/* -- Summary / Exit NPC in the last room -- */}
       {isVisible && (
         <ZoneNPC
-          position={[0, 0.05, 26]}
+          position={[0, 0.05, 2.0]}
           rotation={[0, 0, 0]}
           nameVi="Ronaldo"
           nameEn="Summary Specialist"
