@@ -140,24 +140,6 @@ export default function AdminDashboard() {
 
   const handleOpenDoor = (doorId: string, targetRoom: string) => {
     if (!adminSocket) return;
-
-    // Ràng buộc kiểm tra trước khi mở cửa
-    let canOpen = true;
-    if (doorId === 'door-room1') {
-      canOpen = roomStates['gallery-subsidy']?.isOpen;
-    } else if (doorId === 'door-room2') {
-      canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
-    } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
-    } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
-    }
-
-    if (!canOpen) {
-      alert('Không thể mở cửa khi các phòng liên quan chưa được bật!');
-      return;
-    }
-
     setDoorLoading(doorId);
     adminSocket.emit('admin:open-door', { doorId, targetRoom });
   };
@@ -179,12 +161,6 @@ export default function AdminDashboard() {
     adminSocket.emit('admin:close-door', { doorId, teleportTo });
   };
 
-  const handleToggleRoom = (roomId: string, currentOpen: boolean) => {
-    if (!adminSocket) return;
-
-    setRoomLoading(roomId);
-    adminSocket.emit('admin:toggle-room', { roomId, isOpen: !currentOpen });
-  };
 
   const handleTeleportAll = (targetRoom: string) => {
     if (!adminSocket) return;
@@ -593,24 +569,6 @@ export default function AdminDashboard() {
                 </button>
               </>
             )}
-
-            <button
-              type="button"
-              onClick={() => handleToggleRoom(roomId, isRoomOpen)}
-              disabled={isLoading}
-              className={`px-4 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                isRoomOpen
-                  ? 'bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400'
-                  : 'bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/20 text-cyan-400'
-              }`}
-            >
-              {isLoading ? (
-                <Loader2 size={12} className="animate-spin" />
-              ) : (
-                <Power size={12} />
-              )}
-              {isRoomOpen ? 'Tắt phòng' : 'Bật phòng'}
-            </button>
           </div>
         </div>
       </div>

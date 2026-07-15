@@ -192,10 +192,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // ═══ Door & Room State ═══
   const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
-    'gallery-subsidy': { isOpen: false },
-    'gallery-paintings': { isOpen: false },
-    'gallery-ceramics': { isOpen: false },
-    'gallery-market-economy': { isOpen: false }
+    'gallery-subsidy': { isOpen: true },
+    'gallery-paintings': { isOpen: true },
+    'gallery-ceramics': { isOpen: true },
+    'gallery-market-economy': { isOpen: true }
   });
   const [loadedRooms, setLoadedRooms] = useState<LoadedRoom[]>([]);
   const [currentRoom, setCurrentRoom] = useState<string>('lobby');

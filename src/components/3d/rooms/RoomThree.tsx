@@ -1,15 +1,36 @@
 import React from 'react';
+import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
+
+// Static Geometries for VelvetRopeBarrier (Cách B: Tái sử dụng hình khối để tránh giật lag GPU)
+const postGeom = new THREE.CylinderGeometry(0.055, 0.07, 0.96, 18);
+const sphereGeom = new THREE.SphereGeometry(0.13, 18, 18);
+const baseGeom = new THREE.CylinderGeometry(0.22, 0.28, 0.08, 24);
+const unitRopeGeom1 = new THREE.CylinderGeometry(1, 1, 1, 20);
+const unitRopeGeom2 = new THREE.CylinderGeometry(1, 1, 1, 16);
+
+// Static Materials for VelvetRopeBarrier
+const postMat = new THREE.MeshStandardMaterial({ color: '#2a2119', roughness: 0.28, metalness: 0.65 });
+const metalMat = new THREE.MeshStandardMaterial({ color: '#c59b45', roughness: 0.22, metalness: 0.85 });
+const baseMat = new THREE.MeshStandardMaterial({ color: '#2a2119', roughness: 0.35, metalness: 0.55 });
+const ropeMat = new THREE.MeshStandardMaterial({ color: '#9f1239', roughness: 0.55, metalness: 0.05 });
+const subRopeMat = new THREE.MeshStandardMaterial({ color: '#7f1d1d', roughness: 0.62, metalness: 0.03 });
+
+// Static Geometries for Spotlight Hooks
+const hookBaseGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.06, 8);
+const hookArmGeom = new THREE.CylinderGeometry(0.015, 0.015, 0.25, 8);
+const hookBulbGeom = new THREE.SphereGeometry(0.025, 12, 12);
+
+// Static Materials for Spotlight Hooks
+const hookBaseMat = new THREE.MeshStandardMaterial({ color: '#334155', metalness: 0.9, roughness: 0.1 });
+const hookArmMat = new THREE.MeshStandardMaterial({ color: '#475569', metalness: 0.8, roughness: 0.2 });
+const hookBulbMat = new THREE.MeshBasicMaterial({ color: '#fff8e7' });
 
 const VelvetRopeBarrier: React.FC<{
   p1: [number, number]; // [x, z] for post 1
   p2: [number, number]; // [x, z] for post 2
 }> = ({ p1, p2 }) => {
-  const postColor = '#2a2119';
-  const metalColor = '#c59b45';
-  const ropeColor = '#9f1239';
-
   // Calculate distance and rotation
   const dx = p2[0] - p1[0];
   const dz = p2[1] - p1[1];
@@ -23,47 +44,34 @@ const VelvetRopeBarrier: React.FC<{
     <group>
       {/* Post 1 */}
       <group position={[p1[0], 0, p1[1]]}>
-        <mesh position={[0, 0.48, 0]}>
-          <cylinderGeometry args={[0.055, 0.07, 0.96, 18]} />
-          <meshStandardMaterial color={postColor} roughness={0.28} metalness={0.65} />
-        </mesh>
-        <mesh position={[0, 0.98, 0]}>
-          <sphereGeometry args={[0.13, 18, 18]} />
-          <meshStandardMaterial color={metalColor} roughness={0.22} metalness={0.85} />
-        </mesh>
-        <mesh position={[0, 0.06, 0]}>
-          <cylinderGeometry args={[0.22, 0.28, 0.08, 24]} />
-          <meshStandardMaterial color={postColor} roughness={0.35} metalness={0.55} />
-        </mesh>
+        <mesh geometry={postGeom} material={postMat} position={[0, 0.48, 0]} />
+        <mesh geometry={sphereGeom} material={metalMat} position={[0, 0.98, 0]} />
+        <mesh geometry={baseGeom} material={baseMat} position={[0, 0.06, 0]} />
       </group>
 
       {/* Post 2 */}
       <group position={[p2[0], 0, p2[1]]}>
-        <mesh position={[0, 0.48, 0]}>
-          <cylinderGeometry args={[0.055, 0.07, 0.96, 18]} />
-          <meshStandardMaterial color={postColor} roughness={0.28} metalness={0.65} />
-        </mesh>
-        <mesh position={[0, 0.98, 0]}>
-          <sphereGeometry args={[0.13, 18, 18]} />
-          <meshStandardMaterial color={metalColor} roughness={0.22} metalness={0.85} />
-        </mesh>
-        <mesh position={[0, 0.06, 0]}>
-          <cylinderGeometry args={[0.22, 0.28, 0.08, 24]} />
-          <meshStandardMaterial color={postColor} roughness={0.35} metalness={0.55} />
-        </mesh>
+        <mesh geometry={postGeom} material={postMat} position={[0, 0.48, 0]} />
+        <mesh geometry={sphereGeom} material={metalMat} position={[0, 0.98, 0]} />
+        <mesh geometry={baseGeom} material={baseMat} position={[0, 0.06, 0]} />
       </group>
 
       {/* Ropes group at the midpoint, rotated to align with the vector from p1 to p2 */}
       <group position={[midX, 0.94, midZ]} rotation={[0, angle, 0]}>
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.045, 0.045, length, 20]} />
-          <meshStandardMaterial color={ropeColor} roughness={0.55} metalness={0.05} />
-        </mesh>
+        <mesh 
+          geometry={unitRopeGeom1} 
+          material={ropeMat} 
+          scale={[0.045, length, 0.045]} 
+          rotation={[Math.PI / 2, 0, 0]} 
+        />
         {/* Dây phụ thấp hơn tạo cảm giác dây nhung có độ dày */}
-        <mesh position={[0, -0.12, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.028, 0.028, length * 0.96, 16]} />
-          <meshStandardMaterial color="#7f1d1d" roughness={0.62} metalness={0.03} />
-        </mesh>
+        <mesh 
+          geometry={unitRopeGeom2} 
+          material={subRopeMat} 
+          scale={[0.028, length * 0.96, 0.028]} 
+          position={[0, -0.12, 0]} 
+          rotation={[Math.PI / 2, 0, 0]} 
+        />
       </group>
     </group>
   );
@@ -203,72 +211,36 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
       {/* Móc tường trái */}
       {sideZPositions.map((zPos, idx) => (
         <group key={`hook-left-${idx}`} position={[-halfW + 0.06, roomHeight - 0.62, zPos]}>
-          <mesh>
-            <cylinderGeometry args={[0.03, 0.03, 0.06, 8]} />
-            <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
-          </mesh>
-          <mesh position={[0.12, -0.08, 0]} rotation={[0, 0, Math.PI / 4]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[0.21, -0.18, 0]}>
-            <sphereGeometry args={[0.025, 12, 12]} />
-            <meshBasicMaterial color="#fff8e7" />
-          </mesh>
+          <mesh geometry={hookBaseGeom} material={hookBaseMat} />
+          <mesh geometry={hookArmGeom} material={hookArmMat} position={[0.12, -0.08, 0]} rotation={[0, 0, Math.PI / 4]} />
+          <mesh geometry={hookBulbGeom} material={hookBulbMat} position={[0.21, -0.18, 0]} />
         </group>
       ))}
 
       {/* Móc tường phải */}
       {sideZPositions.map((zPos, idx) => (
         <group key={`hook-right-${idx}`} position={[halfW - 0.06, roomHeight - 0.62, zPos]}>
-          <mesh>
-            <cylinderGeometry args={[0.03, 0.03, 0.06, 8]} />
-            <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
-          </mesh>
-          <mesh position={[-0.12, -0.08, 0]} rotation={[0, 0, -Math.PI / 4]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[-0.21, -0.18, 0]}>
-            <sphereGeometry args={[0.025, 12, 12]} />
-            <meshBasicMaterial color="#fff8e7" />
-          </mesh>
+          <mesh geometry={hookBaseGeom} material={hookBaseMat} />
+          <mesh geometry={hookArmGeom} material={hookArmMat} position={[-0.12, -0.08, 0]} rotation={[0, 0, -Math.PI / 4]} />
+          <mesh geometry={hookBulbGeom} material={hookBulbMat} position={[-0.21, -0.18, 0]} />
         </group>
       ))}
 
       {/* Móc tường cửa vào */}
       {doorXPositions.map((xPos, idx) => (
         <group key={`hook-door-${idx}`} position={[xPos, roomHeight - 0.62, -halfL + 0.06]}>
-          <mesh>
-            <cylinderGeometry args={[0.03, 0.03, 0.06, 8]} />
-            <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
-          </mesh>
-          <mesh position={[0, -0.08, 0.12]} rotation={[Math.PI / 4, 0, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, -0.18, 0.21]}>
-            <sphereGeometry args={[0.025, 12, 12]} />
-            <meshBasicMaterial color="#fff8e7" />
-          </mesh>
+          <mesh geometry={hookBaseGeom} material={hookBaseMat} />
+          <mesh geometry={hookArmGeom} material={hookArmMat} position={[0, -0.08, 0.12]} rotation={[Math.PI / 4, 0, 0]} />
+          <mesh geometry={hookBulbGeom} material={hookBulbMat} position={[0, -0.18, 0.21]} />
         </group>
       ))}
 
       {/* Móc tường cuối sau */}
       {doorXPositions.map((xPos, idx) => (
         <group key={`hook-back-${idx}`} position={[xPos, roomHeight - 0.62, halfL - 0.06]}>
-          <mesh>
-            <cylinderGeometry args={[0.03, 0.03, 0.06, 8]} />
-            <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
-          </mesh>
-          <mesh position={[0, -0.08, -0.12]} rotation={[-Math.PI / 4, 0, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.25, 8]} />
-            <meshStandardMaterial color="#475569" metalness={0.8} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, -0.18, -0.21]}>
-            <sphereGeometry args={[0.025, 12, 12]} />
-            <meshBasicMaterial color="#fff8e7" />
-          </mesh>
+          <mesh geometry={hookBaseGeom} material={hookBaseMat} />
+          <mesh geometry={hookArmGeom} material={hookArmMat} position={[0, -0.08, -0.12]} rotation={[-Math.PI / 4, 0, 0]} />
+          <mesh geometry={hookBulbGeom} material={hookBulbMat} position={[0, -0.18, -0.21]} />
         </group>
       ))}
 

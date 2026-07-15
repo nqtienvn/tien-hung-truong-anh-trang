@@ -58,10 +58,10 @@ const closingTimers = {};
 // Cấu trúc: { [roomId]: { isOpen: boolean } }
 // ═══════════════════════════════════════════════════════════════════════════
 const roomStates = {
-  'gallery-subsidy': { isOpen: false },
-  'gallery-paintings': { isOpen: false },
-  'gallery-ceramics': { isOpen: false },
-  'gallery-market-economy': { isOpen: false }
+  'gallery-subsidy': { isOpen: true },
+  'gallery-paintings': { isOpen: true },
+  'gallery-ceramics': { isOpen: true },
+  'gallery-market-economy': { isOpen: true }
 };
 
 // Trạng thái đồng bộ của phòng 1
@@ -454,23 +454,8 @@ io.on('connection', (socket) => {
     const { doorId, targetRoom } = data;
     console.log(`[ADMIN] Yêu cầu mở cửa "${doorId}" → phòng "${targetRoom}"`);
 
-    // Kiểm tra điều kiện mở cửa: Cả 2 phòng liên quan đều phải đang bật (mở)
-    // Sảnh (lobby) mặc định luôn bật.
+    // Kiểm tra điều kiện mở cửa: Các phòng hiện tại hoạt động độc lập và luôn sẵn sàng
     let canOpen = true;
-    if (doorId === 'door-room1') {
-      canOpen = roomStates['gallery-subsidy']?.isOpen;
-    } else if (doorId === 'door-room2') {
-      canOpen = roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-paintings']?.isOpen;
-    } else if (doorId === 'door-room3') {
-      canOpen = roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen;
-    } else if (doorId === 'door-room4') {
-      canOpen = roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen;
-    }
-
-    if (!canOpen) {
-      socket.emit('admin:error', { message: 'Chỉ được mở cửa khi cả hai phòng liên quan đều đang bật!' });
-      return;
-    }
 
     // Hủy timer đóng cửa nếu có
     if (closingTimers[doorId]) {
@@ -904,84 +889,9 @@ io.on('connection', (socket) => {
   const roomClosingTimers = {};
 
   socket.on('admin:toggle-room', (data) => {
-    const { roomId, isOpen } = data;
-    console.log(`[ADMIN] Yêu cầu chuyển phòng "${roomId}" sang: ${isOpen ? 'Bật' : 'Tắt'}`);
-
-    if (isOpen) {
-      roomStates[roomId] = { isOpen: true };
-      io.emit('room-states', roomStates);
-      
-      // Hủy timer đóng phòng nếu có
-      if (roomClosingTimers[roomId]) {
-        clearTimeout(roomClosingTimers[roomId]);
-        delete roomClosingTimers[roomId];
-      }
-      return;
-    }
-
-    // Tình huống Tắt phòng (isOpen === false):
-    // 1. Ràng buộc: Tất cả các cửa liên quan trực tiếp đến phòng này phải đang đóng
-    const relatedDoors = [];
-    if (roomId === 'gallery-subsidy') {
-      relatedDoors.push('door-room1', 'door-room2');
-    } else if (roomId === 'gallery-paintings') {
-      relatedDoors.push('door-room2', 'door-room3');
-    } else if (roomId === 'gallery-ceramics') {
-      relatedDoors.push('door-room3', 'door-room4');
-    } else if (roomId === 'gallery-market-economy') {
-      relatedDoors.push('door-room4');
-    }
-
-    // Tự động đóng các cửa liên quan đang mở khi tắt phòng
-    relatedDoors.forEach(doorId => {
-      if (doorStates[doorId]?.isOpen) {
-        doorStates[doorId] = { isOpen: false, targetRoom: '' };
-        io.emit('door-closed', { doorId });
-      }
-    });
-    io.emit('door-states', doorStates);
-
-    // Xác định phòng sẽ teleport người chơi sang
-    let teleportTo = 'lobby';
-    if (roomId === 'gallery-paintings') {
-      teleportTo = 'gallery-subsidy';
-    } else if (roomId === 'gallery-ceramics') {
-      teleportTo = 'gallery-paintings';
-    } else if (roomId === 'gallery-market-economy') {
-      teleportTo = 'gallery-ceramics';
-    }
-
-    // Đếm số người hiện đang ở trong phòng bị tắt
-    const usersInRoom = Object.values(activeUsers).filter(u => u.galleryId === roomId);
-
-    if (usersInRoom.length === 0) {
-      // Không có ai ở trong phòng -> Tắt ngay lập tức
-      roomStates[roomId] = { isOpen: false };
-      io.emit('room-states', roomStates);
-      console.log(`[ADMIN] Phòng "${roomId}" không có người, đã tắt ngay lập tức.`);
-    } else {
-      // Có người ở trong phòng -> Bắt đầu đếm ngược đóng phòng 5 giây
-      console.log(`[ADMIN] Phòng "${roomId}" có ${usersInRoom.length} người. Bắt đầu đếm ngược 5s để tắt phòng.`);
-
-      io.emit('room-closing', {
-        roomId,
-        teleportTo,
-        countdownMs: DOOR_CLOSE_COUNTDOWN_MS
-      });
-
-      const timer = setTimeout(() => {
-        roomStates[roomId] = { isOpen: false };
-        io.emit('room-states', roomStates);
-        io.emit('room-closed', { roomId, teleportTo });
-        delete roomClosingTimers[roomId];
-        console.log(`[ADMIN] Phòng "${roomId}" đã tắt sau đếm ngược. Đã phát lệnh teleport người chơi còn lại về "${teleportTo}".`);
-      }, DOOR_CLOSE_COUNTDOWN_MS);
-
-      if (roomClosingTimers[roomId]) {
-        clearTimeout(roomClosingTimers[roomId]);
-      }
-      roomClosingTimers[roomId] = timer;
-    }
+    const { roomId } = data;
+    console.log(`[ADMIN] Yêu cầu toggle room "${roomId}" bị bỏ qua vì toàn bộ phòng được kích hoạt mặc định.`);
+    socket.emit('room-states', roomStates);
   });
 
   socket.on('admin:get-room1-players', () => {

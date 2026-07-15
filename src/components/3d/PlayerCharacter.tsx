@@ -200,7 +200,7 @@ export const PlayerCharacter: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
-    if (selectedExhibit || !nickname || miniGameOpen || (roomOneLocked && !roomOneCompleted) || welcomeModalOpen) return;
+    if (selectedExhibit || !nickname || miniGameOpen) return;
 
     const { w, a, s, d, shift } = keysPressed.current;
 
