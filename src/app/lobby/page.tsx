@@ -16,6 +16,7 @@ import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
+import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
 import {
@@ -540,6 +541,8 @@ const LobbyPlayer: React.FC<{
   transitionLoading: boolean;
   onTransitionLoadingChange: (loading: boolean) => void;
   onTransitionRoomChange: (roomId: string, fallbackName: string) => void;
+  onOpenRoomThreeVideo: () => void;
+  roomThreeVideoOpen: boolean;
 }> = ({
   onActiveDoorChange,
   activeDoor,
@@ -547,6 +550,8 @@ const LobbyPlayer: React.FC<{
   transitionLoading,
   onTransitionLoadingChange,
   onTransitionRoomChange,
+  onOpenRoomThreeVideo,
+  roomThreeVideoOpen,
 }) => {
   const playerRef = useRef<THREE.Group>(null);
   const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
@@ -909,11 +914,18 @@ const LobbyPlayer: React.FC<{
 
       if (e.code === 'KeyE') {
         e.preventDefault();
+        if (roomThreeVideoOpen) return;
         if (sittingPositionRef.current) {
           // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 2
           if (playerRef.current && playerRef.current.position.z > 54.0 && playerRef.current.position.z <= 100.0) {
             setRoomTwoDocOpen((prev: boolean) => !prev);
           }
+        } else if (
+          currentRoom === 'gallery-ceramics'
+          && playerRef.current
+          && Math.hypot(playerRef.current.position.x, playerRef.current.position.z - ROOM_OFFSETS['gallery-ceramics'].z) <= 2.6
+        ) {
+          onOpenRoomThreeVideo();
         } else if (activeDoorRef.current) {
           const door = activeDoorRef.current;
           const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
@@ -1002,11 +1014,11 @@ const LobbyPlayer: React.FC<{
       window.removeEventListener('blur', resetAllKeys);
       document.removeEventListener('visibilitychange', resetAllKeys);
     };
-  }, []);
+  }, [baseY, currentRoom, language, onOpenRoomThreeVideo, roomThreeVideoOpen, setCurrentRoom, setRoomTwoDocOpen, setSittingPosition, setSittingPrompt, setTeleportTarget]);
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit || transitionLoading) return;
+    if (selectedExhibit || transitionLoading || roomThreeVideoOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -1389,11 +1401,13 @@ export default function LobbyPage() {
     setMiniGameOpen,
     sittingPrompt,
     otherUsers,
+    markRoomThreeVideoViewed,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
   const [entered, setEntered] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [roomThreeVideoOpen, setRoomThreeVideoOpen] = useState(false);
 
   // Trạng thái chuyển phòng mượt mà qua màn hình loading (Tách không gian các phòng độc lập)
   const [transitionLoading, setTransitionLoading] = useState(false);
@@ -1639,6 +1653,8 @@ export default function LobbyPage() {
                     setTransitionRoomId(roomId || null);
                     setTransitionRoomName(fallbackName);
                   }}
+                  onOpenRoomThreeVideo={() => setRoomThreeVideoOpen(true)}
+                  roomThreeVideoOpen={roomThreeVideoOpen}
                 />
 
                 {/* Multiplayer avatars */}
@@ -2231,6 +2247,12 @@ export default function LobbyPage() {
 
       {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}
       <RoomTwoDocumentModal />
+
+      <RoomThreeVideoModal
+        open={roomThreeVideoOpen}
+        onClose={() => setRoomThreeVideoOpen(false)}
+        onViewed={markRoomThreeVideoViewed}
+      />
 
       {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
       {sittingPrompt && (

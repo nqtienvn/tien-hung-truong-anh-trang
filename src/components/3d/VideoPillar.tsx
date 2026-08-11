@@ -1,21 +1,11 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Html, useVideoTexture } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
-import { useMuseum } from '@/context/MuseumContext';
-import {
-  getVideoPillarTransition,
-  isInsideVideoPillarZone,
-} from '@/lib/videoPillarZone';
+import React from 'react';
+import { useVideoTexture } from '@react-three/drei';
 
-const VIDEO_URL = '/videos/room-three-pillar.mp4';
-const DEFAULT_ACTIVATION_RADIUS = 3;
+import { ROOM_THREE_VIDEO_URL } from '@/lib/roomThreeQuest';
 
-export interface VideoPillarProps {
-  activationRadius?: number;
-}
+export interface VideoPillarProps {}
 
 const SCREEN_CONFIG = [
   { position: [0, 2.35, 0.78] as [number, number, number], rotationY: 0 },
@@ -24,99 +14,17 @@ const SCREEN_CONFIG = [
   { position: [-0.78, 2.35, 0] as [number, number, number], rotationY: -Math.PI / 2 },
 ];
 
-export const VideoPillar: React.FC<VideoPillarProps> = ({
-  activationRadius = DEFAULT_ACTIVATION_RADIUS,
-}) => {
-  const { language } = useMuseum();
-  const pillarRef = useRef<THREE.Group>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const wasInsideRef = useRef(false);
-  const worldCenter = useMemo(() => new THREE.Vector3(), []);
-  const videoTexture = useVideoTexture(VIDEO_URL, {
+export const VideoPillar: React.FC<VideoPillarProps> = () => {
+  const videoTexture = useVideoTexture(ROOM_THREE_VIDEO_URL, {
     start: false,
-    muted: false,
+    muted: true,
     loop: true,
     playsInline: true,
     crossOrigin: 'anonymous',
   });
-  const video = videoTexture.image as HTMLVideoElement;
-  const [needsUnmute, setNeedsUnmute] = useState(false);
-
-  useEffect(() => {
-    videoRef.current = video;
-
-    return () => {
-      video.pause();
-      video.currentTime = 0;
-      videoRef.current = null;
-    };
-  }, [video]);
-
-  const playFromBeginning = useCallback(async () => {
-    const activeVideo = videoRef.current;
-    if (!activeVideo) return;
-
-    activeVideo.currentTime = 0;
-    activeVideo.muted = false;
-
-    try {
-      await activeVideo.play();
-      setNeedsUnmute(false);
-    } catch {
-      activeVideo.muted = true;
-      setNeedsUnmute(true);
-      await activeVideo.play().catch(() => undefined);
-    }
-  }, []);
-
-  const stopAndReset = useCallback(() => {
-    const activeVideo = videoRef.current;
-    if (!activeVideo) return;
-
-    activeVideo.pause();
-    activeVideo.currentTime = 0;
-    setNeedsUnmute(false);
-  }, []);
-
-  const handleUnmute = useCallback(async () => {
-    const activeVideo = videoRef.current;
-    if (!activeVideo) return;
-
-    activeVideo.muted = false;
-    try {
-      await activeVideo.play();
-      setNeedsUnmute(false);
-    } catch {
-      activeVideo.muted = true;
-      setNeedsUnmute(true);
-    }
-  }, []);
-
-  useFrame((state) => {
-    const player = state.scene.getObjectByName('lobby-player');
-    if (!player || !pillarRef.current) return;
-
-    pillarRef.current.getWorldPosition(worldCenter);
-    const isInside = isInsideVideoPillarZone(
-      player.position.x,
-      player.position.z,
-      worldCenter.x,
-      worldCenter.z,
-      activationRadius,
-    );
-    const transition = getVideoPillarTransition(wasInsideRef.current, isInside);
-
-    if (transition === 'enter') {
-      void playFromBeginning();
-    } else if (transition === 'leave') {
-      stopAndReset();
-    }
-
-    wasInsideRef.current = isInside;
-  });
 
   return (
-    <group ref={pillarRef}>
+    <group>
       <mesh position={[0, 0.14, 0]} castShadow receiveShadow>
         <cylinderGeometry args={[0.85, 1, 0.28, 32]} />
         <meshStandardMaterial color="#211a16" metalness={0.75} roughness={0.25} />
@@ -149,32 +57,6 @@ export const VideoPillar: React.FC<VideoPillarProps> = ({
         </group>
       ))}
 
-      {needsUnmute && (
-        <Html position={[0, 4.25, 0]} center distanceFactor={7}>
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              void handleUnmute();
-            }}
-            style={{
-              border: '1px solid rgba(245, 158, 11, 0.7)',
-              borderRadius: '999px',
-              background: 'rgba(15, 23, 42, 0.94)',
-              color: '#fef3c7',
-              cursor: 'pointer',
-              fontFamily: 'Inter, system-ui, sans-serif',
-              fontSize: '12px',
-              fontWeight: 800,
-              letterSpacing: '0.04em',
-              padding: '9px 16px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {language === 'vi' ? 'Bật tiếng' : 'Unmute'}
-          </button>
-        </Html>
-      )}
     </group>
   );
 };
