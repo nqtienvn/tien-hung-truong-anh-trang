@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
+import { collectFragment, readRoomThreeProgress } from '@/lib/roomThreeQuestState';
 
 export interface GraphicsSettings {
   preset: 'ultra-low' | 'low' | 'medium';
@@ -130,6 +131,12 @@ interface MuseumContextType {
 
   collectedCeramics: string[];
   addCeramic: (id: string) => void;
+  roomThreeVideoViewed: boolean;
+  roomThreeCollectedFragments: string[];
+  roomThreeCompleted: boolean;
+  markRoomThreeVideoViewed: () => void;
+  collectRoomThreeFragment: (id: string) => void;
+  completeRoomThreeQuest: () => void;
   talkedNpcs: string[];
   addTalkedNpc: (npcId: string) => void;
 
@@ -268,6 +275,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [sittingPosition, setSittingPosition] = useState<{ x: number; y: number; z: number; rotationY?: number } | null>(null);
   const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
   const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
+  const [roomThreeVideoViewed, setRoomThreeVideoViewed] = useState(false);
+  const [roomThreeCollectedFragments, setRoomThreeCollectedFragments] = useState<string[]>([]);
+  const [roomThreeCompleted, setRoomThreeCompleted] = useState(false);
   const [talkedNpcs, setTalkedNpcs] = useState<string[]>([]);
 
   // Reset gameplay progress khi đổi người chơi trong phiên hiện tại.
@@ -275,6 +285,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
+    setRoomThreeVideoViewed(false);
+    setRoomThreeCollectedFragments([]);
+    setRoomThreeCompleted(false);
   }, [nickname]);
 
   const addClue = useCallback((clueId: string) => {
@@ -334,6 +347,75 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [nickname]);
 
+  // Sync the new Room 3 Paris 1919 quest progress independently from legacy ceramics data.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (!nickname) {
+      setRoomThreeVideoViewed(false);
+      setRoomThreeCollectedFragments([]);
+      setRoomThreeCompleted(false);
+      return;
+    }
+
+    const progressKey = `roomThreeQuestProgress:${nickname.trim().toLowerCase()}`;
+    const progress = readRoomThreeProgress(localStorage.getItem(progressKey));
+    setRoomThreeVideoViewed(progress.videoViewed);
+    setRoomThreeCollectedFragments(progress.collectedFragments);
+    setRoomThreeCompleted(progress.completed);
+  }, [nickname]);
+
+  const saveRoomThreeProgress = useCallback((progress: {
+    videoViewed: boolean;
+    collectedFragments: string[];
+    completed: boolean;
+  }) => {
+    if (typeof window !== 'undefined' && nickname) {
+      const progressKey = `roomThreeQuestProgress:${nickname.trim().toLowerCase()}`;
+      localStorage.setItem(progressKey, JSON.stringify(progress));
+    }
+  }, [nickname]);
+
+  const markRoomThreeVideoViewed = useCallback(() => {
+    setRoomThreeVideoViewed((previous) => {
+      if (previous) return previous;
+      saveRoomThreeProgress({
+        videoViewed: true,
+        collectedFragments: roomThreeCollectedFragments,
+        completed: roomThreeCompleted,
+      });
+      return true;
+    });
+  }, [roomThreeCollectedFragments, roomThreeCompleted, saveRoomThreeProgress]);
+
+  const collectRoomThreeFragment = useCallback((fragmentId: string) => {
+    setRoomThreeCollectedFragments((previous) => {
+      const updated = collectFragment(previous, fragmentId);
+      if (updated.length === previous.length) return previous;
+      saveRoomThreeProgress({
+        videoViewed: roomThreeVideoViewed,
+        collectedFragments: updated,
+        completed: roomThreeCompleted,
+      });
+      return updated;
+    });
+  }, [roomThreeCompleted, roomThreeVideoViewed, saveRoomThreeProgress]);
+
+  const completeRoomThreeQuest = useCallback(() => {
+    setRoomThreeCompleted((previous) => {
+      if (previous) return previous;
+      saveRoomThreeProgress({
+        videoViewed: roomThreeVideoViewed,
+        collectedFragments: roomThreeCollectedFragments,
+        completed: true,
+      });
+      if (socket?.connected) {
+        socket.emit('room3:quest-completed');
+      }
+      return true;
+    });
+  }, [roomThreeCollectedFragments, roomThreeVideoViewed, saveRoomThreeProgress, socket]);
+
   // Sync Room 4 gameplay progress (talkedNpcs)
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -380,17 +462,22 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCluesCollected([]);
     setRoomOneCompleted(false);
     setCollectedCeramics([]);
+    setRoomThreeVideoViewed(false);
+    setRoomThreeCollectedFragments([]);
+    setRoomThreeCompleted(false);
     setTalkedNpcs([]);
     if (typeof window !== 'undefined') {
       if (nickname) {
         localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
         localStorage.removeItem(`roomThreeProgress:${nickname.trim().toLowerCase()}`);
+        localStorage.removeItem(`roomThreeQuestProgress:${nickname.trim().toLowerCase()}`);
         localStorage.removeItem(`roomFourProgress:${nickname.trim().toLowerCase()}`);
       }
       Object.keys(localStorage).forEach((key) => {
         if (
           key.startsWith('roomOneProgress:') ||
           key.startsWith('roomThreeProgress:') ||
+          key.startsWith('roomThreeQuestProgress:') ||
           key.startsWith('roomFourProgress:') ||
           key.startsWith('museum_room1_failed_quizzes')
         ) {
@@ -403,7 +490,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       localStorage.removeItem('collectedCeramics');
       localStorage.removeItem('roomFourProgress');
     }
-  }, []);
+  }, [nickname]);
 
   const clearTeleport = useCallback(() => setTeleportTarget(null), []);
 
@@ -1013,6 +1100,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSittingPrompt,
         collectedCeramics,
         addCeramic,
+        roomThreeVideoViewed,
+        roomThreeCollectedFragments,
+        roomThreeCompleted,
+        markRoomThreeVideoViewed,
+        collectRoomThreeFragment,
+        completeRoomThreeQuest,
         talkedNpcs,
         addTalkedNpc,
 
