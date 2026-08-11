@@ -4,5 +4,4 @@ COPY package*.json ./
 RUN npm ci --only=production
 COPY ws-server.js ./
 EXPOSE 3001
-ENV WS_PORT=3001
 CMD ["node", "ws-server.js"]

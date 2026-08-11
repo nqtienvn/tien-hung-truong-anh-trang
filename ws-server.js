@@ -1009,9 +1009,9 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.WS_PORT || 3001;
-server.listen(PORT, () => {
+const PORT = process.env.PORT || process.env.WS_PORT || 3001;
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`===================================================`);
-  console.log(`WebSocket server đang chạy trên cổng http://localhost:${PORT}`);
+  console.log(`WebSocket server đang chạy trên cổng http://0.0.0.0:${PORT}`);
   console.log(`===================================================`);
 });
