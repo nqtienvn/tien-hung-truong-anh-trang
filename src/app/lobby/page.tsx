@@ -19,6 +19,7 @@ import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
 import { RoomThreeExhibitModal } from '@/components/ui/RoomThreeExhibitModal';
 import { RoomThreeQuestHud } from '@/components/ui/RoomThreeQuestHud';
+import { RoomThreeQuestModal } from '@/components/ui/RoomThreeQuestModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
 import {
@@ -1447,6 +1448,7 @@ export default function LobbyPage() {
     roomThreeCollectedFragments,
     roomThreeCompleted,
     collectRoomThreeFragment,
+    completeRoomThreeQuest,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
@@ -2345,16 +2347,13 @@ export default function LobbyPage() {
         }}
       />
 
-      {roomThreeDeskOpen && (
-        <div className="absolute inset-0 z-[68] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm pointer-events-auto">
-          <div className="w-full max-w-xl rounded-3xl border border-amber-400/30 bg-slate-950 p-7 text-center text-slate-100 shadow-2xl">
-            <div className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">BÀN LÀM VIỆC CỦA NGUYỄN ÁI QUỐC</div>
-            <h2 className="mt-2 text-xl font-black">Khôi phục Bản Yêu sách</h2>
-            <p className="mt-5 text-sm leading-7 text-slate-300">Bạn đã mang đủ 8 mảnh yêu sách đến bàn làm việc. Giao diện ghép văn kiện sẽ mở ở bước tiếp theo.</p>
-            <button type="button" onClick={() => setRoomThreeDeskOpen(false)} className="mt-6 rounded-xl bg-amber-400 px-5 py-3 text-xs font-black text-slate-950 hover:bg-amber-300">Đóng</button>
-          </div>
-        </div>
-      )}
+      <RoomThreeQuestModal
+        open={roomThreeDeskOpen}
+        fragmentIds={roomThreeCollectedFragments}
+        completed={roomThreeCompleted}
+        onClose={() => setRoomThreeDeskOpen(false)}
+        onComplete={completeRoomThreeQuest}
+      />
 
       {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
       {sittingPrompt && (
