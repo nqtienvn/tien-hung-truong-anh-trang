@@ -37,7 +37,14 @@ export const RoomThreeQuestModal: React.FC<RoomThreeQuestModalProps> = ({
 
   useEffect(() => {
     if (!open) return;
-    setOrderedIds(completed ? fragmentIds : [...fragmentIds].reverse());
+    const initialOrder = completed
+      ? [...fragmentIds].sort(
+          (firstId, secondId) =>
+            (fragmentsById.get(firstId)?.correctOrder ?? 0) -
+            (fragmentsById.get(secondId)?.correctOrder ?? 0),
+        )
+      : [...fragmentIds].reverse();
+    setOrderedIds(initialOrder);
     setSelectedIndex(null);
     setDraggedIndex(null);
     setFeedback(completed ? 'correct' : null);
