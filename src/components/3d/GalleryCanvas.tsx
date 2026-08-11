@@ -500,10 +500,13 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
 
         <Suspense fallback={null}>
           {/* Phòng triển lãm */}
-          <ExhibitionRoom galleryId={galleryId} />
+          <ExhibitionRoom
+            galleryId={galleryId}
+            centralExhibit={exhibits.find((exhibit) => exhibit.id === 'exhibit-convergence-1930')}
+          />
 
           {/* Các tác phẩm/hiện vật */}
-          {exhibits.map((exhibit) => (
+          {exhibits.filter((exhibit) => exhibit.id !== 'exhibit-convergence-1930').map((exhibit) => (
             <ExhibitObject key={exhibit.id} exhibit={exhibit} />
           ))}
 

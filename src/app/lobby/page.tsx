@@ -15,6 +15,7 @@ import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
+import { RoomOneSoundtrack } from '@/components/ui/RoomOneSoundtrack';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
@@ -66,7 +67,7 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở tường sau sảnh, tầng 2 (Y=3, Z=8)
     position: [0, 3.0, 8.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 01: Phòng Bao Cấp',
+    label: 'Phòng 01: Dấu chân tìm đường',
   },
   {
     doorId: 'door-room2',
@@ -109,7 +110,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room1',
     check: (x: number, z: number) => z >= 6.0 && z <= 8.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 10.0] as [number, number, number],
-    promptVi: 'vào Phòng 01: Phòng Bao Cấp',
+    promptVi: 'vào Phòng 01: Dấu chân tìm đường',
     promptEn: 'enter Room 01: Subsidy Room'
   },
   {
@@ -1577,7 +1578,7 @@ export default function LobbyPage() {
     }
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
-      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
+      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Dấu chân tìm đường' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
       'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
@@ -2212,10 +2213,13 @@ export default function LobbyPage() {
         </div>
       )}
 
-      {/* ═══ SỔ NHIỆM VỤ ĐIỀU TRA PHÒNG BAO CẤP ═══ */}
+      {/* ═══ SỔ NHIỆM VỤ PHÒNG DẤU CHÂN TÌM ĐƯỜNG ═══ */}
       <InvestigationNotebook />
 
-      {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
+      {/* ═══ NHẠC NỀN RIÊNG PHÒNG DẤU CHÂN TÌM ĐƯỜNG ═══ */}
+      <RoomOneSoundtrack />
+
+      {/* ═══ POPUP HƯỚNG DẪN PHÒNG DẤU CHÂN TÌM ĐƯỜNG ═══ */}
       <RoomWelcomeModal />
 
       {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}

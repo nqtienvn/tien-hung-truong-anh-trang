@@ -30,7 +30,7 @@ interface DynamicRoomProps {
 // Phòng 3: bắt đầu Z=100 →  center = 100 + 15 = 115, spans Z 100..130
 // Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..220
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
-  'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
+  'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Dấu chân tìm đường (Z 8 → 54)
   'gallery-paintings': { z: 77.35, y: 3.0 },   // Phòng 2: đẩy lùi 0.35 để tránh z-fighting với tường sau phòng 1
   'gallery-ceramics': { z: 115.7, y: 3.0 },    // Phòng 3: giữ khoảng hở nhỏ tương tự với phòng 2
   'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 280)
@@ -49,6 +49,7 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
 
 export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
   const { galleryId, exhibits, gallery } = room;
+  const wallExhibits = exhibits.filter((exhibit) => exhibit.id !== 'exhibit-convergence-1930');
   const groupRef = useRef<THREE.Group>(null);
 
   // Cơ chế đếm số hiện vật được phép hiển thị để load từ từ (staggered loading)
@@ -67,7 +68,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
     // Cứ mỗi 150ms mount thêm 1 hiện vật để chia đều tải tải lưới (geometry) và tải hoạ tiết (texture)
     const interval = setInterval(() => {
       setVisibleCount((prev) => {
-        if (prev >= exhibits.length) {
+        if (prev >= wallExhibits.length) {
           clearInterval(interval);
           return prev;
         }
@@ -76,7 +77,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
     }, 150);
 
     return () => clearInterval(interval);
-  }, [isVisible, exhibits.length]);
+  }, [isVisible, wallExhibits.length]);
 
   // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
   useFrame((state) => {
@@ -125,10 +126,11 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
           customSettings={customSettings}
           isVisible={isVisible}
           ropeBarriersConfig={gallery?.rope_barriers_config}
+          centralExhibit={exhibits.find((exhibit) => exhibit.id === 'exhibit-convergence-1930')}
         />
 
         {/* Các hiện vật trong phòng - Load từ từ từng cái một để giảm lag */}
-        {exhibits.slice(0, visibleCount).map((exhibit) => (
+        {wallExhibits.slice(0, visibleCount).map((exhibit) => (
           <ExhibitObject key={exhibit.id} exhibit={exhibit} isVisible={isVisible} />
         ))}
       </Suspense>

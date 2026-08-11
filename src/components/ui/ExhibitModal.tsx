@@ -26,119 +26,196 @@ const GAMEPLAY_DICTIONARY: Record<string, GameplayData> = {
     timerDuration: 10,
     quizzes: [
       {
-        question: 'Theo quan sát, vai trò chính của tem phiếu trong đời sống thời kỳ này là gì?',
+        question: 'Nguyễn Tất Thành rời Tổ quốc tìm đường cứu nước vào thời gian nào?',
         options: [
-          'Một loại giấy xác nhận quyền sở hữu hàng hóa của người dân',
-          'Một công cụ giúp Nhà nước phân phối hàng hóa theo định mức',
-          'Một hình thức tiền tệ thay thế khi người dân mua hàng',
-          'Một loại phiếu ưu đãi giúp người dân mua hàng với giá rẻ hơn'
+          'Ngày 5/6/1911',
+          'Ngày 3/2/1930',
+          'Ngày 2/9/1945',
+          'Ngày 19/5/1890'
+        ],
+        correctIndex: 0
+      },
+      {
+        question: 'Sự kiện Nguyễn Tất Thành ra đi từ Bến Nhà Rồng có ý nghĩa gì?',
+        options: [
+          'Mở đầu công cuộc xây dựng đất nước sau chiến tranh',
+          'Đánh dấu sự thành lập một tổ chức chính trị mới',
+          'Là điểm khởi đầu của hành trình tìm đường cứu nước',
+          'Kết thúc các phong trào cứu nước đương thời'
+        ],
+        correctIndex: 2
+      }
+    ],
+    historyText: 'NGƯỜI RA ĐI — Bến Nhà Rồng – 05/06/1911. Ngày 5/6/1911, từ Bến Nhà Rồng, người thanh niên Nguyễn Tất Thành rời Tổ quốc trên tàu Amiral Latouche-Tréville. Trong bối cảnh các phong trào cứu nước đương thời chưa tìm được con đường giải phóng dân tộc phù hợp, Nguyễn Tất Thành quyết định ra nước ngoài để tìm hiểu thế giới và tìm một con đường mới cho dân tộc Việt Nam. Ý nghĩa: Đây là điểm khởi đầu của hành trình tìm đường cứu nước.',
+    clueText: 'BẾN NHÀ RỒNG · 1911 · RA ĐI'
+  },
+  'exhibit-world-1911-1917': {
+    hasTimer: false,
+    timerDuration: 0,
+    quizzes: [
+      {
+        question: 'Trong giai đoạn 1911–1917, trải nghiệm thực tiễn giúp Nguyễn Tất Thành nhận ra điều gì?',
+        options: [
+          'Sự áp bức chỉ tồn tại tại Việt Nam',
+          'Nhân dân thuộc địa ở nhiều nơi đều chịu áp bức và bóc lột',
+          'Người lao động tại các nước tư bản đều có cuộc sống sung túc',
+          'Các nước thuộc địa không có điểm chung với nhau'
         ],
         correctIndex: 1
       },
       {
-        question: 'Gia đình bạn có 4 người, được cấp 13kg gạo theo tem và có 300 đồng tiền mặt. Gia đình muốn mua thêm 20kg gạo. Theo cơ chế lúc đó, điều gì xảy ra?',
+        question: 'Cuối năm 1917, Nguyễn Tất Thành trở lại Pháp và bước sang giai đoạn nào?',
         options: [
-          'Có thể mua nếu có đủ tiền vì tiền quyết định việc mua hàng',
-          'Không thể mua nếu không có thêm tem phiếu dù vẫn còn tiền',
-          'Có thể mua tự do tại mọi cửa hàng vì gạo là nhu yếu phẩm',
-          'Có thể mua thêm nếu trả giá cao hơn người khác'
+          'Ngừng tìm hiểu tình hình thế giới để trở về Việt Nam',
+          'Chỉ tiếp tục làm việc trên các tàu biển',
+          'Từ quan sát, trải nghiệm sang tham gia tích cực hơn vào hoạt động chính trị',
+          'Rời châu Âu để định cư lâu dài tại Hoa Kỳ'
+        ],
+        correctIndex: 2
+      }
+    ],
+    historyText: 'NHÌN RA THẾ GIỚI — 1911–1917. Sau khi rời Bến Nhà Rồng năm 1911, Nguyễn Tất Thành bắt đầu hành trình quan sát và tìm hiểu thế giới. Trên đường sang Pháp, Người đi qua Singapore, Colombo, Port Said rồi đến Marseille. Năm 1912, Người tiếp tục qua Tây Ban Nha, Bồ Đào Nha và nhiều vùng thuộc địa ở châu Phi. Cuối năm 1912, Người đến Hoa Kỳ; khoảng cuối năm 1913, Người sang Anh và sống, lao động tại đây đến khoảng năm 1917. Cuối năm 1917, Người trở lại Pháp, chuyển từ chủ yếu quan sát và trải nghiệm thực tế sang tham gia ngày càng tích cực vào các hoạt động chính trị. Ý nghĩa: Sáu năm đi qua nhiều quốc gia và châu lục giúp Người nhận ra sự áp bức không chỉ tồn tại ở Việt Nam, từng bước phân biệt nhân dân lao động với các lực lượng thực dân và nhận thức sự gần gũi giữa các dân tộc bị áp bức.',
+    clueText: 'PHÁP · CHÂU PHI · HOA KỲ · ANH · LAO ĐỘNG · QUAN SÁT'
+  },
+  'exhibit-versailles-1919': {
+    hasTimer: false,
+    timerDuration: 0,
+    quizzes: [
+      {
+        question: 'Nội dung chính của 8 điểm trong “Yêu sách của nhân dân An Nam” là gì?',
+        options: [
+          'Yêu cầu giành độc lập hoàn toàn ngay lập tức',
+          'Đòi các quyền tự do, dân chủ và bình đẳng cơ bản cho người Việt Nam',
+          'Đề nghị Pháp mở rộng hoạt động thương mại tại Việt Nam',
+          'Yêu cầu thành lập một liên minh quân sự mới'
         ],
         correctIndex: 1
-      }
-    ],
-    historyText: 'Tem phiếu lương thực: Trong thời kỳ bao cấp, người dân muốn mua gạo phải có cả tiền và tem phiếu. Tem phiếu quy định số lượng hàng hóa được mua theo định mức. Khi hết tem, dù còn tiền, người dân cũng không thể mua thêm gạo.',
-    clueText: 'Hàng hóa được mua theo tem phiếu'
-  },
-  'exhibit-ricebook': {
-    hasTimer: false,
-    timerDuration: 0,
-    quizzes: [
+      },
       {
-        question: 'Trong sổ ghi: Gia đình: 4 người, Định mức: 13kg/tháng. Ai quyết định con số này?',
+        question: 'Việc các cường quốc không đáp ứng bản yêu sách giúp Nguyễn Ái Quốc nhận thức rõ điều gì?',
         options: [
-          'Gia đình tự đăng ký dựa trên nhu cầu sử dụng',
-          'Cửa hàng quyết định dựa trên lượng hàng còn lại',
-          'Nhà nước quy định dựa trên chế độ phân phối',
-          'Người dân có thể thương lượng với người bán để thay đổi'
+          'Các dân tộc thuộc địa có thể hoàn toàn trông chờ vào lời hứa của các cường quốc',
+          'Chỉ cần tiếp tục gửi thêm yêu sách là có thể giành độc lập',
+          'Muốn giải phóng dân tộc phải tìm con đường hiệu quả hơn, không phụ thuộc vào sự ban phát của các nước đế quốc',
+          'Hoạt động chính trị tại diễn đàn quốc tế không có bất kỳ ý nghĩa nào'
         ],
         correctIndex: 2
       }
     ],
-    historyText: 'Sổ gạo - Dấu ấn của thời kỳ bao cấp: Lương thực được phân phối theo định mức do Nhà nước quy định. Số lượng gạo mỗi gia đình được nhận phụ thuộc vào số nhân khẩu và tiêu chuẩn được cấp, không do người dân tự quyết định.',
-    clueText: 'Lương thực được cấp theo định mức'
+    historyText: 'TIẾNG NÓI CỦA MỘT DÂN TỘC — Paris, 18/06/1919. Nguyễn Ái Quốc gửi Yêu sách của nhân dân An Nam gồm 8 điểm tới Hội nghị Versailles, đòi các quyền tự do, dân chủ và bình đẳng cơ bản cho người Việt Nam. Các yêu cầu không được đáp ứng, giúp Người nhận thức rõ rằng các dân tộc thuộc địa không thể chỉ trông chờ vào sự ban phát của các cường quốc và cần tìm một con đường giải phóng hiệu quả hơn.',
+    clueText: 'VERSAILLES 1919 · NGUYỄN ÁI QUỐC · 8 ĐIỂM YÊU SÁCH · TỰ DO · DÂN CHỦ · BÌNH ĐẲNG'
   },
-  'exhibit-factory': {
-    hasTimer: false,
-    timerDuration: 0,
-    quizzes: [
-      {
-        question: 'Nhà máy có kế hoạch: Xe đạp 5000 chiếc, Quạt 3000 chiếc. Nếu nhu cầu xe đạp tăng gấp đôi, nhà máy có thể tự quyết định sản xuất thêm?',
-        options: [
-          'Có, vì doanh nghiệp luôn được tự do thay đổi sản lượng khi thị trường cần',
-          'Có, nhưng phải xin phép cơ quan quản lý trước khi thay đổi kế hoạch',
-          'Không, vì phải thực hiện theo chỉ tiêu kế hoạch được giao',
-          'Không, vì nhà máy không được phép tăng sản lượng trong mọi trường hợp'
-        ],
-        correctIndex: 2
-      }
-    ],
-    historyText: 'Trong thời kỳ bao cấp, nhiều nhà máy hoạt động theo cơ chế kế hoạch hóa tập trung. Sản lượng sản xuất, số lượng hàng hóa và mục tiêu sản xuất đều được Nhà nước giao theo kế hoạch. Vì vậy, dù nhu cầu thị trường thay đổi, nhà máy không thể tự quyết định sản lượng.',
-    clueText: 'Sản xuất theo kế hoạch được giao'
-  },
-  'exhibit-priceboard': {
+  'exhibit-lenin-theses-1920': {
     hasTimer: true,
     timerDuration: 10,
     quizzes: [
       {
-        question: 'Giá gạo ngoài thị trường tăng cao. Cửa hàng quốc doanh có thể xử lý như thế nào?',
+        question: 'Luận cương của V.I. Lênin mà Nguyễn Ái Quốc đọc tháng 7/1920 đề cập trực tiếp đến vấn đề nào?',
         options: [
-          'Tự tăng giá để cân bằng cung cầu',
-          'Giữ nguyên giá theo quy định của Nhà nước',
-          'Tăng giá nếu người mua đồng ý trả thêm tiền',
-          'Điều chỉnh giá dựa trên mức giá của các cửa hàng khác'
+          'Vấn đề dân tộc và thuộc địa',
+          'Cải cách hệ thống giáo dục tại Pháp',
+          'Phát triển thương mại giữa các nước châu Âu',
+          'Tổ chức lại Hội nghị Versailles'
+        ],
+        correctIndex: 0
+      },
+      {
+        question: 'Sau khi tiếp cận Luận cương của Lênin, Nguyễn Ái Quốc xác định phương hướng nào cho sự nghiệp giải phóng dân tộc?',
+        options: [
+          'Tiếp tục trông chờ sự giúp đỡ của các cường quốc đế quốc',
+          'Đi theo con đường cách mạng vô sản, gắn với lực lượng cách mạng của quần chúng',
+          'Chỉ đấu tranh bằng cách gửi yêu sách tới các hội nghị quốc tế',
+          'Tách cuộc đấu tranh của Việt Nam khỏi phong trào cách mạng thế giới'
         ],
         correctIndex: 1
       }
     ],
-    historyText: 'Bảng giá mậu dịch: Giá nhiều mặt hàng được giữ theo mức quy định cứng của Nhà nước, không thay đổi linh hoạt theo cung - cầu thị trường.',
-    clueText: 'Giá hàng hóa do Nhà nước quy định'
+    historyText: 'ÁNH SÁNG CỦA CON ĐƯỜNG — Paris, tháng 7/1920. Nguyễn Ái Quốc đọc Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của V.I. Lênin. Luận cương giúp Người xác định con đường cách mạng vô sản là phương hướng cơ bản để giải phóng dân tộc Việt Nam, đánh dấu bước ngoặt quyết định về tư tưởng sau gần một thập kỷ tìm tòi và khảo nghiệm thực tiễn.',
+    clueText: 'LUẬN CƯƠNG LÊNIN · DÂN TỘC & THUỘC ĐỊA · 1920 · CÁCH MẠNG VÔ SẢN'
   },
-  'exhibit-shop': {
+  'exhibit-tours-1920': {
     hasTimer: false,
     timerDuration: 0,
     quizzes: [
       {
-        question: 'Vì sao cửa hàng thường xảy ra tình trạng hết hàng? (Chọn 2 đáp án)',
+        question: 'Tại Đại hội Tours tháng 12/1920, Nguyễn Ái Quốc đã đưa ra lựa chọn nào?',
         options: [
-          'Nhu cầu của người dân tăng nhưng nguồn cung không đáp ứng đủ',
-          'Hàng hóa được phân phối theo kế hoạch nên lượng hàng có giới hạn',
-          'Người dân cố tình mua tích trữ quá nhiều',
-          'Cửa hàng không muốn bán hết hàng để giữ lại cho tháng sau'
+          'Phản đối việc gia nhập Quốc tế Cộng sản',
+          'Bỏ phiếu tán thành gia nhập Quốc tế III',
+          'Rời Đảng Xã hội Pháp để trở về Việt Nam ngay lập tức',
+          'Tiếp tục chỉ gửi yêu sách tới các cường quốc'
         ],
-        correctIndex: [0, 1],
-        isMulti: true
+        correctIndex: 1
+      },
+      {
+        question: 'Sự lựa chọn tại Đại hội Tours đánh dấu bước chuyển biến nào của Nguyễn Ái Quốc?',
+        options: [
+          'Từ một người yêu nước đang tìm đường trở thành một người cộng sản',
+          'Từ hoạt động chính trị chuyển hoàn toàn sang hoạt động thương mại',
+          'Từ ủng hộ cách mạng vô sản chuyển sang dựa vào các nước đế quốc',
+          'Từ đấu tranh quốc tế chuyển sang từ bỏ mục tiêu giải phóng dân tộc'
+        ],
+        correctIndex: 0
       }
     ],
-    historyText: 'Cửa hàng mậu dịch thời bao cấp: Hàng hóa thiết yếu chủ yếu được phân phối qua cửa hàng mậu dịch quốc doanh. Do sản xuất còn nhiều khó khăn, nguồn cung hạn chế trong khi nhu cầu lớn nên thường xuyên thiếu hụt hàng hóa, người dân phải xếp hàng dài để mua.',
-    clueText: 'Hàng hóa phân phối hạn chế, thường xuyên thiếu hụt'
+    historyText: 'SỰ LỰA CHỌN LỊCH SỬ — Tours, Pháp, tháng 12/1920. Nguyễn Ái Quốc tham dự Đại hội lần thứ XVIII của Đảng Xã hội Pháp, bỏ phiếu tán thành gia nhập Quốc tế Cộng sản và trở thành một trong những thành viên tham gia sáng lập Đảng Cộng sản Pháp. Sự kiện đánh dấu bước chuyển từ một người yêu nước đang tìm kiếm con đường cứu nước thành một người cộng sản, chính thức lựa chọn con đường cách mạng vô sản để giải phóng dân tộc.',
+    clueText: 'ĐẠI HỘI TOURS · QUỐC TẾ III · ĐẢNG CỘNG SẢN PHÁP · CÁCH MẠNG VÔ SẢN · LỰA CHỌN'
   },
-  'exhibit-witness': {
+  'exhibit-guangzhou-1925-1927': {
     hasTimer: false,
     timerDuration: 0,
     quizzes: [
       {
-        question: 'Theo câu chuyện trên, cuộc sống của người dân thời bao cấp có đặc điểm gì?',
+        question: 'Tháng 6/1925 tại Quảng Châu, Nguyễn Ái Quốc thành lập tổ chức nào?',
         options: [
-          'Người dân có thể mua hàng hóa tự do theo nhu cầu',
-          'Người dân phải sử dụng hàng hóa theo định mức được phân phối',
-          'Giá cả hàng hóa thay đổi liên tục theo thị trường',
-          'Các gia đình có thể tự quyết định số lượng hàng được mua'
+          'Hội Việt Nam Cách mạng Thanh niên',
+          'Đảng Xã hội Pháp',
+          'Quốc tế Cộng sản',
+          'Đảng Cộng sản Pháp'
+        ],
+        correctIndex: 0
+      },
+      {
+        question: 'Các hoạt động của Nguyễn Ái Quốc tại Quảng Châu nhằm chuẩn bị những mặt nào cho cách mạng Việt Nam?',
+        options: [
+          'Chỉ chuẩn bị nguồn tài chính và vũ khí',
+          'Tư tưởng, chính trị, cán bộ và tổ chức',
+          'Chỉ tập trung vào hoạt động ngoại giao',
+          'Chỉ nghiên cứu tình hình kinh tế Trung Quốc'
         ],
         correctIndex: 1
       }
     ],
-    historyText: 'Ký ức thời bao cấp: Đời sống phụ thuộc vào chế độ phân phối. Mọi gia đình tính toán từng bữa ăn, quen với việc xếp hàng và tiết kiệm phần được cấp.',
-    clueText: 'Đời sống phụ thuộc vào chế độ phân phối'
+    historyText: 'CHUẨN BỊ CHO CÁCH MẠNG — Quảng Châu, Trung Quốc, 1925–1927. Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên, tổ chức các lớp huấn luyện chính trị, đào tạo cán bộ và truyền bá chủ nghĩa Mác – Lênin vào Việt Nam. Các bài giảng được tập hợp và xuất bản thành Đường Kách Mệnh năm 1927, góp phần chuẩn bị về tư tưởng, chính trị, cán bộ và tổ chức cho cách mạng Việt Nam.',
+    clueText: 'QUẢNG CHÂU · HỘI VIỆT NAM CÁCH MẠNG THANH NIÊN · HUẤN LUYỆN CÁN BỘ · ĐƯỜNG KÁCH MỆNH · CHUẨN BỊ TỔ CHỨC'
+  },
+  'exhibit-convergence-1930': {
+    hasTimer: true,
+    timerDuration: 10,
+    quizzes: [
+      {
+        question: 'Vì sao việc thống nhất các tổ chức cộng sản trở nên cấp thiết vào cuối năm 1929?',
+        options: [
+          'Vì các tổ chức hoạt động riêng rẽ, tranh giành ảnh hưởng và thiếu sự lãnh đạo thống nhất',
+          'Vì phong trào công nhân và phong trào yêu nước đã hoàn toàn chấm dứt',
+          'Vì Việt Nam lúc đó chưa có bất kỳ tổ chức cộng sản nào',
+          'Vì Quốc tế Cộng sản yêu cầu giải thể toàn bộ lực lượng cách mạng'
+        ],
+        correctIndex: 0
+      },
+      {
+        question: 'Nguyễn Ái Quốc đến Hồng Kông đầu năm 1930 để thực hiện nhiệm vụ gì?',
+        options: [
+          'Thành lập thêm một tổ chức cộng sản hoạt động riêng rẽ',
+          'Triệu tập và chủ trì hội nghị nhằm thống nhất các tổ chức cộng sản',
+          'Tổ chức một hội nghị thương mại quốc tế',
+          'Chấm dứt hoạt động của phong trào cách mạng Việt Nam'
+        ],
+        correctIndex: 1
+      }
+    ],
+    historyText: 'HỘI TỤ — Việt Nam – Hồng Kông, 1929–1930. Năm 1929, ba tổ chức cộng sản lần lượt xuất hiện nhưng tồn tại riêng rẽ, tranh giành ảnh hưởng và thiếu sự lãnh đạo thống nhất. Với tư cách đại diện Quốc tế Cộng sản, Nguyễn Ái Quốc từ Xiêm đến Hồng Kông để triệu tập và chủ trì một hội nghị nhằm thống nhất các tổ chức cộng sản, mở đường cho sự thành lập Đảng Cộng sản Việt Nam.',
+    clueText: '1929 · BA TỔ CHỨC CỘNG SẢN · PHÂN TÁN · THỐNG NHẤT · HỒNG KÔNG 1930'
   }
 };
 
@@ -172,7 +249,6 @@ export const ExhibitModal: React.FC = () => {
     nickname,
     collectedCeramics,
     addCeramic,
-    roomOneCompleted
   } = useMuseum();
 
   // --- States cho Audio thuyết minh mặc định ---
@@ -182,7 +258,7 @@ export const ExhibitModal: React.FC = () => {
   const isCeramicsRoom = activeGallery?.id === 'gallery-ceramics';
   const [ceramicsCountdown, setCeramicsCountdown] = useState(10);
 
-  // --- States cho Gameplay Bao cấp (gallery-subsidy) ---
+  // --- States cho gameplay Hành trình tìm đường (gallery-subsidy) ---
   const isSubsidyRoom = activeGallery?.id === 'gallery-subsidy';
   const gameData = selectedExhibit ? GAMEPLAY_DICTIONARY[selectedExhibit.id] : null;
 
@@ -242,29 +318,26 @@ export const ExhibitModal: React.FC = () => {
     }
 
     if (isSubsidyRoom && gameData) {
-      if (exhibitModalMode === 'info' || roomOneCompleted) {
+      const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
+
+      // Bảng thông tin chỉ mở tư liệu; hiện vật đã thu thập cũng không cần làm lại quiz.
+      // Hiện vật chưa thu thập luôn được phép thử câu hỏi lại để tránh khóa tiến trình RoomOne.
+      if (exhibitModalMode === 'info' || alreadyCollected) {
         setGameState('info');
         setCanCollectCurrentClue(false);
         return;
       }
 
-      const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
-      const alreadyFailed = failedQuizIds.includes(selectedExhibit.id);
-      if (alreadyCollected || alreadyFailed) {
-        setGameState('info');
-        setCanCollectCurrentClue(false);
-      } else {
-        setGameState(gameData.hasTimer ? 'observe' : 'quiz');
-        setCountdown(gameData.timerDuration);
-        setCurrentQuizIndex(0);
-        setSelectedOption(null);
-        setSelectedOptions([]);
-        setAnswerChecked(false);
-        setIsCorrect(false);
-        setCanCollectCurrentClue(false);
-      }
+      setGameState(gameData.hasTimer ? 'observe' : 'quiz');
+      setCountdown(gameData.timerDuration);
+      setCurrentQuizIndex(0);
+      setSelectedOption(null);
+      setSelectedOptions([]);
+      setAnswerChecked(false);
+      setIsCorrect(false);
+      setCanCollectCurrentClue(false);
     }
-  }, [selectedExhibit?.id, cluesCollected, failedQuizIds, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, roomOneCompleted]);
+  }, [selectedExhibit?.id, cluesCollected, failedQuizIds, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode]);
 
   // Bộ đếm ngược 10 giây cho phòng gốm sứ
   useEffect(() => {
@@ -409,7 +482,7 @@ export const ExhibitModal: React.FC = () => {
                 alt={titleText}
                 className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
                 style={{
-                  objectPosition: selectedExhibit.id === 'exhibit-priceboard' ? 'right center' : 'center'
+                  objectPosition: 'center'
                 }}
               />
             ) : (
@@ -432,7 +505,7 @@ export const ExhibitModal: React.FC = () => {
 
           {/* Nhãn loại hiện vật */}
           <span className="absolute bottom-5 left-5 bg-amber-500/20 text-amber-200 border border-amber-500/35 text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-lg uppercase font-sans">
-            {isSubsidyRoom ? 'Bao Cấp Việt Nam' : (selectedExhibit.model_3d_url ? 'Điêu Khắc 3D' : 'Hội Họa 2D')}
+            {isSubsidyRoom ? 'Theo dấu chân Người' : (selectedExhibit.model_3d_url ? 'Điêu Khắc 3D' : 'Hội Họa 2D')}
           </span>
         </div>
 
@@ -449,18 +522,26 @@ export const ExhibitModal: React.FC = () => {
           <div className="flex-1 p-6 lg:p-8 overflow-y-auto space-y-6 custom-scrollbar text-base">
 
             {/* ═══════════════════════════════════════════════════════════════
-                TRƯỜNG HỢP 1: GAMEPLAY KHÁM PHÁ THỜI BAO CẤP (PHÒNG BAO CẤP)
+                TRƯỜNG HỢP 1: GAMEPLAY HÀNH TRÌNH TÌM ĐƯỜNG (PHÒNG 01)
                 ═══════════════════════════════════════════════════════════════ */}
             {isSubsidyRoom && gameData ? (
               <div className="space-y-4">
                 {/* Tiêu đề hiện vật */}
                 <div className="pr-12">
-                  <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-2 font-sans">
-                    {titleText}
-                  </h2>
-                  <div className="text-amber-300 font-sans text-sm uppercase tracking-wider font-bold">
-                    {authorText}
-                  </div>
+                  {selectedExhibit.id === 'exhibit-coupon' ? (
+                    <h2 className="text-lg lg:text-xl xl:text-2xl font-black tracking-tight text-white leading-tight font-sans whitespace-nowrap">
+                      NGƯỜI RA ĐI – Bến cảng Nhà Rồng – 5/6/1911
+                    </h2>
+                  ) : (
+                    <>
+                      <h2 className="text-3xl lg:text-4xl font-black tracking-tight text-white leading-tight mb-2 font-sans">
+                        {titleText}
+                      </h2>
+                      <div className="text-amber-300 font-sans text-sm uppercase tracking-wider font-bold">
+                        {authorText}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <hr className="border-slate-800/80" />
 
@@ -546,7 +627,7 @@ export const ExhibitModal: React.FC = () => {
                           <div className="bg-rose-500/10 border border-rose-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-rose-400">
                             <AlertTriangle size={30} />
                             <span className="font-mono font-bold text-sm">Lựa chọn chưa đúng.</span>
-                            <p className="text-xs text-rose-300/80">Câu hỏi này đã khóa cho lượt chơi của bạn. Bạn vẫn có thể đọc tư liệu nhưng không thu thập được vật phẩm này.</p>
+                            <p className="text-xs text-rose-300/80">Bạn có thể đóng hiện vật, xem lại tư liệu và bấm vào ảnh để thử lại câu hỏi.</p>
                           </div>
                         )}
 
@@ -576,11 +657,221 @@ export const ExhibitModal: React.FC = () => {
                     <div className="space-y-2">
                       <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase flex items-center gap-1.5 font-mono">
                         <BookOpen size={14} />
-                        Tư liệu lịch sử bao cấp
+                        {selectedExhibit.id === 'exhibit-coupon' || selectedExhibit.id === 'exhibit-world-1911-1917' || selectedExhibit.id === 'exhibit-versailles-1919' || selectedExhibit.id === 'exhibit-lenin-theses-1920' || selectedExhibit.id === 'exhibit-tours-1920' || selectedExhibit.id === 'exhibit-guangzhou-1925-1927' || selectedExhibit.id === 'exhibit-convergence-1930'
+                          ? 'Tư liệu hành trình cứu nước'
+                          : 'Tư liệu hành trình lịch sử'}
                       </span>
-                      <p className="text-xs text-slate-200 leading-relaxed font-sans text-justify bg-slate-900/35 p-3 rounded-xl border border-slate-900 font-medium">
-                        {gameData.historyText}
-                      </p>
+                      <div className="text-xs text-slate-200 leading-relaxed font-sans bg-slate-900/35 p-4 rounded-xl border border-slate-900 font-medium">
+                        {selectedExhibit.id === 'exhibit-coupon' ? (
+                          <div className="space-y-3">
+                            <p>
+                              Ngày 5/6/1911, từ Bến Nhà Rồng, người thanh niên Nguyễn Tất Thành rời Tổ quốc trên tàu Amiral Latouche-Tréville.
+                            </p>
+                            <p>
+                              Trong bối cảnh các phong trào cứu nước đương thời chưa tìm được con đường giải phóng dân tộc phù hợp, Nguyễn Tất Thành quyết định ra nước ngoài để tìm hiểu thế giới và tìm một con đường mới cho dân tộc Việt Nam.
+                            </p>
+                            <p className="text-amber-200">
+                              <strong>Ý nghĩa:</strong> Đây là điểm khởi đầu của hành trình tìm đường cứu nước.
+                            </p>
+                          </div>
+                        ) : selectedExhibit.id === 'exhibit-world-1911-1917' ? (
+                          <div className="space-y-3">
+                            <p>
+                              Sau khi rời Bến Nhà Rồng năm 1911, Nguyễn Tất Thành bắt đầu hành trình quan sát và tìm hiểu thế giới.
+                            </p>
+                            <p>
+                              Trên đường sang Pháp, Người đi qua nhiều cảng như Singapore, Colombo (Sri Lanka), Port Said (Ai Cập) rồi đến Marseille, Pháp. Tại đây, Người bắt đầu trực tiếp quan sát xã hội Pháp và nhận ra rằng ngay tại chính quốc cũng tồn tại người nghèo và người lao động bị áp bức.
+                            </p>
+                            <p>
+                              Năm 1912, Người tiếp tục theo tàu đi qua Tây Ban Nha, Bồ Đào Nha và nhiều vùng thuộc địa ở châu Phi như Algeria, Tunisia, Senegal, Congo, Dahomey, Madagascar, Réunion, Mozambique và Ai Cập. Những gì chứng kiến giúp Người nhận ra rằng nhân dân thuộc địa ở nhiều nơi đều chịu áp bức và bóc lột.
+                            </p>
+                            <p>
+                              Cuối năm 1912, Nguyễn Tất Thành đến Hoa Kỳ, sống và làm việc tại một số nơi như New York, Brooklyn và Boston, đồng thời tìm hiểu xã hội Mỹ và đời sống của người lao động, đặc biệt là người da đen.
+                            </p>
+                            <p>
+                              Khoảng cuối năm 1913, Người sang Anh và sống, lao động tại đây đến khoảng năm 1917. Quá trình này giúp Người hiểu thêm về xã hội tư bản, phong trào công nhân và tình cảnh của các dân tộc nằm dưới ách thống trị của chủ nghĩa thực dân Anh.
+                            </p>
+                            <p>
+                              Cuối năm 1917, Nguyễn Tất Thành trở lại Pháp, bước sang một giai đoạn mới: từ chủ yếu quan sát và trải nghiệm thực tế sang tham gia ngày càng tích cực vào các hoạt động chính trị.
+                            </p>
+                            <p className="text-amber-200">
+                              <strong>Ý nghĩa:</strong> Sáu năm đi qua nhiều quốc gia và châu lục giúp Nguyễn Tất Thành nhận ra rằng sự áp bức không chỉ tồn tại ở Việt Nam. Người từng bước phân biệt nhân dân lao động với các lực lượng thực dân, đồng thời hình thành nhận thức về sự gần gũi giữa các dân tộc bị áp bức.
+                            </p>
+                          </div>
+                        ) : selectedExhibit.id === 'exhibit-versailles-1919' ? (
+                          <div className="space-y-4">
+                            <p>
+                              Sau Chiến tranh thế giới thứ nhất, các nước thắng trận tổ chức Hội nghị Hòa bình Versailles để bàn về trật tự thế giới mới. Ngày 18/6/1919, thay mặt nhóm những người Việt Nam yêu nước tại Pháp, Nguyễn Ái Quốc gửi “Yêu sách của nhân dân An Nam” tới hội nghị và các đoàn đại biểu tham dự.
+                            </p>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-sky-300">📍 Bối cảnh</h3>
+                                <p>Hội nghị Versailles được tổ chức sau Chiến tranh thế giới thứ nhất để xác lập một trật tự thế giới mới.</p>
+                              </div>
+                              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-amber-300">📜 Hành động</h3>
+                                <p>Nguyễn Ái Quốc gửi bản yêu sách gồm 8 điểm, đòi quyền bình đẳng trước pháp luật, tự do báo chí, ngôn luận, lập hội, hội họp, cư trú, đi lại và học tập.</p>
+                              </div>
+                              <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-rose-300">❌ Kết quả</h3>
+                                <p>Những yêu cầu chính đáng không được các cường quốc tại Hội nghị Versailles đáp ứng.</p>
+                              </div>
+                              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-emerald-300">💡 Nhận thức</h3>
+                                <p>Không thể chỉ trông chờ các cường quốc trao quyền tự do; dân tộc Việt Nam cần tiếp tục tìm một con đường giải phóng hiệu quả hơn.</p>
+                              </div>
+                            </div>
+
+                            <p>
+                              Sự kiện đánh dấu bước phát triển quan trọng: Nguyễn Ái Quốc không còn chỉ quan sát xã hội và đời sống người lao động mà đã trực tiếp đưa vấn đề quyền lợi của dân tộc Việt Nam ra một diễn đàn quốc tế.
+                            </p>
+                            <p className="text-amber-200">
+                              <strong>Ý nghĩa:</strong> Từ thực tiễn đấu tranh, Nguyễn Ái Quốc ngày càng nhận thấy muốn giải phóng dân tộc cần tìm một con đường hiệu quả hơn, thay vì phụ thuộc vào sự ban phát quyền lợi từ các nước đế quốc. Câu hỏi đó dẫn Người tới bước ngoặt tiếp theo vào năm 1920.
+                            </p>
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 font-bold tracking-wide text-amber-300">
+                              VERSAILLES 1919 · NGUYỄN ÁI QUỐC · 8 ĐIỂM YÊU SÁCH · TỰ DO · DÂN CHỦ · BÌNH ĐẲNG
+                            </div>
+                          </div>
+                        ) : selectedExhibit.id === 'exhibit-lenin-theses-1920' ? (
+                          <div className="space-y-4">
+                            <p>
+                              Sau nhiều năm đi qua nhiều quốc gia, trực tiếp quan sát xã hội và tham gia các hoạt động chính trị tại Pháp, Nguyễn Ái Quốc vẫn luôn tìm kiếm câu trả lời cho một vấn đề lớn: <strong className="text-white">Làm thế nào để giải phóng dân tộc Việt Nam khỏi ách thống trị của thực dân?</strong>
+                            </p>
+                            <p>
+                              Tháng 7/1920, tại Paris, Nguyễn Ái Quốc đọc trên báo <em>L&apos;Humanité</em> <strong className="text-white">“Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa”</strong> của V.I. Lênin.
+                            </p>
+                            <p>
+                              Luận cương đề cập trực tiếp đến <strong className="text-white">vấn đề dân tộc và thuộc địa</strong>, khẳng định phong trào cách mạng phải ủng hộ cuộc đấu tranh giải phóng của các dân tộc bị áp bức và chỉ ra mối quan hệ giữa cách mạng vô sản với phong trào giải phóng dân tộc.
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-sky-300">🌍 Nhận ra mối liên hệ</h3>
+                                <p>Cuộc đấu tranh của Việt Nam gắn với cuộc đấu tranh của các dân tộc thuộc địa và phong trào cách mạng thế giới.</p>
+                              </div>
+                              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-amber-300">💡 Xác định con đường</h3>
+                                <p>Muốn giải phóng dân tộc phải đi theo con đường cách mạng vô sản, dựa vào lực lượng cách mạng của quần chúng nhân dân.</p>
+                              </div>
+                            </div>
+                            <p>
+                              Nếu năm <strong className="text-white">1911</strong> đánh dấu thời điểm Nguyễn Tất Thành “ra đi tìm đường”, thì việc tiếp cận Luận cương của Lênin năm <strong className="text-white">1920</strong> là <strong className="text-white">bước ngoặt quyết định về tư tưởng</strong>, giúp Nguyễn Ái Quốc xác định phương hướng cơ bản cho con đường giải phóng dân tộc Việt Nam.
+                            </p>
+                            <p className="text-amber-200">
+                              <strong>Ý nghĩa:</strong> Sau gần một thập kỷ tìm tòi và khảo nghiệm thực tiễn, Nguyễn Ái Quốc chuyển từ “tìm kiếm con đường cứu nước” sang “xác định con đường cách mạng vô sản”. Đây là tiền đề trực tiếp cho sự lựa chọn chính trị của Người tại Đại hội Tours cuối năm 1920.
+                            </p>
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 font-bold tracking-wide text-amber-300">
+                              LUẬN CƯƠNG LÊNIN · DÂN TỘC &amp; THUỘC ĐỊA · 1920 · CÁCH MẠNG VÔ SẢN
+                            </div>
+                          </div>
+                        ) : selectedExhibit.id === 'exhibit-tours-1920' ? (
+                          <div className="space-y-4">
+                            <p>
+                              Sau khi đọc <strong className="text-white">Luận cương của V.I. Lênin về vấn đề dân tộc và thuộc địa</strong> vào tháng 7/1920, Nguyễn Ái Quốc từng bước tìm thấy lời giải cho vấn đề Người theo đuổi từ khi rời Việt Nam năm 1911: <strong className="text-white">con đường giải phóng dân tộc</strong>.
+                            </p>
+                            <p>
+                              Từ ngày <strong className="text-white">25 đến 30/12/1920</strong>, Nguyễn Ái Quốc tham dự <strong className="text-white">Đại hội lần thứ XVIII của Đảng Xã hội Pháp tại thành phố Tours</strong>. Một trong những vấn đề quan trọng của Đại hội là quyết định có gia nhập Quốc tế Cộng sản (Quốc tế III) hay không.
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-amber-300">🗳️ Quyết định</h3>
+                                <p>Nguyễn Ái Quốc đứng về phía những người ủng hộ Quốc tế Cộng sản và bỏ phiếu tán thành việc gia nhập Quốc tế III.</p>
+                              </div>
+                              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-sky-300">🚩 Dấu mốc chính trị</h3>
+                                <p>Người trở thành một trong những thành viên tham gia sáng lập Đảng Cộng sản Pháp.</p>
+                              </div>
+                            </div>
+                            <p>
+                              Sau nhiều năm khảo nghiệm và tiếp cận tư tưởng của Lênin, Người xác định <strong className="text-white">cách mạng vô sản là con đường giải phóng dân tộc phù hợp với cách mạng Việt Nam</strong>.
+                            </p>
+                            <p>
+                              Đây là bước chuyển quan trọng: từ <strong className="text-white">một người yêu nước đang tìm kiếm con đường cứu nước</strong>, Nguyễn Ái Quốc trở thành <strong className="text-white">một người cộng sản</strong>, gắn cuộc đấu tranh giải phóng dân tộc Việt Nam với phong trào cách mạng vô sản thế giới.
+                            </p>
+                            <p className="text-amber-200">
+                              <strong>Ý nghĩa:</strong> Nếu việc đọc Luận cương của Lênin giúp Nguyễn Ái Quốc “tìm thấy con đường”, thì quyết định tại Đại hội Tours đánh dấu việc Người “chính thức lựa chọn và đứng về con đường đó”.
+                            </p>
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 font-bold tracking-wide text-amber-300">
+                              ĐẠI HỘI TOURS · QUỐC TẾ III · ĐẢNG CỘNG SẢN PHÁP · CÁCH MẠNG VÔ SẢN · LỰA CHỌN
+                            </div>
+                          </div>
+                        ) : selectedExhibit.id === 'exhibit-guangzhou-1925-1927' ? (
+                          <div className="space-y-4">
+                            <p>
+                              Sau khi xác định con đường cách mạng vô sản, Nguyễn Ái Quốc nhận thấy rằng <strong className="text-white">chỉ có tư tưởng đúng là chưa đủ</strong>. Muốn tiến hành cách mạng ở Việt Nam cần truyền bá lý luận, đào tạo cán bộ, tổ chức phong trào và từng bước xây dựng lực lượng.
+                            </p>
+                            <p>
+                              Cuối năm <strong className="text-white">1924</strong>, Nguyễn Ái Quốc đến <strong className="text-white">Quảng Châu, Trung Quốc</strong>, nơi có nhiều thanh niên Việt Nam yêu nước đang hoạt động. Từ đây, Người bắt đầu chuẩn bị trực tiếp về tư tưởng, chính trị và tổ chức cho cách mạng Việt Nam.
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-sky-300">🏛️ Xây dựng tổ chức</h3>
+                                <p>Tháng 6/1925, Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên để tập hợp thanh niên yêu nước và truyền bá chủ nghĩa Mác – Lênin vào Việt Nam.</p>
+                              </div>
+                              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-emerald-300">🎓 Huấn luyện cán bộ</h3>
+                                <p>Người trực tiếp mở các lớp về lý luận, phương pháp tổ chức và vận động quần chúng; nhiều học viên sau đó trở về Việt Nam xây dựng phong trào.</p>
+                              </div>
+                              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 sm:col-span-2">
+                                <h3 className="mb-1 font-bold text-amber-300">📖 Truyền bá lý luận</h3>
+                                <p>Các bài giảng được tập hợp và xuất bản thành <em>Đường Kách Mệnh</em> năm 1927, trình bày những vấn đề cơ bản về mục tiêu, lực lượng, tổ chức và phương pháp cách mạng.</p>
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 rounded-xl border border-slate-700/60 bg-slate-900/60 p-3">
+                              <strong className="text-amber-300">1920</strong>
+                              <span>Nguyễn Ái Quốc xác định <strong className="text-white">con đường</strong>.</span>
+                              <strong className="text-amber-300">1925–1927</strong>
+                              <span>Người chuẩn bị <strong className="text-white">con người, lý luận và tổ chức</strong> để thực hiện con đường ấy.</span>
+                            </div>
+                            <p className="text-amber-200">
+                              <strong>Ý nghĩa:</strong> Hoạt động tại Quảng Châu góp phần chuẩn bị về tư tưởng, chính trị, cán bộ và tổ chức, tạo những tiền đề quan trọng cho sự phát triển của phong trào cách mạng và sự ra đời của một chính đảng cộng sản ở Việt Nam sau này.
+                            </p>
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 font-bold tracking-wide text-amber-300">
+                              QUẢNG CHÂU · HỘI VIỆT NAM CÁCH MẠNG THANH NIÊN · HUẤN LUYỆN CÁN BỘ · ĐƯỜNG KÁCH MỆNH · CHUẨN BỊ TỔ CHỨC
+                            </div>
+                          </div>
+                        ) : selectedExhibit.id === 'exhibit-convergence-1930' ? (
+                          <div className="space-y-4">
+                            <p>
+                              Đến cuối những năm 1920, phong trào công nhân và phong trào yêu nước Việt Nam phát triển mạnh. Yêu cầu thành lập một chính đảng cộng sản để lãnh đạo cách mạng ngày càng trở nên cấp thiết.
+                            </p>
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-rose-300">Bắc Kỳ</h3>
+                                <p><strong className="text-white">Đông Dương Cộng sản Đảng</strong> được thành lập.</p>
+                              </div>
+                              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-amber-300">Nam Kỳ</h3>
+                                <p><strong className="text-white">An Nam Cộng sản Đảng</strong> được thành lập và hoạt động chủ yếu tại đây.</p>
+                              </div>
+                              <div className="rounded-xl border border-sky-500/20 bg-sky-500/5 p-3">
+                                <h3 className="mb-1 font-bold text-sky-300">Trung Kỳ</h3>
+                                <p><strong className="text-white">Đông Dương Cộng sản Liên đoàn</strong> ra đời từ sự chuyển biến của lực lượng cách mạng.</p>
+                              </div>
+                            </div>
+                            <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-3">
+                              <h3 className="mb-1 font-bold text-rose-300">⚠️ Vấn đề đặt ra</h3>
+                              <p>Các tổ chức cùng hoạt động theo khuynh hướng cộng sản nhưng tồn tại riêng rẽ, tranh giành ảnh hưởng và thiếu sự lãnh đạo thống nhất, khiến phong trào có nguy cơ phân tán về lực lượng và tổ chức.</p>
+                            </div>
+                            <p>
+                              Với tư cách đại diện của <strong className="text-white">Quốc tế Cộng sản</strong>, Nguyễn Ái Quốc từ Xiêm đến <strong className="text-white">Hồng Kông</strong> để triệu tập và chủ trì một hội nghị nhằm giải quyết sự chia rẽ giữa các tổ chức cộng sản.
+                            </p>
+                            <div className="rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-transparent p-4">
+                              <h3 className="mb-2 font-bold text-amber-300">❓ Câu hỏi quyết định</h3>
+                              <p className="text-white">Có thể thống nhất những tổ chức đang hoạt động riêng rẽ thành một chính đảng duy nhất hay không?</p>
+                              <p className="mt-2 text-white">Và nếu thống nhất, họ sẽ thống nhất trên cơ sở nào?</p>
+                            </div>
+                            <p className="text-amber-200">
+                              <strong>Kết quả:</strong> Sau đó, Đảng Cộng sản Việt Nam được thành lập, mở ra một bước ngoặt quan trọng của cách mạng Việt Nam.
+                            </p>
+                            <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 font-bold tracking-wide text-amber-300">
+                              1929 · BA TỔ CHỨC CỘNG SẢN · PHÂN TÁN · THỐNG NHẤT · HỒNG KÔNG 1930
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-justify">{gameData.historyText}</p>
+                        )}
+                      </div>
                     </div>
 
 

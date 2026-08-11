@@ -166,7 +166,7 @@ export default function AdminDashboard() {
     if (!adminSocket) return;
     const roomName = targetRoom === 'lobby' 
       ? 'Sảnh chờ' 
-      : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
+      : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Dấu chân tìm đường)' 
       : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
       : targetRoom === 'gallery-ceramics' ? 'Phòng 03 (Đồ gốm sứ)' 
       : 'Phòng 04 (Kinh tế thị trường)';
@@ -738,7 +738,7 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room1', 'gallery-subsidy', 'Cửa số 01: Sảnh ↔ Phòng 01')}
 
             {/* 3. PHÒNG 1 */}
-            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Bao Cấp Việt Nam', 'Khu vực trưng bày thời kỳ kinh tế bao cấp (1976-1985)', ['door-room1', 'door-room2'])}
+            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Dấu chân tìm đường', 'Hành trình tìm đường cứu nước của Nguyễn Ái Quốc, 1911–1930', ['door-room1', 'door-room2'])}
 
             {/* 4. CỬA 2 */}
             {renderAdminDoor('door-room2', 'gallery-paintings', 'Cửa số 02: Phòng 01 ↔ Phòng 02')}
@@ -1050,7 +1050,7 @@ export default function AdminDashboard() {
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               {roomOnePlayers.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 text-xs">
-                  Không có người chơi nào đang ở trong Phòng 01 (Bao cấp).
+                  Không có người chơi nào đang ở trong Phòng 01 (Dấu chân tìm đường).
                 </div>
               ) : (
                 <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">

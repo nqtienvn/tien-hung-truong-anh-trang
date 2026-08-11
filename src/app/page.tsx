@@ -180,11 +180,11 @@ export default function Home() {
                   Phòng 01
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Phòng Bao Cấp
+                  Phòng Dấu chân tìm đường
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Trải nghiệm trò chơi điều tra lịch sử bao cấp, tích lũy manh
-                  mối và giải đáp câu đố thời kỳ trước Đổi mới.
+                  Khám phá hành trình tìm đường cứu nước của Nguyễn Ái Quốc,
+                  thu thập tư liệu và kết nối các dấu mốc lịch sử 1911–1930.
                 </p>
               </div>
             </div>

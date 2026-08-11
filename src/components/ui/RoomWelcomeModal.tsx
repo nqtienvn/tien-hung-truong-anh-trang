@@ -16,13 +16,13 @@ const GALLERY_CONFIGS: Record<string, {
   summary: React.ReactNode;
 }> = {
   'gallery-subsidy': {
-    headerTitle: 'PHÒNG 01 • PHÒNG BAO CẤP',
-    welcomeTitle: 'Chào mừng đến Phòng Bao Cấp!',
+    headerTitle: 'PHÒNG 01 • DẤU CHÂN TÌM ĐƯỜNG',
+    welcomeTitle: 'Chào mừng đến Phòng “Dấu chân tìm đường”!',
     introText: (
       <>
         <span className="italic">Chủ đề: </span>
-        <strong>Một tháng sống trong thời bao cấp.</strong>
-        <span className="italic"> Bạn sẽ điều tra cơ chế vận hành kinh tế Việt Nam trước Đổi mới thông qua các hiện vật lịch sử. Đọc kỹ hướng dẫn bên dưới trước khi bắt đầu!</span>
+        <strong>Hành trình tìm đường cứu nước của Nguyễn Ái Quốc, 1911–1930</strong>
+        <span className="block italic mt-2">Đọc kỹ hướng dẫn bên dưới trước khi bắt đầu!</span>
       </>
     ),
     steps: [
@@ -39,19 +39,19 @@ const GALLERY_CONFIGS: Record<string, {
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
         title: '③ Hoàn thiện Sổ điều tra',
-        desc: 'Khi có đủ manh mối, hãy mở Sổ điều tra (nút góc dưới phải) để lắp ráp các bánh răng và bản đúc kết trên Cỗ máy Bao cấp.',
+        desc: 'Khi có đủ manh mối, hãy mở Sổ điều tra (nút góc dưới phải) để ghép các bằng chứng và bản đúc kết trên Bảng điều khiển hành trình.',
       },
       {
         icon: <DoorOpen size={28} className="text-amber-600" />,
         title: '④ Mở cửa sang phòng tiếp theo',
-        desc: 'Hoàn thành vận hành cỗ máy chính xác và đóng dấu phê duyệt báo cáo để mở khóa cửa sang Phòng 02.',
+        desc: 'Kết nối chính xác dòng chảy lịch sử và đóng dấu phê duyệt báo cáo để mở khóa cửa sang Phòng 02.',
       },
     ],
     summary: (
       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🔍</span>
-          <span>6 hiện vật cần giải mã</span>
+          <span>6 hiện vật + 1 tư liệu trung tâm</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🧩</span>

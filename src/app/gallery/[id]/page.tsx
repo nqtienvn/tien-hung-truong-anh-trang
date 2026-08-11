@@ -9,6 +9,7 @@ import ExhibitModal from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
+import { RoomOneSoundtrack } from '@/components/ui/RoomOneSoundtrack';
 import { Users, MessageSquare, ArrowLeft, SendHorizontal, Settings } from 'lucide-react';
 
 interface ChatMessage {
@@ -355,6 +356,7 @@ export default function GalleryPage({ params }: PageProps) {
       {nickname && !inQueue && isAdmitted && miniGameOpen && <MiniGameModal />}
       {nickname && !inQueue && isAdmitted && <CeramicsCollection />}
       {nickname && !inQueue && isAdmitted && <MarketEconomyQuest />}
+      {nickname && !inQueue && isAdmitted && <RoomOneSoundtrack />}
 
       {/* 5. MÀN HÌNH HÀNG CHỜ KHI PHÒNG ĐẦY (QUEUE OVERLAY) */}
       {nickname && inQueue && (

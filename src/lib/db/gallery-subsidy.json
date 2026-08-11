@@ -2,8 +2,8 @@
   "galleries": [
     {
       "id": "gallery-subsidy",
-      "name": "Phòng Bao Cấp",
-      "description": "Thời kỳ bao cấp với cơ chế kế hoạch hóa tập trung trước đổi mới.",
+      "name": "Phòng Dấu chân tìm đường",
+      "description": "Hành trình tìm đường cứu nước của Nguyễn Ái Quốc, 1911–1930",
       "scene_asset_url": "",
       "is_active": true,
       "room_width": 24,
@@ -21,46 +21,46 @@
       "id": "exhibit-coupon",
       "gallery_id": "gallery-subsidy",
       "title": {
-        "vi": "Tem phiếu lương thực",
-        "en": "Food Coupons"
+        "vi": "NGƯỜI RA ĐI",
+        "en": "THE DEPARTURE"
       },
       "author": {
-        "vi": "Nhà nước ban hành",
-        "en": "State Issued"
+        "vi": "Bến Nhà Rồng – 05/06/1911",
+        "en": "Nha Rong Wharf – 05 June 1911"
       },
       "description": {
-        "vi": "Tem phiếu là công cụ phân phối hàng hóa thiết yếu thời bao cấp theo định mức. Muốn mua gạo phải có cả tiền mặt và tem phiếu.",
-        "en": "Food coupons were tools to distribute essential goods under quota during the subsidy period. Both cash and coupons were required."
+        "vi": "Ngày 5/6/1911, từ Bến Nhà Rồng, người thanh niên Nguyễn Tất Thành rời Tổ quốc trên tàu Amiral Latouche-Tréville. Trong bối cảnh các phong trào cứu nước đương thời chưa tìm được con đường giải phóng dân tộc phù hợp, Nguyễn Tất Thành quyết định ra nước ngoài để tìm hiểu thế giới và tìm một con đường mới cho dân tộc Việt Nam. Ý nghĩa: Đây là điểm khởi đầu của hành trình tìm đường cứu nước.",
+        "en": "On 5 June 1911, Nguyễn Tất Thành left Vietnam from Nha Rong Wharf aboard the Amiral Latouche-Tréville. This marked the beginning of his journey to find a path to national liberation."
       },
       "model_3d_url": "",
-      "thumbnail_url": "/exhibits/coupon.jpg",
-      "coordinate_x": -11.75,
-      "coordinate_y": 2.85,
-      "coordinate_z": -17.9,
-      "rotation_x": 0,
+      "thumbnail_url": "/exhibits/nguoi-ra-di.jpg",
+      "coordinate_x": -11.8,
+      "coordinate_y": 3.65,
+      "coordinate_z": -17.25,
+      "rotation_x": 0.0085,
       "rotation_y": 1.5708,
-      "rotation_z": 0,
-      "scale_x": 3.55,
-      "scale_y": 2.75,
+      "rotation_z": 0.0085,
+      "scale_x": 4,
+      "scale_y": 2.8,
       "scale_z": 0.1
     },
     {
-      "id": "exhibit-ricebook",
+      "id": "exhibit-world-1911-1917",
       "gallery_id": "gallery-subsidy",
       "title": {
-        "vi": "Sổ gạo gia đình",
-        "en": "Family Rice Booklet"
+        "vi": "NHÌN RA THẾ GIỚI",
+        "en": "LOOKING OUT AT THE WORLD"
       },
       "author": {
-        "vi": "Mẫu số lương thực",
-        "en": "Food Registry Office"
+        "vi": "1911–1917 – Những năm khảo nghiệm thực tiễn",
+        "en": "1911–1917 – Years of Practical Exploration"
       },
       "description": {
-        "vi": "Sổ đăng ký lương thực gia đình quy định số lượng gạo được nhận theo số nhân khẩu trong hộ gia đình do Nhà nước quy định.",
-        "en": "Family food registry booklet regulating the amount of rice received according to the number of members in the household as specified by the State."
+        "vi": "Sau khi rời Bến Nhà Rồng năm 1911, Nguyễn Tất Thành bắt đầu hành trình quan sát và tìm hiểu thế giới. Trong sáu năm qua nhiều quốc gia và châu lục, Người từng bước nhận ra sự gần gũi giữa các dân tộc bị áp bức và hiểu thêm về xã hội tư bản, phong trào công nhân.",
+        "en": "After leaving Nha Rong Wharf in 1911, Nguyễn Tất Thành began observing and learning about the world. Six years across many countries and continents helped shape his understanding of oppressed peoples, capitalist society, and workers' movements."
       },
       "model_3d_url": "",
-      "thumbnail_url": "/exhibits/ricebook.jpg",
+      "thumbnail_url": "/exhibits/nhin-ra-the-gioi.gif",
       "coordinate_x": -11.75,
       "coordinate_y": 2.85,
       "coordinate_z": 0,
@@ -72,22 +72,22 @@
       "scale_z": 0.1
     },
     {
-      "id": "exhibit-factory",
+      "id": "exhibit-versailles-1919",
       "gallery_id": "gallery-subsidy",
       "title": {
-        "vi": "Kế hoạch nhà máy",
-        "en": "Factory Production Plan"
+        "vi": "TIẾNG NÓI CỦA MỘT DÂN TỘC",
+        "en": "THE VOICE OF A NATION"
       },
       "author": {
-        "vi": "Xí nghiệp quốc doanh",
-        "en": "State-Owned Enterprise"
+        "vi": "18/06/1919 – Yêu sách của nhân dân An Nam",
+        "en": "18 June 1919 – Claims of the Annamite People"
       },
       "description": {
-        "vi": "Văn bản chỉ tiêu sản xuất năm 1983 của nhà máy. Tất cả các mục tiêu, sản lượng đều do Nhà nước giao phó theo kế hoạch tập trung.",
-        "en": "The 1983 factory production targets. All objectives and output were assigned by the State in a centralized planning system."
+        "vi": "Ngày 18/6/1919 tại Paris, Nguyễn Ái Quốc thay mặt nhóm những người Việt Nam yêu nước gửi Yêu sách của nhân dân An Nam gồm 8 điểm tới Hội nghị Versailles, đòi các quyền tự do, dân chủ và bình đẳng cơ bản cho người Việt Nam.",
+        "en": "On 18 June 1919 in Paris, Nguyễn Ái Quốc submitted the eight-point Claims of the Annamite People to the Versailles Conference, demanding basic freedoms, democratic rights, and equality for the Vietnamese people."
       },
       "model_3d_url": "",
-      "thumbnail_url": "/exhibits/factory.jpg",
+      "thumbnail_url": "/exhibits/tieng-noi-mot-dan-toc.jpg",
       "coordinate_x": -11.75,
       "coordinate_y": 2.85,
       "coordinate_z": 16,
@@ -99,22 +99,22 @@
       "scale_z": 0.1
     },
     {
-      "id": "exhibit-priceboard",
+      "id": "exhibit-lenin-theses-1920",
       "gallery_id": "gallery-subsidy",
       "title": {
-        "vi": "Bảng giá mậu dịch",
-        "en": "State Store Price List"
+        "vi": "ÁNH SÁNG CỦA CON ĐƯỜNG",
+        "en": "THE LIGHT OF THE PATH"
       },
       "author": {
-        "vi": "Sở Thương nghiệp",
-        "en": "Department of Trade"
+        "vi": "Paris – Tháng 7/1920",
+        "en": "Paris – July 1920"
       },
       "description": {
-        "vi": "Bảng giá các mặt hàng thiết yếu niêm yết tại cửa hàng lương thực nhà nước năm 1983. Mức giá được cố định bởi Nhà nước.",
-        "en": "Price list of essential goods posted at the state food store in 1983. Prices were fixed strictly by the State."
+        "vi": "Tháng 7/1920 tại Paris, Nguyễn Ái Quốc đọc Sơ thảo lần thứ nhất những luận cương về vấn đề dân tộc và vấn đề thuộc địa của V.I. Lênin. Từ đó, Người xác định con đường cách mạng vô sản là phương hướng cơ bản để giải phóng dân tộc Việt Nam.",
+        "en": "In July 1920 in Paris, Nguyễn Ái Quốc read V.I. Lenin's Preliminary Draft Theses on the National and Colonial Questions and identified proletarian revolution as the fundamental path toward Vietnam's national liberation."
       },
       "model_3d_url": "",
-      "thumbnail_url": "/exhibits/priceboard.jpg",
+      "thumbnail_url": "/exhibits/anh-sang-cua-con-duong.jpg",
       "coordinate_x": 11.75,
       "coordinate_y": 2.85,
       "coordinate_z": -17.9,
@@ -126,22 +126,22 @@
       "scale_z": 0.1
     },
     {
-      "id": "exhibit-shop",
+      "id": "exhibit-tours-1920",
       "gallery_id": "gallery-subsidy",
       "title": {
-        "vi": "Cửa hàng mậu dịch",
-        "en": "State-Run Store"
+        "vi": "SỰ LỰA CHỌN LỊCH SỬ",
+        "en": "THE HISTORIC CHOICE"
       },
       "author": {
-        "vi": "Mậu dịch viên",
-        "en": "State Shop Assistant"
+        "vi": "Đại hội Tours – Tháng 12/1920",
+        "en": "Tours Congress – December 1920"
       },
       "description": {
-        "vi": "Cửa hàng mậu dịch quốc doanh - nơi phân phối độc quyền các nhu yếu phẩm. Tình trạng khan hiếm và xếp hàng dài là nét đặc trưng.",
-        "en": "State-run store - the exclusive distributor of essential supplies. Long queues and persistent shortages were typical features."
+        "vi": "Tại Đại hội Tours tháng 12/1920, Nguyễn Ái Quốc bỏ phiếu tán thành gia nhập Quốc tế Cộng sản và trở thành một trong những thành viên tham gia sáng lập Đảng Cộng sản Pháp. Sự kiện đánh dấu việc Người chính thức lựa chọn con đường cách mạng vô sản để giải phóng dân tộc.",
+        "en": "At the Tours Congress in December 1920, Nguyễn Ái Quốc voted to join the Communist International and became one of the founding participants of the French Communist Party, formally choosing the path of proletarian revolution for national liberation."
       },
       "model_3d_url": "",
-      "thumbnail_url": "/exhibits/shop.jpg",
+      "thumbnail_url": "/exhibits/su-lua-chon-lich-su.jpg",
       "coordinate_x": 11.75,
       "coordinate_y": 2.85,
       "coordinate_z": 0,
@@ -153,22 +153,22 @@
       "scale_z": 0.1
     },
     {
-      "id": "exhibit-witness",
+      "id": "exhibit-guangzhou-1925-1927",
       "gallery_id": "gallery-subsidy",
       "title": {
-        "vi": "Ký ức thời bao cấp",
-        "en": "Subsidy Era Memoirs"
+        "vi": "CHUẨN BỊ CHO CÁCH MẠNG",
+        "en": "PREPARING FOR REVOLUTION"
       },
       "author": {
-        "vi": "Góc nhân chứng",
-        "en": "Witness Corner"
+        "vi": "Quảng Châu – 1925–1927",
+        "en": "Guangzhou – 1925–1927"
       },
       "description": {
-        "vi": "Kể lại cuộc sống thường nhật dựa trên chế độ phân phối tem phiếu, tiết kiệm từng bữa ăn và sự tự giác hợp tác của cộng đồng.",
-        "en": "Recalling daily life under the coupon system, saving every meal, and the voluntary cooperation of the community."
+        "vi": "Tại Quảng Châu giai đoạn 1925–1927, Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên, tổ chức các lớp huấn luyện chính trị và truyền bá lý luận cách mạng. Các bài giảng sau đó được tập hợp thành tác phẩm Đường Kách Mệnh.",
+        "en": "In Guangzhou from 1925 to 1927, Nguyễn Ái Quốc founded the Vietnamese Revolutionary Youth League, organized political training courses, and disseminated revolutionary theory. His lectures were later compiled as The Revolutionary Path."
       },
       "model_3d_url": "",
-      "thumbnail_url": "/exhibits/witness.jpg",
+      "thumbnail_url": "/exhibits/chuan-bi-cho-cach-mang.jpg",
       "coordinate_x": 11.75,
       "coordinate_y": 2.85,
       "coordinate_z": 16,
@@ -177,6 +177,33 @@
       "rotation_z": 0,
       "scale_x": 3.55,
       "scale_y": 2.75,
+      "scale_z": 0.1
+    },
+    {
+      "id": "exhibit-convergence-1930",
+      "gallery_id": "gallery-subsidy",
+      "title": {
+        "vi": "HỘI TỤ",
+        "en": "CONVERGENCE"
+      },
+      "author": {
+        "vi": "Từ sự phân tán năm 1929 đến Hồng Kông đầu năm 1930",
+        "en": "From Fragmentation in 1929 to Hong Kong in Early 1930"
+      },
+      "description": {
+        "vi": "Năm 1929, ba tổ chức cộng sản lần lượt ra đời nhưng hoạt động riêng rẽ và thiếu sự lãnh đạo thống nhất. Trước tình hình đó, Nguyễn Ái Quốc đến Hồng Kông để triệu tập và chủ trì hội nghị thống nhất các tổ chức cộng sản vào đầu năm 1930.",
+        "en": "In 1929, three communist organizations emerged but operated separately without unified leadership. Nguyễn Ái Quốc went to Hong Kong to convene and chair a conference to unite them in early 1930."
+      },
+      "model_3d_url": "",
+      "thumbnail_url": "/exhibits/hoi-tu-1930.jpg",
+      "coordinate_x": 0,
+      "coordinate_y": 1.1,
+      "coordinate_z": 0,
+      "rotation_x": 0,
+      "rotation_y": 0,
+      "rotation_z": 0,
+      "scale_x": 2.8,
+      "scale_y": 1.9,
       "scale_z": 0.1
     }
   ]

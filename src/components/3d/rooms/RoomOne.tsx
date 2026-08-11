@@ -1,7 +1,152 @@
 import React from 'react';
 import * as THREE from 'three';
+import { Edges, Html, RoundedBox, useTexture } from '@react-three/drei';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
+import type { Exhibit } from '@/lib/db';
+
+const REQUIRED_CLUES_FOR_CENTRAL_ARCHIVE = [
+  'exhibit-coupon',
+  'exhibit-world-1911-1917',
+  'exhibit-versailles-1919',
+  'exhibit-lenin-theses-1920',
+  'exhibit-tours-1920',
+  'exhibit-guangzhou-1925-1927',
+];
+
+const CentralArchiveShowcase: React.FC<{
+  exhibit: Exhibit;
+  unlocked: boolean;
+  collectedCount: number;
+  onOpen: () => void;
+}> = ({ exhibit, unlocked, collectedCount, onOpen }) => {
+  const texture = useTexture(exhibit.thumbnail_url);
+
+  const openExhibit = (event: { stopPropagation: () => void }) => {
+    event.stopPropagation();
+    if (!unlocked) return;
+    onOpen();
+  };
+
+  return (
+    <group
+      position={[0, 0, 0]}
+      onClick={openExhibit}
+      onPointerOver={() => { if (unlocked) document.body.style.cursor = 'pointer'; }}
+      onPointerOut={() => { document.body.style.cursor = 'default'; }}
+    >
+      {/* Bóng đổ mềm và chân đế bo góc nhiều lớp */}
+      <mesh position={[0, 0.035, 0]} receiveShadow>
+        <boxGeometry args={[4.85, 0.07, 2.95]} />
+        <meshStandardMaterial color="#100d0b" roughness={0.9} />
+      </mesh>
+      <RoundedBox args={[4.65, 0.72, 2.75]} radius={0.14} smoothness={5} position={[0, 0.42, 0]} castShadow receiveShadow>
+        <meshStandardMaterial color="#241712" roughness={0.36} metalness={0.08} />
+        <Edges color="#0f0907" threshold={20} />
+      </RoundedBox>
+      <RoundedBox args={[4.45, 0.13, 2.57]} radius={0.055} smoothness={4} position={[0, 0.81, 0]} castShadow>
+        <meshStandardMaterial color="#9a7139" roughness={0.24} metalness={0.72} />
+      </RoundedBox>
+      <RoundedBox args={[4.22, 0.17, 2.34]} radius={0.06} smoothness={4} position={[0, 0.94, 0]} castShadow>
+        <meshStandardMaterial color="#d7c39c" roughness={0.5} metalness={0.08} />
+      </RoundedBox>
+
+      {/* Khung tài liệu và ảnh đặt đúng chiều, hơi nâng khỏi mặt bệ */}
+      <RoundedBox args={[3.25, 0.075, 2.2]} radius={0.045} smoothness={4} position={[0, 1.055, 0]} castShadow>
+        <meshStandardMaterial color="#33241b" roughness={0.3} metalness={0.42} />
+      </RoundedBox>
+      <mesh
+        position={[0, 1.15, 0]}
+        rotation={[-Math.PI / 2, 0, Math.PI]}
+        renderOrder={2}
+      >
+        <planeGeometry args={[3.05, 2.0]} />
+        <meshBasicMaterial
+          map={texture}
+          toneMapped={false}
+          side={THREE.DoubleSide}
+          polygonOffset
+          polygonOffsetFactor={-4}
+          polygonOffsetUnits={-4}
+        />
+      </mesh>
+
+      {/* Bốn mặt kính riêng biệt giúp tủ trong và nhẹ hơn khối kính đặc */}
+      {[-2.08, 2.08].map((x) => (
+        <mesh key={`glass-side-${x}`} position={[x, 1.54, 0]}>
+          <boxGeometry args={[0.025, 1.02, 2.3]} />
+          <meshPhysicalMaterial color="#d9ffff" transparent opacity={0.18} roughness={0.04} transmission={0.9} thickness={0.04} depthWrite={false} />
+        </mesh>
+      ))}
+      {[-1.14, 1.14].map((z) => (
+        <mesh key={`glass-front-${z}`} position={[0, 1.54, z]}>
+          <boxGeometry args={[4.18, 1.02, 0.025]} />
+          <meshPhysicalMaterial color="#d9ffff" transparent opacity={0.16} roughness={0.04} transmission={0.9} thickness={0.04} depthWrite={false} />
+        </mesh>
+      ))}
+      <mesh position={[0, 2.055, 0]}>
+        <boxGeometry args={[4.18, 0.03, 2.3]} />
+        <meshPhysicalMaterial color="#efffff" transparent opacity={0.14} roughness={0.03} transmission={0.94} thickness={0.035} depthWrite={false} />
+      </mesh>
+
+      {/* Khung đồng mảnh ở các góc và viền mái kính */}
+      {[[-2.1, -1.16], [-2.1, 1.16], [2.1, -1.16], [2.1, 1.16]].map(([x, z], index) => (
+        <mesh key={`corner-${index}`} position={[x, 1.55, z]} castShadow>
+          <cylinderGeometry args={[0.035, 0.035, 1.08, 8]} />
+          <meshStandardMaterial color="#6f5738" metalness={0.82} roughness={0.2} />
+        </mesh>
+      ))}
+      {[-1.16, 1.16].map((z) => (
+        <mesh key={`top-rail-z-${z}`} position={[0, 2.07, z]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.03, 0.03, 4.22, 8]} />
+          <meshStandardMaterial color="#806440" metalness={0.82} roughness={0.2} />
+        </mesh>
+      ))}
+      {[-2.1, 2.1].map((x) => (
+        <mesh key={`top-rail-x-${x}`} position={[x, 2.07, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.03, 0.03, 2.34, 8]} />
+          <meshStandardMaterial color="#806440" metalness={0.82} roughness={0.2} />
+        </mesh>
+      ))}
+
+      {/* Ánh sáng bảo tàng dịu bên trong tủ */}
+      <pointLight position={[-1.45, 1.82, 0.68]} color="#ffd98a" intensity={0.34} distance={3.4} decay={2} />
+      <pointLight position={[1.45, 1.82, -0.68]} color="#ffd98a" intensity={0.34} distance={3.4} decay={2} />
+
+      {/* Bảng khóa đồng ở mặt trước, màu trạng thái thay đổi khi đủ bằng chứng */}
+      <RoundedBox args={[0.72, 0.42, 0.15]} radius={0.065} smoothness={4} position={[0, 1.3, 1.22]} castShadow>
+        <meshStandardMaterial color="#3a2b20" roughness={0.28} metalness={0.66} />
+      </RoundedBox>
+      <mesh position={[0, 1.31, 1.305]}>
+        <circleGeometry args={[0.105, 24]} />
+        <meshStandardMaterial
+          color={unlocked ? '#22c55e' : '#dc2626'}
+          emissive={unlocked ? '#16a34a' : '#b91c1c'}
+          emissiveIntensity={unlocked ? 1.2 : 0.72}
+        />
+      </mesh>
+      <pointLight position={[0, 1.31, 1.46]} color={unlocked ? '#4ade80' : '#ef4444'} intensity={0.22} distance={1.2} />
+
+      <Html center position={[0, 2.36, 0]} distanceFactor={9} style={{ pointerEvents: 'none' }}>
+        <div style={{
+          minWidth: 250,
+          padding: '10px 16px',
+          borderRadius: 999,
+          border: `1px solid ${unlocked ? '#4ade80' : '#f59e0b'}`,
+          background: 'linear-gradient(135deg, rgba(15,23,42,.96), rgba(36,23,18,.95))',
+          color: unlocked ? '#86efac' : '#fde68a',
+          fontSize: 12,
+          fontWeight: 700,
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+          boxShadow: `0 8px 28px ${unlocked ? 'rgba(34,197,94,.2)' : 'rgba(245,158,11,.18)'}`,
+        }}>
+          {unlocked ? '🔓 Đã mở khóa · Nhấp để khám phá HỘI TỤ' : `🔒 Tư liệu trung tâm · Đã thu thập ${collectedCount}/6`}
+        </div>
+      </Html>
+    </group>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ĐỊNH NGHĨA GEOMETRIES & MATERIALS DÙNG CHUNG ĐỂ TRÁNH GIẬT LAG WEBGL
@@ -96,6 +241,7 @@ const VelvetRopeBarrier: React.FC<{
 
 type RoomOneProps = BaseRoomProps & {
   ropeBarriersConfig?: string;
+  centralExhibit?: Exhibit;
 };
 
 export const RoomOne: React.FC<RoomOneProps> = ({ 
@@ -103,16 +249,25 @@ export const RoomOne: React.FC<RoomOneProps> = ({
   customSettings, 
   isVisible = true,
   onRopeClick,
-  ropeBarriersConfig
+  ropeBarriersConfig,
+  centralExhibit,
 }) => {
-  const { activeGallery } = useMuseum();
+  const {
+    activeGallery,
+    cluesCollected,
+    setSelectedExhibit,
+    setExhibitModalMode,
+  } = useMuseum();
+  const collectedRequiredClues = REQUIRED_CLUES_FOR_CENTRAL_ARCHIVE.filter((id) => cluesCollected.includes(id)).length;
+  const isCentralArchiveUnlocked = collectedRequiredClues === REQUIRED_CLUES_FOR_CENTRAL_ARCHIVE.length;
 
   // Parse config riêng từng dây từ customSettings hoặc DB
   // Thứ tự: [0]=trái-18, [1]=trái-8, [2]=trái+2, [3]=phải-18, [4]=phải-8, [5]=phải+2
   const DEFAULT_ROPE = { xOffset: 0, zOffset: 0 };
   let ropeConfigs: Array<{ xOffset: number; zOffset: number }> = Array(6).fill(DEFAULT_ROPE);
+  const settingsWithRopes = customSettings as (typeof customSettings & { rope_barriers_config?: string });
   try {
-    const raw = ropeBarriersConfig ?? (customSettings as any)?.rope_barriers_config ?? activeGallery?.rope_barriers_config;
+    const raw = ropeBarriersConfig ?? settingsWithRopes?.rope_barriers_config ?? activeGallery?.rope_barriers_config;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length === 6) ropeConfigs = parsed;
@@ -191,6 +346,18 @@ export const RoomOne: React.FC<RoomOneProps> = ({
       <VelvetRopeBarrier side="right" zPoints={[-19, -13]} xOffset={-ropeConfigs[3].xOffset} zOffset={ropeConfigs[3].zOffset} onClick={() => onRopeClick?.(3)} />
       <VelvetRopeBarrier side="right" zPoints={[-3, 3]} xOffset={-ropeConfigs[4].xOffset} zOffset={ropeConfigs[4].zOffset} onClick={() => onRopeClick?.(4)} />
       <VelvetRopeBarrier side="right" zPoints={[13, 19]} xOffset={-ropeConfigs[5].xOffset} zOffset={ropeConfigs[5].zOffset} onClick={() => onRopeClick?.(5)} />
+
+      {centralExhibit && (
+        <CentralArchiveShowcase
+          exhibit={centralExhibit}
+          unlocked={isCentralArchiveUnlocked}
+          collectedCount={collectedRequiredClues}
+          onOpen={() => {
+            setExhibitModalMode('game');
+            setSelectedExhibit(centralExhibit);
+          }}
+        />
+      )}
     </BaseRoom>
   );
 };

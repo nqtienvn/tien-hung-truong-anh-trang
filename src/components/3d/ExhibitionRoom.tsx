@@ -4,6 +4,7 @@ import RoomTwo from './rooms/RoomTwo';
 import RoomThree from './rooms/RoomThree';
 import RoomFour from './rooms/RoomFour';
 import BaseRoom from './rooms/BaseRoom';
+import type { Exhibit } from '@/lib/db';
 
 interface ExhibitionRoomProps {
   galleryId: string;
@@ -19,6 +20,7 @@ interface ExhibitionRoomProps {
   isVisible?: boolean;
   onRopeClick?: (ropeIndex: number) => void;
   ropeBarriersConfig?: string;
+  centralExhibit?: Exhibit;
 }
 
 export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = (props) => {
