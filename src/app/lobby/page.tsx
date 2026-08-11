@@ -22,6 +22,7 @@ import {
   ROOM_THREE_DISPLAY_NAME,
   ROOM_THREE_TRANSITION,
 } from '@/lib/roomThreeNarrative';
+import { createTeleportMovePayload } from '@/lib/teleportSync';
 
 // ── Summary Minigame data (mirrored from RoomFour constants) ──
 const MG_SITUATIONS = [
@@ -616,9 +617,10 @@ const LobbyPlayer: React.FC<{
   useEffect(() => {
     if (teleportTarget && playerRef.current) {
       playerRef.current.position.set(teleportTarget.x, teleportTarget.y + baseY, teleportTarget.z);
+      socket?.emit('move', createTeleportMovePayload(teleportTarget, playerRef.current.rotation.y));
       clearTeleport();
     }
-  }, [teleportTarget, clearTeleport, baseY]);
+  }, [teleportTarget, clearTeleport, baseY, socket]);
 
   /**
    * Kiểm tra va chạm mở rộng (sảnh + phòng triển lãm)
