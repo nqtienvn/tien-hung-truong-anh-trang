@@ -58,11 +58,11 @@ const closingTimers = {};
 // Cấu trúc: { [roomId]: { isOpen: boolean } }
 // ═══════════════════════════════════════════════════════════════════════════
 const roomStates = {
-  'gallery-subsidy': { isOpen: true },
-  'gallery-paintings': { isOpen: true },
-  'gallery-ceramics': { isOpen: true },
-  'gallery-market-economy': { isOpen: true },
-  'gallery-three': { isOpen: true }
+  'gallery-subsidy': { isOpen: true, status: 'waiting', startTimestamp: null },
+  'gallery-paintings': { isOpen: true, status: 'waiting', startTimestamp: null },
+  'gallery-ceramics': { isOpen: true, status: 'waiting', startTimestamp: null },
+  'gallery-market-economy': { isOpen: true, status: 'waiting', startTimestamp: null },
+  'gallery-three': { isOpen: true, status: 'waiting', startTimestamp: null }
 };
 
 // Trạng thái đồng bộ của phòng 1
@@ -72,6 +72,84 @@ let roomOneStartTimestamp = null;
 
 // Trạng thái đồng bộ của phòng 2 (Hội nghị)
 let roomTwoSessionState = 'waiting'; // 'waiting', 'session1'
+const roomTwoSessionStartTimestamps = {};
+
+const SCORE_ROOM_CONFIG = {
+  'gallery-subsidy': { key: 'room1', label: 'Phòng 01' },
+  'gallery-paintings': { key: 'room2', label: 'Phòng 02' },
+  'gallery-ceramics': { key: 'room3', label: 'Phòng 03' },
+  'gallery-market-economy': { key: 'room4', label: 'Phòng 04' }
+};
+
+const createEmptyRoomResults = () => ({
+  room1: { score: 0, timeSpent: 0, submitted: false, finalized: false },
+  room2: { score: 0, timeSpent: 0, submitted: false, finalized: false },
+  room3: { score: 0, timeSpent: 0, submitted: false, finalized: false },
+  room4: { score: 0, timeSpent: 0, submitted: false, finalized: false }
+});
+
+const ensureResultTracking = (user) => {
+  if (!user.roomResults) user.roomResults = createEmptyRoomResults();
+  for (const [key, result] of Object.entries(createEmptyRoomResults())) {
+    user.roomResults[key] = {
+      ...result,
+      ...(user.roomResults[key] || {})
+    };
+  }
+  if (!user.readyRooms) user.readyRooms = {};
+};
+
+const recalculateOverallResult = (user) => {
+  ensureResultTracking(user);
+  const rooms = Object.values(user.roomResults);
+  user.totalScore = rooms.reduce((sum, r) => sum + (Number(r.score) || 0), 0);
+  user.totalTimeSpent = rooms.reduce((sum, r) => sum + (Number(r.timeSpent) || 0), 0);
+  user.score = user.totalScore;
+  user.timeSpent = user.totalTimeSpent;
+};
+
+const getScoringRoomKey = (galleryId) => SCORE_ROOM_CONFIG[galleryId]?.key || null;
+
+const getPlayersInGallery = (galleryId) => Object.values(activeUsers).filter(
+  u => u.galleryId === galleryId && u.nickname
+);
+
+const getOverallResults = () => Object.values(activeUsers)
+  .filter(u => u.nickname)
+  .map(u => {
+    ensureResultTracking(u);
+    recalculateOverallResult(u);
+    return {
+      socketId: u.id,
+      nickname: u.nickname,
+      room1Score: u.roomResults.room1.score || 0,
+      room1Time: u.roomResults.room1.timeSpent || 0,
+      room2Score: u.roomResults.room2.score || 0,
+      room2Time: u.roomResults.room2.timeSpent || 0,
+      room3Score: u.roomResults.room3.score || 0,
+      room3Time: u.roomResults.room3.timeSpent || 0,
+      room4Score: u.roomResults.room4.score || 0,
+      room4Time: u.roomResults.room4.timeSpent || 0,
+      totalScore: u.totalScore || 0,
+      totalTimeSpent: u.totalTimeSpent || 0
+    };
+  })
+  .sort((a, b) => {
+    if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+    return a.totalTimeSpent - b.totalTimeSpent;
+  });
+
+const broadcastOverallResults = () => {
+  io.emit('admin:overall-results-update', getOverallResults());
+};
+
+const isMovementLocked = (user) => {
+  const roomKey = getScoringRoomKey(user.galleryId);
+  if (!roomKey) return false;
+  const roomState = roomStates[user.galleryId];
+  ensureResultTracking(user);
+  return roomState?.status !== 'playing';
+};
 
 const updateRoomOneReadyStatus = () => {
   // Tìm tất cả user đang ở trong phòng 1
@@ -95,57 +173,88 @@ const updateRoomOneReadyStatus = () => {
   }
 
   if (roomOneState === 'waiting') {
-    if (readyPlayers === totalPlayers && totalPlayers > 0) {
-      roomOneState = 'countdown';
-      io.to('museum-unified').emit('room1:countdown-start', { duration: 5 });
-      console.log(`[ROOM-1] Tự động bắt đầu đếm ngược 5 giây vì tất cả người chơi (${readyPlayers}/${totalPlayers}) đã sẵn sàng.`);
-
-      roomOneCountdownTimer = setTimeout(() => {
-        roomOneState = 'started';
-        roomOneStartTimestamp = Date.now();
-        io.to('museum-unified').emit('room1:start-game', { roomOneStartTimestamp });
-        console.log(`[ROOM-1] Trò chơi tự động bắt đầu. Start time: ${roomOneStartTimestamp}`);
-        roomOneCountdownTimer = null;
-      }, 5000);
-    } else {
-      io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
-    }
+    io.to('museum-unified').emit('room1:waiting-status', { readyPlayers, totalPlayers });
   }
 };
 
 const broadcastRoomOnePlayers = () => {
   const usersInRoomOne = Object.values(activeUsers)
     .filter(u => (u.galleryId === 'gallery-subsidy' || u.galleryId === 'lobby') && u.nickname)
-    .map(u => ({
-      socketId: u.id,
-      nickname: u.nickname,
-      ready: !!u.room1Ready,
-      completed: !!u.room1Completed,
-      cluesCollectedCount: u.cluesCollectedCount || 0,
-      baseScore: u.room1BaseScore || 0,
-      timeSpent: u.room1TimeSpent || 0
-    }));
+    .map(u => {
+      ensureResultTracking(u);
+      recalculateOverallResult(u);
+      return {
+        socketId: u.id,
+        nickname: u.nickname,
+        ready: !!u.room1Ready,
+        completed: !!u.room1Completed,
+        cluesCollectedCount: u.cluesCollectedCount || 0,
+        baseScore: u.room1BaseScore || 0,
+        timeSpent: u.room1TimeSpent || 0,
+        finalScore: u.roomResults.room1.score || u.room1BaseScore || 0,
+        totalScore: u.totalScore || 0,
+        totalTimeSpent: u.totalTimeSpent || 0
+      };
+    });
   
   io.emit('admin:room1-players-update', usersInRoomOne);
+  broadcastOverallResults();
 };
 const broadcastRoomTwoPlayers = () => {
   const usersInRoomTwo = Object.values(activeUsers)
     .filter(u => u.galleryId === 'gallery-paintings' && u.nickname)
-    .map(u => ({
-      socketId: u.id,
-      nickname: u.nickname,
-      submitted1: u.room2Score1 !== undefined,
-      score1: u.room2Score1 || 0,
-      submitted2: u.room2Score2 !== undefined,
-      score2: u.room2Score2 || 0,
-      submitted3: u.room2Score3 !== undefined,
-      score3: u.room2Score3 || 0,
-      submitted4: u.room2Score4 !== undefined,
-      score4: u.room2Score4 || 0,
-      totalScore: (u.room2Score1 || 0) + (u.room2Score2 || 0) + (u.room2Score3 || 0) + (u.room2Score4 || 0)
-    }));
+    .map(u => {
+      ensureResultTracking(u);
+      recalculateOverallResult(u);
+      return {
+        socketId: u.id,
+        nickname: u.nickname,
+        ready: !!u.readyRooms.room2,
+        submitted1: u.room2Score1 !== undefined,
+        score1: u.room2Score1 || 0,
+        submitted2: u.room2Score2 !== undefined,
+        score2: u.room2Score2 || 0,
+        submitted3: u.room2Score3 !== undefined,
+        score3: u.room2Score3 || 0,
+        submitted4: u.room2Score4 !== undefined,
+        score4: u.room2Score4 || 0,
+        time1: u.room2Time1 || 0,
+        time2: u.room2Time2 || 0,
+        time3: u.room2Time3 || 0,
+        time4: u.room2Time4 || 0,
+        totalScore: u.roomResults.room2.score || ((u.room2Score1 || 0) + (u.room2Score2 || 0) + (u.room2Score3 || 0) + (u.room2Score4 || 0)),
+        totalTimeSpent: u.roomResults.room2.timeSpent || ((u.room2Time1 || 0) + (u.room2Time2 || 0) + (u.room2Time3 || 0) + (u.room2Time4 || 0))
+      };
+    });
   
   io.emit('admin:room2-players-update', usersInRoomTwo);
+  broadcastOverallResults();
+};
+
+const broadcastGenericRoomPlayers = (galleryId) => {
+  const roomKey = getScoringRoomKey(galleryId);
+  if (!roomKey) return;
+
+  const players = getPlayersInGallery(galleryId).map(u => {
+    ensureResultTracking(u);
+    recalculateOverallResult(u);
+    const result = u.roomResults[roomKey];
+    return {
+      socketId: u.id,
+      nickname: u.nickname,
+      roomId: galleryId,
+      ready: !!u.readyRooms[roomKey],
+      score: result.score || 0,
+      timeSpent: result.timeSpent || 0,
+      submitted: !!result.submitted,
+      finalized: !!result.finalized,
+      totalScore: u.totalScore || 0,
+      totalTimeSpent: u.totalTimeSpent || 0
+    };
+  });
+
+  io.emit('admin:room-players-update', { roomId: galleryId, players });
+  broadcastOverallResults();
 };
 
 
@@ -241,13 +350,39 @@ io.on('connection', (socket) => {
   socket.on('room1:ready', () => {
     const user = activeUsers[socket.id];
     if (!user || user.galleryId !== 'gallery-subsidy') return;
+    ensureResultTracking(user);
     user.room1Ready = true;
+    user.readyRooms.room1 = true;
     console.log(`[ROOM-1] ${user.nickname} (${socket.id}) đã sẵn sàng khám phá.`);
     updateRoomOneReadyStatus();
     broadcastRoomOnePlayers();
   });
 
   // Lắng nghe gửi điểm số lên bảng xếp hạng
+  socket.on('room:ready', (data = {}) => {
+    const user = activeUsers[socket.id];
+    if (!user) return;
+
+    const galleryId = data.roomId || user.galleryId;
+    const roomKey = getScoringRoomKey(galleryId);
+    if (!roomKey || user.galleryId !== galleryId) return;
+
+    ensureResultTracking(user);
+    user.readyRooms[roomKey] = true;
+    if (roomKey === 'room1') {
+      user.room1Ready = true;
+      updateRoomOneReadyStatus();
+      broadcastRoomOnePlayers();
+    } else if (roomKey === 'room2') {
+      broadcastRoomTwoPlayers();
+    } else {
+      broadcastGenericRoomPlayers(galleryId);
+    }
+
+    socket.emit('room:player-lock', { roomId: galleryId, locked: true });
+    broadcastOverallResults();
+  });
+
   socket.on('submit-score', (data) => {
     const user = activeUsers[socket.id];
     if (!user) return;
@@ -319,7 +454,11 @@ io.on('connection', (socket) => {
       yaw: yaw || 0,
       status: '',
       score: 0,
-      timeSpent: 9999
+      timeSpent: 0,
+      totalScore: 0,
+      totalTimeSpent: 0,
+      roomResults: createEmptyRoomResults(),
+      readyRooms: {}
     };
 
     if (activeInRoom.length < MAX_USERS_PER_ROOM) {
@@ -366,6 +505,10 @@ io.on('connection', (socket) => {
     const user = activeUsers[socket.id];
     if (!user) return;
 
+    if (isMovementLocked(user)) {
+      return;
+    }
+
     user.x = data.x;
     user.y = data.y;
     user.z = data.z;
@@ -411,9 +554,15 @@ io.on('connection', (socket) => {
         socket.emit('room2:state-sync', { roomTwoSessionState });
         broadcastRoomTwoPlayers();
       }
+      if (newRoom === 'gallery-ceramics' || newRoom === 'gallery-market-economy') {
+        broadcastGenericRoomPlayers(newRoom);
+      }
       
       if (oldRoom === 'gallery-paintings') {
         broadcastRoomTwoPlayers();
+      }
+      if (oldRoom === 'gallery-ceramics' || oldRoom === 'gallery-market-economy') {
+        broadcastGenericRoomPlayers(oldRoom);
       }
     }
 
@@ -425,10 +574,23 @@ io.on('connection', (socket) => {
   socket.on('update-score', (data) => {
     const user = activeUsers[socket.id];
     if (!user) return;
-    user.score = data.score;
+    ensureResultTracking(user);
+    const roomKey = getScoringRoomKey(user.galleryId);
+    const score = Number(data.score) || 0;
+    if (roomKey) {
+      user.roomResults[roomKey] = {
+        ...user.roomResults[roomKey],
+        score,
+        submitted: true
+      };
+      recalculateOverallResult(user);
+    } else {
+      user.score = score;
+    }
     const socketRoom = getSocketRoom(user.galleryId);
     const usersInRoom = Object.values(activeUsers).filter(u => getSocketRoom(u.galleryId) === socketRoom);
     io.to(socketRoom).emit('users-list', usersInRoom);
+    broadcastOverallResults();
     console.log(`[SCORE] ${user.nickname} (${socket.id}) cập nhật điểm: ${user.score}`);
   });
 
@@ -510,14 +672,28 @@ io.on('connection', (socket) => {
   socket.on('admin:start-room1-countdown', () => {
     console.log(`[ADMIN] Yêu cầu bắt đầu đếm ngược Phòng 1 từ admin.`);
     if (roomOneState === 'waiting') {
+      const usersInRoomOne = getPlayersInGallery('gallery-subsidy');
+      const readyPlayers = usersInRoomOne.filter(u => u.room1Ready);
+      if (usersInRoomOne.length === 0 || readyPlayers.length !== usersInRoomOne.length) {
+        socket.emit('admin:error', { message: 'Chưa thể bắt đầu Phòng 1: còn người chơi chưa bấm Sẵn sàng.' });
+        updateRoomOneReadyStatus();
+        broadcastRoomOnePlayers();
+        return;
+      }
+
       roomOneState = 'countdown';
+      roomStates['gallery-subsidy'].status = 'countdown';
+      roomStates['gallery-subsidy'].startTimestamp = null;
       io.to('museum-unified').emit('room1:countdown-start', { duration: 7 });
       console.log(`[ROOM-1] Bắt đầu đếm ngược 7 giây cho tất cả người chơi theo lệnh Admin.`);
 
       roomOneCountdownTimer = setTimeout(() => {
         roomOneState = 'started';
         roomOneStartTimestamp = Date.now();
+        roomStates['gallery-subsidy'].status = 'playing';
+        roomStates['gallery-subsidy'].startTimestamp = roomOneStartTimestamp;
         io.to('museum-unified').emit('room1:start-game', { roomOneStartTimestamp });
+        io.to('museum-unified').emit('room:start-game', { roomId: 'gallery-subsidy', startTimestamp: roomOneStartTimestamp });
         console.log(`[ROOM-1] Trò chơi đã bắt đầu theo lệnh Admin. Start time: ${roomOneStartTimestamp}`);
         roomOneCountdownTimer = null;
       }, 7000);
@@ -590,7 +766,14 @@ io.on('connection', (socket) => {
         // Cập nhật điểm cho user trực tuyến
         const targetUser = activeUsers[p.socketId];
         if (targetUser) {
-          targetUser.score = finalScore;
+          ensureResultTracking(targetUser);
+          targetUser.roomResults.room1 = {
+            score: finalScore,
+            timeSpent: p.timeSpent,
+            submitted: true,
+            finalized: true
+          };
+          recalculateOverallResult(targetUser);
         }
 
         // Đẩy điểm vào bảng xếp hạng chung
@@ -629,6 +812,7 @@ io.on('connection', (socket) => {
 
       // Phát sóng bảng xếp hạng mới cho toàn bộ người chơi
       io.emit('leaderboard-updated', leaderboard);
+      broadcastOverallResults();
 
       // Phát sóng sự kiện kết thúc phiên chơi phòng 1 kèm kết quả xếp hạng
       io.to('museum-unified').emit('room1:session-ended', { results });
@@ -639,7 +823,7 @@ io.on('connection', (socket) => {
       io.emit('door-states', doorStates);
 
       // Tự động bật phòng 2 (gallery-paintings) hoạt động
-      roomStates['gallery-paintings'] = { isOpen: true };
+      roomStates['gallery-paintings'] = { ...roomStates['gallery-paintings'], isOpen: true };
       io.emit('room-states', roomStates);
 
       // Reset các trường đồng bộ Phòng 1 cho phiên chơi mới
@@ -648,8 +832,12 @@ io.on('connection', (socket) => {
         u.room1Completed = false;
         u.room1BaseScore = 0;
         u.room1TimeSpent = 0;
+        ensureResultTracking(u);
+        u.readyRooms.room1 = false;
       });
       roomOneState = 'waiting';
+      roomStates['gallery-subsidy'].status = 'waiting';
+      roomStates['gallery-subsidy'].startTimestamp = null;
       io.to('museum-unified').emit('room1:state-sync', { roomOneState, roomOneStartTimestamp: null });
     }
   });
@@ -701,7 +889,14 @@ io.on('connection', (socket) => {
 
         const targetUser = activeUsers[p.socketId];
         if (targetUser) {
-          targetUser.score = finalScore;
+          ensureResultTracking(targetUser);
+          targetUser.roomResults.room1 = {
+            score: finalScore,
+            timeSpent: p.timeSpent,
+            submitted: true,
+            finalized: true
+          };
+          recalculateOverallResult(targetUser);
         }
 
         leaderboard.push({
@@ -734,6 +929,7 @@ io.on('connection', (socket) => {
       }
 
       io.emit('leaderboard-updated', leaderboard);
+      broadcastOverallResults();
       io.to('museum-unified').emit('room1:session-ended', { results });
 
       // Tự động mở cửa Phòng 2 để cho phép đi tiếp
@@ -742,7 +938,7 @@ io.on('connection', (socket) => {
       io.emit('door-states', doorStates);
 
       // Tự động bật phòng 2 (gallery-paintings) hoạt động
-      roomStates['gallery-paintings'] = { isOpen: true };
+      roomStates['gallery-paintings'] = { ...roomStates['gallery-paintings'], isOpen: true };
       io.emit('room-states', roomStates);
 
       // Reset Trạng thái phòng 1
@@ -751,8 +947,12 @@ io.on('connection', (socket) => {
         u.room1Completed = false;
         u.room1BaseScore = 0;
         u.room1TimeSpent = 0;
+        ensureResultTracking(u);
+        u.readyRooms.room1 = false;
       });
       roomOneState = 'waiting';
+      roomStates['gallery-subsidy'].status = 'waiting';
+      roomStates['gallery-subsidy'].startTimestamp = null;
       io.to('museum-unified').emit('room1:state-sync', { roomOneState, roomOneStartTimestamp: null });
     }
   });
@@ -763,13 +963,18 @@ io.on('connection', (socket) => {
   socket.on('admin:start-room2-session1', () => {
     console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ nhất ở Phòng 2 từ admin.');
     roomTwoSessionState = 'session1';
+    roomTwoSessionStartTimestamps[1] = Date.now();
+    roomStates['gallery-paintings'].status = 'playing';
+    roomStates['gallery-paintings'].startTimestamp = roomTwoSessionStartTimestamps[1];
     io.emit('room2:session1-start');
+    io.to('museum-unified').emit('room:start-game', { roomId: 'gallery-paintings', startTimestamp: roomTwoSessionStartTimestamps[1] });
     broadcastRoomTwoPlayers();
   });
 
   socket.on('admin:start-room2-session2', () => {
     console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ hai ở Phòng 2 từ admin.');
     roomTwoSessionState = 'session2';
+    roomTwoSessionStartTimestamps[2] = Date.now();
     io.emit('room2:session2-start');
     broadcastRoomTwoPlayers();
   });
@@ -777,6 +982,7 @@ io.on('connection', (socket) => {
   socket.on('admin:start-room2-session3', () => {
     console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ ba ở Phòng 2 từ admin.');
     roomTwoSessionState = 'session3';
+    roomTwoSessionStartTimestamps[3] = Date.now();
     io.emit('room2:session3-start');
     broadcastRoomTwoPlayers();
   });
@@ -784,6 +990,7 @@ io.on('connection', (socket) => {
   socket.on('admin:start-room2-session4', () => {
     console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ tư ở Phòng 2 từ admin.');
     roomTwoSessionState = 'session4';
+    roomTwoSessionStartTimestamps[4] = Date.now();
     io.emit('room2:session4-start');
     broadcastRoomTwoPlayers();
   });
@@ -791,6 +998,12 @@ io.on('connection', (socket) => {
   socket.on('admin:start-room2-completed', () => {
     console.log('[ADMIN] Yêu cầu HOÀN THÀNH họp Phòng 2 từ admin. Tự động mở cửa 3.');
     roomTwoSessionState = 'completed';
+    roomStates['gallery-paintings'].status = 'ended';
+    getPlayersInGallery('gallery-paintings').forEach(u => {
+      ensureResultTracking(u);
+      u.roomResults.room2.finalized = true;
+      recalculateOverallResult(u);
+    });
     io.emit('room2:completed-start');
 
     // Tự động mở cửa Phòng 3 để cho phép đi tiếp
@@ -799,7 +1012,7 @@ io.on('connection', (socket) => {
     io.emit('door-states', doorStates);
 
     // Tự động bật phòng 3 (gallery-ceramics) hoạt động
-    roomStates['gallery-ceramics'] = { isOpen: true };
+    roomStates['gallery-ceramics'] = { ...roomStates['gallery-ceramics'], isOpen: true };
     io.emit('room-states', roomStates);
 
     broadcastRoomTwoPlayers();
@@ -809,12 +1022,78 @@ io.on('connection', (socket) => {
     broadcastRoomTwoPlayers();
   });
 
+  socket.on('admin:get-overall-results', () => {
+    socket.emit('admin:overall-results-update', getOverallResults());
+  });
+
+  socket.on('admin:get-room-players', (data = {}) => {
+    broadcastGenericRoomPlayers(data.roomId);
+  });
+
+  socket.on('admin:start-room', (data = {}) => {
+    const galleryId = data.roomId;
+    const roomKey = getScoringRoomKey(galleryId);
+    if (!roomKey) return;
+
+    const players = getPlayersInGallery(galleryId);
+    const readyPlayers = players.filter(u => {
+      ensureResultTracking(u);
+      return !!u.readyRooms[roomKey];
+    });
+
+    if (players.length === 0 || readyPlayers.length !== players.length) {
+      socket.emit('admin:error', { message: 'Chưa thể bắt đầu phòng: còn người chơi chưa bấm Sẵn sàng.' });
+      return;
+    }
+
+    roomStates[galleryId].status = 'playing';
+    roomStates[galleryId].startTimestamp = Date.now();
+    io.to('museum-unified').emit('room:start-game', { roomId: galleryId, startTimestamp: roomStates[galleryId].startTimestamp });
+    broadcastGenericRoomPlayers(galleryId);
+    broadcastOverallResults();
+  });
+
+  socket.on('admin:end-room', (data = {}) => {
+    const galleryId = data.roomId;
+    const roomKey = getScoringRoomKey(galleryId);
+    if (!roomKey) return;
+
+    const startedAt = roomStates[galleryId]?.startTimestamp;
+    const elapsed = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
+    roomStates[galleryId].status = 'ended';
+
+    getPlayersInGallery(galleryId).forEach(u => {
+      ensureResultTracking(u);
+      u.roomResults[roomKey] = {
+        ...u.roomResults[roomKey],
+        timeSpent: u.roomResults[roomKey].timeSpent || elapsed,
+        finalized: true
+      };
+      recalculateOverallResult(u);
+    });
+
+    broadcastOverallResults();
+    broadcastGenericRoomPlayers(galleryId);
+  });
+
   socket.on('room2:submit-score', (data) => {
     const user = activeUsers[socket.id];
     if (!user) return;
 
     const { session, value, selectedPolicies } = data;
     let calculatedScore = 0;
+    const sessionStart = roomTwoSessionStartTimestamps[session] || Date.now();
+    const calculatedTime = Math.max(0, Math.floor((Date.now() - sessionStart) / 1000));
+    const updateRoomTwoAggregate = () => {
+      ensureResultTracking(user);
+      user.roomResults.room2 = {
+        score: (user.room2Score1 || 0) + (user.room2Score2 || 0) + (user.room2Score3 || 0) + (user.room2Score4 || 0),
+        timeSpent: (user.room2Time1 || 0) + (user.room2Time2 || 0) + (user.room2Time3 || 0) + (user.room2Time4 || 0),
+        submitted: [1, 2, 3, 4].some(i => user[`room2Score${i}`] !== undefined),
+        finalized: roomTwoSessionState === 'completed'
+      };
+      recalculateOverallResult(user);
+    };
 
     if (session === 1) {
       const val = value || 0;
@@ -826,7 +1105,8 @@ io.on('connection', (socket) => {
       else if (val >= 91 && val <= 100) calculatedScore = 10;
 
       user.room2Score1 = calculatedScore;
-      user.score = (user.score || 0) + calculatedScore;
+      user.room2Time1 = calculatedTime;
+      updateRoomTwoAggregate();
       console.log(`[ROOM-2-SUBMIT] Session 1: ${user.nickname} nộp đánh giá: ${val}. Điểm đạt: ${calculatedScore}`);
     } 
     else if (session === 2) {
@@ -840,7 +1120,8 @@ io.on('connection', (socket) => {
       calculatedScore = matchCount * 2.5;
 
       user.room2Score2 = calculatedScore;
-      user.score = (user.score || 0) + calculatedScore;
+      user.room2Time2 = calculatedTime;
+      updateRoomTwoAggregate();
       console.log(`[ROOM-2-SUBMIT] Session 2: ${user.nickname} chọn đúng ${matchCount}/4 nguyên nhân. Điểm đạt: ${calculatedScore}`);
     } 
     else if (session === 3) {
@@ -863,7 +1144,8 @@ io.on('connection', (socket) => {
       }
 
       user.room2Score3 = calculatedScore;
-      user.score = (user.score || 0) + calculatedScore;
+      user.room2Time3 = calculatedTime;
+      updateRoomTwoAggregate();
       console.log(`[ROOM-2-SUBMIT] Session 3: ${user.nickname} chọn mô hình: ${model}, đúng ${policyMatchCount}/3 chính sách. Điểm đạt: ${calculatedScore}`);
     } 
     else if (session === 4) {
@@ -881,11 +1163,12 @@ io.on('connection', (socket) => {
       calculatedScore += policyMatchCount * 4; // 2đ cho chính sách + 2đ cho đổi mới cơ chế
 
       user.room2Score4 = calculatedScore;
-      user.score = (user.score || 0) + calculatedScore;
+      user.room2Time4 = calculatedTime;
+      updateRoomTwoAggregate();
       console.log(`[ROOM-2-SUBMIT] Session 4: ${user.nickname} chọn đường lối: ${path}, đúng ${policyMatchCount}/3 chính sách. Điểm đạt: ${calculatedScore}`);
     }
 
-    socket.emit('room2:submit-success', { session, score: calculatedScore });
+    socket.emit('room2:submit-success', { session, score: calculatedScore, timeSpent: calculatedTime });
     broadcastRoomTwoPlayers();
   });
 

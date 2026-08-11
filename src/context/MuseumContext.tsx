@@ -135,6 +135,7 @@ interface MuseumContextType {
 
   // --- Room 1 Game Start Synchronizer ---
   roomOneLocked: boolean;
+  currentRoomLocked: boolean;
   roomOneWaitingPlayers: number;
   roomOneTotalPlayers: number;
   roomOneCountdownTime: number;
@@ -208,6 +209,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // --- Room 1 Game Start Synchronizer ---
   const [roomOneLocked, setRoomOneLocked] = useState(false);
+  const [currentRoomLocked, setCurrentRoomLocked] = useState(false);
   const [roomOneWaitingPlayers, setRoomOneWaitingPlayers] = useState(0);
   const [roomOneTotalPlayers, setRoomOneTotalPlayers] = useState(0);
   const [roomOneCountdownTime, setRoomOneCountdownTime] = useState(0);
@@ -791,6 +793,14 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setRoomOneSessionResults(null);
     });
 
+    newSocket.on('room:player-lock', (data: { roomId: string; locked: boolean }) => {
+      setCurrentRoomLocked(data.locked);
+    });
+
+    newSocket.on('room:start-game', (data: { roomId: string; startTimestamp?: number }) => {
+      setCurrentRoomLocked(false);
+    });
+
     newSocket.on('room1:session-ended', (data: { results: any[] }) => {
       setRoomOneSessionResults(data.results);
       setRoomOneCompleted(true);
@@ -933,6 +943,10 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [activeGallery?.id, roomOneState]);
 
+  useEffect(() => {
+    setCurrentRoomLocked(false);
+  }, [currentRoom]);
+
   // Reset Room 2 states when leaving Room 2
   useEffect(() => {
     if (currentRoom !== 'gallery-paintings') {
@@ -1018,6 +1032,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // --- Room 1 Game Start Synchronizer ---
         roomOneLocked,
+        currentRoomLocked,
         roomOneWaitingPlayers,
         roomOneTotalPlayers,
         roomOneCountdownTime,
