@@ -1,4 +1,7 @@
-import { ROOM_THREE_FRAGMENTS } from './roomThreeQuest';
+import {
+  ROOM_THREE_FRAGMENTS,
+  RoomThreeInteractionPoint,
+} from './roomThreeQuest';
 
 export interface RoomThreeProgress {
   videoViewed: boolean;
@@ -78,3 +81,24 @@ export const readRoomThreeProgress = (raw: string | null): RoomThreeProgress => 
 export const getRoomThreeVideoCompletionState = (reason: 'closed' | 'ended' | 'other') => ({
   viewed: reason === 'closed' || reason === 'ended',
 });
+
+export const findNearestRoomThreeInteraction = (
+  player: { x: number; z: number },
+  points: readonly RoomThreeInteractionPoint[],
+  collectedIds: readonly string[],
+): RoomThreeInteractionPoint | null => {
+  const collected = new Set(collectedIds);
+  let nearest: RoomThreeInteractionPoint | null = null;
+  let nearestDistance = Number.POSITIVE_INFINITY;
+
+  for (const point of points) {
+    if (point.kind === 'fragment' && point.id && collected.has(point.id)) continue;
+    const distance = Math.hypot(player.x - point.x, player.z - point.z);
+    if (distance <= point.radius && distance < nearestDistance) {
+      nearest = point;
+      nearestDistance = distance;
+    }
+  }
+
+  return nearest;
+};

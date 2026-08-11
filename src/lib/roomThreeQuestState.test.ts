@@ -4,6 +4,7 @@ import {
   evaluateRoomThreePuzzle,
   getCollectedFragmentCount,
   getRoomThreeMissionText,
+  findNearestRoomThreeInteraction,
   isCorrectFragmentOrder,
   isFragmentCollected,
   readRoomThreeProgress,
@@ -67,5 +68,30 @@ describe('Room Three quest state', () => {
   it('returns empty progress for malformed JSON', () => {
     expect(readRoomThreeProgress('{bad json'))
       .toEqual({ videoViewed: false, collectedFragments: [], completed: false });
+  });
+
+  it('selects the nearest uncollected fragment within its radius', () => {
+    const nearest = findNearestRoomThreeInteraction(
+      { x: -14.1, z: 107.7 },
+      [
+        { kind: 'fragment', id: 'legal-equality', x: -14.25, z: 107.7, radius: 2.6 },
+        { kind: 'fragment', id: 'press-freedom', x: -14.25, z: 107.7, radius: 2.6 },
+      ],
+      [],
+    );
+    expect(nearest?.kind).toBe('fragment');
+    expect(nearest?.id).toBe('legal-equality');
+  });
+
+  it('never offers a collected fragment again', () => {
+    const nearest = findNearestRoomThreeInteraction(
+      { x: -14.1, z: 107.7 },
+      [
+        { kind: 'fragment', id: 'legal-equality', x: -14.25, z: 107.7, radius: 2.6 },
+        { kind: 'fragment', id: 'press-freedom', x: -14.25, z: 107.7, radius: 2.6 },
+      ],
+      ['legal-equality'],
+    );
+    expect(nearest?.id).toBe('press-freedom');
   });
 });

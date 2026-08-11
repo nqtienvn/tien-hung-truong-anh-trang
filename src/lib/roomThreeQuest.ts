@@ -101,3 +101,36 @@ export const ROOM_THREE_FRAGMENTS: readonly RoomThreeFragment[] = [
 export const ROOM_THREE_INTERACTION_RADIUS = 2.6;
 export const ROOM_THREE_DESK_POSITION = [7.1, 0, 10.9] as const;
 export const ROOM_THREE_VIDEO_POSITION = [0, 0, 0] as const;
+export const ROOM_THREE_ROOM_OFFSET_Z = 115.7;
+
+export type RoomThreeInteractionKind = 'video' | 'fragment' | 'desk';
+
+export interface RoomThreeInteractionPoint {
+  kind: RoomThreeInteractionKind;
+  id?: string;
+  x: number;
+  z: number;
+  radius: number;
+}
+
+export const ROOM_THREE_INTERACTION_POINTS: readonly RoomThreeInteractionPoint[] = [
+  {
+    kind: 'video',
+    x: ROOM_THREE_VIDEO_POSITION[0],
+    z: ROOM_THREE_ROOM_OFFSET_Z + ROOM_THREE_VIDEO_POSITION[2],
+    radius: ROOM_THREE_INTERACTION_RADIUS,
+  },
+  {
+    kind: 'desk',
+    x: ROOM_THREE_DESK_POSITION[0],
+    z: ROOM_THREE_ROOM_OFFSET_Z + ROOM_THREE_DESK_POSITION[2],
+    radius: ROOM_THREE_INTERACTION_RADIUS,
+  },
+  ...ROOM_THREE_FRAGMENTS.map((fragment) => ({
+    kind: 'fragment' as const,
+    id: fragment.id,
+    x: fragment.position[0],
+    z: ROOM_THREE_ROOM_OFFSET_Z + fragment.position[2],
+    radius: ROOM_THREE_INTERACTION_RADIUS,
+  })),
+];
