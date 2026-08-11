@@ -2,6 +2,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
+import { VideoPillar } from '../VideoPillar';
 
 // Static Geometries for VelvetRopeBarrier (Cách B: Tái sử dụng hình khối để tránh giật lag GPU)
 const postGeom = new THREE.CylinderGeometry(0.055, 0.07, 0.96, 18);
@@ -104,6 +105,8 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} showPilasters={false}>
+
+      <VideoPillar />
 
       {/* ============================================================
           ĐÈN RỌI TRANH — TƯỜNG TRÁI (x = -halfW)
