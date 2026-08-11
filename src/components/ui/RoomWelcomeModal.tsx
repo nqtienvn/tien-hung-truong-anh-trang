@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useMuseum } from '@/context/MuseumContext';
 import { BookOpen, Search, FileCheck, DoorOpen, X, ChevronRight, Sparkles, Gamepad2 } from 'lucide-react';
+import {
+  ROOM_THREE_DISPLAY_NAME,
+  ROOM_THREE_WELCOME,
+} from '@/lib/roomThreeNarrative';
 
 const GALLERY_CONFIGS: Record<string, {
   headerTitle: string;
@@ -122,55 +126,45 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-ceramics': {
-    headerTitle: 'PHÒNG 03 • PHÒNG HỘI NHẬP',
-    welcomeTitle: 'Chào mừng đến Phòng Hội Nhập!',
+    headerTitle: ROOM_THREE_DISPLAY_NAME,
+    welcomeTitle: 'PARIS · 1919',
     introText: (
       <>
-        <span className="italic">Chủ đề: </span>
-        <strong>Việt Nam mở cửa với thế giới.</strong>
-        <span className="italic"> Bạn sẽ tìm hiểu về chặng đường hội nhập kinh tế quốc tế của nước nhà qua các bức tranh tư liệu lịch sử. Đọc kỹ thông tin để chuẩn bị cho mini game!</span>
+        <p className="text-xl sm:text-2xl font-serif italic text-slate-800 leading-relaxed">
+          {ROOM_THREE_WELCOME.quote}
+        </p>
+        <p className="mt-3">
+          <strong>{ROOM_THREE_WELCOME.mission}</strong>
+        </p>
       </>
     ),
     steps: [
       {
         icon: <Search size={28} className="text-amber-600" />,
-        title: '① Khám phá tác phẩm',
-        desc: 'Đi xung quanh phòng triển lãm, nhấp vào các bức tranh trên tường để đọc chi tiết thông tin lịch sử về từng sự kiện mở cửa.',
+        title: `① ${ROOM_THREE_WELCOME.steps[0].title}`,
+        desc: ROOM_THREE_WELCOME.steps[0].description,
       },
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
-        title: '② Thu thập dữ kiện',
-        desc: 'Mỗi bức tranh sau khi đọc sẽ được ghi nhận vào "Bộ sưu tập" ở góc dưới bên phải màn hình. Hãy thu thập đủ 9 dữ kiện.',
+        title: `② ${ROOM_THREE_WELCOME.steps[1].title}`,
+        desc: ROOM_THREE_WELCOME.steps[1].description,
       },
       {
         icon: <Gamepad2 size={28} className="text-amber-600" />,
-        title: '③ Tham gia Mini Game',
-        desc: 'Đến khu vực máy chơi game "Game dòng chảy lịch sử" ở cuối phòng để bắt đầu trò chơi sắp xếp 9 sự kiện theo đúng trình tự thời gian.',
+        title: `③ ${ROOM_THREE_WELCOME.steps[2].title}`,
+        desc: ROOM_THREE_WELCOME.steps[2].description,
       },
       {
         icon: <FileCheck size={28} className="text-amber-600" />,
-        title: '④ Hoàn thành thử thách',
-        desc: 'Sắp xếp chính xác các sự kiện để đạt điểm số cao nhất. Bạn có 3 phút thực hiện và chỉ được nộp kết quả duy nhất một lần!',
+        title: `④ ${ROOM_THREE_WELCOME.steps[3].title}`,
+        desc: ROOM_THREE_WELCOME.steps[3].description,
       },
     ],
     summary: (
-      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
-        <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">🖼️</span>
-          <span>9 bức tranh cần đọc</span>
-        </div>
-        <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">📁</span>
-          <span>Bộ sưu tập → góc dưới phải</span>
-        </div>
-        <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">⏱️</span>
-          <span>Giới hạn 3 phút chơi game</span>
-        </div>
-        <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">🎯</span>
-          <span>Chỉ nộp bài duy nhất 1 lần</span>
-        </div>
+      <div className="space-y-2 text-[11px] text-slate-700">
+        <p className="font-semibold leading-relaxed text-slate-800">
+          {ROOM_THREE_WELCOME.flow}
+        </p>
       </div>
     ),
   },

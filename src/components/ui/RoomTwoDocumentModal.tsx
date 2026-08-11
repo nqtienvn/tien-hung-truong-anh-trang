@@ -6,6 +6,7 @@ import {
   FileText, Award, AlertTriangle, TrendingUp, DollarSign, 
   ShoppingCart, Loader2, X, ChevronRight, CheckCircle2, AlertCircle, Play, Shield
 } from 'lucide-react';
+import { ROOM_THREE_DISPLAY_NAME } from '@/lib/roomThreeNarrative';
 
 interface CauseCard {
   id: string;
@@ -1313,7 +1314,7 @@ export const RoomTwoDocumentModal: React.FC = () => {
                     &ldquo;Đại hội thống nhất lựa chọn đường lối Đổi mới: phát triển nền kinh tế nhiều thành phần, vận hành theo cơ chế thị trường có sự quản lý của Nhà nước. Đây là bước chuyển quan trọng nhằm giải phóng sức sản xuất và khắc phục những hạn chế của cơ chế cũ.&rdquo;
                   </p>
                 </div>
-                <p className="text-xs text-slate-500">Vui lòng đóng bảng tài liệu. Hãy đứng dậy (phím F) và sẵn sàng đi tiếp sang Phòng 3!</p>
+                <p className="text-xs text-slate-500">Vui lòng đóng bảng tài liệu. Hãy đứng dậy (phím F) và sẵn sàng đi tiếp sang {ROOM_THREE_DISPLAY_NAME}!</p>
               </div>
             )
           )}
@@ -1363,10 +1364,10 @@ export const RoomTwoDocumentModal: React.FC = () => {
 
               <div className="space-y-2">
                 <div className="bg-[#fcf8f2] border border-amber-200/50 rounded-xl px-4 py-2 text-[11px] text-amber-900 inline-block font-bold">
-                  🚪 Cửa Phòng 3 (gallery-ceramics) đã được mở!
+                  🚪 Cửa {ROOM_THREE_DISPLAY_NAME} đã được mở!
                 </div>
                 <p className="text-[10px] text-slate-450 italic">
-                  Đại biểu có thể đóng cửa sổ này và di chuyển qua cửa tiếp theo phía sau khán đài để sang Phòng 3.
+                  Đại biểu có thể đóng cửa sổ này và di chuyển qua cửa tiếp theo phía sau khán đài để sang {ROOM_THREE_DISPLAY_NAME}.
                 </p>
               </div>
             </div>

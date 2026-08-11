@@ -18,6 +18,10 @@ import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
+import {
+  ROOM_THREE_DISPLAY_NAME,
+  ROOM_THREE_TRANSITION,
+} from '@/lib/roomThreeNarrative';
 
 // ── Summary Minigame data (mirrored from RoomFour constants) ──
 const MG_SITUATIONS = [
@@ -81,7 +85,7 @@ const DOOR_CONFIGS = [
     targetRoom: 'gallery-ceramics',
     position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Phòng Hội Nhập',
+    label: ROOM_THREE_DISPLAY_NAME,
   },
   {
     doorId: 'door-room4',
@@ -151,7 +155,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room3',
     check: (x: number, z: number) => z >= 98.0 && z <= 100.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 102.0] as [number, number, number],
-    promptVi: 'vào Phòng 03: Phòng Hội Nhập',
+    promptVi: `vào ${ROOM_THREE_DISPLAY_NAME}`,
     promptEn: 'enter Room 03: Integration Room'
   },
   {
@@ -182,7 +186,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room4',
     check: (x: number, z: number) => z >= 130.0 && z <= 132.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 128.0] as [number, number, number],
-    promptVi: 'quay lại Phòng 03',
+    promptVi: `quay lại ${ROOM_THREE_DISPLAY_NAME}`,
     promptEn: 'return to Room 03'
   },
   // --- ROOM 4 <-> ROOM 5 ---
@@ -534,14 +538,14 @@ const LobbyPlayer: React.FC<{
   activeDoorRef: React.RefObject<any>;
   transitionLoading: boolean;
   onTransitionLoadingChange: (loading: boolean) => void;
-  onTransitionRoomNameChange: (name: string) => void;
+  onTransitionRoomChange: (roomId: string, fallbackName: string) => void;
 }> = ({
   onActiveDoorChange,
   activeDoor,
   activeDoorRef,
   transitionLoading,
   onTransitionLoadingChange,
-  onTransitionRoomNameChange,
+  onTransitionRoomChange,
 }) => {
   const playerRef = useRef<THREE.Group>(null);
   const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
@@ -911,7 +915,7 @@ const LobbyPlayer: React.FC<{
         } else if (activeDoorRef.current) {
           const door = activeDoorRef.current;
           const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
-          onTransitionRoomNameChange(targetRoomName);
+          onTransitionRoomChange(door.toRoom, targetRoomName);
           onTransitionLoadingChange(true);
 
           setTimeout(() => {
@@ -925,6 +929,7 @@ const LobbyPlayer: React.FC<{
 
             setTimeout(() => {
               onTransitionLoadingChange(false);
+              onTransitionRoomChange('', '');
             }, 800);
           }, 1200);
         }
@@ -1391,6 +1396,7 @@ export default function LobbyPage() {
   // Trạng thái chuyển phòng mượt mà qua màn hình loading (Tách không gian các phòng độc lập)
   const [transitionLoading, setTransitionLoading] = useState(false);
   const [transitionRoomName, setTransitionRoomName] = useState('');
+  const [transitionRoomId, setTransitionRoomId] = useState<string | null>(null);
   const [activeDoorInfo, setActiveDoorInfo] = useState<any | null>(null);
   const activeDoorInfoRef = useRef<any>(null);
   useEffect(() => {
@@ -1579,7 +1585,7 @@ export default function LobbyPage() {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: ROOM_THREE_DISPLAY_NAME },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
       'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
     };
@@ -1627,7 +1633,10 @@ export default function LobbyPage() {
                   activeDoorRef={activeDoorInfoRef}
                   transitionLoading={transitionLoading}
                   onTransitionLoadingChange={setTransitionLoading}
-                  onTransitionRoomNameChange={setTransitionRoomName}
+                  onTransitionRoomChange={(roomId, fallbackName) => {
+                    setTransitionRoomId(roomId || null);
+                    setTransitionRoomName(fallbackName);
+                  }}
                 />
 
                 {/* Multiplayer avatars */}
@@ -2273,12 +2282,31 @@ export default function LobbyPage() {
             </div>
 
             <div className="space-y-3">
-              <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
-              </span>
-              <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                {transitionRoomName}
-              </h2>
+              {transitionRoomId === 'gallery-ceramics' ? (
+                <>
+                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+                  </span>
+                  <p className="text-amber-400 text-xs font-black tracking-[0.28em] mt-2">
+                    {ROOM_THREE_TRANSITION.roomName}
+                  </p>
+                  <p className="text-cyan-300 text-sm font-bold tracking-[0.22em]">
+                    {ROOM_THREE_TRANSITION.period}
+                  </p>
+                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                    {ROOM_THREE_TRANSITION.description}
+                  </h2>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+                  </span>
+                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                    {transitionRoomName}
+                  </h2>
+                </>
+              )}
               <p className="text-slate-400 text-xs font-semibold italic animate-pulse">
                 {language === 'vi'
                   ? 'Đang chuẩn bị không gian triển lãm 3D...'

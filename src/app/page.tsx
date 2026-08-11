@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { ROOM_THREE_DISPLAY_NAME } from "@/lib/roomThreeNarrative";
 
 export default function Home() {
   return (
@@ -227,10 +228,10 @@ export default function Home() {
                   Phòng 03
                 </span>
                 <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Phòng Hội Nhập
+                  {ROOM_THREE_DISPLAY_NAME}
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Tìm hiểu chặng đường hội nhập kinh tế quốc tế của Việt Nam qua các tác phẩm tranh tư liệu và mini game dòng chảy lịch sử.
+                  PARIS · 1919 — Khôi phục Bản Yêu sách của nhân dân An Nam.
                 </p>
               </div>
             </div>
