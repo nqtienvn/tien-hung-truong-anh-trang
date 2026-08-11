@@ -19,6 +19,12 @@ interface DoorState {
   targetRoom: string;
 }
 
+interface AdminRoomState {
+  isOpen: boolean;
+  status?: 'waiting' | 'countdown' | 'playing' | 'ended';
+  startTimestamp?: number | null;
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
@@ -34,6 +40,18 @@ export default function AdminDashboard() {
   const [error, setError] = useState('');
 
   // Kiểm tra trạng thái xác thực đã lưu
+  const handleStartGenericRoom = (roomId: string) => {
+    if (!adminSocket) return;
+    adminSocket.emit('admin:start-room', { roomId });
+  };
+
+  const handleEndGenericRoom = (roomId: string) => {
+    if (!adminSocket) return;
+    if (window.confirm('Kết thúc phòng và chốt điểm/thời gian hiện tại?')) {
+      adminSocket.emit('admin:end-room', { roomId });
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const auth = sessionStorage.getItem('admin_authorized');
@@ -49,7 +67,7 @@ export default function AdminDashboard() {
   const [doorLoading, setDoorLoading] = useState<string | null>(null);
 
   // ═══ Room Control State ═══
-  const [roomStates, setRoomStates] = useState<Record<string, { isOpen: boolean }>>({
+  const [roomStates, setRoomStates] = useState<Record<string, AdminRoomState>>({
     'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
     'gallery-ceramics': { isOpen: true },
@@ -58,9 +76,13 @@ export default function AdminDashboard() {
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
   const [roomOnePlayers, setRoomOnePlayers] = useState<any[]>([]);
   const [roomTwoPlayers, setRoomTwoPlayers] = useState<any[]>([]);
+  const [genericRoomPlayers, setGenericRoomPlayers] = useState<Record<string, any[]>>({});
+  const [genericResultsRoomId, setGenericResultsRoomId] = useState<string | null>(null);
+  const [overallResults, setOverallResults] = useState<any[]>([]);
   const [roomTwoSessionState, setRoomTwoSessionState] = useState<'waiting' | 'session1' | 'session2' | 'session3' | 'session4' | 'completed'>('waiting');
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [isRoomTwoResultsModalOpen, setIsRoomTwoResultsModalOpen] = useState(false);
+  const [isOverallResultsModalOpen, setIsOverallResultsModalOpen] = useState(false);
 
   // Kết nối Socket.io cho admin
   useEffect(() => {
@@ -77,6 +99,7 @@ export default function AdminDashboard() {
       sock.emit('admin:get-door-status');
       sock.emit('admin:get-room1-players');
       sock.emit('admin:get-room2-players');
+      sock.emit('admin:get-overall-results');
     });
 
     sock.on('admin:room1-players-update', (players: any[]) => {
@@ -85,6 +108,14 @@ export default function AdminDashboard() {
 
     sock.on('admin:room2-players-update', (players: any[]) => {
       setRoomTwoPlayers(players);
+    });
+
+    sock.on('admin:overall-results-update', (players: any[]) => {
+      setOverallResults(players);
+    });
+
+    sock.on('admin:room-players-update', (data: { roomId: string; players: any[] }) => {
+      setGenericRoomPlayers(prev => ({ ...prev, [data.roomId]: data.players }));
     });
 
     sock.on('room2:session1-start', () => {
@@ -104,7 +135,7 @@ export default function AdminDashboard() {
       setDoorLoading(null);
     });
 
-    sock.on('room-states', (states: Record<string, { isOpen: boolean }>) => {
+    sock.on('room-states', (states: Record<string, AdminRoomState>) => {
       setRoomStates(states);
       setRoomLoading(null);
     });
@@ -182,6 +213,19 @@ export default function AdminDashboard() {
     if (window.confirm('Bắt đầu đếm ngược 7 giây cho tất cả người chơi trong Phòng 1?')) {
       adminSocket.emit('admin:start-room1-countdown');
     }
+  };
+
+  const canStartRoomOne =
+    roomOnePlayers.length > 0 && roomOnePlayers.every((p) => p.ready);
+
+  const canStartRoomTwo =
+    roomTwoPlayers.length > 0 && roomTwoPlayers.every((p) => p.ready);
+
+  const isRoomPlaying = (roomId: string) => roomStates[roomId]?.status === 'playing';
+  const getGenericRoomPlayers = (roomId: string) => genericRoomPlayers[roomId] || [];
+  const canStartGenericRoom = (roomId: string) => {
+    const players = getGenericRoomPlayers(roomId);
+    return players.length > 0 && players.every((p) => p.ready);
   };
 
   const handleForceEndRoomOne = () => {
@@ -467,7 +511,12 @@ export default function AdminDashboard() {
                     <button
                       type="button"
                       onClick={handleStartRoomOneCountdown}
-                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-violet-500/10 hover:bg-violet-500/25 border border-violet-500/25 text-violet-400"
+                      disabled={!canStartRoomOne}
+                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                        canStartRoomOne
+                          ? 'cursor-pointer bg-violet-500/10 hover:bg-violet-500/25 border-violet-500/25 text-violet-400'
+                          : 'cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600'
+                      }`}
                     >
                       <Clock size={12} />
                       Bắt đầu đếm ngược (7s)
@@ -495,14 +544,27 @@ export default function AdminDashboard() {
                       className="px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
                     >
                       <Users size={10} />
-                      Đại biểu
+                      Danh sách
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStartGenericRoom('gallery-paintings')}
+                      disabled={!canStartRoomTwo}
+                      className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
+                        canStartRoomTwo
+                          ? 'bg-violet-500/10 hover:bg-violet-500/25 border-violet-500/25 text-violet-400 cursor-pointer'
+                          : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
+                      }`}
+                    >
+                      <Clock size={10} />
+                      Bắt đầu phòng
                     </button>
                     <button
                       type="button"
                       onClick={handleStartRoomTwoSessionOne}
-                      disabled={roomTwoSessionState === 'session1'}
+                      disabled={!isRoomPlaying('gallery-paintings') || roomTwoSessionState === 'session1'}
                       className={`px-2 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 border ${
-                        roomTwoSessionState === 'session1'
+                        !isRoomPlaying('gallery-paintings') || roomTwoSessionState === 'session1'
                           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-350 cursor-not-allowed'
                           : 'bg-slate-800 border-slate-700 text-slate-350 hover:bg-slate-750 cursor-pointer'
                       }`}
@@ -555,9 +617,45 @@ export default function AdminDashboard() {
                           : 'bg-amber-500/10 hover:bg-amber-500/25 border-amber-500/25 text-amber-400 cursor-pointer'
                       }`}
                     >
-                      Chốt Đổi Mới
+                      Kết thúc & tính điểm
                     </button>
                   </div>
+                )}
+                {['gallery-ceramics', 'gallery-market-economy'].includes(roomId) && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        adminSocket?.emit('admin:get-room-players', { roomId });
+                        setGenericResultsRoomId(roomId);
+                      }}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 border border-cyan-500/25 text-cyan-400"
+                    >
+                      <Users size={12} />
+                      Danh sách
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStartGenericRoom(roomId)}
+                      disabled={!canStartGenericRoom(roomId)}
+                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                        canStartGenericRoom(roomId)
+                          ? 'cursor-pointer bg-violet-500/10 hover:bg-violet-500/25 border-violet-500/25 text-violet-400'
+                          : 'cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600'
+                      }`}
+                    >
+                      <Clock size={12} />
+                      Bắt đầu phòng
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleEndGenericRoom(roomId)}
+                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/20 text-rose-400"
+                    >
+                      <Power size={12} />
+                      Kết thúc phòng
+                    </button>
+                  </>
                 )}
                 <button
                   type="button"
@@ -679,6 +777,17 @@ export default function AdminDashboard() {
             <h1 className="font-sans font-bold tracking-wider text-base uppercase">CMS QUẢN TRỊ BẢO TÀNG</h1>
           </div>
         </div>
+
+        <button
+          onClick={() => {
+            adminSocket?.emit('admin:get-overall-results');
+            setIsOverallResultsModalOpen(true);
+          }}
+          className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/20 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+        >
+          <Award size={14} />
+          Tổng điểm
+        </button>
 
         <button
           onClick={handleAddNew}
@@ -1079,7 +1188,7 @@ export default function AdminDashboard() {
                                 </span>
                               ) : p.ready ? (
                                 <span className="bg-violet-500/10 border border-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase animate-pulse">
-                                  Đang chơi
+                                  Sẵn sàng
                                 </span>
                               ) : (
                                 <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
@@ -1097,7 +1206,7 @@ export default function AdminDashboard() {
                               {p.completed ? `${p.timeSpent}s` : '-'}
                             </td>
                             <td className="py-3 px-4 text-center font-mono font-bold text-cyan-400">
-                              {p.completed ? `${p.baseScore}đ` : '-'}
+                              {p.completed ? `${p.finalScore || p.baseScore || 0}đ` : '-'}
                             </td>
                           </tr>
                         );
@@ -1155,11 +1264,13 @@ export default function AdminDashboard() {
                     <thead>
                       <tr className="bg-slate-950 text-slate-400 font-mono text-[9px] uppercase border-b border-slate-800 tracking-wider">
                         <th className="py-3 px-4">Đại biểu</th>
+                        <th className="py-3 px-3 text-center">Trạng thái</th>
                         <th className="py-3 px-3 text-center">Phiên 1 (Giá)</th>
                         <th className="py-3 px-3 text-center">Phiên 2 (Sản xuất)</th>
                         <th className="py-3 px-3 text-center">Phiên 3 (Nông nghiệp)</th>
                         <th className="py-3 px-3 text-center">Phiên 4 (Đường lối)</th>
                         <th className="py-3 px-4 text-center font-bold text-amber-400">Tổng điểm</th>
+                        <th className="py-3 px-4 text-center font-bold text-cyan-300">Tổng thời gian</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-850 text-slate-350">
@@ -1168,6 +1279,17 @@ export default function AdminDashboard() {
                           <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
                             <td className="py-3 px-4 font-medium text-white max-w-[120px] truncate">
                               {p.nickname}
+                            </td>
+                            <td className="py-3 px-3 text-center">
+                              {p.ready ? (
+                                <span className="bg-violet-500/10 border border-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Sẵn sàng
+                                </span>
+                              ) : (
+                                <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                                  Chờ
+                                </span>
+                              )}
                             </td>
                             <td className="py-3 px-3 text-center font-mono">
                               {p.submitted1 ? (
@@ -1200,6 +1322,9 @@ export default function AdminDashboard() {
                             <td className="py-3 px-4 text-center font-mono font-bold text-amber-400">
                               {p.totalScore || 0}đ
                             </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold text-cyan-300">
+                              {p.totalTimeSpent || 0}s
+                            </td>
                           </tr>
                         );
                       })}
@@ -1222,6 +1347,121 @@ export default function AdminDashboard() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+      {genericResultsRoomId && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] animate-fade-in font-sans">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm uppercase tracking-wider">
+                <Users size={16} />
+                <span>Danh sách realtime {genericResultsRoomId === 'gallery-ceramics' ? 'Phòng 03' : 'Phòng 04'}</span>
+              </div>
+              <button
+                onClick={() => setGenericResultsRoomId(null)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              {(genericRoomPlayers[genericResultsRoomId] || []).length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  Chưa có người chơi trong phòng này.
+                </div>
+              ) : (
+                <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[9px] uppercase border-b border-slate-800 tracking-wider">
+                        <th className="py-3 px-4">Người chơi</th>
+                        <th className="py-3 px-3 text-center">Trạng thái</th>
+                        <th className="py-3 px-3 text-center">Điểm phòng</th>
+                        <th className="py-3 px-3 text-center">Thời gian</th>
+                        <th className="py-3 px-3 text-center">Chốt</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-850 text-slate-350">
+                      {(genericRoomPlayers[genericResultsRoomId] || []).map((p) => (
+                        <tr key={p.socketId} className="hover:bg-slate-900/30 transition-colors">
+                          <td className="py-3 px-4 font-medium text-white max-w-[140px] truncate">{p.nickname}</td>
+                          <td className="py-3 px-3 text-center">
+                            {p.ready ? (
+                              <span className="bg-violet-500/10 border border-violet-500/20 text-violet-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">Sẵn sàng</span>
+                            ) : (
+                              <span className="bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">Chờ</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono font-bold text-cyan-300">{p.score || 0}đ</td>
+                          <td className="py-3 px-3 text-center font-mono text-amber-300">{p.timeSpent || 0}s</td>
+                          <td className="py-3 px-3 text-center font-mono text-slate-400">{p.finalized ? 'Đã chốt' : '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {isOverallResultsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[82vh] animate-fade-in font-sans">
+            <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+              <div className="flex items-center gap-2 text-cyan-300 font-bold text-sm uppercase tracking-wider">
+                <Award size={16} />
+                <span>Tổng điểm toàn bộ phòng</span>
+              </div>
+              <button
+                onClick={() => setIsOverallResultsModalOpen(false)}
+                className="text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+              {overallResults.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 text-xs">
+                  Chưa có dữ liệu điểm tổng.
+                </div>
+              ) : (
+                <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-mono text-[9px] uppercase border-b border-slate-800 tracking-wider">
+                        <th className="py-3 px-4">Người chơi</th>
+                        <th className="py-3 px-3 text-center">P1</th>
+                        <th className="py-3 px-3 text-center">P2</th>
+                        <th className="py-3 px-3 text-center">P3</th>
+                        <th className="py-3 px-3 text-center">P4</th>
+                        <th className="py-3 px-4 text-center text-cyan-300">Tổng điểm</th>
+                        <th className="py-3 px-4 text-center text-amber-300">Tổng thời gian</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-850 text-slate-350">
+                      {overallResults.map((p, index) => (
+                        <tr key={p.socketId || p.nickname} className="hover:bg-slate-900/30 transition-colors">
+                          <td className="py-3 px-4 font-medium text-white max-w-[160px] truncate">
+                            <span className="text-slate-500 mr-2 font-mono">#{index + 1}</span>
+                            {p.nickname}
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono">{p.room1Score || 0}đ / {p.room1Time || 0}s</td>
+                          <td className="py-3 px-3 text-center font-mono">{p.room2Score || 0}đ / {p.room2Time || 0}s</td>
+                          <td className="py-3 px-3 text-center font-mono">{p.room3Score || 0}đ / {p.room3Time || 0}s</td>
+                          <td className="py-3 px-3 text-center font-mono">{p.room4Score || 0}đ / {p.room4Time || 0}s</td>
+                          <td className="py-3 px-4 text-center font-mono font-bold text-cyan-300">{p.totalScore || 0}đ</td>
+                          <td className="py-3 px-4 text-center font-mono font-bold text-amber-300">{p.totalTimeSpent || 0}s</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

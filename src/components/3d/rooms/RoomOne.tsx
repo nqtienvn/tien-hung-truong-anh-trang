@@ -1,6 +1,12 @@
-import React from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import { Edges, Html, RoundedBox, useTexture } from '@react-three/drei';
+import { useMuseum } from '@/context/MuseumContext';
+import { BaseRoom, BaseRoomProps } from './BaseRoom';
+import type { Exhibit } from '@/lib/db';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
 import type { Exhibit } from '@/lib/db';
@@ -170,6 +176,9 @@ const vaseBodyGeom   = new THREE.CylinderGeometry(0.09, 0.13, 0.26, 8);
 const vaseMouthGeom  = new THREE.SphereGeometry(0.11, 8, 8);
 const flowerStemGeom = new THREE.CylinderGeometry(0.008, 0.009, 0.3, 8);
 const flowerBudGeom  = new THREE.SphereGeometry(0.045, 8, 8);
+const pedestalBaseGeom = new THREE.CylinderGeometry(1.35, 1.6, 0.78, 32);
+const pedestalTopGeom = new THREE.CylinderGeometry(1.5, 1.35, 0.2, 32);
+const videoScreenGeom = new THREE.PlaneGeometry(3.6, 2.03);
 
 const postMat     = new THREE.MeshStandardMaterial({ color: '#2a2119', roughness: 0.28, metalness: 0.65 });
 const metalMat    = new THREE.MeshStandardMaterial({ color: '#c59b45', roughness: 0.22, metalness: 0.85 });
@@ -189,6 +198,253 @@ const vaseMouthMat     = new THREE.MeshStandardMaterial({ color: '#a1887f', roug
 const flowerStemMat    = new THREE.MeshStandardMaterial({ color: '#2f5d3a', roughness: 0.7 });
 const flowerBudRedMat  = new THREE.MeshStandardMaterial({ color: '#ef4444', roughness: 0.6 });
 const flowerBudPinkMat = new THREE.MeshStandardMaterial({ color: '#f8b4c4', roughness: 0.6 });
+const pedestalBaseMat = new THREE.MeshStandardMaterial({ color: '#4a2b1b', roughness: 0.55, metalness: 0.05 });
+const pedestalTopMat = new THREE.MeshStandardMaterial({ color: '#c59b45', roughness: 0.32, metalness: 0.45 });
+
+const videoControlButtonStyle: React.CSSProperties = {
+  width: 30,
+  height: 30,
+  padding: 0,
+  borderRadius: 999,
+  border: '1px solid rgba(250,204,21,0.45)',
+  background: 'rgba(30,41,59,0.92)',
+  color: '#fde68a',
+  fontSize: 14,
+  fontWeight: 800,
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  lineHeight: 1,
+};
+
+const RoomOneVideoPedestal: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(20);
+  const posterTexture = useTexture('/videos/room1-preview-5s.jpg');
+
+  useEffect(() => {
+    posterTexture.colorSpace = THREE.SRGBColorSpace;
+  }, [posterTexture]);
+
+  const video = useMemo(() => {
+    if (typeof document === 'undefined' || !isVisible || videoFailed) return null;
+    const el = document.createElement('video');
+    el.src = '/videos/room1-pedestal-video.mp4?v=room1-remix-20s-720p30-20260811';
+    el.crossOrigin = 'anonymous';
+    el.loop = true;
+    el.muted = true;
+    el.volume = 1;
+    el.playsInline = true;
+    el.preload = 'auto';
+    return el;
+  }, [isVisible, videoFailed]);
+
+  const videoTexture = useMemo(() => {
+    if (!video) return null;
+    const texture = new THREE.VideoTexture(video);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    return texture;
+  }, [video]);
+
+  const toggleAudioAndPlay = useCallback(() => {
+    if (!video || !isVisible) return;
+    const nextAudioEnabled = !audioEnabled;
+    setAudioEnabled(nextAudioEnabled);
+    video.muted = !nextAudioEnabled;
+    video.volume = 1;
+    void video.play().catch(() => undefined);
+  }, [video, isVisible, audioEnabled]);
+
+  const togglePlay = useCallback(() => {
+    if (!video) return;
+    if (video.paused) {
+      void video.play().catch(() => undefined);
+    } else {
+      video.pause();
+    }
+  }, [video]);
+
+  const seekBy = useCallback((seconds: number) => {
+    if (!video) return;
+    const safeDuration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : duration;
+    video.currentTime = THREE.MathUtils.clamp(video.currentTime + seconds, 0, safeDuration);
+    setCurrentTime(video.currentTime);
+  }, [video, duration]);
+
+  const seekTo = useCallback((seconds: number) => {
+    if (!video) return;
+    const safeDuration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : duration;
+    video.currentTime = THREE.MathUtils.clamp(seconds, 0, safeDuration);
+    setCurrentTime(video.currentTime);
+  }, [video, duration]);
+
+  useEffect(() => {
+    if (!video) return;
+    setVideoReady(false);
+
+    const handleVideoError = () => {
+      video.pause();
+      setVideoFailed(true);
+    };
+    const markVideoReady = () => {
+      if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+        setVideoReady(true);
+      }
+    };
+    const syncVideoState = () => {
+      setIsPlaying(!video.paused);
+      setCurrentTime(video.currentTime || 0);
+      if (Number.isFinite(video.duration) && video.duration > 0) {
+        setDuration(video.duration);
+      }
+    };
+    const playVideo = () => {
+      if (!isVisible) return;
+      video.muted = !audioEnabled;
+      void video.play().catch(() => undefined);
+    };
+
+    video.addEventListener('error', handleVideoError);
+    video.addEventListener('loadeddata', playVideo);
+    video.addEventListener('canplay', playVideo);
+    video.addEventListener('playing', markVideoReady);
+    video.addEventListener('timeupdate', markVideoReady);
+    video.addEventListener('loadedmetadata', syncVideoState);
+    video.addEventListener('play', syncVideoState);
+    video.addEventListener('pause', syncVideoState);
+    video.addEventListener('timeupdate', syncVideoState);
+
+    if (isVisible) {
+      video.load();
+      playVideo();
+    } else {
+      video.pause();
+    }
+    return () => {
+      video.removeEventListener('error', handleVideoError);
+      video.removeEventListener('loadeddata', playVideo);
+      video.removeEventListener('canplay', playVideo);
+      video.removeEventListener('playing', markVideoReady);
+      video.removeEventListener('timeupdate', markVideoReady);
+      video.removeEventListener('loadedmetadata', syncVideoState);
+      video.removeEventListener('play', syncVideoState);
+      video.removeEventListener('pause', syncVideoState);
+      video.removeEventListener('timeupdate', syncVideoState);
+    };
+  }, [video, isVisible, audioEnabled]);
+
+  useFrame(() => {
+    if (videoTexture && video?.readyState && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      videoTexture.needsUpdate = true;
+    }
+  });
+
+  useEffect(() => {
+    return () => {
+      video?.pause();
+      videoTexture?.dispose();
+    };
+  }, [video, videoTexture]);
+
+  return (
+    <group position={[0, 0, 0]}>
+      <mesh geometry={pedestalBaseGeom} material={pedestalBaseMat} position={[0, 0.39, 0]} />
+      <mesh geometry={pedestalTopGeom} material={pedestalTopMat} position={[0, 0.88, 0]} />
+      <mesh position={[0, 1.02, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.72, 1.18, 48]} />
+        <meshBasicMaterial color="#facc15" transparent opacity={0.38} side={THREE.DoubleSide} />
+      </mesh>
+      <group position={[0, 2.85, -0.24]} rotation={[-0.06, 0, 0]}>
+        <mesh geometry={videoScreenGeom} position={[0, 0, 0.035]}>
+          {videoReady && videoTexture ? (
+            <meshBasicMaterial map={videoTexture} toneMapped={false} side={THREE.DoubleSide} />
+        ) : (
+          <meshBasicMaterial map={posterTexture} toneMapped={false} side={THREE.DoubleSide} />
+        )}
+      </mesh>
+        {false && !audioEnabled && (
+          <Html position={[0, -1.25, 0.12]} center transform distanceFactor={8} occlude={false}>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleAudioAndPlay();
+              }}
+              style={{
+                padding: '8px 14px',
+                borderRadius: '999px',
+                border: '1px solid rgba(250,204,21,0.55)',
+                background: 'rgba(15,23,42,0.88)',
+                color: '#fde68a',
+                fontSize: 12,
+                fontWeight: 800,
+                letterSpacing: '0.04em',
+                whiteSpace: 'nowrap',
+                cursor: 'pointer',
+                boxShadow: '0 10px 24px rgba(0,0,0,0.35)',
+              }}
+            >
+              🔊 Bật tiếng video
+            </button>
+          </Html>
+        )}
+        <Html position={[0, -1.65, 0.12]} center distanceFactor={8} occlude={false}>
+          <div
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: 210,
+              padding: '7px 9px',
+              borderRadius: 999,
+              border: '1px solid rgba(250,204,21,0.5)',
+              background: 'rgba(15,23,42,0.72)',
+              color: '#fde68a',
+              boxShadow: '0 8px 18px rgba(0,0,0,0.28)',
+              userSelect: 'none',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <button type="button" onClick={() => seekBy(-5)} style={videoControlButtonStyle} title="Tua lùi 5 giây">⏪</button>
+              <button type="button" onClick={togglePlay} style={videoControlButtonStyle}>
+                {isPlaying ? '⏸' : '▶'}
+              </button>
+              <button type="button" onClick={() => seekBy(5)} style={videoControlButtonStyle} title="Tua tới 5 giây">⏩</button>
+              <button
+                type="button"
+                onClick={toggleAudioAndPlay}
+                style={videoControlButtonStyle}
+                title={audioEnabled ? 'Tắt tiếng' : 'Bật tiếng'}
+              >
+                {audioEnabled ? '🔊' : '🔇'}
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={duration || 20}
+                step={0.1}
+                value={Math.min(currentTime, duration || 20)}
+                onChange={(event) => seekTo(Number(event.currentTarget.value))}
+                style={{ width: 64, accentColor: '#facc15', cursor: 'pointer' }}
+                title={`${Math.floor(currentTime)}s / ${Math.floor(duration || 20)}s`}
+              />
+            </div>
+          </div>
+        </Html>
+      </group>
+      <pointLight position={[0, 1.24, -0.25]} intensity={isVisible ? 0.85 : 0} distance={3.8} color="#fef3c7" />
+      <pointLight position={[0, 2.75, -0.6]} intensity={isVisible ? 0.55 : 0} distance={5.2} color="#fff7d6" />
+    </group>
+  );
+};
 
 const VelvetRopeBarrier: React.FC<{
   side: 'left' | 'right';
@@ -290,6 +546,8 @@ export const RoomOne: React.FC<RoomOneProps> = ({
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={overriddenSettings} isVisible={isVisible}>
+      <RoomOneVideoPedestal isVisible={isVisible} />
+
       {/* 3. GHẾ GỖ DÀI CHO KHÁCH NGHỈ (Z = -12.0 & Z = 12.0) */}
       {[-12.0, 12.0].map((z) => (
         <group key={z} position={[0, 0, z]}>
@@ -363,3 +621,4 @@ export const RoomOne: React.FC<RoomOneProps> = ({
 };
 
 export default RoomOne;
+

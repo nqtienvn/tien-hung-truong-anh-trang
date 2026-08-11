@@ -556,7 +556,7 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, currentRoomLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -613,9 +613,17 @@ const LobbyPlayer: React.FC<{
   useEffect(() => {
     if (teleportTarget && playerRef.current) {
       playerRef.current.position.set(teleportTarget.x, teleportTarget.y + baseY, teleportTarget.z);
+      socket?.emit('move', {
+        x: teleportTarget.x,
+        y: teleportTarget.y,
+        z: teleportTarget.z,
+        yaw: playerRef.current.rotation.y,
+        isSitting: false,
+        headYaw: 0,
+      });
       clearTeleport();
     }
-  }, [teleportTarget, clearTeleport, baseY]);
+  }, [teleportTarget, clearTeleport, baseY, socket]);
 
   /**
    * Kiểm tra va chạm mở rộng (sảnh + phòng triển lãm)
@@ -713,6 +721,12 @@ const LobbyPlayer: React.FC<{
         }
 
         // 6. Bàn lọ hoa trang trí (mỗi bên 3 bàn => Global Z = 15.0, 31.0, 47.0)
+        const dxVideoPedestal = x;
+        const dzVideoPedestal = z - 31.0;
+        if (Math.sqrt(dxVideoPedestal * dxVideoPedestal + dzVideoPedestal * dzVideoPedestal) < 1.7) {
+          return true;
+        }
+
         const decorTables = [
           { x: -7.2, z: 15.0 },
           { x: -7.2, z: 31.0 },
@@ -1000,7 +1014,7 @@ const LobbyPlayer: React.FC<{
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit || transitionLoading) return;
+    if (selectedExhibit || transitionLoading || roomOneLocked || currentRoomLocked || welcomeModalOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {

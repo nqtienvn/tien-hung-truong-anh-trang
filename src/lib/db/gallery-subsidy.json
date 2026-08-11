@@ -33,6 +33,7 @@
         "en": "On 5 June 1911, Nguyễn Tất Thành left Vietnam from Nha Rong Wharf aboard the Amiral Latouche-Tréville. This marked the beginning of his journey to find a path to national liberation."
       },
       "model_3d_url": "",
+<<<<<<< HEAD
       "thumbnail_url": "/exhibits/nguoi-ra-di.jpg",
       "coordinate_x": -11.8,
       "coordinate_y": 3.65,
@@ -42,6 +43,17 @@
       "rotation_z": 0.0085,
       "scale_x": 4,
       "scale_y": 2.8,
+=======
+      "thumbnail_url": "/exhibits/coupon.jpg",
+      "coordinate_x": -11.75,
+      "coordinate_y": 3.7,
+      "coordinate_z": -17.9,
+      "rotation_x": 0,
+      "rotation_y": 1.5708,
+      "rotation_z": 0,
+      "scale_x": 3.55,
+      "scale_y": 5,
+>>>>>>> origin/main
       "scale_z": 0.1
     },
     {

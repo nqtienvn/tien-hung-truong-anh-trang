@@ -182,6 +182,7 @@ export const RoomWelcomeModal: React.FC = () => {
     nickname, 
     socket, 
     roomOneState, 
+    roomTwoSessionState,
     roomOneWaitingPlayers, 
     roomOneTotalPlayers, 
     roomOneCountdownTime,
@@ -230,6 +231,29 @@ export const RoomWelcomeModal: React.FC = () => {
     }
   }, [roomOneState, activeGallery?.id, isWaitingRoomOne]);
 
+  useEffect(() => {
+    if (activeGallery?.id === 'gallery-paintings' && roomTwoSessionState !== 'waiting' && isWaitingRoomOne) {
+      setIsWaitingRoomOne(false);
+      handleDismiss();
+    }
+  }, [roomTwoSessionState, activeGallery?.id, isWaitingRoomOne]);
+
+  useEffect(() => {
+    if (!socket || !activeGallery?.id) return;
+
+    const handleRoomStart = (data: { roomId: string }) => {
+      if (data.roomId === activeGallery.id && isWaitingRoomOne) {
+        setIsWaitingRoomOne(false);
+        handleDismiss();
+      }
+    };
+
+    socket.on('room:start-game', handleRoomStart);
+    return () => {
+      socket.off('room:start-game', handleRoomStart);
+    };
+  }, [socket, activeGallery?.id, isWaitingRoomOne]);
+
   // Hiện popup khi bước vào phòng có cấu hình và có nickname
   useEffect(() => {
     if (config && nickname) {
@@ -258,8 +282,12 @@ export const RoomWelcomeModal: React.FC = () => {
         } else {
           // Ngược lại, vào trạng thái chờ đồng bộ
           setIsWaitingRoomOne(true);
+          socket?.emit('room:ready', { roomId: activeGallery.id });
           socket?.emit('room1:ready');
         }
+      } else if (activeGallery?.id && ['gallery-paintings', 'gallery-ceramics', 'gallery-market-economy'].includes(activeGallery.id)) {
+        setIsWaitingRoomOne(true);
+        socket?.emit('room:ready', { roomId: activeGallery.id });
       } else {
         handleDismiss();
       }
@@ -286,7 +314,7 @@ export const RoomWelcomeModal: React.FC = () => {
                   Chuẩn bị khởi hành!
                 </h3>
                 <p className="text-sm text-slate-600 leading-relaxed font-sans max-w-sm">
-                  Tất cả mọi người đã sẵn sàng. Trò chơi sẽ bắt đầu sau ít giây. Hãy chuẩn bị tinh thần khám phá!
+                  Admin đã bắt đầu trò chơi. Hãy chuẩn bị tinh thần khám phá!
                 </p>
               </div>
             </>
@@ -302,7 +330,7 @@ export const RoomWelcomeModal: React.FC = () => {
               </div>
               <div className="space-y-2 w-full">
                 <h3 className="text-lg font-bold text-[#5c3d1a] uppercase tracking-wider font-sans">
-                  Đang chờ người chơi khác...
+                  Đang chờ admin bắt đầu...
                 </h3>
                 <div className="bg-[#f5efe3] border border-[#e2d5c0] rounded-xl p-3 max-w-xs mx-auto">
                   <span className="text-sm font-black text-amber-700 font-mono">
@@ -311,7 +339,7 @@ export const RoomWelcomeModal: React.FC = () => {
                   <span className="text-xs text-slate-500 block font-sans mt-0.5">người chơi sẵn sàng</span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed font-sans max-w-xs mx-auto pt-2">
-                  Trò chơi sẽ đồng loạt bắt đầu đếm ngược khi tất cả người chơi trong phòng nhấn nút sẵn sàng.
+                  Khi tất cả người chơi đã sẵn sàng, admin sẽ bấm bắt đầu để hệ thống đếm ngược đồng loạt.
                 </p>
                 <button
                   onClick={handleLeaveWaitingRoom}
@@ -437,7 +465,7 @@ export const RoomWelcomeModal: React.FC = () => {
             {isLast ? (
               <>
                 <Sparkles size={14} />
-                Bắt đầu khám phá!
+                Sẵn sàng
               </>
             ) : (
               <>
