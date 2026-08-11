@@ -204,10 +204,10 @@ export default function Home() {
                   Phòng 02
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Phòng Đổi Mới
+                  Phòng Hội Nghị
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Nghiên cứu bối cảnh lịch sử Đại hội VI (12/1986), hóa thân thành đại biểu để thảo luận và đưa ra quyết sách Đổi mới đất nước.
+                  Tái hiện Hội nghị hợp nhất thành lập Đảng Cộng sản Việt Nam (3/2/1930) tại Cửu Long, Hồng Kông do Nguyễn Ái Quốc chủ trì.
                 </p>
               </div>
             </div>

@@ -74,7 +74,7 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở cuối phòng 1 (Y=3, Z=54) nối sang phòng 2
     position: [0, 3.0, 54.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Phòng Đổi Mới',
+    label: 'Phòng 02: Phòng Hội Nghị',
   },
   {
     doorId: 'door-room3',
@@ -130,8 +130,8 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room2',
     check: (x: number, z: number) => z >= 52.0 && z <= 54.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 56.0] as [number, number, number],
-    promptVi: 'vào Phòng 02: Phòng Đổi Mới',
-    promptEn: 'enter Room 02: Doi Moi Room'
+    promptVi: 'vào Phòng 02: Phòng Hội Nghị',
+    promptEn: 'enter Room 02: Conference Room'
   },
   {
     id: 'room2-to-room1',
@@ -1578,7 +1578,7 @@ export default function LobbyPage() {
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
-      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Hội Nghị' },
       'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
       'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
