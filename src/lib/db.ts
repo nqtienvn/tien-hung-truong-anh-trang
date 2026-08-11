@@ -66,7 +66,9 @@ function readDb(): DatabaseSchema {
           const filePath = path.join(DB_DIR, file);
           const content = fs.readFileSync(filePath, 'utf-8');
           const data = JSON.parse(content) as DatabaseSchema;
-          console.log(`[DB-LOAD] Đọc file ${file}: ${data.galleries?.length || 0} phòng, ${data.exhibits?.length || 0} hiện vật.`);
+          if (process.env.DEBUG_DB_LOAD === 'true') {
+            console.log(`[DB-LOAD] Đọc file ${file}: ${data.galleries?.length || 0} phòng, ${data.exhibits?.length || 0} hiện vật.`);
+          }
           if (data.galleries) galleries.push(...data.galleries);
           if (data.exhibits) exhibits.push(...data.exhibits);
         }

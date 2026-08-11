@@ -6,6 +6,7 @@ import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
 import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Clock, Users, Award, X } from 'lucide-react';
 import { ROOM_THREE_DISPLAY_NAME } from '@/lib/roomThreeNarrative';
+import { fetchAdminData } from '@/lib/adminData';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
@@ -230,19 +231,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAuthorized) return;
 
-    // Tải toàn bộ galleries và exhibits
-    Promise.all([
-      fetch('/api/galleries').then(res => res.json()),
-      fetch('/api/exhibits').then(res => res.json())
-    ])
-      .then(([galleriesData, exhibitsData]) => {
-        setGalleries(galleriesData);
-        setExhibits(exhibitsData);
+    // Tải toàn bộ galleries và exhibits, có giới hạn thời gian để không kẹt spinner.
+    fetchAdminData()
+      .then(({ galleries: galleriesData, exhibits: exhibitsData }) => {
+        setGalleries(galleriesData as Gallery[]);
+        setExhibits(exhibitsData as Exhibit[]);
         setLoading(false);
       })
       .catch(err => {
         console.error('Lỗi tải dữ liệu admin:', err);
-        setError('Không thể kết nối đến máy chủ.');
+        setError(err instanceof Error ? err.message : 'Không thể kết nối đến máy chủ.');
         setLoading(false);
       });
   }, [isAuthorized]);
