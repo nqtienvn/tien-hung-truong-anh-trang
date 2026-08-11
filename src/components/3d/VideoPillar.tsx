@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Html } from '@react-three/drei';
+import { Html, useVideoTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
@@ -32,73 +32,62 @@ export const VideoPillar: React.FC<VideoPillarProps> = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const wasInsideRef = useRef(false);
   const worldCenter = useMemo(() => new THREE.Vector3(), []);
-  const [videoTexture, setVideoTexture] = useState<THREE.VideoTexture | null>(null);
+  const videoTexture = useVideoTexture(VIDEO_URL, {
+    start: false,
+    muted: false,
+    loop: true,
+    playsInline: true,
+    crossOrigin: 'anonymous',
+  });
+  const video = videoTexture.image as HTMLVideoElement;
   const [needsUnmute, setNeedsUnmute] = useState(false);
 
   useEffect(() => {
-    const video = document.createElement('video');
-    video.src = VIDEO_URL;
-    video.crossOrigin = 'anonymous';
-    video.loop = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.muted = false;
-    video.setAttribute('playsinline', '');
-
-    const texture = new THREE.VideoTexture(video);
-    texture.colorSpace = THREE.SRGBColorSpace;
-
     videoRef.current = video;
-    const textureFrame = window.requestAnimationFrame(() => {
-      setVideoTexture(texture);
-    });
 
     return () => {
-      window.cancelAnimationFrame(textureFrame);
       video.pause();
-      video.removeAttribute('src');
-      video.load();
-      texture.dispose();
+      video.currentTime = 0;
       videoRef.current = null;
     };
-  }, []);
+  }, [video]);
 
   const playFromBeginning = useCallback(async () => {
-    const video = videoRef.current;
-    if (!video) return;
+    const activeVideo = videoRef.current;
+    if (!activeVideo) return;
 
-    video.currentTime = 0;
-    video.muted = false;
+    activeVideo.currentTime = 0;
+    activeVideo.muted = false;
 
     try {
-      await video.play();
+      await activeVideo.play();
       setNeedsUnmute(false);
     } catch {
-      video.muted = true;
+      activeVideo.muted = true;
       setNeedsUnmute(true);
-      await video.play().catch(() => undefined);
+      await activeVideo.play().catch(() => undefined);
     }
   }, []);
 
   const stopAndReset = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const activeVideo = videoRef.current;
+    if (!activeVideo) return;
 
-    video.pause();
-    video.currentTime = 0;
+    activeVideo.pause();
+    activeVideo.currentTime = 0;
     setNeedsUnmute(false);
   }, []);
 
   const handleUnmute = useCallback(async () => {
-    const video = videoRef.current;
-    if (!video) return;
+    const activeVideo = videoRef.current;
+    if (!activeVideo) return;
 
-    video.muted = false;
+    activeVideo.muted = false;
     try {
-      await video.play();
+      await activeVideo.play();
       setNeedsUnmute(false);
     } catch {
-      video.muted = true;
+      activeVideo.muted = true;
       setNeedsUnmute(true);
     }
   }, []);
@@ -125,8 +114,6 @@ export const VideoPillar: React.FC<VideoPillarProps> = ({
 
     wasInsideRef.current = isInside;
   });
-
-  useEffect(() => stopAndReset, [stopAndReset]);
 
   return (
     <group ref={pillarRef}>
