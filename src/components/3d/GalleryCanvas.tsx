@@ -500,7 +500,7 @@ export const GalleryCanvas: React.FC<GalleryCanvasProps> = ({ exhibits, galleryI
 
         <Suspense fallback={null}>
           {/* Phòng triển lãm */}
-          <ExhibitionRoom galleryId={galleryId} />
+          <ExhibitionRoom galleryId={galleryId} exhibits={exhibits} />
 
           {/* Các tác phẩm/hiện vật */}
           {exhibits.map((exhibit) => (

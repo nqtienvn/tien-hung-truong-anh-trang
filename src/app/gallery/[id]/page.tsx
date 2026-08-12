@@ -9,6 +9,7 @@ import ExhibitModal from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
+import { RoomFiveMissionHud } from '@/components/ui/RoomFiveMissionHud';
 import { Users, MessageSquare, ArrowLeft, SendHorizontal, Settings } from 'lucide-react';
 
 interface ChatMessage {
@@ -40,8 +41,26 @@ export default function GalleryPage({ params }: PageProps) {
     settings,
     updateSettings,
     updatePreset,
-    miniGameOpen
+    miniGameOpen,
+    roomFiveProgress,
   } = useMuseum();
+
+  const leaveGallery = () => {
+    const leavingUnfinishedRoomFive = galleryId === 'gallery-three'
+      && roomFiveProgress.fragments.length > 0
+      && !roomFiveProgress.completed;
+    if (leavingUnfinishedRoomFive) {
+      const shouldLeave = window.confirm(
+        language === 'vi'
+          ? 'Hồ sơ hành trình Văn Ba chưa hoàn tất. Tiến độ đã được lưu; bạn có muốn về sảnh không?'
+          : 'The Văn Ba journey record is unfinished. Your progress is saved; return to the lobby?',
+      );
+      if (!shouldLeave) return;
+    }
+    setNickname('');
+    setActiveGallery(null);
+    router.push('/');
+  };
 
   const [exhibits, setExhibits] = useState<Exhibit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -230,11 +249,7 @@ export default function GalleryPage({ params }: PageProps) {
           <div className="max-w-7xl mx-auto flex items-center justify-between pointer-events-auto">
             {/* Nút quay lại */}
             <button
-              onClick={() => {
-                setNickname(''); // Reset biệt danh khi rời đi
-                setActiveGallery(null);
-                router.push('/');
-              }}
+              onClick={leaveGallery}
               className="flex items-center gap-2 bg-slate-950/60 hover:bg-slate-900 border border-slate-805 text-slate-300 hover:text-white px-4 py-2.5 rounded-xl backdrop-blur-md transition-all cursor-pointer text-xs font-bold"
             >
               <ArrowLeft size={14} />
@@ -352,6 +367,7 @@ export default function GalleryPage({ params }: PageProps) {
 
       {/* 4. MODAL THUYẾT MINH HIỆN VẬT (Z-INDEX: 50) */}
       {nickname && !inQueue && isAdmitted && <ExhibitModal />}
+      {nickname && !inQueue && isAdmitted && <RoomFiveMissionHud />}
       {nickname && !inQueue && isAdmitted && miniGameOpen && <MiniGameModal />}
       {nickname && !inQueue && isAdmitted && <CeramicsCollection />}
       {nickname && !inQueue && isAdmitted && <MarketEconomyQuest />}

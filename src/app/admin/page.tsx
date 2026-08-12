@@ -12,6 +12,7 @@ const DOOR_CONFIGS = [
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
   { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
   { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
+  { doorId: 'door-room5', targetRoom: 'gallery-three', label: 'Cửa 5: Phòng 04 ↔ Phòng 05', color: 'amber' },
 ];
 
 interface DoorState {
@@ -53,7 +54,8 @@ export default function AdminDashboard() {
     'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
     'gallery-ceramics': { isOpen: true },
-    'gallery-market-economy': { isOpen: true }
+    'gallery-market-economy': { isOpen: true },
+    'gallery-three': { isOpen: true }
   });
   const [roomLoading, setRoomLoading] = useState<string | null>(null);
   const [roomOnePlayers, setRoomOnePlayers] = useState<any[]>([]);
@@ -351,6 +353,8 @@ export default function AdminDashboard() {
       isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
     } else if (doorId === 'door-room4') {
       isPrereqMet = (roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen) || false;
+    } else if (doorId === 'door-room5') {
+      isPrereqMet = (roomStates['gallery-market-economy']?.isOpen && roomStates['gallery-three']?.isOpen) || false;
     }
 
     return (
@@ -756,7 +760,13 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
 
             {/* 9. PHÒNG 4 */}
-            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4'])}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Kinh Tế Thị Trường', 'Không gian trưng bày kinh tế thị trường định hướng XHCN (1996 - Nay)', ['door-room4', 'door-room5'])}
+
+            {/* 10. CỬA 5 */}
+            {renderAdminDoor('door-room5', 'gallery-three', 'Cửa số 05: Phòng 04 ↔ Phòng 05')}
+
+            {/* 11. PHÒNG 5 */}
+            {renderAdminRoom('gallery-three', 'Phòng 05: Bến Nhà Rồng 1911', 'Bến Nhà Rồng, tàu Amiral Latouche-Tréville và công việc phụ bếp của Văn Ba', ['door-room5'])}
           </div>
         </div>
 
@@ -963,6 +973,20 @@ export default function AdminDashboard() {
                   value={editingExhibit.thumbnail_url || ''}
                   onChange={(e) => setEditingExhibit(prev => prev ? { ...prev, thumbnail_url: e.target.value } : null)}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Slide ảnh (mỗi dòng một đường dẫn)</label>
+                <textarea
+                  value={editingExhibit.image_urls?.join('\n') || ''}
+                  onChange={(e) => setEditingExhibit(prev => prev ? {
+                    ...prev,
+                    image_urls: e.target.value.split(/\r?\n/).map(url => url.trim()).filter(Boolean)
+                  } : null)}
+                  rows={3}
+                  placeholder="/exhibits/anh-1.png&#10;/exhibits/anh-2.png"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500 resize-y"
                 />
               </div>
 

@@ -133,6 +133,12 @@ const baseRingSelectedMat = new THREE.MeshBasicMaterial({
   side: THREE.DoubleSide,
 });
 
+const ROOM5_FIRST_VOYAGE_IMAGE_URL = "/exhibits/nha-rong-first-voyage.png";
+const ROOM5_FIRST_VOYAGE_IMAGE_ASPECT = 335 / 597;
+const ROOM5_VAN_BA_PROFILE_IMAGE_URL = "/exhibits/nha-rong-van-ba-profile.png";
+const ROOM5_GALLEY_ARCHIVE_IMAGE_URL = "/exhibits/nha-rong-galley-archive.png";
+const ROOM5_GALLEY_ARCHIVE_IMAGE_ASPECT = 450 / 260;
+
 // Hàm tự động vẽ tranh thủ công giả lập thời bao cấp khi gặp lỗi CORS tải ảnh từ Unsplash
 function createProceduralTexture(title: string, id: string): string {
   if (typeof window === "undefined") return "";
@@ -267,11 +273,44 @@ const PaintingComponent: React.FC<{
   groupRef,
   onClick,
 }) => {
-  const { settings } = useMuseum();
+  const { settings, roomFiveProgress } = useMuseum();
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
   const [textureError, setTextureError] = useState(false);
   const matRef = useRef<THREE.MeshBasicMaterial>(null);
   const hotspotRef = useRef<THREE.Group>(null);
+  const isRoomFiveFirstVoyage = exhibit.id === "nha-rong-first-voyage";
+  const isRoomFiveVanBaProfile = exhibit.id === "nha-rong-latouche-treville";
+  const isRoomFiveGalleyMission = exhibit.id === "nha-rong-galley-work";
+  const isRoomFiveDeparture = exhibit.id === "nha-rong-departure-1911";
+  const roomFiveFragment = isRoomFiveDeparture
+    ? "departure"
+    : isRoomFiveVanBaProfile
+      ? "identity"
+      : isRoomFiveGalleyMission
+        ? "labour"
+        : isRoomFiveFirstVoyage
+          ? "voyage"
+          : null;
+  const roomFiveOrder = ["departure", "identity", "vessel", "labour", "voyage"] as const;
+  const nextRoomFiveFragment = roomFiveOrder.find((id) => !roomFiveProgress.fragments.includes(id));
+  const roomFiveCompleted = roomFiveFragment ? roomFiveProgress.fragments.includes(roomFiveFragment) : false;
+  const frameColor = roomFiveCompleted
+    ? "#34d399"
+    : roomFiveFragment === nextRoomFiveFragment
+      ? "#22d3ee"
+      : isSelected ? "#d4af37" : "#100f0d";
+  const thumbnailUrl = isRoomFiveFirstVoyage
+    ? ROOM5_FIRST_VOYAGE_IMAGE_URL
+    : isRoomFiveVanBaProfile
+      ? ROOM5_VAN_BA_PROFILE_IMAGE_URL
+      : isRoomFiveGalleyMission
+        ? ROOM5_GALLEY_ARCHIVE_IMAGE_URL
+        : exhibit.thumbnail_url;
+  const imagePlaneWidth = isRoomFiveFirstVoyage
+    ? exhibit.scale_y * ROOM5_FIRST_VOYAGE_IMAGE_ASPECT
+    : isRoomFiveGalleyMission
+      ? exhibit.scale_y * ROOM5_GALLEY_ARCHIVE_IMAGE_ASPECT
+      : exhibit.scale_x;
 
   useEffect(() => {
     if (!matRef.current) return;
@@ -292,8 +331,7 @@ const PaintingComponent: React.FC<{
   });
 
   useEffect(() => {
-    if (!exhibit.thumbnail_url) return;
-    setTextureError(false);
+    if (!thumbnailUrl) return;
     const loader = new THREE.TextureLoader();
     loader.setCrossOrigin("anonymous");
     const fallbackUrl = createProceduralTexture(
@@ -302,9 +340,10 @@ const PaintingComponent: React.FC<{
     );
 
     loader.load(
-      exhibit.thumbnail_url,
+      thumbnailUrl,
       (t) => {
         t.colorSpace = THREE.SRGBColorSpace;
+        setTextureError(false);
         setTexture(t);
       },
       undefined,
@@ -314,6 +353,7 @@ const PaintingComponent: React.FC<{
             fallbackUrl,
             (t) => {
               t.colorSpace = THREE.SRGBColorSpace;
+              setTextureError(false);
               setTexture(t);
             },
             undefined,
@@ -324,7 +364,7 @@ const PaintingComponent: React.FC<{
         }
       },
     );
-  }, [exhibit.thumbnail_url, exhibit.id, language]);
+  }, [thumbnailUrl, exhibit.id, exhibit.title.en, exhibit.title.vi, language]);
 
   return (
     <group>
@@ -357,7 +397,7 @@ const PaintingComponent: React.FC<{
             args={[exhibit.scale_x + 0.2, exhibit.scale_y + 0.2, 0.15]}
           />
           <meshStandardMaterial
-            color={isSelected ? "#d4af37" : "#100f0d"}
+            color={frameColor}
             roughness={0.2}
             metalness={0.8}
           />
@@ -375,7 +415,7 @@ const PaintingComponent: React.FC<{
             }
           }}
         >
-          <planeGeometry args={[exhibit.scale_x, exhibit.scale_y]} />
+          <planeGeometry args={[imagePlaneWidth, exhibit.scale_y]} />
           <meshBasicMaterial
             ref={matRef}
             color="#1a1a1a"
@@ -391,7 +431,7 @@ const PaintingComponent: React.FC<{
             e.stopPropagation();
             if (onClick) onClick(exhibit);
             else {
-              setExhibitModalMode("info");
+              setExhibitModalMode(isRoomFiveDeparture || isRoomFiveVanBaProfile || isRoomFiveGalleyMission || isRoomFiveFirstVoyage ? "game" : "info");
               setSelectedExhibit(exhibit);
             }
           }}
@@ -424,10 +464,14 @@ const PaintingComponent: React.FC<{
             >
               <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
                 <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
-                  {language === "vi" ? exhibit.title.vi : exhibit.title.en}
+                  {isRoomFiveVanBaProfile
+                    ? (language === "vi" ? "Hồ sơ Văn Ba" : "The Văn Ba profile")
+                    : (language === "vi" ? exhibit.title.vi : exhibit.title.en)}
                 </p>
                 <p className="text-[8px] text-slate-600 italic truncate leading-none w-full text-center">
-                  {language === "vi" ? exhibit.author.vi : exhibit.author.en}
+                  {isRoomFiveVanBaProfile
+                    ? (language === "vi" ? "Ba ngày trước khi rời bến" : "Three days before departure")
+                    : (language === "vi" ? exhibit.author.vi : exhibit.author.en)}
                 </p>
                 <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
                   {language === "vi" ? "Nhấp để xem" : "Click to view"}

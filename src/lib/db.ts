@@ -33,6 +33,8 @@ export interface Exhibit {
   description: Translation;
   model_3d_url: string;
   thumbnail_url: string;
+  /** Optional ordered set of images shown in the exhibit detail slideshow. */
+  image_urls?: string[];
   coordinate_x: number;
   coordinate_y: number;
   coordinate_z: number;

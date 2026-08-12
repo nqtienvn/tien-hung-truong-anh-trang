@@ -18,6 +18,7 @@ import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
+import { RoomFiveMissionHud } from '@/components/ui/RoomFiveMissionHud';
 
 // ── Summary Minigame data (mirrored from RoomFour constants) ──
 const MG_SITUATIONS = [
@@ -95,7 +96,7 @@ const DOOR_CONFIGS = [
     targetRoom: 'gallery-three',
     position: [0, 3.0, 280.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 05: Phòng Thành Quả',
+    label: 'Phòng 05: Bến Nhà Rồng 1911',
   },
 ];
 
@@ -193,8 +194,8 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room5',
     check: (x: number, z: number) => z >= 278.0 && z <= 280.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 282.0] as [number, number, number],
-    promptVi: 'vào Phòng 05: Phòng Thành Quả',
-    promptEn: 'enter Room 05: Achievements Room'
+    promptVi: 'vào Phòng 05: Bến Nhà Rồng 1911',
+    promptEn: 'enter Room 05: Nhà Rồng Wharf 1911'
   },
   {
     id: 'room5-to-room4',
@@ -239,8 +240,8 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     return 3.0;
   }
 
-  // Phòng 4 (gallery-market-economy) — Z từ 130.0 đến 245.0, Y = 3.0
-  if (z > 130.0 && z <= 245.0) {
+  // Các phòng từ Phòng 4 đến Phòng 5 đều ở cao độ Y = 3.0.
+  if (z > 130.0 && z <= 330.0) {
     return 3.0;
   }
 
@@ -555,7 +556,12 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFiveProgress } = useMuseum();
+  const roomFiveProgressRef = useRef(roomFiveProgress);
+
+  useEffect(() => {
+    roomFiveProgressRef.current = roomFiveProgress;
+  }, [roomFiveProgress]);
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -642,7 +648,7 @@ const LobbyPlayer: React.FC<{
       if (activeRoom === 'gallery-paintings' && (z < 54.3 || z > 99.7)) return true;
       if (activeRoom === 'gallery-ceramics' && (z < 100.3 || z > 129.7)) return true;
       if (activeRoom === 'gallery-market-economy' && (z < 130.3 || z > 279.7)) return true;
-      if (activeRoom === 'gallery-three' && z < 280.3) return true;
+      if (activeRoom === 'gallery-three' && (z < 280.3 || z > 329.7)) return true;
 
       // ── VÙNG SẢNH (Lobby) ──
       if (z <= 8.0) {
@@ -910,6 +916,15 @@ const LobbyPlayer: React.FC<{
           }
         } else if (activeDoorRef.current) {
           const door = activeDoorRef.current;
+          const leavingUnfinishedRoomFive = door.id === 'room5-to-room4'
+            && roomFiveProgressRef.current.fragments.length > 0
+            && !roomFiveProgressRef.current.completed;
+          if (leavingUnfinishedRoomFive) {
+            const shouldLeave = window.confirm(
+              'Hồ sơ hành trình Văn Ba chưa hoàn tất. Tiến độ đã được lưu; bạn có muốn quay lại Phòng 04 không?',
+            );
+            if (!shouldLeave) return;
+          }
           const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
           onTransitionRoomNameChange(targetRoomName);
           onTransitionLoadingChange(true);
@@ -1187,16 +1202,10 @@ const LobbyPlayer: React.FC<{
       setCurrentRoom('gallery-paintings');
     } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
       setCurrentRoom('gallery-ceramics');
-    } else if (curPos.z > 130.0 && curPos.z <= 210.0) {
+    } else if (curPos.z > 130.0 && curPos.z <= 280.0) {
       setCurrentRoom('gallery-market-economy');
-    } else if (curPos.z > 210.0) {
-      // Dịch chuyển ngược lại Sảnh chính khi đi qua cửa ra
-      curPos.set(0, baseY, -5.0);
-      setCurrentRoom('lobby');
-      if (playerRef.current) {
-        playerRef.current.position.set(0, baseY, -5.0);
-        playerRef.current.rotation.set(0, 0, 0);
-      }
+    } else if (curPos.z > 280.0 && curPos.z <= 330.0) {
+      setCurrentRoom('gallery-three');
     }
 
     // Arm/Leg swing
@@ -1581,7 +1590,7 @@ export default function LobbyPage() {
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
       'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
-      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
+      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Bến Nhà Rồng 1911' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1953,6 +1962,7 @@ export default function LobbyPage() {
 
       {/* ═══ MODAL CHI TIẾT HIỆN VẬT (Exhibit Modal) ═══ */}
       <ExhibitModal />
+      <RoomFiveMissionHud />
       {miniGameOpen && <MiniGameModal />}
 
       {/* ── SUMMARY MINIGAME FULLSCREEN OVERLAY (pure DOM, outside Canvas) ── */}

@@ -125,6 +125,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
           customSettings={customSettings}
           isVisible={isVisible}
           ropeBarriersConfig={gallery?.rope_barriers_config}
+          exhibits={exhibits}
         />
 
         {/* Các hiện vật trong phòng - Load từ từ từng cái một để giảm lag */}

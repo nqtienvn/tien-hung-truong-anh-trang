@@ -3,7 +3,9 @@ import RoomOne from './rooms/RoomOne';
 import RoomTwo from './rooms/RoomTwo';
 import RoomThree from './rooms/RoomThree';
 import RoomFour from './rooms/RoomFour';
+import RoomNhaRong from './rooms/RoomNhaRong';
 import BaseRoom from './rooms/BaseRoom';
+import { Exhibit } from '@/lib/db';
 
 interface ExhibitionRoomProps {
   galleryId: string;
@@ -19,6 +21,7 @@ interface ExhibitionRoomProps {
   isVisible?: boolean;
   onRopeClick?: (ropeIndex: number) => void;
   ropeBarriersConfig?: string;
+  exhibits?: Exhibit[];
 }
 
 export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = (props) => {
@@ -38,6 +41,10 @@ export const ExhibitionRoom: React.FC<ExhibitionRoomProps> = (props) => {
 
   if (galleryId === 'gallery-market-economy') {
     return <RoomFour {...props} />;
+  }
+
+  if (galleryId === 'gallery-three') {
+    return <RoomNhaRong {...props} />;
   }
 
   // Fallback cho phòng mới trong tương lai
