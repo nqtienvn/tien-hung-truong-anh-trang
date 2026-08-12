@@ -1,12 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Edges, Html, RoundedBox, useTexture } from '@react-three/drei';
-import { useMuseum } from '@/context/MuseumContext';
-import { BaseRoom, BaseRoomProps } from './BaseRoom';
-import type { Exhibit } from '@/lib/db';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
 import type { Exhibit } from '@/lib/db';
