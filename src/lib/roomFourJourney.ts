@@ -16,12 +16,22 @@ export interface RoomFourJourneyNarrative {
   en: string;
 }
 
+/** A fixed, contextual illustration shown above the primary station text. */
+export interface RoomFourJourneyIllustration {
+  src: string;
+  altVi: string;
+  altEn: string;
+  captionVi: string;
+  captionEn: string;
+}
+
 export interface RoomFourJourneyContent {
   id: RoomFourStationId;
   eyebrowVi: string;
   eyebrowEn: string;
   leadVi: string;
   leadEn: string;
+  illustration?: RoomFourJourneyIllustration;
   historyVi: readonly string[];
   historyEn: readonly string[];
   /** The fixed exhibition rhythm: see → act → witness → understand. */
@@ -168,19 +178,26 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
     id: 's1',
     eyebrowVi: 'Trạm 01 · Moscow · 1923',
     eyebrowEn: 'Station 01 · Moscow · 1923',
-    leadVi: 'Bàn học là một “đảo tập trung”, nơi lý luận được tiếp thu và hệ thống hóa.',
-    leadEn: 'The study desk is an island of concentration where revolutionary theory is absorbed and systematised.',
+    leadVi: 'Một lớp học ngắn hạn ở Moscow mở đầu cho hành trình chuẩn bị trở về.',
+    leadEn: 'A short course in Moscow begins the preparation for the journey home.',
+    illustration: {
+      src: '/images/room4/station1/communist-university-toilers-east-archive.png',
+      altVi: 'Ảnh tư liệu mặt tiền Trường Đại học Cộng sản của những người lao động Phương Đông tại Moscow.',
+      altEn: 'Historical image of the facade of the Communist University of the Toilers of the East in Moscow.',
+      captionVi: 'Ảnh tư liệu Trường Đại học Cộng sản của những người lao động Phương Đông tại Moscow.',
+      captionEn: 'Historical image of the Communist University of the Toilers of the East in Moscow.',
+    },
     historyVi: [
-      'Nguyễn Ái Quốc học tại Trường Đại học Cộng sản của những người lao động phương Đông ở Moscow.',
-      'Tại đây, Người củng cố lý luận cách mạng và nghiên cứu thực tiễn của nhà nước Xô-viết.',
+      'Cuối năm 1923, Nguyễn Ái Quốc vào học lớp ngắn hạn tại Trường Đại học Cộng sản của những người lao động Phương Đông ở Moscow.',
+      'Thành lập ngày 21/4/1921, trường đào tạo cán bộ cách mạng cho các nước thuộc địa và phụ thuộc.',
     ],
     historyEn: [
-      'Nguyen Ai Quoc studied at the Communist University of the Toilers of the East in Moscow.',
-      'There he strengthened his revolutionary theory and studied the practice of the Soviet state.',
+      'In late 1923, Nguyen Ai Quoc took a short course at the Communist University of the Toilers of the East in Moscow.',
+      'Founded on 21 April 1921, the school trained revolutionary cadres from colonial and dependent countries.',
     ],
     before: {
-      vi: 'Ba quyển sách khép trên bàn học Moscow.',
-      en: 'Three closed books rest on the Moscow study desk.',
+      vi: 'Ba quyển sách khép trong không gian học tập ở Moscow.',
+      en: 'Three closed books wait in the Moscow learning space.',
     },
     action: {
       vi: 'Mở lần lượt ba quyển sách',
@@ -223,29 +240,32 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
     id: 's2',
     eyebrowVi: 'Trạm 02 · Diễn đàn Quốc tế · 1923–1924',
     eyebrowEn: 'Station 02 · International forum · 1923–1924',
-    leadVi: 'Ba diễn đàn mở rộng tầm nhìn từ một bàn học tới mạng lưới đấu tranh quốc tế.',
-    leadEn: 'Three forums expand the view from a study desk to an international network of struggle.',
+    leadVi: 'Tư liệu hình ảnh tại Đại hội lần thứ V của Quốc tế Cộng sản, tổ chức ở Moskva năm 1924.',
+    leadEn: 'A photographic document from the Fifth Congress of the Communist International in Moscow, 1924.',
+    illustration: {
+      src: '/images/room4/station2/nguyen-ai-quoc-comintern-v-modal.png',
+      altVi: 'Ảnh tư liệu Nguyễn Ái Quốc cùng các đại biểu tại Đại hội lần thứ V của Quốc tế Cộng sản ở Moskva năm 1924.',
+      altEn: 'Historical image of Nguyen Ai Quoc with delegates at the Fifth Congress of the Communist International in Moscow, 1924.',
+      captionVi: 'Ảnh tư liệu tại Đại hội lần thứ V của Quốc tế Cộng sản, Moskva, năm 1924.',
+      captionEn: 'Historical image from the Fifth Congress of the Communist International, Moscow, 1924.',
+    },
     historyVi: [
-      'Ngày 17/10/1923, Nguyễn Ái Quốc dự kỳ họp đầu tiên của Hội đồng Quốc tế Nông dân và được bầu vào Đoàn Chủ tịch gồm 11 ủy viên.',
-      'Ngày 23/6/1924, tại Đại hội V Quốc tế Cộng sản, Người nhấn mạnh không thể xem nhẹ vấn đề thuộc địa và mối liên hệ giữa phong trào công nhân chính quốc với phong trào giải phóng thuộc địa.',
-      'Ngày 21/7/1924, tại Đại hội III Quốc tế Công hội Đỏ, Người trình bày tình hình công nhân Đông Dương và đề nghị sự ủng hộ quốc tế.',
+      'Tại diễn đàn này, Người đã dũng cảm, thẳng thắn phê phán một số đảng cộng sản ở các nước chính quốc chưa quan tâm đúng mức đến vấn đề thuộc địa, đồng thời khẳng định mạnh mẽ vai trò của cách mạng giải phóng dân tộc ở các nước bị áp bức.',
     ],
     historyEn: [
-      'On 17 October 1923, Nguyen Ai Quoc attended the first session of the Peasant International Council and was elected to its eleven-member Presidium.',
-      'On 23 June 1924, at the Fifth Congress of the Communist International, he stressed that the colonial question could not be neglected and linked workers in the metropoles with colonial liberation movements.',
-      'On 21 July 1924, at the Third Congress of the Red International of Labour Unions, he presented the condition of Indochinese workers and called for international support.',
+      'At this forum, he courageously and candidly criticised some communist parties in the metropoles for failing to give due attention to the colonial question, while strongly affirming the role of national liberation revolutions in oppressed countries.',
     ],
     before: {
-      vi: 'Ba vòng tư liệu vẫn tách rời quanh diễn đàn.',
-      en: 'Three documentary rings remain separate around the forum.',
+      vi: 'Hình ảnh lãnh tụ Nguyễn Ái Quốc (Chủ tịch Hồ Chí Minh) tham dự và phát biểu tại Đại hội lần thứ V của Quốc tế Cộng sản tổ chức ở Moskva năm 1924.',
+      en: 'Nguyen Ai Quoc (President Ho Chi Minh) attending and speaking at the Fifth Congress of the Communist International in Moscow, 1924.',
     },
     action: {
-      vi: 'Kích hoạt ba vòng tư liệu',
-      en: 'Activate the three documentary rings',
+      vi: 'Mở lần lượt ba mốc tư liệu trên màn hình',
+      en: 'Open the three documentary entries on the screen in sequence',
     },
     after: {
-      vi: 'Ba tuyến sáng nối chính quốc với các dân tộc thuộc địa.',
-      en: 'Three light paths link the metropole with colonised peoples.',
+      vi: 'Ba đèn tín hiệu dưới màn hình sáng lên, làm rõ mối liên hệ giữa chính quốc và các dân tộc thuộc địa.',
+      en: 'Three status lights beneath the screen illuminate, clarifying the link between the metropole and colonised peoples.',
     },
     meaning: {
       vi: 'Quan hệ và phương pháp mở rộng con đường thuộc địa.',

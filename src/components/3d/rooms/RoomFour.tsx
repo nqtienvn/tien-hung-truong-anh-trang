@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { Html, Text } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 import {
@@ -31,7 +31,6 @@ import {
   type RoomFourStationKind,
   type RoomFourStationLayout,
 } from '@/lib/roomFourLayout';
-import { ROOM_FOUR_PHASE_ELEVEN_TYPE_SCALE } from '@/lib/roomFourHistoricalMarkers';
 import { RoomFourHistoricalFlags } from './room-four/RoomFourHistoricalFlags';
 import { RoomFourHistoricalQuotes } from './room-four/RoomFourHistoricalQuotes';
 import { ROOM_FOUR_FOOT_PLAQUES } from '@/lib/roomFourFootPlaques';
@@ -293,9 +292,19 @@ const RouteSpine: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => 
   );
 };
 
+const IGNORE_RAYCAST: THREE.Object3D['raycast'] = () => undefined;
+
+const RETURN_MAP_MARKERS = [
+  [-1.18, 2.68, 0.26],
+  [-1.2, 1.2, 0.26],
+  [0.92, 2.4, 0.26],
+  [1.08, 1.04, 0.26],
+  [0.16, 3.08, 0.26],
+] as const satisfies ReadonlyArray<readonly [number, number, number]>;
+
+if (false) {
 const JOURNEY_LINK_DURATION_SECONDS = 1.75;
 const JOURNEY_FINALE_DURATION_SECONDS = 1.65;
-const IGNORE_RAYCAST: THREE.Object3D['raycast'] = () => undefined;
 
 interface ActiveJourneyLink {
   sealId: RoomFourSealId;
@@ -471,6 +480,7 @@ const JourneyFinaleEffect: React.FC<{ onComplete: () => void }> = ({ onComplete 
   );
 };
 
+}
 const PortalFrame: React.FC<{
   z: number;
   roomHeight: number;
@@ -791,62 +801,314 @@ const StudyDesk: React.FC<{
   );
 };
 
-const ForumGlobe: React.FC<{ progressCount: number }> = ({ progressCount }) => {
-  const destinations: ReadonlyArray<readonly [number, number, number]> = [
-    [-2.2, 2.35, 0],
-    [2.25, 2.52, 0],
-    [0.45, 3.25, 0],
-  ];
+/**
+ * S1 is a static architectural maquette inspired by the winter, neoclassical
+ * Moscow university facade in the approved reference. It occupies the former
+ * study-desk volume only; no route, collider, raycast, or interaction changes.
+ */
+const MoscowUniversityBuildingModel: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => {
+  const frontWindows = reducedDetail ? [-1.12, -0.56, 0.56, 1.12] : [-1.24, -0.84, -0.42, 0.42, 0.84, 1.24];
+  const windowRows = reducedDetail ? [0.84, 1.4] : [0.62, 1.18, 1.74];
+  const columnPositions = [-1.06, -0.64, -0.22, 0.22, 0.64, 1.06];
+
   return (
-  <group>
-    <mesh position={[0, 0.32, 0]} material={SHARED_MATERIALS.coldFrame}>
-      <cylinderGeometry args={[1.65, 1.85, 0.58, 32]} />
-    </mesh>
-    <mesh position={[0, 1.55, 0]}>
-      <sphereGeometry args={[1.04, 28, 20]} />
-      <meshStandardMaterial
-        color={COLD.line}
-        emissive={COLD.line}
-        emissiveIntensity={0.24 + progressCount * 0.12}
-        roughness={0.56}
-        wireframe
-      />
-    </mesh>
-    {[0, 0.42, -0.42].map((rotationZ, index) => (
-      <mesh
-        key={`forum-ring-${rotationZ}`}
-        position={[0, 1.55, 0]}
-        rotation={[Math.PI / 2, rotationZ, index * 0.22]}
-        material={
-          index < progressCount
-            ? index === 1
-              ? SHARED_MATERIALS.coldAccentLine
-              : SHARED_MATERIALS.coldLine
-            : SHARED_MATERIALS.inactiveLine
-        }
-      >
-        <torusGeometry args={[1.48 + index * 0.16, 0.035, 8, 48]} />
+    <group name="room-four-s1-moscow-university-maquette" raycast={IGNORE_RAYCAST}>
+      {/* Raised stone plinth and snow-dusted entrance stair. */}
+      <mesh position={[0.12, 0.14, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[2.28, 0.28, 3.08]} />
       </mesh>
-    ))}
-    {destinations.map((destination, index) => {
-      const revealed = index < progressCount;
-      return (
-        <React.Fragment key={`forum-connection-${index}`}>
-          {revealed && (
-            <Connector
-              start={[0, 1.55, 0]}
-              end={destination}
-              material={index === 1 ? SHARED_MATERIALS.coldAccentLine : SHARED_MATERIALS.coldLine}
-              radius={0.028}
-            />
-          )}
-          <mesh position={destination as [number, number, number]} material={revealed ? SHARED_MATERIALS.coldAccent : SHARED_MATERIALS.darkInk}>
-            <sphereGeometry args={[revealed ? 0.12 : 0.075, 12, 8]} />
+      {[0, 1, 2, 3].map((step) => (
+        <mesh
+          key={`s1-university-step-${step}`}
+          position={[-1.17 - step * 0.13, 0.18 + step * 0.09, 0]}
+          material={SHARED_MATERIALS.coldPaper}
+          raycast={IGNORE_RAYCAST}
+        >
+          <boxGeometry args={[0.28, 0.1, 1.78 - step * 0.12]} />
+        </mesh>
+      ))}
+
+      {/* Main block, lower storey, and a stepped roofline echo the reference. */}
+      <mesh position={[0.12, 1.2, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[2.16, 1.86, 3.05]} />
+      </mesh>
+      <mesh position={[0.12, 0.52, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[2.22, 0.5, 3.1]} />
+      </mesh>
+      <mesh position={[0.12, 2.17, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[2.34, 0.16, 3.2]} />
+      </mesh>
+      <mesh position={[0.22, 2.34, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[1.72, 0.2, 2.54]} />
+      </mesh>
+      <mesh position={[0.22, 2.48, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[1.8, 0.11, 2.62]} />
+      </mesh>
+      {!reducedDetail && (
+        <mesh position={[0.22, 2.56, 0]} material={SHARED_MATERIALS.coldDisplayGlow} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[1.68, 0.022, 2.5]} />
+        </mesh>
+      )}
+
+      {/* Portico: six fluted-looking columns, capitals, entablature, red banners. */}
+      <mesh position={[-1.03, 1.36, 0]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.08, 1.64, 1.82]} />
+      </mesh>
+      {[-0.72, 0.72].map((z) => (
+        <mesh key={`s1-university-banner-${z}`} position={[-1.1, 1.42, z]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.035, 1.38, 0.26]} />
+        </mesh>
+      ))}
+      {columnPositions.map((z) => (
+        <group key={`s1-university-column-${z}`}>
+          <mesh position={[-1.2, 0.52, z]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+            <cylinderGeometry args={[0.12, 0.16, 0.14, 10]} />
           </mesh>
-        </React.Fragment>
+          <mesh position={[-1.2, 1.28, z]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+            <cylinderGeometry args={[0.075, 0.09, 1.42, 10]} />
+          </mesh>
+          {!reducedDetail && [-0.032, 0.032].map((offset) => (
+            <mesh key={`s1-university-flute-${z}-${offset}`} position={[-1.282, 1.28, z + offset]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.012, 1.1, 0.012]} />
+            </mesh>
+          ))}
+          <mesh position={[-1.2, 2.02, z]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+            <cylinderGeometry args={[0.12, 0.12, 0.1, 10]} />
+          </mesh>
+        </group>
+      ))}
+      <mesh position={[-1.2, 2.16, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.16, 0.22, 2.72]} />
+      </mesh>
+      <mesh position={[-1.2, 2.31, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.22, 0.1, 2.84]} />
+      </mesh>
+
+      {/* Deep-set front windows retain the dark, wintry contrast of the image. */}
+      {windowRows.flatMap((y) => frontWindows.map((z) => [y, z] as const)).map(([y, z]) => (
+        <group key={`s1-university-window-${y}-${z}`} position={[-1.01, y, z]}>
+          <mesh material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.03, 0.32, 0.23]} />
+          </mesh>
+          <mesh position={[-0.02, 0, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.02, 0.035, 0.28]} />
+          </mesh>
+          {!reducedDetail && (
+            <mesh position={[-0.021, 0, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.022, 0.27, 0.018]} />
+            </mesh>
+          )}
+        </group>
+      ))}
+
+      {/* Side windows provide the long wing seen from the oblique street view. */}
+      {!reducedDetail && [0.58, 1.16, 1.74].flatMap((y) => [-0.66, -0.22, 0.22, 0.66].map((x) => [x, y] as const)).map(([x, y]) => (
+        <mesh key={`s1-university-side-window-${x}-${y}`} position={[x, y, 1.54]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.22, 0.3, 0.03]} />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
+/**
+ * Phase 12 adds one contextual prop to each station. These are deliberately
+ * static and raycast-free: the existing central exhibit and foot-plaque remain
+ * the only visual and interaction anchors of the visitor journey.
+ */
+const SupplementalStationModel: React.FC<{
+  stationId: RoomFourStationLayout['id'];
+  reducedDetail: boolean;
+}> = ({ stationId, reducedDetail }) => {
+  switch (stationId) {
+    case 's1':
+      return null;
+    case 's2':
+      return null;
+    case 's3':
+      return (
+        <group name="room-four-s3-diplomatic-trunk" position={[1.46, 0.08, 0.56]} raycast={IGNORE_RAYCAST}>
+          <mesh position={[0, 0.32, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.82, 0.5, 0.56]} />
+          </mesh>
+          <mesh position={[0, 0.61, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.86, 0.12, 0.6]} />
+          </mesh>
+          {[-0.28, 0.28].map((x) => (
+            <mesh key={`s3-trunk-strap-${x}`} position={[x, 0.63, 0]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.055, 0.14, 0.62]} />
+            </mesh>
+          ))}
+          {!reducedDetail && (
+            <mesh position={[0, 0.74, 0]} rotation={[Math.PI / 2, 0, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+              <torusGeometry args={[0.14, 0.026, 6, 12]} />
+            </mesh>
+          )}
+        </group>
       );
-    })}
-  </group>
+    case 's4':
+      return (
+        <group name="room-four-s4-three-drawer-file-cabinet" position={[-1.12, 0.08, 0.84]} raycast={IGNORE_RAYCAST}>
+          <mesh position={[0, 0.76, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.62, 1.5, 0.48]} />
+          </mesh>
+          {[-0.42, 0, 0.42].map((y, index) => (
+            <React.Fragment key={`s4-cabinet-drawer-${index}`}>
+              <mesh position={[0, 0.76 + y, -0.255]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+                <boxGeometry args={[0.51, 0.33, 0.025]} />
+              </mesh>
+              <mesh position={[0, 0.76 + y, -0.278]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+                <sphereGeometry args={[0.032, 8, 6]} />
+              </mesh>
+            </React.Fragment>
+          ))}
+        </group>
+      );
+    case 's5':
+      return (
+        <group name="room-four-s5-secret-mailbox" position={[1.72, 0.08, -0.94]} raycast={IGNORE_RAYCAST}>
+          <mesh position={[0, 0.37, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.08, 0.72, 0.08]} />
+          </mesh>
+          <mesh position={[0, 0.88, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.68, 0.43, 0.36]} />
+          </mesh>
+          <mesh position={[0, 0.99, -0.19]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.38, 0.04, 0.025]} />
+          </mesh>
+          {!reducedDetail && (
+            <mesh position={[0.24, 0.82, -0.2]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+              <circleGeometry args={[0.07, 10]} />
+            </mesh>
+          )}
+        </group>
+      );
+    case 's6':
+      return (
+        <group name="room-four-s6-lead-type-tray" position={[-1.4, 0.1, 0.72]} raycast={IGNORE_RAYCAST}>
+          <mesh position={[0, 0.74, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.86, 0.12, 0.6]} />
+          </mesh>
+          <mesh position={[0, 0.83, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.66, 0.09, 0.42]} />
+          </mesh>
+          {(reducedDetail ? [-0.18, 0.18] : [-0.24, -0.08, 0.08, 0.24]).map((x, index) => (
+            <mesh key={`s6-lead-type-${x}`} position={[x, 0.9, index % 2 === 0 ? -0.1 : 0.1]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.08, 0.08, 0.1]} />
+            </mesh>
+          ))}
+        </group>
+      );
+    case 's7':
+      return (
+        <group name="room-four-s7-camouflaged-bookshelf" position={[1.48, 0.08, 0.86]} rotation={[0, 0, -0.055]} raycast={IGNORE_RAYCAST}>
+          <mesh position={[0, 1.08, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.72, 2.16, 0.3]} />
+          </mesh>
+          {[-0.58, 0, 0.58].map((y) => (
+            <mesh key={`s7-shelf-${y}`} position={[0, 1.08 + y, -0.18]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.62, 0.06, 0.08]} />
+            </mesh>
+          ))}
+          {(reducedDetail ? [-0.16, 0.16] : [-0.22, -0.07, 0.08, 0.23]).map((x, index) => (
+            <mesh key={`s7-book-${x}`} position={[x, 1.08 + (index % 3 - 1) * 0.58, -0.205]} material={index % 2 === 0 ? SHARED_MATERIALS.warmPaper : SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.09, 0.34, 0.04]} />
+            </mesh>
+          ))}
+        </group>
+      );
+    case 's8':
+      return (
+        <group name="room-four-s8-homeward-journey-trunk" position={[-1.54, 0.08, -0.72]} raycast={IGNORE_RAYCAST}>
+          <mesh position={[0, 0.32, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.94, 0.5, 0.62]} />
+          </mesh>
+          <mesh position={[0, 0.62, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+            <boxGeometry args={[0.98, 0.13, 0.66]} />
+          </mesh>
+          {[-0.3, 0.3].map((x) => (
+            <mesh key={`s8-trunk-strap-${x}`} position={[x, 0.65, -0.01]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.06, 0.16, 0.68]} />
+            </mesh>
+          ))}
+          {!reducedDetail && (
+            <mesh position={[0, 0.71, -0.08]} rotation={[-0.13, 0.1, 0]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.48, 0.025, 0.3]} />
+            </mesh>
+          )}
+        </group>
+      );
+    default:
+      return null;
+  }
+};
+
+/**
+ * The S2 focal object is a static documentary screen. Its image sits within a
+ * physical frame; only the existing foot-plaque can open the station modal.
+ */
+const InternationalForumScreen: React.FC<{
+  progressCount: number;
+  reducedDetail: boolean;
+}> = ({ progressCount, reducedDetail }) => {
+  const imageTexture = useTexture('/images/room4/station2/nguyen-ai-quoc-comintern-v-screen.png');
+  const screenTexture = useMemo(() => {
+    const texture = imageTexture.clone();
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  }, [imageTexture]);
+
+  useEffect(() => () => screenTexture.dispose(), [screenTexture]);
+
+  return (
+    <group name="room-four-s2-documentary-screen" raycast={IGNORE_RAYCAST}>
+      <mesh position={[-0.4, 0.15, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.9, 0.3, 3.38]} />
+      </mesh>
+      <mesh position={[-0.4, 0.36, 0]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.64, 0.16, 2.92]} />
+      </mesh>
+      {[-1.12, 1.12].map((z) => (
+        <mesh key={`s2-screen-foot-${z}`} position={[0.03, 0.12, z]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.58, 0.17, 0.42]} />
+        </mesh>
+      ))}
+
+      <mesh position={[-0.34, 1.67, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.18, 2.72, 3.58]} />
+      </mesh>
+      <mesh position={[-0.23, 1.67, 0]} rotation={[0, Math.PI / 2, 0]} raycast={IGNORE_RAYCAST}>
+        <planeGeometry args={[3.26, 2.38]} />
+        <meshBasicMaterial map={screenTexture} toneMapped={false} />
+      </mesh>
+      {[
+        { position: [-0.2, 2.94, 0] as const, scale: [0.14, 0.16, 3.58] as const },
+        { position: [-0.2, 0.4, 0] as const, scale: [0.14, 0.16, 3.58] as const },
+        { position: [-0.2, 1.67, -1.71] as const, scale: [0.14, 2.7, 0.16] as const },
+        { position: [-0.2, 1.67, 1.71] as const, scale: [0.14, 2.7, 0.16] as const },
+      ].map((framePart, index) => (
+        <mesh key={`s2-screen-frame-${index}`} position={framePart.position} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={framePart.scale} />
+        </mesh>
+      ))}
+
+      {!reducedDetail && (
+        <mesh position={[-0.18, 3.1, 0]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.05, 0.06, 2.58]} />
+        </mesh>
+      )}
+      {[-0.36, 0, 0.36].map((z, index) => (
+        <mesh
+          key={`s2-screen-status-${z}`}
+          position={[-0.15, 0.48, z]}
+          material={index < progressCount ? SHARED_MATERIALS.coldAccent : SHARED_MATERIALS.inactiveLine}
+          raycast={IGNORE_RAYCAST}
+        >
+          <sphereGeometry args={[0.055, 10, 8]} />
+        </mesh>
+      ))}
+    </group>
   );
 };
 
@@ -1042,10 +1304,10 @@ const ReturnMap: React.FC<{
         </React.Fragment>
       ))}
       {finaleComplete &&
-        RETURN_MAP_FINALE_SEALS.map((seal) => (
+        RETURN_MAP_MARKERS.map((mapPosition, index) => (
           <mesh
-            key={`return-map-final-seal-${seal.sealId}`}
-            position={seal.mapPosition as [number, number, number]}
+            key={`return-map-marker-${index}`}
+            position={mapPosition as [number, number, number]}
             material={SHARED_MATERIALS.warmAccent}
             raycast={IGNORE_RAYCAST}
           >
@@ -1077,35 +1339,31 @@ const JourneyCardDesk: React.FC<{ collected: boolean }> = ({ collected }) => (
 
 const ArtifactAssembly: React.FC<{
   kind: RoomFourStationKind;
-  progressCount: number;
-  completed: boolean;
-  finaleComplete: boolean;
-}> = ({ kind, progressCount, completed, finaleComplete }) => {
+  reducedDetail: boolean;
+}> = ({ kind, reducedDetail }) => {
   switch (kind) {
     case 'journey-card':
-      return <JourneyCardDesk collected={completed} />;
+      return <JourneyCardDesk collected />;
     case 'study-desk':
-      return <StudyDesk progressCount={progressCount} />;
+      return <MoscowUniversityBuildingModel reducedDetail={reducedDetail} />;
     case 'forum-globe':
-      return <ForumGlobe progressCount={progressCount} />;
+      return <InternationalForumScreen progressCount={3} reducedDetail={reducedDetail} />;
     case 'travel-ticket':
-      return <StudyDesk ticket progressCount={progressCount} />;
+      return <StudyDesk ticket progressCount={3} />;
     case 'mission-desk':
-      return <StudyDesk warm mission progressCount={progressCount} />;
+      return <StudyDesk warm mission progressCount={3} />;
     case 'organisation-network':
-      return <OrganisationNetwork progressCount={progressCount} />;
+      return <OrganisationNetwork progressCount={3} />;
     case 'printing-press':
-      return <PrintingPress completed={completed} />;
+      return <PrintingPress completed />;
     case 'secret-classroom':
-      return <ClassroomAssembly progressCount={progressCount} />;
+      return <ClassroomAssembly progressCount={4} />;
     case 'return-map':
-      return <ReturnMap progressCount={progressCount} finaleComplete={finaleComplete} />;
+      return <ReturnMap progressCount={4} finaleComplete />;
     default:
       return null;
   }
 };
-
-type StationStatus = 'locked' | 'active' | 'complete';
 
 const FocalBackdrop: React.FC<{
   station: RoomFourStationLayout;
@@ -1138,6 +1396,7 @@ const FocalBackdrop: React.FC<{
   );
 };
 
+/* Legacy active-station pulse removed with the progress interface.
 const ActiveStationBeacon: React.FC<{
   position: readonly [number, number];
   radius: number;
@@ -1175,6 +1434,7 @@ const ActiveStationBeacon: React.FC<{
   );
 };
 
+*/
 const StationFootPlaque: React.FC<{
   station: RoomFourStationLayout;
   language: 'vi' | 'en';
@@ -1289,71 +1549,35 @@ const StationFootPlaque: React.FC<{
 const StationBay: React.FC<{
   station: RoomFourStationLayout;
   language: 'vi' | 'en';
-  status: StationStatus;
-  progressCount: number;
-  animated: boolean;
   showFocalBackdrop: boolean;
   showPlaque: boolean;
-  finaleComplete: boolean;
-  onOpen: (station: RoomFourStationLayout, isNear: boolean) => void;
+  reducedDetail: boolean;
+  onOpen: (station: RoomFourStationLayout) => void;
 }> = ({
   station,
   language,
-  status,
-  progressCount,
-  animated,
   showFocalBackdrop,
   showPlaque,
-  finaleComplete,
+  reducedDetail,
   onOpen,
 }) => {
-  const { camera, scene } = useThree();
   const warm = station.section === 'guangzhou';
   const material = warm ? SHARED_MATERIALS.warmFrame : SHARED_MATERIALS.coldFrame;
-  const ringMaterial =
-    status === 'complete'
-      ? SHARED_MATERIALS.completionLine
-      : status === 'active'
-        ? warm
-          ? SHARED_MATERIALS.warmLine
-          : SHARED_MATERIALS.coldLine
-        : SHARED_MATERIALS.inactiveLine;
-  const artifactLineMaterial =
-    status === 'complete'
-      ? warm
-        ? SHARED_MATERIALS.warmAccentLine
-        : SHARED_MATERIALS.coldAccentLine
-      : ringMaterial;
+  const ringMaterial = warm ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.coldLine;
+  const artifactLineMaterial = warm ? SHARED_MATERIALS.warmAccentLine : SHARED_MATERIALS.coldAccentLine;
   const displayGlowMaterial = warm
     ? SHARED_MATERIALS.warmDisplayGlow
     : SHARED_MATERIALS.coldDisplayGlow;
   const [width, depth] = station.footprint;
   const stopRadius = station.focalLevel === 1 ? 0.42 : 0.32;
-  const interactionRef = useRef<THREE.Group>(null);
-  const artifactWorldPosition = useRef(new THREE.Vector3()).current;
-  const playerWorldPosition = useRef(new THREE.Vector3()).current;
-
-  const exploreFromPlaque = useCallback(() => {
-    if (!interactionRef.current) {
-      onOpen(station, false);
-      return;
-    }
-
-    interactionRef.current.getWorldPosition(artifactWorldPosition);
-    const player = scene.getObjectByName('player-character') ?? scene.getObjectByName('lobby-player');
-    (player ?? camera).getWorldPosition(playerWorldPosition);
-    onOpen(station, artifactWorldPosition.distanceToSquared(playerWorldPosition) <= 42.25);
-  }, [artifactWorldPosition, camera, onOpen, playerWorldPosition, scene, station]);
+  const exploreFromPlaque = useCallback(() => onOpen(station), [onOpen, station]);
 
   return (
     <group name={`room-four-${station.id}`}>
       {showFocalBackdrop && station.focalLevel === 1 && (
         <FocalBackdrop station={station} warm={warm} lineMaterial={artifactLineMaterial} />
       )}
-      <group
-        ref={interactionRef}
-        position={[station.object[0], 0, station.object[1]]}
-      >
+      <group position={[station.object[0], 0, station.object[1]]}>
         <mesh position={[0, 0.03, 0]} material={material}>
           <boxGeometry args={[width, 0.06, depth]} />
         </mesh>
@@ -1370,15 +1594,9 @@ const StationBay: React.FC<{
         </mesh>
         <ArtifactAssembly
           kind={station.kind}
-          progressCount={progressCount}
-          completed={status === 'complete'}
-          finaleComplete={finaleComplete}
+          reducedDetail={reducedDetail}
         />
-        {status === 'complete' && (
-          <mesh position={[0, 0.32, -depth * 0.34]} material={artifactLineMaterial}>
-            <cylinderGeometry args={[0.055, 0.055, 0.58, 10]} />
-          </mesh>
-        )}
+        <SupplementalStationModel stationId={station.id} reducedDetail={reducedDetail} />
       </group>
       <mesh
         position={[station.stop[0], 0.075, station.stop[1]]}
@@ -1387,14 +1605,6 @@ const StationBay: React.FC<{
       >
         <ringGeometry args={[stopRadius, stopRadius + 0.055, 32]} />
       </mesh>
-      {status === 'active' && (
-        <ActiveStationBeacon
-          position={station.stop}
-          radius={stopRadius}
-          warm={warm}
-          animated={animated}
-        />
-      )}
       {showPlaque && (
         <StationFootPlaque
           station={station}
@@ -1454,6 +1664,7 @@ const TransitionCorridor: React.FC<{
   </group>
 );
 
+/* Legacy completion threshold removed with the progress interface.
 const ThresholdSigns: React.FC<{ language: 'vi' | 'en'; journeyCompleted: boolean }> = ({
   language,
   journeyCompleted,
@@ -1492,6 +1703,7 @@ const ThresholdSigns: React.FC<{ language: 'vi' | 'en'; journeyCompleted: boolea
   </group>
 );
 
+*/
 export const RoomFour: React.FC<BaseRoomProps> = ({
   customSettings,
   isVisible = true,
@@ -1499,43 +1711,19 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
   lightingContext = 'standalone',
   children,
 }) => {
-  const {
-    language,
-    settings,
-    talkedNpcs,
-    addTalkedNpc,
-    setRoomFourInteractionOpen,
-  } = useMuseum();
+  const { language, settings, setRoomFourInteractionOpen } = useMuseum();
   const [activeStationId, setActiveStationId] = useState<RoomFourStationId | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [activeJourneyLink, setActiveJourneyLink] = useState<ActiveJourneyLink | null>(null);
-  const [journeyLinkRequestId, setJourneyLinkRequestId] = useState(0);
-  const [finalePlaying, setFinalePlaying] = useState(false);
-  const [finaleRequestId, setFinaleRequestId] = useState(0);
   // The data height (6 m) receives the single approved +1 m shell allowance here.
   const roomHeight = (customSettings?.room_height ?? 6) + 1;
   const resolvedLanguage: 'vi' | 'en' = language === 'en' ? 'en' : 'vi';
-  const journeyProgress = useMemo(
-    () => talkedNpcs.filter(isRoomFourJourneyToken),
-    [talkedNpcs],
-  );
-  const nextStationId = getNextRoomFourStation(journeyProgress);
-  const journeyFinaleReady = isRoomFourFinaleReady(journeyProgress);
-  const journeyFinaleComplete = journeyProgress.includes(roomFourFinaleToken());
   const isUltraLow = settings.preset === 'ultra-low';
   const reducedDetail = settings.preset !== 'medium';
-  const useStaticJourneyLinks = isUltraLow || !settings.animations;
-  const shouldAnimateFinale = !useStaticJourneyLinks;
-  const staticJourneyLink = useMemo(() => {
-    if (!activeJourneyLink || !useStaticJourneyLinks) return null;
-    return activeJourneyLink;
-  }, [activeJourneyLink, useStaticJourneyLinks]);
   const ribStride = isUltraLow ? 3 : reducedDetail ? 2 : 1;
   // The stronger entry key is only used while the room is previewed through a
   // neighbouring doorway. Once inside, the lobby receives the exact same
   // global rig as the standalone gallery page.
   const isEntryPreview = lightingContext === 'connected' && !isInteractive;
-  const showJourneyUi = isVisible && isInteractive;
+  const showStationOverlay = isVisible && isInteractive;
   const fillIntensity = isEntryPreview
     ? settings.reducedLights ? 0.58 : 0.72
     : settings.reducedLights ? 0.46 : 0.34;
@@ -1548,6 +1736,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
     setRoomFourInteractionOpen(false);
   }, [setRoomFourInteractionOpen]);
 
+  /* Legacy journey completion handlers, tasks, and progress effects removed.
   const completeJourneyFinale = useCallback(() => {
     setFinalePlaying(false);
     if (!journeyFinaleComplete) addTalkedNpc(roomFourFinaleToken());
@@ -1569,8 +1758,12 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
     );
   }, [finalePlaying, journeyFinaleComplete, resolvedLanguage]);
 
+  */
   const openStation = useCallback(
-    (station: RoomFourStationLayout, isNear: boolean) => {
+    (station: RoomFourStationLayout) => {
+      setActiveStationId(station.id);
+      setRoomFourInteractionOpen(true);
+      /*
       if (!isNear) {
         setNotice(
           resolvedLanguage === 'vi'
@@ -1600,10 +1793,12 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
       setNotice(null);
       setActiveStationId(station.id);
       setRoomFourInteractionOpen(true);
+      */
     },
-    [journeyProgress, nextStationId, resolvedLanguage, setRoomFourInteractionOpen],
+    [setRoomFourInteractionOpen],
   );
 
+  /*
   const openJourneyCard = useCallback(() => {
     if (!journeyProgress.includes(roomFourCompletionToken('card'))) return;
     setNotice(null);
@@ -1759,6 +1954,7 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
     return () => window.clearTimeout(timer);
   }, [completeJourneyFinale, finalePlaying, shouldAnimateFinale]);
 
+  */
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && activeStationId) closeInteraction();
@@ -1804,61 +2000,23 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
       )}
 
       <RouteSpine reducedDetail={reducedDetail} />
-      {ROOM_FOUR_STATIONS.map((station) => {
-        const stationCompleted = journeyProgress.includes(roomFourCompletionToken(station.id));
-        const completed = stationCompleted && (station.id !== 's8' || journeyFinaleComplete);
-        const status: StationStatus = completed
-          ? 'complete'
-          : station.id === nextStationId || (station.id === 's8' && journeyFinaleReady)
-            ? 'active'
-            : 'locked';
-        return (
-          <StationBay
-            key={station.id}
-            station={station}
-            language={resolvedLanguage}
-            status={status}
-            progressCount={getRoomFourStationProgress(journeyProgress, station.id)}
-            animated={settings.animations}
-            showFocalBackdrop={!isUltraLow}
-            showPlaque={showJourneyUi && !activeStationId}
-            finaleComplete={journeyFinaleComplete && !finalePlaying}
-            onOpen={isInteractive ? openStation : () => undefined}
-          />
-        );
-      })}
-      <TransitionCorridor
-        detailed={!reducedDetail}
-        activated={journeyProgress.includes(roomFourCompletionToken('s3'))}
-      />
-      {activeJourneyLink && !useStaticJourneyLinks && (
-        <JourneyLinkEffect key={activeJourneyLink.requestId} link={activeJourneyLink} />
-      )}
-      {finalePlaying && shouldAnimateFinale && (
-        <JourneyFinaleEffect
-          key={finaleRequestId}
-          onComplete={completeJourneyFinale}
+      {ROOM_FOUR_STATIONS.map((station) => (
+        <StationBay
+          key={station.id}
+          station={station}
+          language={resolvedLanguage}
+          showFocalBackdrop={!isUltraLow}
+          showPlaque={showStationOverlay && !activeStationId}
+          reducedDetail={isUltraLow}
+          onOpen={isInteractive ? openStation : () => undefined}
         />
-      )}
-      {showJourneyUi && !activeStationId && (
-        <ThresholdSigns language={resolvedLanguage} journeyCompleted={journeyFinaleComplete} />
-      )}
-      {showJourneyUi && (
+      ))}
+      <TransitionCorridor detailed={!reducedDetail} activated />
+      {showStationOverlay && (
         <RoomFourJourneyOverlay
           language={resolvedLanguage}
-          progress={journeyProgress}
           activeStationId={activeStationId}
-          notice={notice}
-          reducedEffects={reducedDetail}
-          journeyFinaleReady={journeyFinaleReady}
-          journeyFinaleComplete={journeyFinaleComplete}
-          finalePlaying={finalePlaying}
           onClose={closeInteraction}
-          onOpenCard={openJourneyCard}
-          onPerformStep={performStationStep}
-          activeJourneyLink={staticJourneyLink}
-          onSelectSeal={activateJourneyLink}
-          onReplayFinale={replayJourneyFinale}
         />
       )}
       {children}
