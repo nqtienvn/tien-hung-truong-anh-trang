@@ -2,6 +2,12 @@ import React, { useRef, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useMuseum } from "@/context/MuseumContext";
+import {
+  isPointInsideRoomFourCollider,
+  ROOM_FOUR_PLAYER_COLLISION_MARGIN,
+  ROOM_FOUR_SPATIAL,
+  ROOM_FOUR_WALL_INSET,
+} from "@/lib/roomFourLayout";
 
 // ─── Kích thước dùng chung ───────────────────────────────────────────────────
 const HEAD_R = 0.22;
@@ -32,6 +38,7 @@ export const PlayerCharacter: React.FC = () => {
     nickname,
     settings,
     miniGameOpen,
+    roomFourInteractionOpen,
     roomOneLocked,
     welcomeModalOpen,
     roomOneCompleted
@@ -69,7 +76,7 @@ export const PlayerCharacter: React.FC = () => {
       if (activeGallery?.id === "gallery-ceramics") {
         spawnZ = -10;
       } else if (activeGallery?.id === "gallery-market-economy") {
-        spawnZ = -70.0; // Bắt đầu từ Zone 1 (trước mốc -65.0)
+        spawnZ = ROOM_FOUR_SPATIAL.spawnLocalZ;
       }
       playerRef.current.position.set(0, baseY, spawnZ);
     }
@@ -183,10 +190,7 @@ export const PlayerCharacter: React.FC = () => {
 
     // ── Phòng 4: gallery-market-economy ──────────────────────────────────────
     if (galleryId === "gallery-market-economy") {
-      // 1. Vách ngăn duy nhất tại Z = -50.0 (Cửa mở ở giữa rộng 6.0m: X từ -3.0 đến 3.0)
-      if (z > -50.4 && z < -49.6) {
-        if (Math.abs(x) > 3.0) return true;
-      }
+      return isPointInsideRoomFourCollider(x, z, ROOM_FOUR_PLAYER_COLLISION_MARGIN);
     }
 
     return false;
@@ -195,7 +199,7 @@ export const PlayerCharacter: React.FC = () => {
   useFrame((state, delta) => {
     if (!playerRef.current) return;
 
-    if (selectedExhibit || !nickname || miniGameOpen) return;
+    if (selectedExhibit || !nickname || miniGameOpen || roomFourInteractionOpen) return;
 
     const { w, a, s, d, shift } = keysPressed.current;
 
@@ -222,15 +226,18 @@ export const PlayerCharacter: React.FC = () => {
       let nextX = currentPos.x + stepX;
       let nextZ = currentPos.z + stepZ;
 
-      const limitX = (activeGallery?.room_width ?? 12) / 2 - 0.6;
+      const isRoomFour = activeGallery?.id === "gallery-market-economy";
+      const roomFourBoundaryMargin = ROOM_FOUR_WALL_INSET + ROOM_FOUR_PLAYER_COLLISION_MARGIN;
+      const limitX = isRoomFour
+        ? ROOM_FOUR_SPATIAL.roomWidth / 2 - roomFourBoundaryMargin
+        : (activeGallery?.room_width ?? 12) / 2 - 0.6;
       const roomLength = activeGallery?.room_length ?? 30;
-      const zOffset =
-        activeGallery?.id === "gallery-market-economy"
-          ? (roomLength - 150) / 2
-          : 0;
-
-      const minZ = -roomLength / 2 + zOffset + 0.6;
-      const maxZ = roomLength / 2 + zOffset - 0.6;
+      const minZ = isRoomFour
+        ? ROOM_FOUR_SPATIAL.localStartZ + roomFourBoundaryMargin
+        : -roomLength / 2 + 0.6;
+      const maxZ = isRoomFour
+        ? ROOM_FOUR_SPATIAL.localEndZ - roomFourBoundaryMargin
+        : roomLength / 2 - 0.6;
 
       nextX = Math.max(-limitX, Math.min(limitX, nextX));
       nextZ = Math.max(minZ, Math.min(maxZ, nextZ));

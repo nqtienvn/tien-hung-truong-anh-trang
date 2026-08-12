@@ -1,2678 +1,1868 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Html, useTexture } from '@react-three/drei';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Html, Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
-import { BaseRoomPlain, BaseRoomProps } from './BaseRoomPlain';
+import {
+  ROOM_FOUR_JOURNEY_CONTENT,
+  ROOM_FOUR_FINALE_SEAL_IDS,
+  ROOM_FOUR_SEAL_LINKS,
+  ROOM_FOUR_SEALS,
+  getNextRoomFourStation,
+  getRoomFourStationProgress,
+  isRoomFourFinaleReady,
+  isRoomFourJourneyToken,
+  roomFourCompletionToken,
+  roomFourFinaleToken,
+  roomFourSealToken,
+  roomFourStepToken,
+  type RoomFourSealId,
+  type RoomFourStationId,
+} from '@/lib/roomFourJourney';
+import type { BaseRoomProps } from './BaseRoomPlain';
+import { RoomFourJourneyOverlay } from './room-four/RoomFourJourneyOverlay';
+import {
+  ROOM_FOUR_CENTERLINE,
+  ROOM_FOUR_PORTALS,
+  ROOM_FOUR_SPATIAL,
+  ROOM_FOUR_STATIONS,
+  type RoomFourStationKind,
+  type RoomFourStationLayout,
+} from '@/lib/roomFourLayout';
+import { ROOM_FOUR_PHASE_ELEVEN_TYPE_SCALE } from '@/lib/roomFourHistoricalMarkers';
+import { RoomFourHistoricalFlags } from './room-four/RoomFourHistoricalFlags';
+import { RoomFourHistoricalQuotes } from './room-four/RoomFourHistoricalQuotes';
+import { ROOM_FOUR_FOOT_PLAQUES } from '@/lib/roomFourFootPlaques';
 
-const PaintingMesh: React.FC<{ url: string }> = ({ url }) => {
-  const texture = useTexture(url);
+const COLD = {
+  floor: '#111a24',
+  wall: '#1c2934',
+  frame: '#2b3a46',
+  paper: '#d8d0bf',
+  line: '#afc9d3',
+  accent: '#8e3437',
+};
+
+const WARM = {
+  floor: '#172326',
+  wall: '#29302c',
+  frame: '#182326',
+  wood: '#5a3828',
+  paper: '#d8b878',
+  line: '#d39a55',
+  accent: '#a44333',
+};
+
+const GOLD = {
+  frame: '#9a6e24',
+  glow: '#ffd778',
+  highlight: '#ffe6aa',
+  button: '#b27a25',
+  face: '#2a1b08',
+  text: '#fff7df',
+  buttonText: '#1e1608',
+};
+
+// Green is reserved for the circular completion guides. The historical red
+// accents remain on the 3D artifacts as part of the room's art direction.
+const COMPLETION = {
+  line: '#4ade80',
+};
+
+const SHARED_MATERIALS = {
+  coldFloor: new THREE.MeshStandardMaterial({ color: COLD.floor, roughness: 0.92, metalness: 0.04 }),
+  coldWall: new THREE.MeshStandardMaterial({ color: COLD.wall, roughness: 0.88, metalness: 0.08 }),
+  coldFrame: new THREE.MeshStandardMaterial({ color: COLD.frame, roughness: 0.7, metalness: 0.38 }),
+  coldPaper: new THREE.MeshStandardMaterial({ color: COLD.paper, roughness: 0.94, metalness: 0 }),
+  warmFloor: new THREE.MeshStandardMaterial({ color: WARM.floor, roughness: 0.92, metalness: 0.03 }),
+  warmWall: new THREE.MeshStandardMaterial({ color: WARM.wall, roughness: 0.9, metalness: 0.02 }),
+  warmFrame: new THREE.MeshStandardMaterial({ color: WARM.frame, roughness: 0.72, metalness: 0.3 }),
+  warmWood: new THREE.MeshStandardMaterial({ color: WARM.wood, roughness: 0.82, metalness: 0.02 }),
+  warmPaper: new THREE.MeshStandardMaterial({ color: WARM.paper, roughness: 0.96, metalness: 0 }),
+  coldAccent: new THREE.MeshStandardMaterial({
+    color: COLD.accent,
+    emissive: COLD.accent,
+    emissiveIntensity: 0.28,
+    roughness: 0.68,
+  }),
+  warmAccent: new THREE.MeshStandardMaterial({
+    color: WARM.accent,
+    emissive: WARM.accent,
+    emissiveIntensity: 0.35,
+    roughness: 0.64,
+  }),
+  darkInk: new THREE.MeshStandardMaterial({ color: '#11191d', roughness: 0.86, metalness: 0.14 }),
+  coldLine: new THREE.MeshBasicMaterial({ color: COLD.line, toneMapped: false }),
+  warmLine: new THREE.MeshBasicMaterial({ color: WARM.line, toneMapped: false }),
+  coldAccentLine: new THREE.MeshBasicMaterial({ color: COLD.accent, toneMapped: false }),
+  warmAccentLine: new THREE.MeshBasicMaterial({ color: WARM.accent, toneMapped: false }),
+  goldPlaqueGlow: new THREE.MeshBasicMaterial({
+    color: GOLD.glow,
+    transparent: true,
+    opacity: 0.44,
+    depthWrite: false,
+    toneMapped: false,
+  }),
+  goldPlaqueFrame: new THREE.MeshStandardMaterial({
+    color: GOLD.frame,
+    emissive: '#5c3c0c',
+    emissiveIntensity: 0.32,
+    roughness: 0.28,
+    metalness: 0.78,
+  }),
+  goldPlaqueFace: new THREE.MeshStandardMaterial({
+    color: GOLD.face,
+    roughness: 0.7,
+    metalness: 0.08,
+  }),
+  goldPlaqueLine: new THREE.MeshBasicMaterial({
+    color: GOLD.highlight,
+    toneMapped: false,
+  }),
+  goldPlaqueButton: new THREE.MeshStandardMaterial({
+    color: GOLD.button,
+    emissive: '#d99624',
+    emissiveIntensity: 0.58,
+    roughness: 0.3,
+    metalness: 0.68,
+  }),
+  coldDisplayGlow: new THREE.MeshBasicMaterial({
+    color: '#84c4dc',
+    transparent: true,
+    opacity: 0.2,
+    depthWrite: false,
+    toneMapped: false,
+  }),
+  warmDisplayGlow: new THREE.MeshBasicMaterial({
+    color: '#f2ba6a',
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+    toneMapped: false,
+  }),
+  completionLine: new THREE.MeshBasicMaterial({ color: COMPLETION.line, toneMapped: false }),
+  inactiveLine: new THREE.MeshBasicMaterial({ color: '#3b474d', toneMapped: false }),
+  route: new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }),
+  routeGlow: new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.14,
+    depthWrite: false,
+    toneMapped: false,
+  }),
+  journeyLink: new THREE.MeshBasicMaterial({
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.94,
+    depthWrite: false,
+    toneMapped: false,
+  }),
+  transitionFloor: new THREE.MeshStandardMaterial({
+    color: '#ffffff',
+    vertexColors: true,
+    roughness: 0.92,
+    metalness: 0.04,
+  }),
+  transitionWall: new THREE.MeshStandardMaterial({
+    color: '#ffffff',
+    vertexColors: true,
+    roughness: 0.88,
+    metalness: 0.06,
+  }),
+  transitionCeiling: new THREE.MeshStandardMaterial({
+    color: '#ffffff',
+    vertexColors: true,
+    roughness: 0.8,
+    metalness: 0.12,
+  }),
+};
+
+const TRANSITION_STEPS = Array.from({ length: 8 }, (_, index) => {
+  const t = index / 7;
+  const color = new THREE.Color(COLD.floor).lerp(new THREE.Color(WARM.floor), t);
+  const wall = new THREE.Color(COLD.wall).lerp(new THREE.Color(WARM.wall), t);
+  return {
+    z: -42 + (index + 0.5),
+    color: `#${color.getHexString()}`,
+    wall: `#${wall.getHexString()}`,
+  };
+});
+
+const CEILING_RIBS = Array.from({ length: 21 }, (_, index) => -73 + index * 3.8);
+
+interface BoxInstance {
+  position: readonly [number, number, number];
+  scale: readonly [number, number, number];
+  color?: string;
+}
+
+const InstancedBoxes: React.FC<{
+  instances: readonly BoxInstance[];
+  material: THREE.Material;
+}> = ({ instances, material }) => {
+  const meshRef = useRef<THREE.InstancedMesh>(null);
+
+  useLayoutEffect(() => {
+    const mesh = meshRef.current;
+    if (!mesh) return;
+    const transform = new THREE.Object3D();
+    const instanceColor = new THREE.Color();
+
+    instances.forEach((instance, index) => {
+      transform.position.set(...instance.position);
+      transform.scale.set(...instance.scale);
+      transform.updateMatrix();
+      mesh.setMatrixAt(index, transform.matrix);
+      if (instance.color) {
+        mesh.setColorAt(index, instanceColor.set(instance.color));
+      }
+    });
+
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.computeBoundingSphere();
+  }, [instances]);
+
+  if (instances.length === 0) return null;
+
   return (
-    <mesh position={[0, 0, 0.06]}>
-      <planeGeometry args={[3.0, 2.0]} />
-      <meshBasicMaterial map={texture} toneMapped={false} />
+    <instancedMesh ref={meshRef} args={[undefined, undefined, instances.length]} material={material}>
+      <boxGeometry args={[1, 1, 1]} />
+    </instancedMesh>
+  );
+};
+
+function createRouteGeometry(
+  radius: number,
+  tubularSegments: number,
+  radialSegments: number,
+): THREE.TubeGeometry {
+  const points = ROOM_FOUR_CENTERLINE.map(([x, z]) => new THREE.Vector3(x, 0.1, z));
+  const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.36);
+  const geometry = new THREE.TubeGeometry(
+    curve,
+    tubularSegments,
+    radius,
+    radialSegments,
+    false,
+  );
+  const position = geometry.getAttribute('position');
+  const colors = new Float32Array(position.count * 3);
+  const cold = new THREE.Color(COLD.line);
+  const warm = new THREE.Color(WARM.line);
+  const mixed = new THREE.Color();
+
+  for (let index = 0; index < position.count; index += 1) {
+    const z = position.getZ(index);
+    const blend = THREE.MathUtils.clamp((z + 42) / 8, 0, 1);
+    mixed.copy(cold).lerp(warm, blend);
+    colors[index * 3] = mixed.r;
+    colors[index * 3 + 1] = mixed.g;
+    colors[index * 3 + 2] = mixed.b;
+  }
+
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  return geometry;
+}
+
+const RouteSpine: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => {
+  const routeGeometry = useMemo(
+    () => createRouteGeometry(0.065, reducedDetail ? 96 : 180, reducedDetail ? 4 : 6),
+    [reducedDetail],
+  );
+  const glowGeometry = useMemo(
+    () => createRouteGeometry(0.15, reducedDetail ? 72 : 132, reducedDetail ? 4 : 6),
+    [reducedDetail],
+  );
+
+  useEffect(
+    () => () => {
+      routeGeometry.dispose();
+      glowGeometry.dispose();
+    },
+    [glowGeometry, routeGeometry],
+  );
+
+  return (
+    <group>
+      <mesh geometry={glowGeometry} material={SHARED_MATERIALS.routeGlow} renderOrder={1} />
+      <mesh geometry={routeGeometry} material={SHARED_MATERIALS.route} renderOrder={2} />
+    </group>
+  );
+};
+
+const JOURNEY_LINK_DURATION_SECONDS = 1.75;
+const JOURNEY_FINALE_DURATION_SECONDS = 1.65;
+const IGNORE_RAYCAST: THREE.Object3D['raycast'] = () => undefined;
+
+interface ActiveJourneyLink {
+  sealId: RoomFourSealId;
+  sourceStationId: RoomFourStationId;
+  targetStationId: RoomFourStationId;
+  requestId: number;
+}
+
+/**
+ * These lightweight marker positions settle into the Return Map during the
+ * Station 8 finale. Their text lives on the Journey Card, keeping the model
+ * itself free of floating labels.
+ */
+const RETURN_MAP_HUB: readonly [number, number, number] = [0.15, 1.85, 0.24];
+const RETURN_MAP_FINALE_SEALS = [
+  { sealId: 'theory', mapPosition: [-1.18, 2.68, 0.26], entryPosition: [-2.4, 4.25, 0.65] },
+  { sealId: 'organisation', mapPosition: [-1.2, 1.2, 0.26], entryPosition: [-2.0, 0.8, 0.65] },
+  { sealId: 'press', mapPosition: [0.92, 2.4, 0.26], entryPosition: [2.25, 4.0, 0.65] },
+  { sealId: 'cadres', mapPosition: [1.08, 1.04, 0.26], entryPosition: [2.3, 0.82, 0.65] },
+  { sealId: 'network', mapPosition: [0.16, 3.08, 0.26], entryPosition: [0.16, 4.7, 0.65] },
+] as const satisfies ReadonlyArray<{
+  sealId: (typeof ROOM_FOUR_FINALE_SEAL_IDS)[number];
+  mapPosition: readonly [number, number, number];
+  entryPosition: readonly [number, number, number];
+}>;
+
+function createJourneyLinkGeometry(
+  sourceStationId: RoomFourStationId,
+  targetStationId: RoomFourStationId,
+): THREE.TubeGeometry {
+  const sourceStation = ROOM_FOUR_STATIONS.find((station) => station.id === sourceStationId);
+  const targetStation = ROOM_FOUR_STATIONS.find((station) => station.id === targetStationId);
+  if (!sourceStation || !targetStation) {
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3([]), 1, 0.01, 3, false);
+  }
+
+  const closestRouteIndex = (stop: readonly [number, number]) =>
+    ROOM_FOUR_CENTERLINE.reduce(
+      (closestIndex, point, index) => {
+        const currentDistance = (point[0] - stop[0]) ** 2 + (point[1] - stop[1]) ** 2;
+        const closestPoint = ROOM_FOUR_CENTERLINE[closestIndex];
+        const closestDistance = (closestPoint[0] - stop[0]) ** 2 + (closestPoint[1] - stop[1]) ** 2;
+        return currentDistance < closestDistance ? index : closestIndex;
+      },
+      0,
+    );
+
+  const sourceIndex = closestRouteIndex(sourceStation.stop);
+  const targetIndex = closestRouteIndex(targetStation.stop);
+  const isForward = sourceIndex <= targetIndex;
+  const spinePoints = ROOM_FOUR_CENTERLINE.slice(
+    Math.min(sourceIndex, targetIndex),
+    Math.max(sourceIndex, targetIndex) + 1,
+  );
+  const orderedPoints = isForward ? spinePoints : [...spinePoints].reverse();
+  const points = orderedPoints.map(([x, z]) => new THREE.Vector3(x, 0.17, z));
+  points[0] = new THREE.Vector3(sourceStation.stop[0], 0.17, sourceStation.stop[1]);
+  points[points.length - 1] = new THREE.Vector3(targetStation.stop[0], 0.17, targetStation.stop[1]);
+
+  const curve = new THREE.CatmullRomCurve3(points, false, 'catmullrom', 0.22);
+  const geometry = new THREE.TubeGeometry(curve, Math.max(36, points.length * 20), 0.043, 6, false);
+  const position = geometry.getAttribute('position');
+  const colors = new Float32Array(position.count * 3);
+  const sourceColor = new THREE.Color(COLD.line);
+  const targetColor = new THREE.Color(WARM.line);
+  const color = new THREE.Color();
+
+  for (let index = 0; index < position.count; index += 1) {
+    const blend = position.count === 1 ? 1 : index / (position.count - 1);
+    color.copy(sourceColor).lerp(targetColor, blend);
+    colors[index * 3] = color.r;
+    colors[index * 3 + 1] = color.g;
+    colors[index * 3 + 2] = color.b;
+  }
+
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  return geometry;
+}
+
+/** A single, non-interactive flash that reuses the approved floor-route geometry. */
+const JourneyLinkEffect: React.FC<{ link: ActiveJourneyLink }> = ({ link }) => {
+  const geometry = useMemo(
+    () => createJourneyLinkGeometry(link.sourceStationId, link.targetStationId),
+    [link.sourceStationId, link.targetStationId],
+  );
+  const elapsed = useRef(0);
+  const drawCount = useMemo(
+    () => geometry.index?.count ?? geometry.getAttribute('position').count,
+    [geometry],
+  );
+
+  useEffect(() => {
+    geometry.setDrawRange(0, 0);
+    SHARED_MATERIALS.journeyLink.opacity = 0.94;
+    return () => {
+      geometry.dispose();
+      SHARED_MATERIALS.journeyLink.opacity = 0.94;
+    };
+  }, [geometry]);
+
+  useFrame((_, delta) => {
+    elapsed.current = Math.min(elapsed.current + delta, JOURNEY_LINK_DURATION_SECONDS);
+    const progress = elapsed.current / JOURNEY_LINK_DURATION_SECONDS;
+    const reveal = THREE.MathUtils.smoothstep(progress * 1.45, 0, 1);
+    geometry.setDrawRange(0, Math.max(3, Math.floor(drawCount * reveal)));
+    SHARED_MATERIALS.journeyLink.opacity =
+      progress > 0.78 ? THREE.MathUtils.mapLinear(progress, 0.78, 1, 0.94, 0) : 0.94;
+  });
+
+  return <mesh geometry={geometry} material={SHARED_MATERIALS.journeyLink} raycast={IGNORE_RAYCAST} renderOrder={4} />;
+};
+
+/**
+ * Phase 9 uses five HTML seal labels instead of per-frame geometry creation.
+ * Animation mutates only group refs; the completion transition is timer-driven
+ * so React state is never updated from useFrame.
+ */
+const JourneyFinaleEffect: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const sealRefs = useRef<Array<THREE.Group | null>>([]);
+  const elapsed = useRef(0);
+  const onCompleteRef = useRef(onComplete);
+  const returnMap = ROOM_FOUR_STATIONS.find((station) => station.id === 's8');
+  const mapX = returnMap?.object[0] ?? -4.9;
+  const mapZ = returnMap?.object[1] ?? -1.3;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => onCompleteRef.current(), JOURNEY_FINALE_DURATION_SECONDS * 1000);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useFrame((_, delta) => {
+    elapsed.current = Math.min(elapsed.current + delta, JOURNEY_FINALE_DURATION_SECONDS);
+    const progress = elapsed.current / JOURNEY_FINALE_DURATION_SECONDS;
+    const eased = THREE.MathUtils.smoothstep(progress, 0, 1);
+    const lift = Math.sin(Math.PI * eased) * 0.42;
+
+    RETURN_MAP_FINALE_SEALS.forEach((seal, index) => {
+      const group = sealRefs.current[index];
+      if (!group) return;
+      group.position.set(
+        mapX + THREE.MathUtils.lerp(seal.entryPosition[0], RETURN_MAP_HUB[0], eased),
+        THREE.MathUtils.lerp(seal.entryPosition[1], RETURN_MAP_HUB[1], eased) + lift,
+        mapZ + THREE.MathUtils.lerp(seal.entryPosition[2], RETURN_MAP_HUB[2], eased),
+      );
+      group.scale.setScalar(THREE.MathUtils.lerp(1, 0.74, eased));
+    });
+  });
+
+  return (
+    <group name="room-four-journey-finale" raycast={IGNORE_RAYCAST} renderOrder={6}>
+      {RETURN_MAP_FINALE_SEALS.map((seal, index) => (
+          <group
+            key={seal.sealId}
+            ref={(node) => {
+              sealRefs.current[index] = node;
+            }}
+            position={[
+              mapX + seal.entryPosition[0],
+              seal.entryPosition[1],
+              mapZ + seal.entryPosition[2],
+            ]}
+          >
+            <mesh material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+              <sphereGeometry args={[0.1, 10, 8]} />
+            </mesh>
+          </group>
+        ))}
+    </group>
+  );
+};
+
+const PortalFrame: React.FC<{
+  z: number;
+  roomHeight: number;
+  material: THREE.Material;
+  halfSpan: number;
+}> = ({ z, roomHeight, material, halfSpan }) => {
+  const columnHeight = roomHeight - 0.32;
+  return (
+    <group position={[0, 0, z]}>
+      <mesh position={[-halfSpan, columnHeight / 2, 0]} material={material}>
+        <boxGeometry args={[0.18, columnHeight, 0.3]} />
+      </mesh>
+      <mesh position={[halfSpan, columnHeight / 2, 0]} material={material}>
+        <boxGeometry args={[0.18, columnHeight, 0.3]} />
+      </mesh>
+      <mesh position={[0, roomHeight - 0.16, 0]} material={material}>
+        <boxGeometry args={[halfSpan * 2 + 0.2, 0.18, 0.3]} />
+      </mesh>
+    </group>
+  );
+};
+
+const RoomShell: React.FC<{ roomHeight: number; ribStride: number }> = ({
+  roomHeight,
+  ribStride,
+}) => {
+  const wallY = roomHeight / 2;
+  const ceilingY = roomHeight + 0.02;
+  const transitionFloorInstances = useMemo<readonly BoxInstance[]>(
+    () =>
+      TRANSITION_STEPS.map((step) => ({
+        position: [0, -0.08, step.z],
+        scale: [ROOM_FOUR_SPATIAL.roomWidth, 0.16, 1.01],
+        color: step.color,
+      })),
+    [],
+  );
+  const transitionWallInstances = useMemo<readonly BoxInstance[]>(
+    () =>
+      TRANSITION_STEPS.flatMap((step) => [
+        {
+          position: [-8.9, wallY, step.z] as const,
+          scale: [0.2, roomHeight, 1.01] as const,
+          color: step.wall,
+        },
+        {
+          position: [8.9, wallY, step.z] as const,
+          scale: [0.2, roomHeight, 1.01] as const,
+          color: step.wall,
+        },
+      ]),
+    [roomHeight, wallY],
+  );
+  const transitionCeilingInstances = useMemo<readonly BoxInstance[]>(
+    () =>
+      TRANSITION_STEPS.map((step) => ({
+        position: [0, ceilingY, step.z],
+        scale: [18, 0.18, 1.01],
+        color: step.wall,
+      })),
+    [ceilingY],
+  );
+  const coldRibInstances = useMemo<readonly BoxInstance[]>(
+    () =>
+      CEILING_RIBS.filter((z, index) => z < -38 && index % ribStride === 0).map((z) => ({
+        position: [0, roomHeight - 0.12, z],
+        scale: [17.6, 0.12, 0.12],
+      })),
+    [ribStride, roomHeight],
+  );
+  const warmRibInstances = useMemo<readonly BoxInstance[]>(
+    () =>
+      CEILING_RIBS.filter((z, index) => z >= -38 && index % ribStride === 0).map((z) => ({
+        position: [0, roomHeight - 0.12, z],
+        scale: [17.6, 0.12, 0.12],
+      })),
+    [ribStride, roomHeight],
+  );
+
+  return (
+    <group>
+      {/* The five plan zones preserve the approved -75 → +5 room boundary. */}
+      <mesh position={[0, -0.08, -71]} material={SHARED_MATERIALS.coldFloor}>
+        <boxGeometry args={[ROOM_FOUR_SPATIAL.roomWidth, 0.16, 8]} />
+      </mesh>
+      <mesh position={[0, -0.08, -54.5]} material={SHARED_MATERIALS.coldFloor}>
+        <boxGeometry args={[ROOM_FOUR_SPATIAL.roomWidth, 0.16, 25]} />
+      </mesh>
+      <InstancedBoxes
+        instances={transitionFloorInstances}
+        material={SHARED_MATERIALS.transitionFloor}
+      />
+      <mesh position={[0, -0.08, -16]} material={SHARED_MATERIALS.warmFloor}>
+        <boxGeometry args={[ROOM_FOUR_SPATIAL.roomWidth, 0.16, 36]} />
+      </mesh>
+      <mesh position={[0, -0.08, 3.5]} material={SHARED_MATERIALS.warmFloor}>
+        <boxGeometry args={[ROOM_FOUR_SPATIAL.roomWidth, 0.16, 3]} />
+      </mesh>
+
+      {/* Side-wall skins change temperature without introducing a third historical section. */}
+      {[
+        { z: -58.5, length: 33, material: SHARED_MATERIALS.coldWall },
+        { z: -16, length: 36, material: SHARED_MATERIALS.warmWall },
+        { z: 3.5, length: 3, material: SHARED_MATERIALS.warmWall },
+      ].map((section) => (
+        <React.Fragment key={`walls-${section.z}`}>
+          <mesh position={[-8.9, wallY, section.z]} material={section.material}>
+            <boxGeometry args={[0.2, roomHeight, section.length]} />
+          </mesh>
+          <mesh position={[8.9, wallY, section.z]} material={section.material}>
+            <boxGeometry args={[0.2, roomHeight, section.length]} />
+          </mesh>
+        </React.Fragment>
+      ))}
+      <InstancedBoxes
+        instances={transitionWallInstances}
+        material={SHARED_MATERIALS.transitionWall}
+      />
+
+      {/* Front and rear walls retain the original centered 4 × 4 metre door apertures. */}
+      {[ROOM_FOUR_SPATIAL.localStartZ, ROOM_FOUR_SPATIAL.localEndZ].map((z, wallIndex) => {
+        const material = wallIndex === 0 ? SHARED_MATERIALS.coldWall : SHARED_MATERIALS.warmWall;
+        return (
+          <group key={`end-wall-${z}`}>
+            <mesh position={[-5.5, wallY, z]} material={material}>
+              <boxGeometry args={[7, roomHeight, 0.22]} />
+            </mesh>
+            <mesh position={[5.5, wallY, z]} material={material}>
+              <boxGeometry args={[7, roomHeight, 0.22]} />
+            </mesh>
+            <mesh position={[0, 5.5, z]} material={material}>
+              <boxGeometry args={[4, Math.max(0.2, roomHeight - 4), 0.22]} />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* A dark, ribbed ceiling creates a controlled contemporary exhibition volume. */}
+      <mesh position={[0, ceilingY, -58.5]} material={SHARED_MATERIALS.darkInk}>
+        <boxGeometry args={[18, 0.18, 33]} />
+      </mesh>
+      <InstancedBoxes
+        instances={transitionCeilingInstances}
+        material={SHARED_MATERIALS.transitionCeiling}
+      />
+      <mesh position={[0, ceilingY, -14.5]} material={SHARED_MATERIALS.darkInk}>
+        <boxGeometry args={[18, 0.18, 39]} />
+      </mesh>
+      <InstancedBoxes instances={coldRibInstances} material={SHARED_MATERIALS.coldFrame} />
+      <InstancedBoxes instances={warmRibInstances} material={SHARED_MATERIALS.warmWood} />
+
+      {ROOM_FOUR_PORTALS.map((portal) => {
+        const material =
+          portal.skin === 'cold-frame'
+            ? SHARED_MATERIALS.coldFrame
+            : portal.skin === 'warm-wood'
+              ? SHARED_MATERIALS.warmWood
+              : SHARED_MATERIALS.warmFrame;
+        return (
+          <PortalFrame
+            key={portal.id}
+            z={portal.z}
+            roomHeight={roomHeight}
+            halfSpan={portal.halfSpan}
+            material={material}
+          />
+        );
+      })}
+    </group>
+  );
+};
+
+const Connector: React.FC<{
+  start: readonly [number, number, number];
+  end: readonly [number, number, number];
+  material: THREE.Material;
+  radius?: number;
+}> = ({ start, end, material, radius = 0.035 }) => {
+  const transform = useMemo(() => {
+    const from = new THREE.Vector3(...start);
+    const to = new THREE.Vector3(...end);
+    const direction = to.clone().sub(from);
+    const midpoint = from.clone().add(to).multiplyScalar(0.5);
+    const quaternion = new THREE.Quaternion().setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction.clone().normalize(),
+    );
+    return { midpoint, quaternion, length: direction.length() };
+  }, [end, start]);
+
+  return (
+    <mesh position={transform.midpoint} quaternion={transform.quaternion} material={material}>
+      <cylinderGeometry args={[radius, radius, transform.length, 8]} />
     </mesh>
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-const SLIDESHOW_IMAGES = [
-  { url: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&auto=format&fit=crop&q=80', label: 'VinFast - Doanh nghiệp tư nhân' },
-  { url: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800&auto=format&fit=crop&q=80', label: 'Samsung - FDI đầu tư nước ngoài' },
-  { url: 'https://images.unsplash.com/photo-1562408590-e32931084e23?w=800&auto=format&fit=crop&q=80', label: 'Viettel - Tập đoàn kinh tế Nhà nước' },
-  { url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&auto=format&fit=crop&q=80', label: 'EVN - An ninh năng lượng' },
-  { url: 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?w=800&auto=format&fit=crop&q=80', label: 'Cao tốc Bắc – Nam - Đầu tư công' },
-  { url: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?w=800&auto=format&fit=crop&q=80', label: 'Bảo hiểm y tế - An sinh xã hội' },
-  { url: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=800&auto=format&fit=crop&q=80', label: 'Chợ truyền thống - Cơ chế cung cầu' },
-  { url: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&auto=format&fit=crop&q=80', label: 'Siêu thị hiện đại - Nhiều thành phần' },
-  { url: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?w=800&auto=format&fit=crop&q=80', label: 'Cảng biển quốc tế - Mở cửa giao thương' },
-  { url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&auto=format&fit=crop&q=80', label: 'Container xuất khẩu - Hội nhập toàn cầu' },
-];
-
-const GAME_SITUATIONS = [
-  { id: 1, text: 'Được mùa nhưng thu nhập lại giảm.', category: 'market_mechanism', label: 'Cơ chế thị trường' },
-  { id: 2, text: 'Ít người sử dụng nhưng vẫn được đầu tư.', category: 'state_role', label: 'Vai trò Nhà nước' },
-  { id: 3, text: 'Cùng một sản phẩm nhưng có rất nhiều đơn vị cùng cung cấp.', category: 'multi_sector', label: 'Nhiều thành phần kinh tế' },
-  { id: 4, text: 'Khó khăn về tài chính nhưng vẫn được tiếp cận dịch vụ.', category: 'social_justice', label: 'Công bằng xã hội' },
-  { id: 5, text: 'Một sản phẩm hoàn thành sau nhiều công đoạn ở nhiều quốc gia.', category: 'integration', label: 'Hội nhập quốc tế' },
-  { id: 6, text: 'Nhu cầu tăng làm giá tăng.', category: 'market_mechanism', label: 'Cơ chế thị trường' },
-  { id: 7, text: 'Không đạt tiêu chuẩn nên không được phép tiếp tục hoạt động.', category: 'state_role', label: 'Vai trò Nhà nước' },
-  { id: 8, text: 'Nhiều mô hình cùng tồn tại trong một lĩnh vực.', category: 'multi_sector', label: 'Nhiều thành phần kinh tế' },
-  { id: 9, text: 'Điều kiện sống khác nhau nhưng cơ hội tiếp cận gần như giống nhau.', category: 'social_justice', label: 'Công bằng xã hội' },
-  { id: 10, text: 'Một đơn hàng phải đi qua nhiều quốc gia mới hoàn thành.', category: 'integration', label: 'Hội nhập quốc tế' },
-  { id: 11, text: 'Bán chậm nên giá giảm.', category: 'market_mechanism', label: 'Cơ chế thị trường' },
-  { id: 12, text: 'Phải thay đổi để đáp ứng quy định mới.', category: 'state_role', label: 'Vai trò Nhà nước' },
-  { id: 13, text: 'Nhiều chủ sở hữu cùng tham gia một lĩnh vực.', category: 'multi_sector', label: 'Nhiều thành phần kinh tế' },
-  { id: 14, text: 'Không đủ khả năng chi trả nhưng vẫn được hỗ trợ.', category: 'social_justice', label: 'Công bằng xã hội' },
-  { id: 15, text: 'Một sản phẩm được tạo ra bởi nhiều quốc gia.', category: 'integration', label: 'Hội nhập quốc tế' },
-  { id: 16, text: 'Nguồn quan trọng bị giảm làm giá tăng đột biến.', category: 'market_mechanism', label: 'Cơ chế thị trường' },
-  { id: 17, text: 'Chưa đáp ứng yêu cầu an toàn nên phải tạm dừng hoạt động.', category: 'state_role', label: 'Vai trò Nhà nước' },
-  { id: 18, text: 'Nhiều hình thức kinh doanh cùng cạnh tranh trực tiếp.', category: 'multi_sector', label: 'Nhiều thành phần kinh tế' },
-  { id: 19, text: 'Khoảng cách giàu nghèo giữa các nhóm dần được thu hẹp.', category: 'social_justice', label: 'Công bằng xã hội' },
-  { id: 20, text: 'Một chuỗi sản xuất, cung ứng trải dài qua nhiều quốc gia.', category: 'integration', label: 'Hội nhập quốc tế' },
-];
-
-const CATEGORIES = [
-  { id: 'market_mechanism', name: 'Cơ chế thị trường', icon: '💹' },
-  { id: 'state_role', name: 'Vai trò Nhà nước', icon: '🏛️' },
-  { id: 'multi_sector', name: 'Nhiều thành phần kinh tế', icon: '🏭' },
-  { id: 'social_justice', name: 'Công bằng xã hội', icon: '❤️' },
-  { id: 'integration', name: 'Hội nhập quốc tế', icon: '🌍' },
-];
-
-// Room 4 absolute Z offset from origin
-const ZONE_ABS_OFFSET = 233.0;
-
-// ═══════════════════════════════════════════════════════════════════════════
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-interface ZoneProps {
-  onZoneClick: (zoneId: number) => void;
-  isActive: boolean;
-  language: 'vi' | 'en';
-  intensity: number;
-}
-
-const ZONE1_EXHIBITS = [
-  {
-    id: "zone1-painting-1",
-    side: "left",
-    x: -6.75,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Kinh tế cá thể, tiểu chủ",
-    titleEn: "Individual & Household Economy",
-    descVi: "Kinh tế cá thể, tiểu chủ. Bên cạnh các tập đoàn lớn, hàng triệu hộ kinh doanh cá thể, tiểu thương tại các chợ truyền thống và cửa hàng bán lẻ vẫn đóng vai trò là \"mạch máu\" phân phối hàng hóa len lỏi đến từng khu dân cư, giải quyết việc làm cho lượng lớn lao động tự do.",
-    descEn: "Individual and small household businesses. Alongside large enterprises, millions of business households and small merchants in traditional markets and retail stores serve as vital distribution veins, providing livelihood for a vast number of workers.",
-    imageUrl: "/images/room4/zone1/tro-tt-vs-sieu-thi.jpg"
-  },
-  {
-    id: "zone1-painting-2",
-    side: "left",
-    x: -2.25,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Kinh tế tập thể (Hợp tác xã)",
-    titleEn: "Collective Economy (Cooperatives)",
-    descVi: "Kinh tế tập thể (Hợp tác xã). Mô hình hợp tác xã kiểu mới không còn gò bó như thời bao cấp. Các hộ nông dân hiện nay liên kết lại để ứng dụng công nghệ cao, đạt chuẩn VietGAP/GlobalGAP, tạo ra sản lượng lớn và tăng sức mạnh đàm phán với các hệ thống siêu thị.",
-    descEn: "Collective economy (Cooperatives). Modern cooperative models have evolved past the rigid subsidies era. Farming households now unite to deploy high-tech cultivation, meeting VietGAP/GlobalGAP standards, yielding mass volume, and boosting bargaining power with major supermarket chains.",
-    imageUrl: "/images/room4/zone1/rau.jpg"
-  },
-  {
-    id: "zone1-painting-3",
-    side: "left",
-    x: 2.25,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Khởi nghiệp (Startups)",
-    titleEn: "Innovative Startups (Startups)",
-    descVi: "Khởi nghiệp đổi mới sáng tạo (Startups). Sự vươn lên của các \"kỳ lân\" công nghệ (như MoMo, VNG) minh chứng cho một môi trường kinh tế năng động, nơi trí tuệ và sự sáng tạo của khối kinh tế tư nhân được khuyến khích phát triển mạnh mẽ.",
-    descEn: "Innovative Startups. The rise of home-grown technology unicorns (such as MoMo, VNG) exemplifies a dynamic economic climate where intellectual property and private sector creativity are highly fostered and motivated to flourish.",
-    imageUrl: "/images/room4/zone1/coworking.png"
-  },
-  {
-    id: "zone1-painting-4",
-    side: "left",
-    x: 6.75,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Sự liên kết chuỗi cung ứng",
-    titleEn: "Supply Chain Linkage",
-    descVi: "Sự liên kết chuỗi cung ứng. Các thành phần kinh tế không hoạt động độc lập mà đan xen lẫn nhau. Các doanh nghiệp tư nhân vừa và nhỏ của Việt Nam đang ngày càng tham gia sâu hơn vào chuỗi cung ứng phụ trợ cho các tập đoàn FDI (như sản xuất linh kiện cho Samsung, Toyota).",
-    descEn: "Supply chain linkage. Economic sectors do not function in isolation but are deeply interwoven. Vietnam's small and medium private enterprises are increasingly integrating into the supporting supply chains of multinational FDI corporations (such as component manufacturing for Samsung, Toyota).",
-    imageUrl: "/images/room4/zone1/fdi-lao-dong.jpg"
-  }
-];
-
-const Zone1MultiSector: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
-  const { setSelectedExhibit } = useMuseum();
-  const logo1Ref = useRef<THREE.Group>(null);
-  const logo2Ref = useRef<THREE.Group>(null);
-  const logo3Ref = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-    const bounce = Math.sin(time * 2) * 0.08;
-
-    if (logo1Ref.current) {
-      logo1Ref.current.position.y = 1.25 + bounce;
-      logo1Ref.current.rotation.y = time * 0.6;
-    }
-    if (logo2Ref.current) {
-      logo2Ref.current.position.y = 1.25 + bounce;
-      logo2Ref.current.rotation.y = time * 0.6;
-    }
-    if (logo3Ref.current) {
-      logo3Ref.current.position.y = 1.25 + bounce;
-      logo3Ref.current.rotation.y = time * 0.6;
-    }
-  });
-
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
-
-  const handlePointerOut = () => {
-    document.body.style.cursor = 'auto';
-  };
-
-  const handlePaintingClick = (e: any, item: typeof ZONE1_EXHIBITS[0]) => {
-    e.stopPropagation();
-    onZoneClick(1);
-    setSelectedExhibit({
-      id: item.id,
-      gallery_id: "gallery-market-economy",
-      title: { vi: item.titleVi, en: item.titleEn },
-      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
-      description: { vi: item.descVi, en: item.descEn },
-      model_3d_url: "",
-      thumbnail_url: item.imageUrl,
-      coordinate_x: -8.9,
-      coordinate_y: 2.3,
-      coordinate_z: -41.0 + item.x,
-      rotation_x: 0,
-      rotation_y: Math.PI / 2,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const isVi = language === 'vi';
-
-  return (
-    <group position={[-4.5, 0, -41.0]} rotation={[0, Math.PI / 2, 0]}>
-      {/* ── Pedestal 1: Viettel (State-owned) ── */}
-      <group
-        position={[-2.2, 0, 0]}
-        onClick={(e) => {
-          e.stopPropagation();
-          onZoneClick(1);
-          setSelectedExhibit({
-            id: 'zone1-viettel',
-            gallery_id: 'gallery-market-economy',
-            title: { vi: "Kinh tế Nhà nước (Viettel)", en: "State Sector (Viettel)" },
-            author: { vi: "Mô hình 3D", en: "3D Model" },
-            description: {
-              vi: "Đại diện cho Kinh tế Nhà nước, giữ vai trò chủ đạo, dẫn dắt phát triển hạ tầng số và công nghệ cao thương mại hóa.",
-              en: "Represents the State-owned Economy Sector, playing a leading role in driving high-tech and digital infrastructure."
-            },
-            model_3d_url: "",
-            thumbnail_url: "/images/room4/viettel.jpg",
-            coordinate_x: -4.5,
-            coordinate_y: 1.0,
-            coordinate_z: -43.2,
-            rotation_x: 0,
-            rotation_y: 0,
-            rotation_z: 0,
-            scale_x: 1,
-            scale_y: 1,
-            scale_z: 1
-          });
-        }}
-      >
-        {/* Glow ring */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-          <ringGeometry args={[0.5, 0.6, 32]} />
-          <meshBasicMaterial color="#ef4444" transparent opacity={0.2 + intensity * 0.8} />
-        </mesh>
-        {/* Base Cylinder */}
-        <mesh
-          position={[0, 0.5, 0]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <cylinderGeometry args={[0.4, 0.45, 1.0, 16]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
-        </mesh>
-        <mesh position={[0, 1.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.35, 0.4, 16]} />
-          <meshBasicMaterial color="#ef4444" transparent opacity={intensity} />
-        </mesh>
-
-        {/* Logo Viettel (Orange globe inside green torus ring) */}
-        <group ref={logo1Ref} position={[0, 1.25, 0]}>
-          {/* Inner Globe */}
-          <mesh>
-            <sphereGeometry args={[0.16, 16, 16]} />
-            <meshStandardMaterial color="#ea580c" emissive="#ea580c" emissiveIntensity={0.5 * intensity} roughness={0.1} />
-          </mesh>
-          {/* Outer Torus Ring */}
-          <mesh rotation={[Math.PI / 4, Math.PI / 4, 0]}>
-            <torusGeometry args={[0.22, 0.02, 8, 24]} />
-            <meshStandardMaterial color="#16a34a" emissive="#16a34a" emissiveIntensity={0.5 * intensity} roughness={0.1} />
-          </mesh>
-        </group>
-
-        {/* HTML Label */}
-        <Html position={[0, 1.7, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-red-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
-            <p className="text-[8px] font-black text-red-400 uppercase tracking-wider">Viettel</p>
-            <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế Nhà nước' : 'State Sector'}</p>
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Pedestal 2: VinFast (Private) ── */}
-      <group
-        position={[0, 0, 0]}
-        onClick={(e) => {
-          e.stopPropagation();
-          onZoneClick(1);
-          setSelectedExhibit({
-            id: 'zone1-vinfast',
-            gallery_id: 'gallery-market-economy',
-            title: { vi: "Kinh tế Tư nhân (VinFast)", en: "Private Sector (VinFast)" },
-            author: { vi: "Mô hình 3D", en: "3D Model" },
-            description: {
-              vi: "Đại diện cho Kinh tế Tư nhân, động lực quan trọng của nền kinh tế, tiên phong sản xuất xe điện thông minh toàn cầu.",
-              en: "Represents the Private Sector, a key engine of growth, pioneering smart electric vehicles globally."
-            },
-            model_3d_url: "",
-            thumbnail_url: "/images/room4/vinfast.jpg",
-            coordinate_x: -4.5,
-            coordinate_y: 1.0,
-            coordinate_z: -45.0,
-            rotation_x: 0,
-            rotation_y: 0,
-            rotation_z: 0,
-            scale_x: 1,
-            scale_y: 1,
-            scale_z: 1
-          });
-        }}
-      >
-        {/* Glow ring */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-          <ringGeometry args={[0.5, 0.6, 32]} />
-          <meshBasicMaterial color="#38bdf8" transparent opacity={0.2 + intensity * 0.8} />
-        </mesh>
-        {/* Base Cylinder */}
-        <mesh
-          position={[0, 0.5, 0]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <cylinderGeometry args={[0.4, 0.45, 1.0, 16]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
-        </mesh>
-        <mesh position={[0, 1.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.35, 0.4, 16]} />
-          <meshBasicMaterial color="#38bdf8" transparent opacity={intensity} />
-        </mesh>
-
-        {/* Logo VinFast (Glowing V shape) */}
-        <group ref={logo2Ref} position={[0, 1.25, 0]}>
-          {/* Left Wing */}
-          <mesh position={[-0.08, 0.05, 0]} rotation={[0, 0, -Math.PI / 6]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.24, 8]} />
-            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8 * intensity} roughness={0.1} />
-          </mesh>
-          {/* Right Wing */}
-          <mesh position={[0.08, 0.05, 0]} rotation={[0, 0, Math.PI / 6]}>
-            <cylinderGeometry args={[0.025, 0.025, 0.24, 8]} />
-            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.8 * intensity} roughness={0.1} />
-          </mesh>
-        </group>
-
-        {/* HTML Label */}
-        <Html position={[0, 1.7, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-sky-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
-            <p className="text-[8px] font-black text-sky-400 uppercase tracking-wider">VinFast</p>
-            <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế Tư nhân' : 'Private Sector'}</p>
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Pedestal 3: Samsung (FDI) ── */}
-      <group
-        position={[2.2, 0, 0]}
-        onClick={(e) => {
-          e.stopPropagation();
-          onZoneClick(1);
-          setSelectedExhibit({
-            id: 'zone1-samsung',
-            gallery_id: 'gallery-market-economy',
-            title: { vi: "Kinh tế có vốn FDI (Samsung)", en: "Foreign FDI Sector (Samsung)" },
-            author: { vi: "Mô hình 3D", en: "3D Model" },
-            description: {
-              vi: "Đại diện cho Kinh tế có vốn đầu tư nước ngoài (FDI), đóng vai trò quan trọng trong sản xuất, xuất khẩu và tạo việc làm công nghệ cao.",
-              en: "Represents the Foreign-Invested Sector (FDI), playing a major role in manufacturing, exports, and high-tech jobs."
-            },
-            model_3d_url: "",
-            thumbnail_url: "/images/room4/samsung.jpg",
-            coordinate_x: -4.5,
-            coordinate_y: 1.0,
-            coordinate_z: -38.8,
-            rotation_x: 0,
-            rotation_y: 0,
-            rotation_z: 0,
-            scale_x: 1,
-            scale_y: 1,
-            scale_z: 1
-          });
-        }}
-      >
-        {/* Glow ring */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-          <ringGeometry args={[0.5, 0.6, 32]} />
-          <meshBasicMaterial color="#3b82f6" transparent opacity={0.2 + intensity * 0.8} />
-        </mesh>
-        <mesh
-          position={[0, 0.5, 0]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <cylinderGeometry args={[0.4, 0.45, 1.0, 16]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.8} roughness={0.2} />
-        </mesh>
-        <mesh position={[0, 1.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.35, 0.4, 16]} />
-          <meshBasicMaterial color="#3b82f6" transparent opacity={intensity} />
-        </mesh>
-
-        {/* Logo Samsung (Glowing blue oval) */}
-        <group ref={logo3Ref} position={[0, 1.25, 0]} scale={[1.3, 0.7, 0.4]} rotation={[Math.PI / 8, 0, -Math.PI / 12]}>
-          <mesh>
-            <sphereGeometry args={[0.18, 24, 24]} />
-            <meshStandardMaterial color="#1d4ed8" emissive="#1d4ed8" emissiveIntensity={0.6 * intensity} roughness={0.1} />
-          </mesh>
-        </group>
-
-        {/* HTML Label */}
-        <Html position={[0, 1.7, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
-            <p className="text-[8px] font-black text-blue-400 uppercase tracking-wider">Samsung</p>
-            <p className="text-[6.5px] text-slate-300 font-bold">{isVi ? 'Kinh tế FDI' : 'FDI Sector'}</p>
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Wall Paintings for Zone 1 ── */}
-      {ZONE1_EXHIBITS.map((item, idx) => (
-        <group
-          key={item.id}
-          position={[item.x, 2.3, item.z]}
-          rotation={item.rotation as any}
-          onClick={(e) => handlePaintingClick(e, item)}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          {/* Wood Frame */}
-          <mesh>
-            <boxGeometry args={[3.2, 2.2, 0.1]} />
-            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
-          </mesh>
-          <PaintingMesh url={item.imageUrl} />
-
-          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
-          <group
-            position={[0, -1.65, 0.35]}
-            rotation={[-Math.PI / 10, 0, 0]}
-          >
-            {/* Trụ chân trái */}
-            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Trụ chân phải */}
-            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Hộp đế gỗ gắn dưới đất */}
-            <mesh position={[0, -0.62, -0.28]}>
-              <boxGeometry args={[1.25, 0.08, 0.34]} />
-              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
-            </mesh>
-            {/* Tấm ốp gỗ sau bảng nhãn */}
-            <mesh position={[0, 0, -0.015]}>
-              <boxGeometry args={[1.9, 0.72, 0.05]} />
-              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
-            </mesh>
-            {/* Tấm giấy nhãn màu vàng kem sáng */}
-            <mesh position={[0, 0, 0.02]}>
-              <boxGeometry args={[1.74, 0.56, 0.035]} />
-              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
-            </mesh>
-
-            <Html
-              position={[0, 0.02, 0.04]}
-              center
-              transform
-              occlude
-              distanceFactor={2.4}
-              className="pointer-events-none select-none text-center font-sans"
-            >
-              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
-                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
-                  {language === 'vi' ? item.titleVi : item.titleEn}
-                </p>
-                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
-                  {language === 'vi' ? item.descVi : item.descEn}
-                </p>
-                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
-                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
-                </p>
-              </div>
-            </Html>
-          </group>
-        </group>
-      ))}
-    </group>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ZONE 2 — Cơ Chế Thị Trường (Balance Scale + Click-to-tilt items)
-// ═══════════════════════════════════════════════════════════════════════════
-
-const ZONE2_EXHIBITS = [
-  {
-    id: "zone2-painting-1",
-    side: "right",
-    x: -6.75,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Thị trường vốn minh bạch",
-    titleEn: "Transparent Capital Market",
-    descVi: "Thị trường vốn minh bạch. Sự hình thành và phát triển của Thị trường Chứng khoán Việt Nam (VN-Index) là minh chứng rõ nét cho việc huy động vốn theo nguyên tắc thị trường, nơi các nhà đầu tư tự do mua bán cổ phần dựa trên kỳ vọng và năng lực của doanh nghiệp.",
-    descEn: "Transparent capital market. The establishment and development of the Vietnam Stock Market (VN-Index) is a clear demonstration of market-based capital mobilization, where investors trade shares freely based on corporate performance and expectations.",
-    imageUrl: "/images/room4/zone2/zone2-1.jpg"
-  },
-  {
-    id: "zone2-painting-2",
-    side: "right",
-    x: -2.25,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Cạnh tranh lành mạnh",
-    titleEn: "Fair Market Competition",
-    descVi: "Cạnh tranh mang lại lợi ích cho người tiêu dùng. Trên thị trường tự do, các doanh nghiệp phải liên tục tung ra các chương trình khuyến mãi, cải thiện dịch vụ giao hàng và chăm sóc khách hàng để giành thị phần. Sự cạnh tranh khốc liệt này giúp người tiêu dùng được hưởng lợi về giá và chất lượng.",
-    descEn: "Competition benefits consumers. In a free market, businesses constantly launch promotions, improve deliveries, and elevate customer care to win market share. This fierce rivalry ensures consumers receive better prices and higher quality.",
-    imageUrl: "/images/room4/zone2/zone2-2.png"
-  },
-  {
-    id: "zone2-painting-3",
-    side: "right",
-    x: 2.25,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Liên thông giá trị toàn cầu",
-    titleEn: "Global Value Integration",
-    descVi: "Sự liên thông với thị trường thế giới. Giá xăng dầu tại Việt Nam được điều chỉnh định kỳ dựa trên biến động của giá dầu thô toàn cầu. Điều này phản ánh rõ sự tôn trọng quy luật giá trị và quy luật cung cầu, thay vì Nhà nước bao cấp bù lỗ như trước đây.",
-    descEn: "Integration with global markets. Gasoline prices in Vietnam are adjusted periodically based on global crude oil fluctuations. This reflects clear respect for the law of value and supply/demand, replacing historical state subsidy systems.",
-    imageUrl: "/images/room4/zone2/zone2-3.jpg"
-  },
-  {
-    id: "zone2-painting-4",
-    side: "right",
-    x: 6.75,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Phá vỡ thế độc quyền",
-    titleEn: "Breaking Telecom Monopoly",
-    descVi: "Phá vỡ thế độc quyền. Lĩnh vực viễn thông là ví dụ điển hình về việc mở cửa thị trường. Sự cạnh tranh giữa Viettel, VNPT, MobiFone... đã làm giá cước viễn thông và Internet tại Việt Nam giảm sâu, trở thành một trong những quốc gia có chi phí tiếp cận Internet rẻ nhất thế giới.",
-    descEn: "Breaking monopoly. Telecommunications is a prime example of market opening. Competition among Viettel, VNPT, MobiFone, etc., has driven telecom and internet fees down, making Vietnam one of the cheapest countries globally for internet access.",
-    imageUrl: "/images/room4/zone2/zone2-4.jpg"
-  }
-];
-
-const Zone2BalanceScale: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
-  const { setSelectedExhibit } = useMuseum();
-  const scaleRef = useRef<THREE.Group>(null);
-  const leftPanRef = useRef<THREE.Group>(null);
-  const rightPanRef = useRef<THREE.Group>(null);
-  const crossbarRef = useRef<THREE.Mesh>(null);
-
-  const goldRef = useRef<THREE.Mesh>(null);
-  const coffeeRef = useRef<THREE.Mesh>(null);
-  const durianRef = useRef<THREE.Mesh>(null);
-
-  const [prices, setPrices] = useState({ coffee: 70, gold: 85, durian: 120 });
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-
-    // Tilt oscillates when player is close (intensity > 0)
-    const maxTilt = 0.28; // radians (about 16 degrees)
-    const tilt = Math.sin(time * 1.8) * maxTilt * intensity;
-
-    if (crossbarRef.current) {
-      crossbarRef.current.rotation.z = tilt;
-    }
-
-    const halfLength = 1.3;
-    const cosT = Math.cos(tilt);
-    const sinT = Math.sin(tilt);
-
-    // Left pan position (X negative, Y moves down when tilt is positive)
-    const leftX = -halfLength * cosT;
-    const leftY = 1.5 - halfLength * sinT;
-    if (leftPanRef.current) {
-      leftPanRef.current.position.set(leftX, leftY - 0.5, 0);
-    }
-
-    // Right pan position (X positive, Y moves up when tilt is positive)
-    const rightX = halfLength * cosT;
-    const rightY = 1.5 + halfLength * sinT;
-    if (rightPanRef.current) {
-      rightPanRef.current.position.set(rightX, rightY - 0.5, 0);
-    }
-
-    // Rotate and float items
-    if (coffeeRef.current) {
-      coffeeRef.current.rotation.y = time * 0.8;
-      coffeeRef.current.position.y = 1.7 + Math.sin(time * 2.5) * 0.1 * intensity;
-    }
-    if (goldRef.current) {
-      goldRef.current.rotation.y = time * 0.5;
-      goldRef.current.rotation.x = time * 0.3;
-      goldRef.current.position.y = 2.15 + Math.sin(time * 2.1) * 0.1 * intensity;
-    }
-    if (durianRef.current) {
-      durianRef.current.rotation.y = time * 0.7;
-      durianRef.current.position.y = 1.7 + Math.sin(time * 2.7) * 0.1 * intensity;
-    }
-
-    // Dynamic prices
-    if (intensity > 0.05) {
-      const pCoffee = Math.round(70 + Math.sin(time * 2.5) * 15 * intensity);
-      const pGold = (85.2 + Math.sin(time * 2.1) * 4.8 * intensity).toFixed(1);
-      const pDurian = Math.round(120 + Math.sin(time * 2.7) * 35 * intensity);
-
-      // Update state less frequently
-      if (Math.round(time * 10) % 5 === 0) {
-        setPrices({
-          coffee: pCoffee,
-          gold: parseFloat(pGold),
-          durian: pDurian
-        });
-      }
-    }
-  });
-
-  const handleClick = (e: any) => {
-    e.stopPropagation();
-    onZoneClick(2);
-    setSelectedExhibit({
-      id: 'zone2-balance-scale',
-      gallery_id: 'gallery-market-economy',
-      title: { vi: "Cơ chế Thị trường tự do", en: "Free Market Mechanism" },
-      author: { vi: "Mô hình 3D", en: "3D Model" },
-      description: {
-        vi: "Giá cả hàng hóa và dịch vụ vận hành linh hoạt theo quan hệ cung - cầu và cạnh tranh lành mạnh trên thị trường dưới sự điều tiết vĩ mô.",
-        en: "Prices of goods and services dynamically fluctuate based on market supply, demand, and fair competition."
-      },
-      model_3d_url: "",
-      thumbnail_url: "/images/room4/cho-truyen-thong.jpg",
-      coordinate_x: 4.5,
-      coordinate_y: 1.0,
-      coordinate_z: -41.0,
-      rotation_x: 0,
-      rotation_y: 0,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
-
-  const handlePointerOut = () => {
-    document.body.style.cursor = 'auto';
-  };
-
-  const handlePaintingClick = (e: any, item: typeof ZONE2_EXHIBITS[0]) => {
-    e.stopPropagation();
-    onZoneClick(2);
-    setSelectedExhibit({
-      id: item.id,
-      gallery_id: "gallery-market-economy",
-      title: { vi: item.titleVi, en: item.titleEn },
-      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
-      description: { vi: item.descVi, en: item.descEn },
-      model_3d_url: "",
-      thumbnail_url: item.imageUrl,
-      coordinate_x: 8.9,
-      coordinate_y: 2.3,
-      coordinate_z: -41.0 + item.x,
-      rotation_x: 0,
-      rotation_y: -Math.PI / 2,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const isVi = language === 'vi';
-
-  return (
-    <group position={[4.5, 0, -41.0]} rotation={[0, Math.PI / 2, 0]} onClick={handleClick}>
-      {/* Glow ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[1.5, 1.7, 32]} />
-        <meshBasicMaterial color="#fbbf24" transparent opacity={0.15 + intensity * 0.65} />
-      </mesh>
-
-      {/* ── Balance Scale 3D ── */}
-      <group position={[0, 0, 0]}>
-        {/* Scale Base */}
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[1.2, 0.1, 0.6]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {/* Scale Pillar */}
-        <mesh position={[0, 0.8, 0]}>
-          <cylinderGeometry args={[0.07, 0.09, 1.5, 16]} />
-          <meshStandardMaterial color="#334155" metalness={0.9} roughness={0.1} />
-        </mesh>
-
-        {/* Pivot Cap */}
-        <mesh position={[0, 1.55, 0]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.22, 16]} />
-          <meshStandardMaterial color="#fbbf24" metalness={0.9} roughness={0.1} />
-        </mesh>
-
-        {/* Tilting Crossbar */}
-        <mesh ref={crossbarRef} position={[0, 1.55, 0]}>
-          <boxGeometry args={[2.7, 0.06, 0.06]} />
-          <meshStandardMaterial color="#fbbf24" metalness={0.9} roughness={0.1} />
-        </mesh>
-
-        {/* Left Pan (Hanging) */}
-        <group ref={leftPanRef}>
-          {/* Hanger wires */}
-          <mesh position={[0, 0.28, 0]} rotation={[0, 0, 0.25]}>
-            <cylinderGeometry args={[0.008, 0.008, 0.55, 8]} />
-            <meshStandardMaterial color="#94a3b8" />
-          </mesh>
-          {/* Pan Plate */}
-          <mesh position={[0, 0, 0]}>
-            <cylinderGeometry args={[0.36, 0.36, 0.02, 16]} />
-            <meshStandardMaterial color="#e2e8f0" metalness={0.85} roughness={0.15} />
-          </mesh>
-        </group>
-
-        {/* Right Pan (Hanging) */}
-        <group ref={rightPanRef}>
-          {/* Hanger wires */}
-          <mesh position={[0, 0.28, 0]} rotation={[0, 0, -0.25]}>
-            <cylinderGeometry args={[0.008, 0.008, 0.55, 8]} />
-            <meshStandardMaterial color="#94a3b8" />
-          </mesh>
-          {/* Pan Plate */}
-          <mesh position={[0, 0, 0]}>
-            <cylinderGeometry args={[0.36, 0.36, 0.02, 16]} />
-            <meshStandardMaterial color="#e2e8f0" metalness={0.85} roughness={0.15} />
-          </mesh>
-        </group>
-      </group>
-
-      {/* ── Floating items with Price Tags ── */}
-      {/* 1. Coffee Bean (Left Side) */}
-      <group position={[-2.2, 0, 0]}>
-        <mesh
-          ref={coffeeRef}
-          scale={[1.3, 0.8, 0.8]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <sphereGeometry args={[0.18, 16, 16]} />
-          <meshStandardMaterial color="#7c2d12" roughness={0.6} />
-        </mesh>
-        <Html position={[0, 2.1, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-amber-600/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
-            <p className="text-[8px] font-black text-amber-500 uppercase tracking-wider">{isVi ? 'Cà phê' : 'Coffee'}</p>
-            <p className="text-[7px] text-slate-200 font-bold">{prices.coffee.toLocaleString()}k {isVi ? 'đ/kg' : 'VND/kg'}</p>
-          </div>
-        </Html>
-      </group>
-
-      {/* 2. Gold Bar (Center Top) */}
-      <group position={[0, 0, -0.5]}>
-        <mesh
-          ref={goldRef}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <boxGeometry args={[0.3, 0.12, 0.15]} />
-          <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} />
-        </mesh>
-        <Html position={[0, 2.55, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-yellow-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
-            <p className="text-[8px] font-black text-yellow-400 uppercase tracking-wider">{isVi ? 'Thỏi vàng' : 'Gold Bar'}</p>
-            <p className="text-[7px] text-slate-200 font-bold">{prices.gold} {isVi ? 'tr/lượng' : 'M VND/tael'}</p>
-          </div>
-        </Html>
-      </group>
-
-      {/* 3. Durian (Right Side) */}
-      <group position={[2.2, 0, 0]}>
-        <mesh
-          ref={durianRef}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <dodecahedronGeometry args={[0.18, 1]} />
-          <meshStandardMaterial color="#84cc16" roughness={0.7} bumpScale={0.1} />
-        </mesh>
-        <Html position={[0, 2.1, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-lime-500/30 px-2 py-1 rounded text-center whitespace-nowrap shadow-md backdrop-blur-sm">
-            <p className="text-[8px] font-black text-lime-400 uppercase tracking-wider">{isVi ? 'Sầu riêng' : 'Durian'}</p>
-            <p className="text-[7px] text-slate-200 font-bold">{prices.durian.toLocaleString()}k {isVi ? 'đ/kg' : 'VND/kg'}</p>
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Wall Paintings for Zone 2 ── */}
-      {ZONE2_EXHIBITS.map((item, idx) => (
-        <group
-          key={item.id}
-          position={[item.x, 2.3, item.z]}
-          rotation={item.rotation as any}
-          onClick={(e) => handlePaintingClick(e, item)}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          {/* Wood Frame */}
-          <mesh>
-            <boxGeometry args={[3.2, 2.2, 0.1]} />
-            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
-          </mesh>
-          <PaintingMesh url={item.imageUrl} />
-
-          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
-          <group
-            position={[0, -1.65, 0.35]}
-            rotation={[-Math.PI / 10, 0, 0]}
-          >
-            {/* Trụ chân trái */}
-            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Trụ chân phải */}
-            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Hộp đế gỗ gắn dưới đất */}
-            <mesh position={[0, -0.62, -0.28]}>
-              <boxGeometry args={[1.25, 0.08, 0.34]} />
-              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
-            </mesh>
-            {/* Tấm ốp gỗ sau bảng nhãn */}
-            <mesh position={[0, 0, -0.015]}>
-              <boxGeometry args={[1.9, 0.72, 0.05]} />
-              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
-            </mesh>
-            {/* Tấm giấy nhãn màu vàng kem sáng */}
-            <mesh position={[0, 0, 0.02]}>
-              <boxGeometry args={[1.74, 0.56, 0.035]} />
-              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
-            </mesh>
-
-            <Html
-              position={[0, 0.02, 0.04]}
-              center
-              transform
-              occlude
-              distanceFactor={2.4}
-              className="pointer-events-none select-none text-center font-sans"
-            >
-              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
-                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
-                  {language === 'vi' ? item.titleVi : item.titleEn}
-                </p>
-                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
-                  {language === 'vi' ? item.descVi : item.descEn}
-                </p>
-                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
-                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
-                </p>
-              </div>
-            </Html>
-          </group>
-        </group>
-      ))}
-    </group>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ZONE 3 — Nhà Nước Quản Lý (Diorama + Force Field Dome)
-// ═══════════════════════════════════════════════════════════════════════════
-const ZONE3_EXHIBITS = [
-  {
-    id: "zone3-painting-1",
-    side: "right",
-    x: -6.75,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Ổn định kinh tế vĩ mô",
-    titleEn: "Macroeconomic Stability",
-    descVi: "Ổn định kinh tế vĩ mô. Bằng các công cụ chính sách tiền tệ (điều chỉnh lãi suất, tỷ giá), Ngân hàng Nhà nước đóng vai trò \"nhạc trưởng\" trong việc kiểm soát lạm phát, giữ giá trị đồng tiền và bảo đảm an toàn cho toàn bộ hệ thống ngân hàng thương mại.",
-    descEn: "Monetary policy tools. The State Bank of Vietnam controls inflation, maintains currency value, and secures the commercial banking system.",
-    imageUrl: "/images/room4/zone3/zone3-1.jpg"
-  },
-  {
-    id: "zone3-painting-2",
-    side: "right",
-    x: -2.25,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Dự trữ quốc gia & Bình ổn giá",
-    titleEn: "National Reserves & Price Stabilization",
-    descVi: "Dự trữ quốc gia và Bình ổn giá. Khi thị trường gặp cú sốc (do thiên tai, dịch bệnh, đứt gãy chuỗi cung ứng), Nhà nước sẽ tung hàng hóa từ các kho dự trữ (như gạo, xăng dầu, vật tư y tế) để bình ổn giá cả, không để xảy ra tình trạng đầu cơ, găm hàng.",
-    descEn: "Stabilizing commodities. During market shocks, the State releases goods from reserves (rice, fuel, medical supplies) to prevent speculation.",
-    imageUrl: "/images/room4/zone3/zone3-2.jpg"
-  },
-  {
-    id: "zone3-painting-3",
-    side: "right",
-    x: 2.25,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Chính phủ kiến tạo",
-    titleEn: "Enabling Government",
-    descVi: "Hội nghị đối thoại giữa Chính phủ và cộng đồng doanh nghiệp. Thay vì can thiệp trực tiếp vào kinh doanh, Nhà nước liên tục cải cách thủ tục hành chính, cắt giảm giấy phép con, hỗ trợ miễn giảm thuế và khoanh nợ trong những giai đoạn khó khăn (như đại dịch COVID-19) để tạo môi trường kinh doanh thuận lợi nhất.",
-    descEn: "Dialogue and reforms. The State simplifies procedures, cuts sub-licenses, and reschedules debt to foster a supportive business climate.",
-    imageUrl: "/images/room4/zone3/zone3-3.jpg"
-  },
-  {
-    id: "zone3-painting-4",
-    side: "right",
-    x: 6.75,
-    z: -4.4,
-    rotation: [0, 0, 0],
-    titleVi: "Quy hoạch chiến lược dài hạn",
-    titleEn: "Long-term Strategic Planning",
-    descVi: "Bản đồ quy hoạch vùng Đồng bằng sông Cửu Long thích ứng với biến đổi khí hậu. Thị trường thường chỉ nhìn vào lợi nhuận ngắn hạn. Vì vậy, Nhà nước phải đóng vai trò lập quy hoạch dài hạn, phân bổ nguồn lực quốc gia cho các vùng kinh tế trọng điểm, đồng thời đầu tư vào các dự án chống biến đổi khí hậu để bảo đảm phát triển bền vững.",
-    descEn: "Long-term planning. The State guides national resources and climate adaptation investments for sustainable future development.",
-    imageUrl: "/images/room4/zone3/zone3-4.jpg"
-  }
-];
-
-const Zone3StateRegulation: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
-  const { setSelectedExhibit } = useMuseum();
-  const car1Ref = useRef<THREE.Mesh>(null);
-  const car2Ref = useRef<THREE.Mesh>(null);
-
-  const turbine1Ref = useRef<THREE.Group>(null);
-  const turbine2Ref = useRef<THREE.Group>(null);
-
-  const book1Ref = useRef<THREE.Group>(null);
-  const book2Ref = useRef<THREE.Group>(null);
-  const book3Ref = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-
-    // Animate cars on the expressway
-    const carSpeed1 = 0.5;
-    const carSpeed2 = 0.35;
-
-    if (car1Ref.current) {
-      car1Ref.current.position.x = -1.1 + ((time * carSpeed1) % 2.2);
-    }
-    if (car2Ref.current) {
-      car2Ref.current.position.x = 1.1 - ((time * carSpeed2) % 2.2);
-    }
-
-    // Spin wind turbine blades
-    if (turbine1Ref.current) {
-      turbine1Ref.current.rotation.z = time * 3.5;
-    }
-    if (turbine2Ref.current) {
-      turbine2Ref.current.rotation.z = time * 2.8;
-    }
-
-    // Law books floating/swaying
-    const floatOffset1 = Math.sin(time * 1.5) * 0.05;
-    const floatOffset2 = Math.sin(time * 1.2 + 1) * 0.05;
-    const floatOffset3 = Math.sin(time * 1.7 + 2) * 0.06;
-
-    if (book1Ref.current) {
-      book1Ref.current.position.y = 1.75 + floatOffset1;
-      book1Ref.current.rotation.y = time * 0.3;
-    }
-    if (book2Ref.current) {
-      book2Ref.current.position.y = 1.75 + floatOffset2;
-      book2Ref.current.rotation.y = -time * 0.25;
-    }
-    if (book3Ref.current) {
-      book3Ref.current.position.y = 2.1 + floatOffset3;
-      book3Ref.current.rotation.x = Math.sin(time) * 0.1;
-    }
-  });
-
-  const handleClick = (e: any) => {
-    e.stopPropagation();
-    onZoneClick(3);
-    setSelectedExhibit({
-      id: 'zone3-state-regulation',
-      gallery_id: 'gallery-market-economy',
-      title: { vi: "Vai trò quản lý vĩ mô của Nhà nước", en: "Macro-regulatory Role of the State" },
-      author: { vi: "Mô hình 3D", en: "3D Model" },
-      description: {
-        vi: "Nhà nước kiến tạo, ban hành luật pháp (Luật Doanh nghiệp, Luật Thuế) và đầu tư hạ tầng thiết yếu (EVN, Cao tốc) để định hướng nền kinh tế.",
-        en: "The State regulates the economy via legal frameworks and invests in essential infrastructure (electricity, highways) to guide development."
-      },
-      model_3d_url: "",
-      thumbnail_url: "/images/room4/cao-toc-bac-nam.jpg",
-      coordinate_x: 4.5,
-      coordinate_y: 1.0,
-      coordinate_z: -25.0,
-      rotation_x: 0,
-      rotation_y: 0,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
-
-  const handlePointerOut = () => {
-    document.body.style.cursor = 'auto';
-  };
-
-  const handlePaintingClick = (e: any, item: typeof ZONE3_EXHIBITS[0]) => {
-    e.stopPropagation();
-    onZoneClick(3);
-    setSelectedExhibit({
-      id: item.id,
-      gallery_id: "gallery-market-economy",
-      title: { vi: item.titleVi, en: item.titleEn },
-      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
-      description: { vi: item.descVi, en: item.descEn },
-      model_3d_url: "",
-      thumbnail_url: item.imageUrl,
-      coordinate_x: 8.9,
-      coordinate_y: 2.3,
-      coordinate_z: -23.0 + item.x,
-      rotation_x: 0,
-      rotation_y: -Math.PI / 2,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const isVi = language === 'vi';
-
-  return (
-    <group position={[4.5, 0, -23.0]} rotation={[0, Math.PI / 2, 0]} onClick={handleClick}>
-      {/* Glow ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[1.5, 1.7, 32]} />
-        <meshBasicMaterial color="#06b6d4" transparent opacity={0.15 + intensity * 0.65} />
-      </mesh>
-
-      {/* ── Diorama Base Table ── */}
-      <mesh position={[0, 0.45, 0]} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
-        <cylinderGeometry args={[1.2, 1.25, 0.9, 32]} />
-        <meshStandardMaterial color="#1e293b" metalness={0.5} roughness={0.5} />
-      </mesh>
-
-      {/* ── Sa Bàn (Diorama Elements) ── */}
-      <group position={[0, 0.9, 0]}>
-        {/* Terrain Base (Green grass field) */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 0]}>
-          <planeGeometry args={[2.2, 2.2]} />
-          <meshStandardMaterial color="#15803d" roughness={0.9} />
-        </mesh>
-
-        {/* Expressway (Cao tốc Bắc - Nam) */}
-        <group position={[0, 0.01, 0]}>
-          {/* Roadbed */}
-          <mesh>
-            <boxGeometry args={[2.2, 0.01, 0.3]} />
-            <meshStandardMaterial color="#1e293b" roughness={0.8} />
-          </mesh>
-          {/* Central Divider (Yellow line) */}
-          <mesh position={[0, 0.008, 0]}>
-            <boxGeometry args={[2.2, 0.008, 0.015]} />
-            <meshBasicMaterial color="#eab308" />
-          </mesh>
-
-          {/* Moving Cars */}
-          <mesh ref={car1Ref} position={[0, 0.02, -0.07]}>
-            <boxGeometry args={[0.07, 0.04, 0.04]} />
-            <meshBasicMaterial color="#ef4444" />
-          </mesh>
-          <mesh ref={car2Ref} position={[0, 0.02, 0.07]}>
-            <boxGeometry args={[0.07, 0.04, 0.04]} />
-            <meshBasicMaterial color="#38bdf8" />
-          </mesh>
-        </group>
-
-        {/* Wind Turbine 1 (EVN Power / Renewable energy) */}
-        <group position={[-0.5, 0, -0.5]}>
-          {/* Pylon */}
-          <mesh position={[0, 0.25, 0]}>
-            <cylinderGeometry args={[0.01, 0.025, 0.5, 8]} />
-            <meshStandardMaterial color="#cbd5e1" metalness={0.5} />
-          </mesh>
-          {/* Generator hub */}
-          <mesh position={[0, 0.5, 0]} rotation={[0, Math.PI / 4, 0]}>
-            <boxGeometry args={[0.04, 0.04, 0.07]} />
-            <meshStandardMaterial color="#cbd5e1" />
-          </mesh>
-          {/* Rotating blades */}
-          <group ref={turbine1Ref} position={[0, 0.5, 0.04]}>
-            {/* Blade 1 */}
-            <mesh position={[0, 0.12, 0]}>
-              <boxGeometry args={[0.015, 0.24, 0.005]} />
-              <meshBasicMaterial color="#ffffff" />
-            </mesh>
-            {/* Blade 2 */}
-            <mesh position={[-0.104, -0.06, 0]} rotation={[0, 0, Math.PI * 2 / 3]}>
-              <boxGeometry args={[0.015, 0.24, 0.005]} />
-              <meshBasicMaterial color="#ffffff" />
-            </mesh>
-            {/* Blade 3 */}
-            <mesh position={[0.104, -0.06, 0]} rotation={[0, 0, -Math.PI * 2 / 3]}>
-              <boxGeometry args={[0.015, 0.24, 0.005]} />
-              <meshBasicMaterial color="#ffffff" />
-            </mesh>
-          </group>
-        </group>
-
-        {/* Wind Turbine 2 */}
-        <group position={[-0.7, 0, 0.4]}>
-          {/* Pylon */}
-          <mesh position={[0, 0.2, 0]}>
-            <cylinderGeometry args={[0.01, 0.02, 0.4, 8]} />
-            <meshStandardMaterial color="#cbd5e1" metalness={0.5} />
-          </mesh>
-          {/* Generator hub */}
-          <mesh position={[0, 0.4, 0]} rotation={[0, Math.PI / 6, 0]}>
-            <boxGeometry args={[0.04, 0.04, 0.06]} />
-            <meshStandardMaterial color="#cbd5e1" />
-          </mesh>
-          {/* Rotating blades */}
-          <group ref={turbine2Ref} position={[0, 0.4, 0.035]}>
-            <mesh position={[0, 0.1, 0]}>
-              <boxGeometry args={[0.012, 0.2, 0.005]} />
-              <meshBasicMaterial color="#ffffff" />
-            </mesh>
-            <mesh position={[-0.086, -0.05, 0]} rotation={[0, 0, Math.PI * 2 / 3]}>
-              <boxGeometry args={[0.012, 0.2, 0.005]} />
-              <meshBasicMaterial color="#ffffff" />
-            </mesh>
-            <mesh position={[0.086, -0.05, 0]} rotation={[0, 0, -Math.PI * 2 / 3]}>
-              <boxGeometry args={[0.012, 0.2, 0.005]} />
-              <meshBasicMaterial color="#ffffff" />
-            </mesh>
-          </group>
-        </group>
-
-        {/* Small Transmission Tower (EVN grid) */}
-        <group position={[0.6, 0, -0.4]}>
-          <mesh position={[0, 0.25, 0]}>
-            <boxGeometry args={[0.1, 0.5, 0.1]} />
-            <meshStandardMaterial color="#475569" wireframe />
-          </mesh>
-          <mesh position={[0, 0.4, 0]}>
-            <boxGeometry args={[0.3, 0.02, 0.05]} />
-            <meshStandardMaterial color="#475569" />
-          </mesh>
-        </group>
-      </group>
-
-      {/* ── Force Field Dome ── */}
-      <mesh position={[0, 0.9, 0]}>
-        <sphereGeometry args={[1.25, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshBasicMaterial
-          color="#06b6d4"
-          transparent
-          opacity={0.06 + intensity * 0.14}
-          wireframe={intensity > 0.3}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-
-      {/* ── Law Books Floating (Mái vòm bảo vệ pháp lý) ── */}
-      {/* Book 1: Luật Doanh nghiệp */}
-      <group ref={book1Ref} position={[-0.8, 1.75, 0.5]}>
-        {/* Book Spine/Cover */}
-        <mesh>
-          <boxGeometry args={[0.26, 0.35, 0.06]} />
-          <meshStandardMaterial color="#1e3a8a" roughness={0.3} />
-        </mesh>
-        {/* Inner Pages */}
-        <mesh position={[0.01, 0, 0]}>
-          <boxGeometry args={[0.24, 0.33, 0.05]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.6} />
-        </mesh>
-        {/* Label */}
-        <Html position={[0, 0.3, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-0.5 rounded text-[6.5px] font-black text-blue-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
-            {isVi ? 'Luật Doanh nghiệp' : 'Enterprise Law'}
-          </div>
-        </Html>
-      </group>
-
-      {/* Book 2: Luật Thuế */}
-      <group ref={book2Ref} position={[0.8, 1.75, -0.5]}>
-        <mesh>
-          <boxGeometry args={[0.26, 0.35, 0.06]} />
-          <meshStandardMaterial color="#b91c1c" roughness={0.3} />
-        </mesh>
-        <mesh position={[-0.01, 0, 0]}>
-          <boxGeometry args={[0.24, 0.33, 0.05]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.6} />
-        </mesh>
-        <Html position={[0, 0.3, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-red-500/30 px-2 py-0.5 rounded text-[6.5px] font-black text-red-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
-            {isVi ? 'Luật Thuế' : 'Tax Law'}
-          </div>
-        </Html>
-      </group>
-
-      {/* Book 3: Hiến pháp */}
-      <group ref={book3Ref} position={[0, 2.1, 0]}>
-        <mesh>
-          <boxGeometry args={[0.3, 0.22, 0.05]} />
-          <meshStandardMaterial color="#7c2d12" roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0, 0.005]}>
-          <boxGeometry args={[0.28, 0.2, 0.04]} />
-          <meshStandardMaterial color="#f8fafc" roughness={0.6} />
-        </mesh>
-        <Html position={[0, 0.25, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-amber-600/30 px-2 py-0.5 rounded text-[6.5px] font-black text-amber-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
-            {isVi ? 'Hiến pháp' : 'Constitution'}
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Wall Paintings for Zone 3 ── */}
-      {ZONE3_EXHIBITS.map((item, idx) => (
-        <group
-          key={item.id}
-          position={[item.x, 2.3, item.z]}
-          rotation={item.rotation as any}
-          onClick={(e) => handlePaintingClick(e, item)}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          {/* Wood Frame */}
-          <mesh>
-            <boxGeometry args={[3.2, 2.2, 0.1]} />
-            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
-          </mesh>
-          <PaintingMesh url={item.imageUrl} />
-
-          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
-          <group
-            position={[0, -1.65, 0.35]}
-            rotation={[-Math.PI / 10, 0, 0]}
-          >
-            {/* Trụ chân trái */}
-            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Trụ chân phải */}
-            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Hộp đế gỗ gắn dưới đất */}
-            <mesh position={[0, -0.62, -0.28]}>
-              <boxGeometry args={[1.25, 0.08, 0.34]} />
-              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
-            </mesh>
-            {/* Tấm ốp gỗ sau bảng nhãn */}
-            <mesh position={[0, 0, -0.015]}>
-              <boxGeometry args={[1.9, 0.72, 0.05]} />
-              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
-            </mesh>
-            {/* Tấm giấy nhãn màu vàng kem sáng */}
-            <mesh position={[0, 0, 0.02]}>
-              <boxGeometry args={[1.74, 0.56, 0.035]} />
-              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
-            </mesh>
-
-            <Html
-              position={[0, 0.02, 0.04]}
-              center
-              transform
-              occlude
-              distanceFactor={2.4}
-              className="pointer-events-none select-none text-center font-sans"
-            >
-              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
-                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
-                  {language === 'vi' ? item.titleVi : item.titleEn}
-                </p>
-                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
-                  {language === 'vi' ? item.descVi : item.descEn}
-                </p>
-                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
-                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
-                </p>
-              </div>
-            </Html>
-          </group>
-        </group>
-      ))}
-    </group>
-  );
-};
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ZONE 4 — Công Bằng Xã Hội (Light Tree + Picture Frames)
-// ═══════════════════════════════════════════════════════════════════════════
-const ZONE4_EXHIBITS = [
-  {
-    id: "zone4-painting-1",
-    side: "left",
-    x: -6.75,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Chương trình Nông thôn mới",
-    titleEn: "National New Rural Program",
-    descVi: "Chương trình Mục tiêu quốc gia Nông thôn mới. Nguồn lực từ tăng trưởng kinh tế được phân bổ để hiện đại hóa bộ mặt nông thôn: xây dựng điện, đường, trường, trạm. Kéo gần khoảng cách phát triển và mức sống giữa khu vực thành thị và nông thôn.",
-    descEn: "Resources from economic growth are allocated to modernize rural areas: building electricity, roads, schools, and medical stations.",
-    imageUrl: "/images/room4/zone4/zone4-1.jpg"
-  },
-  {
-    id: "zone4-painting-2",
-    side: "left",
-    x: -2.25,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Nhà ở xã hội",
-    titleEn: "Social Housing Policy",
-    descVi: "Chính sách an cư cho người lao động. Để người công nhân tạo ra của cải không bị bỏ lại phía sau, Nhà nước đưa ra các gói tín dụng ưu đãi và quy hoạch quỹ đất để phát triển nhà ở xã hội, giúp người thu nhập thấp có cơ hội sở hữu nhà ở an toàn.",
-    descEn: "Preferential credit packages and land planning for social housing help low-income earners own safe houses.",
-    imageUrl: "/images/room4/zone4/zone4-2.png"
-  },
-  {
-    id: "zone4-painting-3",
-    side: "left",
-    x: 2.25,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Phổ cập giáo dục & công nghệ",
-    titleEn: "Universal Education & Tech",
-    descVi: "Trẻ em vùng miền núi, hải đảo đang sử dụng máy tính bảng để học tập. Công bằng xã hội không chỉ là chia đều của cải, mà quan trọng hơn là \"bình đẳng về cơ hội\". Việc đầu tư cáp quang internet đến vùng sâu vùng xa và các chính sách miễn giảm học phí giúp mọi trẻ em đều có cơ hội tiếp cận tri thức.",
-    descEn: "Universal Education and Technology. Investing in fiber optics to remote areas and tuition exemptions ensures every child has access to knowledge.",
-    imageUrl: "/images/room4/zone4/zone4-3.jpg"
-  },
-  {
-    id: "zone4-painting-4",
-    side: "left",
-    x: 6.75,
-    z: 4.4,
-    rotation: [0, Math.PI, 0],
-    titleVi: "Chăm lo người yếu thế & có công",
-    titleEn: "Caring for the Disadvantaged",
-    descVi: "Cán bộ y tế thăm khám cho Cựu chiến binh và người khuyết tật. Một nền kinh tế thị trường nhân văn là nền kinh tế có mạng lưới an sinh xã hội vững chắc. Hàng năm, ngân sách quốc gia luôn dành một phần lớn để chi trả trợ cấp, chăm sóc y tế cho người có công, người cao tuổi neo đơn và người khuyết tật.",
-    descEn: "A humane market economy has a solid social safety net, allocating national budget for subsidies and medical care.",
-    imageUrl: "/images/room4/zone4/zone4-4.jpg"
-  }
-];
-
-const Zone4SocialEquity: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
-  const { setSelectedExhibit } = useMuseum();
-  const leaf1Ref = useRef<THREE.Mesh>(null);
-  const leaf2Ref = useRef<THREE.Mesh>(null);
-  const leaf3Ref = useRef<THREE.Mesh>(null);
-  const leaf4Ref = useRef<THREE.Mesh>(null);
-  const leaf5Ref = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-
-    // Pulsate the tree canopy spheres (leaves)
-    if (leaf1Ref.current) {
-      const s = 1.0 + Math.sin(time * 2.0) * 0.05;
-      leaf1Ref.current.scale.set(s, s, s);
-    }
-    if (leaf2Ref.current) {
-      const s = 1.0 + Math.sin(time * 1.7 + 1) * 0.06;
-      leaf2Ref.current.scale.set(s, s, s);
-    }
-    if (leaf3Ref.current) {
-      const s = 1.0 + Math.sin(time * 2.2 + 2) * 0.05;
-      leaf3Ref.current.scale.set(s, s, s);
-    }
-    if (leaf4Ref.current) {
-      const s = 1.0 + Math.sin(time * 1.5 + 3) * 0.07;
-      leaf4Ref.current.scale.set(s, s, s);
-    }
-    if (leaf5Ref.current) {
-      const s = 1.0 + Math.sin(time * 2.5 + 4) * 0.06;
-      leaf5Ref.current.scale.set(s, s, s);
-    }
-  });
-
-  const handleClick = (e: any) => {
-    e.stopPropagation();
-    onZoneClick(4);
-    setSelectedExhibit({
-      id: 'zone4-social-equity',
-      gallery_id: 'gallery-market-economy',
-      title: { vi: "Tiến bộ và Công bằng Xã hội", en: "Social Progress & Equity" },
-      author: { vi: "Mô hình 3D", en: "3D Model" },
-      description: {
-        vi: "Gắn tăng trưởng kinh tế với tiến bộ xã hội. Triển khai các gói bảo hiểm y tế toàn dân, học bổng vùng cao và cứu trợ khẩn cấp.",
-        en: "Tying economic growth with social equity, providing universal health insurance, educational support, and disaster relief."
-      },
-      model_3d_url: "",
-      thumbnail_url: "/images/room4/bao-hiem-y-te.jpg",
-      coordinate_x: -4.5,
-      coordinate_y: 1.0,
-      coordinate_z: -23.0,
-      rotation_x: 0,
-      rotation_y: 0,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
-
-  const handlePointerOut = () => {
-    document.body.style.cursor = 'auto';
-  };
-
-  const handlePaintingClick = (e: any, item: typeof ZONE4_EXHIBITS[0]) => {
-    e.stopPropagation();
-    onZoneClick(4);
-    setSelectedExhibit({
-      id: item.id,
-      gallery_id: "gallery-market-economy",
-      title: { vi: item.titleVi, en: item.titleEn },
-      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
-      description: { vi: item.descVi, en: item.descEn },
-      model_3d_url: "",
-      thumbnail_url: item.imageUrl,
-      coordinate_x: -8.9,
-      coordinate_y: 2.3,
-      coordinate_z: -23.0 + item.x,
-      rotation_x: 0,
-      rotation_y: Math.PI / 2,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const isVi = language === 'vi';
-
-  return (
-    <group position={[-4.5, 0, -23.0]} rotation={[0, Math.PI / 2, 0]} onClick={handleClick}>
-      {/* Warm Glow ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[1.5, 1.7, 32]} />
-        <meshBasicMaterial color="#f97316" transparent opacity={0.15 + intensity * 0.65} />
-      </mesh>
-
-      {/* ── Light Tree (Cây Ánh Sáng) ── */}
-      <group position={[0, 0, 0]}>
-        {/* Trunk */}
-        <mesh position={[0, 0.6, 0]}>
-          <cylinderGeometry args={[0.08, 0.16, 1.2, 12]} />
-          <meshStandardMaterial color="#451a03" roughness={0.9} />
-        </mesh>
-
-        {/* Glowing canopy spheres */}
-        <mesh ref={leaf1Ref} position={[0, 1.35, 0]}>
-          <sphereGeometry args={[0.3, 16, 16]} />
-          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.6 * intensity} roughness={0.1} />
-        </mesh>
-        <mesh ref={leaf2Ref} position={[-0.22, 1.5, 0.12]}>
-          <sphereGeometry args={[0.2, 16, 16]} />
-          <meshStandardMaterial color="#f97316" emissive="#f97316" emissiveIntensity={0.5 * intensity} roughness={0.1} />
-        </mesh>
-        <mesh ref={leaf3Ref} position={[0.22, 1.5, -0.12]}>
-          <sphereGeometry args={[0.22, 16, 16]} />
-          <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={0.5 * intensity} roughness={0.1} />
-        </mesh>
-        <mesh ref={leaf4Ref} position={[0.12, 1.6, 0.18]}>
-          <sphereGeometry args={[0.18, 16, 16]} />
-          <meshStandardMaterial color="#f97316" emissive="#f97316" emissiveIntensity={0.5 * intensity} roughness={0.1} />
-        </mesh>
-        <mesh ref={leaf5Ref} position={[-0.18, 1.6, -0.18]}>
-          <sphereGeometry args={[0.16, 16, 16]} />
-          <meshStandardMaterial color="#f59e0b" emissive="#f59e0b" emissiveIntensity={0.5 * intensity} roughness={0.1} />
-        </mesh>
-
-        {/* Tree Base / Pedestal */}
-        <mesh position={[0, 0.05, 0]}>
-          <cylinderGeometry args={[0.45, 0.5, 0.1, 16]} />
-          <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.3} />
-        </mesh>
-      </group>
-
-      {/* ── Digital Frames ── */}
-      {/* Frame 1: Thẻ BHYT (Left) */}
-      <group position={[-2.0, 1.1, 0.2]} rotation={[0, Math.PI - Math.PI / 6, 0]}>
-        {/* Pedestal */}
-        <mesh position={[0, -0.55, 0]}>
-          <cylinderGeometry args={[0.15, 0.2, 1.1, 12]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {/* Frame border */}
-        <mesh
-          position={[0, 0.05, 0]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <boxGeometry args={[0.7, 0.5, 0.04]} />
-          <meshStandardMaterial color="#1e1b4b" roughness={0.3} />
-        </mesh>
-
-        {/* Chip card graphic */}
-        <Html transform occlude distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
-          <div className="w-[145px] h-[95px] rounded-lg bg-gradient-to-br from-indigo-900 via-blue-900 to-indigo-950 p-2 border border-blue-500/20 text-white flex flex-col justify-between font-sans shadow-inner select-none">
-            <div className="flex justify-between items-start">
-              <span className="text-[14px]">🏥</span>
-              <span className="text-[6.5px] bg-red-500/20 text-red-300 border border-red-500/30 px-1 rounded font-bold uppercase tracking-wider">
-                {isVi ? 'Bảo hiểm y tế' : 'Social Health'}
-              </span>
-            </div>
-            <div className="space-y-0.5">
-              <h5 className="text-[7.5px] font-black uppercase text-indigo-200">
-                {isVi ? 'BẢO HIỂM Y TẾ TOÀN DÂN' : 'UNIVERSAL HEALTH CARE'}
-              </h5>
-              <p className="text-[5.5px] leading-relaxed text-indigo-300">
-                {isVi ? 'Hỗ trợ 100% chi phí khám chữa bệnh cho người nghèo' : '100% medical expense support for poor households.'}
-              </p>
-            </div>
-          </div>
-        </Html>
-      </group>
-
-      {/* Frame 2: Cứu trợ thiên tai (Right) */}
-      <group position={[2.0, 1.1, 0.2]} rotation={[0, Math.PI + Math.PI / 6, 0]}>
-        {/* Pedestal */}
-        <mesh position={[0, -0.55, 0]}>
-          <cylinderGeometry args={[0.15, 0.2, 1.1, 12]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {/* Frame border */}
-        <mesh
-          position={[0, 0.05, 0]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <boxGeometry args={[0.7, 0.5, 0.04]} />
-          <meshStandardMaterial color="#1e1b4b" roughness={0.3} />
-        </mesh>
-
-        {/* Disaster relief graphic */}
-        <Html transform occlude distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
-          <div className="w-[145px] h-[95px] rounded-lg bg-gradient-to-br from-amber-900 via-orange-900 to-amber-950 p-2 border border-orange-500/20 text-white flex flex-col justify-between font-sans shadow-inner select-none">
-            <div className="flex justify-between items-start">
-              <span className="text-[14px]">🤝</span>
-              <span className="text-[6.5px] bg-orange-500/20 text-orange-300 border border-orange-500/30 px-1 rounded font-bold uppercase tracking-wider">
-                {isVi ? 'Cứu trợ thiên tai' : 'Disaster Relief'}
-              </span>
-            </div>
-            <div className="space-y-0.5">
-              <h5 className="text-[7.5px] font-black uppercase text-orange-200">
-                {isVi ? 'ẤM ÁP TÌNH ĐỒNG BÀO' : 'COMMUNITY SOLIDARITY'}
-              </h5>
-              <p className="text-[5.5px] leading-relaxed text-orange-300">
-                {isVi ? 'Ứng phó bão lũ, hỗ trợ dựng lại nhà cửa sau thiên tai' : 'Disaster response and housing rebuild reconstruction assistance.'}
-              </p>
-            </div>
-          </div>
-        </Html>
-      </group>
-
-      {/* Frame 3: Học sinh vùng cao (Center Behind Tree) */}
-      <group position={[0, 1.25, -1.0]} rotation={[0, Math.PI, 0]}>
-        {/* Pedestal */}
-        <mesh position={[0, -0.7, 0]}>
-          <cylinderGeometry args={[0.15, 0.2, 1.4, 12]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-        </mesh>
-
-        {/* Frame border */}
-        <mesh
-          position={[0, 0.05, 0]}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          <boxGeometry args={[0.7, 0.5, 0.04]} />
-          <meshStandardMaterial color="#1e1b4b" roughness={0.3} />
-        </mesh>
-
-        {/* Education support graphic */}
-        <Html transform occlude distanceFactor={2.4} position={[0, 0.05, 0.021]} center>
-          <div className="w-[145px] h-[95px] rounded-lg bg-gradient-to-br from-yellow-900 via-amber-800 to-yellow-950 p-2 border border-yellow-500/20 text-white flex flex-col justify-between font-sans shadow-inner select-none">
-            <div className="flex justify-between items-start">
-              <span className="text-[14px]">☀️</span>
-              <span className="text-[6.5px] bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 px-1 rounded font-bold uppercase tracking-wider">
-                {isVi ? 'Phát triển bền vững' : 'Equity Development'}
-              </span>
-            </div>
-            <div className="space-y-0.5">
-              <h5 className="text-[7.5px] font-black uppercase text-yellow-200">
-                {isVi ? 'HỌC BỔNG VÙNG CAO' : 'HIGHLAND SCHOLARSHIPS'}
-              </h5>
-              <p className="text-[5.5px] leading-relaxed text-yellow-300">
-                {isVi ? 'Bảo đảm cơ hội học tập bình đẳng cho mọi trẻ em Việt Nam' : 'Ensuring equal learning opportunities for every Vietnamese child.'}
-              </p>
-            </div>
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Wall Paintings for Zone 4 ── */}
-      {ZONE4_EXHIBITS.map((item, idx) => (
-        <group
-          key={item.id}
-          position={[item.x, 2.3, item.z]}
-          rotation={item.rotation as any}
-          onClick={(e) => handlePaintingClick(e, item)}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          {/* Wood Frame */}
-          <mesh>
-            <boxGeometry args={[3.2, 2.2, 0.1]} />
-            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
-          </mesh>
-          <PaintingMesh url={item.imageUrl} />
-
-          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
-          <group
-            position={[0, -1.65, 0.35]}
-            rotation={[-Math.PI / 10, 0, 0]}
-          >
-            {/* Trụ chân trái */}
-            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Trụ chân phải */}
-            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Hộp đế gỗ gắn dưới đất */}
-            <mesh position={[0, -0.62, -0.28]}>
-              <boxGeometry args={[1.25, 0.08, 0.34]} />
-              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
-            </mesh>
-            {/* Tấm ốp gỗ sau bảng nhãn */}
-            <mesh position={[0, 0, -0.015]}>
-              <boxGeometry args={[1.9, 0.72, 0.05]} />
-              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
-            </mesh>
-            {/* Tấm giấy nhãn màu vàng kem sáng */}
-            <mesh position={[0, 0, 0.02]}>
-              <boxGeometry args={[1.74, 0.56, 0.035]} />
-              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
-            </mesh>
-
-            <Html
-              position={[0, 0.02, 0.04]}
-              center
-              transform
-              occlude
-              distanceFactor={2.4}
-              className="pointer-events-none select-none text-center font-sans"
-            >
-              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
-                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
-                  {language === 'vi' ? item.titleVi : item.titleEn}
-                </p>
-                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
-                  {language === 'vi' ? item.descVi : item.descEn}
-                </p>
-                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
-                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
-                </p>
-              </div>
-            </Html>
-          </group>
-        </group>
-      ))}
-    </group>
-  );
-};
-
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ZONE 5 — Hội Nhập Quốc Tế (Holographic Globe + Orbit Lines + Mini Port)
-// ═══════════════════════════════════════════════════════════════════════════
-const ZONE5_EXHIBITS = [
-  {
-    id: "zone5-painting-1",
-    side: "left",
-    x: -8.9,
-    z: -3.75, // Absolute Z = 13.75
-    rotation: [0, Math.PI / 2, 0],
-    titleVi: "Mạng lưới FTA toàn cầu",
-    titleEn: "Global FTA Network",
-    descVi: "Mạng lưới FTA phủ rộng toàn cầu. Việt Nam đã ký kết 16 hiệp định thương mại tự do (bao gồm các hiệp định thế hệ mới như EVFTA, CPTPP), mở toang cánh cửa đưa hàng hóa Việt Nam tiến vào các thị trường khó tính nhất với mức thuế suất ưu đãi, tạo lợi thế cạnh tranh khổng lồ.",
-    descEn: "Vietnam signed 16 FTAs (including new-generation ones like EVFTA, CPTPP), opening gates for exports with preferential tariffs.",
-    imageUrl: "/images/room4/zone5/zone5-1.jpg"
-  },
-  {
-    id: "zone5-painting-2",
-    side: "left",
-    x: -8.9,
-    z: 3.75, // Absolute Z = 21.25
-    rotation: [0, Math.PI / 2, 0],
-    titleVi: "Nông sản chinh phục thế giới",
-    titleEn: "Agriculture Conquers Markets",
-    descVi: "Nông nghiệp chinh phục thế giới. Hội nhập giúp nông sản Việt Nam không chỉ quẩn quanh trong \"ao làng\". Từ gạo, cà phê, hồ tiêu cho đến thủy sản, các sản phẩm nông nghiệp Việt Nam nay đã đáp ứng các tiêu chuẩn khắt khe nhất (FDA, EU) và xuất khẩu thu về hàng chục tỷ USD mỗi năm.",
-    descEn: "Vietnamese rice, coffee, pepper, and seafood meet international standards (FDA, EU) for exports, generating billions USD annually.",
-    imageUrl: "/images/room4/zone5/zone5-2.jpg"
-  },
-  {
-    id: "zone5-painting-3",
-    side: "right",
-    x: 8.9,
-    z: -3.75, // Absolute Z = 13.75
-    rotation: [0, -Math.PI / 2, 0],
-    titleVi: "Giao lưu văn hóa & Du lịch",
-    titleEn: "Tourism & Cultural Exchange",
-    descVi: "Mở cửa biên giới, giao lưu văn hóa. Du khách quốc tế tấp nập đi thuyền tại Vịnh Hạ Long, Phố cổ Hội An. Việc miễn thị thực và quảng bá văn hóa giúp Việt Nam trở thành điểm đến hấp dẫn trên bản đồ du lịch thế giới, mang lại nguồn thu ngoại tệ lớn.",
-    descEn: "International tourism at Ha Long and Hoi An. Visa exemptions and cultural promotion draw foreign travelers and currencies.",
-    imageUrl: "/images/room4/zone5/zone5-3.jpg"
-  },
-  {
-    id: "zone5-painting-4",
-    side: "right",
-    x: 8.9,
-    z: 3.75, // Absolute Z = 21.25
-    rotation: [0, -Math.PI / 2, 0],
-    titleVi: "Xuất khẩu dịch vụ số",
-    titleEn: "Digital Services Export",
-    descVi: "Xuất khẩu dịch vụ số và nguồn nhân lực. Hội nhập không chỉ dừng lại ở xuất khẩu hàng hóa vật lý. Lực lượng lao động Việt Nam (đặc biệt là ngành IT, lập trình phần mềm) đang trực tiếp tham gia vào các dự án công nghệ toàn cầu, đưa trí tuệ Việt vươn ra thế giới.",
-    descEn: "Domestic IT talent and developers participating directly in global tech projects, bringing digital service exports to the world.",
-    imageUrl: "/images/room4/zone5/zone5-4.jpg"
-  }
-];
-
-const Zone5InternationalIntegration: React.FC<ZoneProps> = ({ onZoneClick, isActive, language, intensity }) => {
-  const { setSelectedExhibit } = useMuseum();
-  const globeRef = useRef<THREE.Mesh>(null);
-  const orbitGroupRef = useRef<THREE.Group>(null);
-
-  const truckRef = useRef<THREE.Group>(null);
-
-  const logoAseanRef = useRef<THREE.Group>(null);
-  const logoWtoRef = useRef<THREE.Group>(null);
-  const logoIntelRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-
-    // Rotate Globe and Orbit lines
-    if (globeRef.current) {
-      globeRef.current.rotation.y = time * 0.35;
-    }
-    if (orbitGroupRef.current) {
-      orbitGroupRef.current.rotation.y = -time * 0.2;
-      orbitGroupRef.current.rotation.z = time * 0.15;
-    }
-
-    // Move Container Truck at Port
-    if (truckRef.current) {
-      const cycle = (time * 0.3) % 2;
-      const x = cycle < 1 ? -0.8 + cycle * 1.6 : 0.8 - (cycle - 1) * 1.6;
-      truckRef.current.position.x = x;
-      // Flip rotation based on direction
-      truckRef.current.rotation.y = cycle < 1 ? 0 : Math.PI;
-    }
-
-    // Organization badges floating
-    const floatOffset1 = Math.sin(time * 1.4) * 0.05;
-    const floatOffset2 = Math.sin(time * 1.1 + 1) * 0.05;
-    const floatOffset3 = Math.sin(time * 1.6 + 2) * 0.06;
-
-    if (logoAseanRef.current) {
-      logoAseanRef.current.position.y = 1.75 + floatOffset1;
-      logoAseanRef.current.rotation.y = time * 0.25;
-    }
-    if (logoWtoRef.current) {
-      logoWtoRef.current.position.y = 1.75 + floatOffset2;
-      logoWtoRef.current.rotation.y = -time * 0.22;
-    }
-    if (logoIntelRef.current) {
-      logoIntelRef.current.position.y = 2.1 + floatOffset3;
-      logoIntelRef.current.rotation.x = Math.sin(time * 0.8) * 0.08;
-    }
-  });
-
-  const handleClick = (e: any) => {
-    e.stopPropagation();
-    onZoneClick(5);
-    setSelectedExhibit({
-      id: 'zone5-international-integration',
-      gallery_id: 'gallery-market-economy',
-      title: { vi: "Hội nhập Kinh tế Quốc tế", en: "International Economic Integration" },
-      author: { vi: "Mô hình 3D", en: "3D Model" },
-      description: {
-        vi: "Việt Nam chủ động tham gia WTO, ASEAN, ký các hiệp định FTA để mở rộng thị trường xuất khẩu và thu hút dòng vốn FDI lớn từ Intel, Samsung.",
-        en: "Vietnam actively integrates through WTO, ASEAN, and FTAs, expanding export markets and attracting high-quality foreign investments."
-      },
-      model_3d_url: "",
-      thumbnail_url: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800",
-      coordinate_x: 0.0,
-      coordinate_y: 1.0,
-      coordinate_z: -5.0,
-      rotation_x: 0,
-      rotation_y: 0,
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
-
-  const handlePointerOut = () => {
-    document.body.style.cursor = 'auto';
-  };
-
-  const handlePaintingClick = (e: any, item: typeof ZONE5_EXHIBITS[0]) => {
-    e.stopPropagation();
-    onZoneClick(5);
-    setSelectedExhibit({
-      id: item.id,
-      gallery_id: "gallery-market-economy",
-      title: { vi: item.titleVi, en: item.titleEn },
-      author: { vi: "Tranh trưng bày", en: "Exhibit Painting" },
-      description: { vi: item.descVi, en: item.descEn },
-      model_3d_url: "",
-      thumbnail_url: item.imageUrl,
-      coordinate_x: item.x,
-      coordinate_y: 2.3,
-      coordinate_z: -9.5 + item.z,
-      rotation_x: 0,
-      rotation_y: item.rotation[1],
-      rotation_z: 0,
-      scale_x: 1,
-      scale_y: 1,
-      scale_z: 1
-    });
-  };
-
-  const isVi = language === 'vi';
-
-  return (
-    <group position={[0.0, 0, -9.5]} onClick={handleClick}>
-      {/* Blue Glow ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <ringGeometry args={[1.6, 1.8, 32]} />
-        <meshBasicMaterial color="#3b82f6" transparent opacity={0.15 + intensity * 0.65} />
-      </mesh>
-
-      {/* ── Holographic Globe (Quả Địa Cầu Tương Tác) ── */}
-      <group position={[0, 0.95, 0]}>
-        {/* Globe wireframe */}
-        <mesh ref={globeRef} onPointerOver={handlePointerOver} onPointerOut={handlePointerOut}>
-          <sphereGeometry args={[0.55, 24, 24]} />
-          <meshBasicMaterial
-            color="#60a5fa"
-            wireframe
-            transparent
-            opacity={0.15 + intensity * 0.35}
-          />
-        </mesh>
-
-        {/* Inner Glowing Core */}
-        <mesh>
-          <sphereGeometry args={[0.32, 16, 16]} />
-          <meshStandardMaterial
-            color="#2563eb"
-            emissive="#3b82f6"
-            emissiveIntensity={0.6 * intensity}
-            roughness={0.2}
-          />
-        </mesh>
-
-        {/* Orbit flight lines */}
-        <group ref={orbitGroupRef}>
-          <mesh rotation={[Math.PI / 4, Math.PI / 6, 0]}>
-            <torusGeometry args={[0.68, 0.008, 6, 48]} />
-            <meshBasicMaterial color="#60a5fa" transparent opacity={0.3 * intensity} />
-          </mesh>
-          <mesh rotation={[-Math.PI / 3, Math.PI / 5, 0.5]}>
-            <torusGeometry args={[0.72, 0.006, 6, 48]} />
-            <meshBasicMaterial color="#93c5fd" transparent opacity={0.3 * intensity} />
-          </mesh>
-        </group>
-
-        {/* Pedestal */}
-        <mesh position={[0, -0.48, 0]}>
-          <cylinderGeometry args={[0.3, 0.36, 0.9, 16]} />
-          <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-        </mesh>
-        <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.26, 0.32, 16]} />
-          <meshBasicMaterial color="#3b82f6" transparent opacity={intensity} />
-        </mesh>
-      </group>
-
-      {/* ── Miniature Port (Cảng Biển & Xe Container) ── */}
-      {/* Port Platform */}
-      <group position={[0, 0, -1.0]}>
-        {/* Concrete Platform */}
-        <mesh position={[0, 0.025, 0]}>
-          <boxGeometry args={[1.8, 0.05, 0.7]} />
-          <meshStandardMaterial color="#475569" roughness={0.6} />
-        </mesh>
-
-        {/* Sea Water base */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, -0.45]}>
-          <planeGeometry args={[2.0, 0.3]} />
-          <meshStandardMaterial color="#1d4ed8" emissive="#1e40af" emissiveIntensity={0.2} roughness={0.1} />
-        </mesh>
-
-        {/* Small Container Stacks */}
-        <group position={[-0.6, 0.08, -0.1]}>
-          {/* Blue Container */}
-          <mesh position={[0, 0.05, 0]}>
-            <boxGeometry args={[0.24, 0.1, 0.12]} />
-            <meshStandardMaterial color="#1e3a8a" roughness={0.4} />
-          </mesh>
-          {/* Red Container */}
-          <mesh position={[0.06, 0.15, -0.02]}>
-            <boxGeometry args={[0.24, 0.1, 0.12]} />
-            <meshStandardMaterial color="#991b1b" roughness={0.4} />
-          </mesh>
-        </group>
-
-        {/* Moving Container Truck */}
-        <group ref={truckRef} position={[0, 0.05, 0.18]}>
-          {/* Truck Head */}
-          <mesh position={[0.08, 0.04, 0]}>
-            <boxGeometry args={[0.05, 0.06, 0.06]} />
-            <meshStandardMaterial color="#cbd5e1" metalness={0.5} />
-          </mesh>
-          {/* Truck Bed */}
-          <mesh position={[-0.04, 0.05, 0]}>
-            <boxGeometry args={[0.18, 0.08, 0.06]} />
-            <meshStandardMaterial color="#15803d" roughness={0.5} />
-          </mesh>
-          {/* Wheels */}
-          <mesh position={[-0.08, 0.01, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.01, 8]} />
-            <meshBasicMaterial color="#000" />
-          </mesh>
-          <mesh position={[-0.08, 0.01, -0.03]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.01, 8]} />
-            <meshBasicMaterial color="#000" />
-          </mesh>
-          <mesh position={[0.06, 0.01, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.01, 8]} />
-            <meshBasicMaterial color="#000" />
-          </mesh>
-          <mesh position={[0.06, 0.01, -0.03]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.015, 0.015, 0.01, 8]} />
-            <meshBasicMaterial color="#000" />
-          </mesh>
-        </group>
-      </group>
-
-      {/* ── Organization Badges (ASEAN, WTO, Intel) ── */}
-      {/* 1. ASEAN Badge (Left) */}
-      <group ref={logoAseanRef} position={[-1.2, 1.75, 0.4]}>
-        <mesh>
-          <boxGeometry args={[0.26, 0.26, 0.05]} />
-          <meshStandardMaterial color="#1e3a8a" roughness={0.3} />
-        </mesh>
-        <mesh position={[0, 0, 0.026]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.005, 16]} />
-          <meshBasicMaterial color="#eab308" />
-        </mesh>
-        <Html position={[0, 0.24, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-0.5 rounded text-[6px] font-black text-blue-400 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
-            ASEAN
-          </div>
-        </Html>
-      </group>
-
-      {/* 2. WTO Badge (Right) */}
-      <group ref={logoWtoRef} position={[1.2, 1.75, -0.4]}>
-        <mesh>
-          <boxGeometry args={[0.26, 0.26, 0.05]} />
-          <meshStandardMaterial color="#0f766e" roughness={0.3} />
-        </mesh>
-        <Html position={[0, 0.24, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-teal-500/30 px-2 py-0.5 rounded text-[6px] font-black text-teal-400 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
-            WTO
-          </div>
-        </Html>
-      </group>
-
-      {/* 3. Intel Chip Badge (Center Top) */}
-      <group ref={logoIntelRef} position={[0, 2.1, 0.3]}>
-        {/* Chip Body */}
-        <mesh>
-          <boxGeometry args={[0.28, 0.28, 0.04]} />
-          <meshStandardMaterial color="#1d4ed8" metalness={0.8} roughness={0.2} />
-        </mesh>
-        {/* Pins / Details */}
-        <mesh position={[0, 0, 0.022]}>
-          <boxGeometry args={[0.2, 0.2, 0.005]} />
-          <meshStandardMaterial color="#3b82f6" metalness={0.9} />
-        </mesh>
-        <Html position={[0, 0.24, 0]} center occlude distanceFactor={6} className="pointer-events-none select-none">
-          <div className="bg-slate-950/85 border border-blue-500/30 px-2 py-0.5 rounded text-[6px] font-black text-blue-300 uppercase tracking-wider whitespace-nowrap shadow backdrop-blur-sm">
-            INTEL (FDI)
-          </div>
-        </Html>
-      </group>
-
-      {/* ── Wall Paintings for Zone 5 ── */}
-      {ZONE5_EXHIBITS.map((item, idx) => (
-        <group
-          key={item.id}
-          position={[item.x, 2.3, item.z]}
-          rotation={item.rotation as any}
-          onClick={(e) => handlePaintingClick(e, item)}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-        >
-          {/* Wood Frame */}
-          <mesh>
-            <boxGeometry args={[3.2, 2.2, 0.1]} />
-            <meshStandardMaterial color="#b45309" metalness={0.6} roughness={0.3} />
-          </mesh>
-          <PaintingMesh url={item.imageUrl} />
-
-          {/* Bảng nhãn thông tin 3D có chân nghiêng giống Room 1 */}
-          <group
-            position={[0, -1.65, 0.35]}
-            rotation={[-Math.PI / 10, 0, 0]}
-          >
-            {/* Trụ chân trái */}
-            <mesh position={[-0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Trụ chân phải */}
-            <mesh position={[0.34, -0.24, -0.12]} rotation={[Math.PI / 2, 0, 0]}>
-              <cylinderGeometry args={[0.025, 0.025, 0.72, 12]} />
-              <meshStandardMaterial color="#15100c" roughness={0.35} metalness={0.72} />
-            </mesh>
-            {/* Hộp đế gỗ gắn dưới đất */}
-            <mesh position={[0, -0.62, -0.28]}>
-              <boxGeometry args={[1.25, 0.08, 0.34]} />
-              <meshStandardMaterial color="#16100b" roughness={0.42} metalness={0.55} />
-            </mesh>
-            {/* Tấm ốp gỗ sau bảng nhãn */}
-            <mesh position={[0, 0, -0.015]}>
-              <boxGeometry args={[1.9, 0.72, 0.05]} />
-              <meshStandardMaterial color="#17120d" roughness={0.5} metalness={0.18} />
-            </mesh>
-            {/* Tấm giấy nhãn màu vàng kem sáng */}
-            <mesh position={[0, 0, 0.02]}>
-              <boxGeometry args={[1.74, 0.56, 0.035]} />
-              <meshStandardMaterial color="#f1e3c7" roughness={0.82} metalness={0.02} />
-            </mesh>
-
-            <Html
-              position={[0, 0.02, 0.04]}
-              center
-              transform
-              occlude
-              distanceFactor={2.4}
-              className="pointer-events-none select-none text-center font-sans"
-            >
-              <div className="w-[150px] text-slate-900 flex flex-col items-center gap-0.5 select-none">
-                <p className="text-[10px] font-bold truncate leading-tight w-full text-center">
-                  {language === 'vi' ? item.titleVi : item.titleEn}
-                </p>
-                <p className="text-[6.5px] leading-snug text-slate-600 italic line-clamp-2 w-full text-center mt-0.5">
-                  {language === 'vi' ? item.descVi : item.descEn}
-                </p>
-                <p className="text-[7px] text-amber-700 font-extrabold uppercase tracking-wide mt-1 animate-pulse">
-                  {language === 'vi' ? 'Nhấp để xem' : 'Click to view'}
-                </p>
-              </div>
-            </Html>
-          </group>
-        </group>
-      ))}
-    </group>
-  );
-};
-
-
-
-
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ZONE NPC COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
-interface ZoneNPCProps {
-  position: [number, number, number];
-  rotation?: [number, number, number];
-  nameVi: string;
-  nameEn: string;
-  infoVi: string;
-  infoEn: string;
-  language: 'vi' | 'en';
-  color?: string;
-  isVisible: boolean;
-  activeIntensity: number;
-  onClick?: (e: any) => void;
-  textureUrl?: string;
-  autoShowOnProximity?: boolean;
-  npcId?: string;
-  onTalk?: (npcId: string) => void;
-  isLocked?: boolean;
-}
-
-const NPCStandee: React.FC<{ url: string; color: string }> = ({ url, color }) => {
-  const [texture, setTexture] = useState<THREE.Texture | null>(null);
-  const [textureError, setTextureError] = useState(false);
-
-  useEffect(() => {
-    if (!url) return;
-    const loader = new THREE.TextureLoader();
-    loader.load(
-      url,
-      (loadedTexture) => {
-        setTexture(loadedTexture);
-      },
-      undefined,
-      (err) => {
-        console.warn('Lỗi tải texture ronaldo:', url, err);
-        setTextureError(true);
-      }
-    );
-  }, [url]);
-
-  return (
-    <group position={[0, 0.9, 0]}>
-      {/* Glow frame (Center) */}
-      <mesh position={[0, 0, 0]}>
-        <planeGeometry args={[1.28, 1.88]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} />
-      </mesh>
-      {/* Inner Support Plate (Center) */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[1.24, 1.84, 0.03]} />
-        <meshStandardMaterial color="#0f172a" metalness={0.8} roughness={0.2} />
-      </mesh>
-
-      {/* Front Face (+Z) */}
-      <mesh position={[0, 0, 0.016]} rotation={[0, 0, 0]}>
-        <planeGeometry args={[1.2, 1.8]} />
-        {texture && !textureError ? (
-          <meshBasicMaterial map={texture} side={THREE.FrontSide} toneMapped={false} />
-        ) : (
-          <meshStandardMaterial color="#1e293b" side={THREE.FrontSide} />
-        )}
-      </mesh>
-
-      {/* Back Face (-Z) */}
-      <mesh position={[0, 0, -0.016]} rotation={[0, Math.PI, 0]}>
-        <planeGeometry args={[1.2, 1.8]} />
-        {texture && !textureError ? (
-          <meshBasicMaterial map={texture} side={THREE.FrontSide} toneMapped={false} />
-        ) : (
-          <meshStandardMaterial color="#1e293b" side={THREE.FrontSide} />
-        )}
-      </mesh>
-
-      {/* Metal pole */}
-      <mesh position={[0, -0.9, 0]}>
-        <cylinderGeometry args={[0.06, 0.06, 0.3, 16]} />
-        <meshStandardMaterial color="#1e293b" metalness={0.9} roughness={0.1} />
-      </mesh>
-      {/* Round stand base */}
-      <mesh position={[0, -1.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.5, 0.5, 0.04, 24]} />
-        <meshStandardMaterial color="#0f172a" metalness={0.9} roughness={0.2} />
-      </mesh>
-    </group>
-  );
-};
-
-const ZoneNPC: React.FC<ZoneNPCProps> = ({
-  position,
-  rotation = [0, 0, 0],
-  nameVi,
-  nameEn,
-  infoVi,
-  infoEn,
-  language,
-  color = '#22d3ee',
-  isVisible,
-  activeIntensity,
-  onClick,
-  textureUrl,
-  autoShowOnProximity,
-  npcId,
-  onTalk,
-  isLocked = false
+const StudyDesk: React.FC<{
+  warm?: boolean;
+  ticket?: boolean;
+  mission?: boolean;
+  progressCount?: number;
+}> = ({
+  warm = false,
+  ticket = false,
+  mission = false,
+  progressCount = 0,
 }) => {
-  const isVi = language === 'vi';
-  const [forceShow, setForceShow] = useState(false);
+  const frame = warm ? SHARED_MATERIALS.warmFrame : SHARED_MATERIALS.coldFrame;
+  const surface = warm ? SHARED_MATERIALS.warmWood : SHARED_MATERIALS.darkInk;
+  const paper = warm ? SHARED_MATERIALS.warmPaper : SHARED_MATERIALS.coldPaper;
+  const accent = warm ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.coldAccent;
+  const line = warm ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.coldLine;
+  const openBookCount = Math.min(progressCount, 3);
 
-  const handleNpcClick = (e: any) => {
-    e.stopPropagation();
-    console.log('[NPC-CLICK] Người chơi click vào NPC:', nameVi);
-    setForceShow(prev => !prev);
-    if (!isLocked) {
-      if (onTalk && npcId) {
-        onTalk(npcId);
-      }
-    }
-    if (onClick) {
-      onClick(e);
-    }
-  };
+  return (
+    <group>
+      <mesh position={[0, 1, 0]} material={surface}>
+        <boxGeometry args={[2.65, 0.16, 1.25]} />
+      </mesh>
+      {[-1.05, 1.05].map((x) => (
+        <mesh key={`desk-leg-${x}`} position={[x, 0.5, 0]} material={frame}>
+          <boxGeometry args={[0.12, 0.95, 0.92]} />
+        </mesh>
+      ))}
 
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation();
-    document.body.style.cursor = 'pointer';
-  };
+      {!ticket && !mission && [-0.72, 0, 0.72].map((x, index) => {
+        const opened = index < openBookCount;
+        return (
+          <group
+            key={`moscow-book-${x}`}
+            position={[x, opened ? 1.28 + index * 0.025 : 1.17 + index * 0.02, -0.05]}
+            rotation={[0, -0.08 + index * 0.08, opened ? -0.08 : 0]}
+          >
+            <mesh material={frame}>
+              <boxGeometry args={[0.58, 0.1, 0.78]} />
+            </mesh>
+            {opened ? (
+              <>
+                <mesh position={[-0.145, 0.07, -0.05]} rotation={[0, 0.28, -0.08]} material={paper}>
+                  <boxGeometry args={[0.3, 0.022, 0.62]} />
+                </mesh>
+                <mesh position={[0.145, 0.07, -0.05]} rotation={[0, -0.28, 0.08]} material={paper}>
+                  <boxGeometry args={[0.3, 0.022, 0.62]} />
+                </mesh>
+                <mesh position={[0, 0.105, -0.05]} material={accent}>
+                  <boxGeometry args={[0.035, 0.018, 0.54]} />
+                </mesh>
+                <mesh position={[0, 0.21, 0.26]} material={line}>
+                  <sphereGeometry args={[0.07, 12, 8]} />
+                </mesh>
+              </>
+            ) : (
+              <mesh position={[0, 0.06, 0]} material={paper}>
+                <boxGeometry args={[0.45, 0.018, 0.63]} />
+              </mesh>
+            )}
+          </group>
+        );
+      })}
 
-  const handlePointerOut = () => {
-    document.body.style.cursor = 'auto';
-  };
+      {ticket && (
+        <group
+          position={[0, progressCount > 0 ? 1.31 : 1.17, progressCount > 0 ? 0.66 : -0.05]}
+          rotation={[progressCount > 0 ? -0.1 : 0, 0.06, progressCount > 0 ? -0.05 : 0]}
+        >
+          <mesh material={paper}>
+            <boxGeometry args={[1.45, 0.055, 0.8]} />
+          </mesh>
+          <mesh position={[0.42, 0.04, 0]} material={accent}>
+            <cylinderGeometry args={[0.14, 0.14, 0.025, 20]} />
+          </mesh>
+        </group>
+      )}
 
-  useEffect(() => {
-    if (forceShow) {
-      const timer = setTimeout(() => {
-        setForceShow(false);
-      }, 30000); // 30 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [forceShow]);
+      {mission && [-0.72, 0, 0.72].map((x, index) => {
+        const opened = index < progressCount;
+        return (
+          <group key={`mission-envelope-${x}`} position={[x, opened ? 1.32 : 1.17, opened ? 0.18 + index * 0.14 : -0.05]}>
+            <mesh material={paper}>
+              <boxGeometry args={[0.58, 0.045, 0.72]} />
+            </mesh>
+            <mesh
+              position={[0, opened ? 0.12 : 0.05, opened ? -0.12 : 0.02]}
+              rotation={[opened ? -0.64 : -0.06, 0, 0]}
+              material={paper}
+            >
+              <boxGeometry args={[0.56, 0.025, 0.31]} />
+            </mesh>
+            <mesh position={[0, 0.055, 0.08]} material={accent}>
+              <cylinderGeometry args={[0.08, 0.08, 0.025, 12]} />
+            </mesh>
+          </group>
+        );
+      })}
 
-  const showBubble = isVisible && (forceShow || (autoShowOnProximity && activeIntensity > 0.3));
+      {!ticket && !mission && (
+        <group position={[0.9, 1.12, -0.25]}>
+          <mesh position={[0, 0.48, 0]} material={frame}>
+            <cylinderGeometry args={[0.035, 0.035, 0.9, 10]} />
+          </mesh>
+          <mesh position={[-0.22, 0.88, 0]} rotation={[0, 0, Math.PI / 2]} material={accent}>
+            <coneGeometry args={[0.26, 0.48, 16, 1, true]} />
+          </mesh>
+        </group>
+      )}
+      {mission &&
+        [-0.72, 0, 0.72].map((x, index) => (
+          <Connector
+            key={`mission-ray-${x}`}
+            start={[x, 1.25, 0]}
+            end={[x * 1.4, 2.35, 1.25 + index * 0.25]}
+            material={index < progressCount ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.inactiveLine}
+            radius={0.024}
+          />
+        ))}
+    </group>
+  );
+};
+
+const ForumGlobe: React.FC<{ progressCount: number }> = ({ progressCount }) => {
+  const destinations: ReadonlyArray<readonly [number, number, number]> = [
+    [-2.2, 2.35, 0],
+    [2.25, 2.52, 0],
+    [0.45, 3.25, 0],
+  ];
+  return (
+  <group>
+    <mesh position={[0, 0.32, 0]} material={SHARED_MATERIALS.coldFrame}>
+      <cylinderGeometry args={[1.65, 1.85, 0.58, 32]} />
+    </mesh>
+    <mesh position={[0, 1.55, 0]}>
+      <sphereGeometry args={[1.04, 28, 20]} />
+      <meshStandardMaterial
+        color={COLD.line}
+        emissive={COLD.line}
+        emissiveIntensity={0.24 + progressCount * 0.12}
+        roughness={0.56}
+        wireframe
+      />
+    </mesh>
+    {[0, 0.42, -0.42].map((rotationZ, index) => (
+      <mesh
+        key={`forum-ring-${rotationZ}`}
+        position={[0, 1.55, 0]}
+        rotation={[Math.PI / 2, rotationZ, index * 0.22]}
+        material={
+          index < progressCount
+            ? index === 1
+              ? SHARED_MATERIALS.coldAccentLine
+              : SHARED_MATERIALS.coldLine
+            : SHARED_MATERIALS.inactiveLine
+        }
+      >
+        <torusGeometry args={[1.48 + index * 0.16, 0.035, 8, 48]} />
+      </mesh>
+    ))}
+    {destinations.map((destination, index) => {
+      const revealed = index < progressCount;
+      return (
+        <React.Fragment key={`forum-connection-${index}`}>
+          {revealed && (
+            <Connector
+              start={[0, 1.55, 0]}
+              end={destination}
+              material={index === 1 ? SHARED_MATERIALS.coldAccentLine : SHARED_MATERIALS.coldLine}
+              radius={0.028}
+            />
+          )}
+          <mesh position={destination as [number, number, number]} material={revealed ? SHARED_MATERIALS.coldAccent : SHARED_MATERIALS.darkInk}>
+            <sphereGeometry args={[revealed ? 0.12 : 0.075, 12, 8]} />
+          </mesh>
+        </React.Fragment>
+      );
+    })}
+  </group>
+  );
+};
+
+const OrganisationNetwork: React.FC<{ progressCount: number }> = ({ progressCount }) => {
+  const nodes: ReadonlyArray<readonly [number, number, number]> = [
+    [-1.2, 1.1, 0],
+    [0, 2.35, 0],
+    [1.2, 1.1, 0],
+    [0, 0.55, 0],
+  ];
+  return (
+    <group>
+      <mesh position={[0, 1.42, 0]} rotation={[Math.PI / 2, 0, 0]} material={SHARED_MATERIALS.warmFrame}>
+        <torusGeometry args={[1.55, 0.09, 10, 48]} />
+      </mesh>
+      {nodes.map((node, index) => (
+        <React.Fragment key={`network-node-${index}`}>
+          <mesh
+            position={node as [number, number, number]}
+            material={
+              index === 0 || index <= progressCount
+                ? index === 1
+                  ? SHARED_MATERIALS.warmAccent
+                  : SHARED_MATERIALS.warmPaper
+                : SHARED_MATERIALS.darkInk
+            }
+          >
+            <sphereGeometry args={[index === 1 ? 0.24 : 0.18, 16, 12]} />
+          </mesh>
+          {index > 0 && (
+            <Connector
+              start={nodes[0]}
+              end={node}
+              material={index <= progressCount ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.inactiveLine}
+            />
+          )}
+        </React.Fragment>
+      ))}
+      <mesh position={[0, 0.2, 0]} material={SHARED_MATERIALS.warmWood}>
+        <cylinderGeometry args={[1.2, 1.45, 0.35, 24]} />
+      </mesh>
+    </group>
+  );
+};
+
+const PrintingPress: React.FC<{ completed: boolean }> = ({ completed }) => (
+  <group>
+    {[-0.95, 0.95].map((x) => (
+      <mesh key={`press-post-${x}`} position={[x, 1.35, 0]} material={SHARED_MATERIALS.warmFrame}>
+        <boxGeometry args={[0.16, 2.45, 1.35]} />
+      </mesh>
+    ))}
+    <mesh position={[0, 2.45, 0]} material={SHARED_MATERIALS.warmFrame}>
+      <boxGeometry args={[2.1, 0.18, 1.35]} />
+    </mesh>
+    {[-0.34, 0.36].map((y) => (
+      <mesh key={`press-roller-${y}`} position={[0, 1.65 + y, 0]} rotation={[0, 0, Math.PI / 2]} material={SHARED_MATERIALS.warmAccent}>
+        <cylinderGeometry args={[0.24, 0.24, 1.75, 20]} />
+      </mesh>
+    ))}
+    <mesh position={[0, 0.72, 0.05]} material={SHARED_MATERIALS.warmWood}>
+      <boxGeometry args={[2.5, 0.18, 1.7]} />
+    </mesh>
+    <mesh
+      position={[0, completed ? 0.92 : 0.84, completed ? 0.78 : 0.05]}
+      rotation={[0, completed ? 0.02 : -0.04, 0]}
+      material={SHARED_MATERIALS.warmPaper}
+    >
+      <boxGeometry args={[1.65, 0.035, 1.3]} />
+    </mesh>
+    {completed && (
+      <group position={[0, 0.96, 0.78]} rotation={[0, 0.02, 0]}>
+        <mesh position={[0, 0, -0.32]} material={SHARED_MATERIALS.darkInk}>
+          <boxGeometry args={[1.12, 0.018, 0.06]} />
+        </mesh>
+        {[-0.17, 0.03, 0.2].map((z, index) => (
+          <mesh key={`newspaper-column-${z}`} position={[index === 1 ? -0.13 : 0.18, 0.015, z]} material={index === 1 ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.darkInk}>
+            <boxGeometry args={[index === 1 ? 0.72 : 0.92, 0.016, 0.035]} />
+          </mesh>
+        ))}
+      </group>
+    )}
+    <Connector
+      start={[1.02, 2.15, 0.45]}
+      end={[1.62, 1.25, 0.7]}
+      material={SHARED_MATERIALS.warmLine}
+      radius={0.055}
+    />
+    <mesh position={[1.66, 1.18, 0.72]} material={SHARED_MATERIALS.warmAccent}>
+      <sphereGeometry args={[0.13, 14, 10]} />
+    </mesh>
+    {completed && (
+      <>
+        <Connector
+          start={[0.64, 1.02, 0.78]}
+          end={[2.45, 1.38, 1.5]}
+          material={SHARED_MATERIALS.warmLine}
+          radius={0.035}
+        />
+        <mesh position={[2.45, 1.38, 1.5]} material={SHARED_MATERIALS.warmAccent}>
+          <sphereGeometry args={[0.12, 14, 10]} />
+        </mesh>
+      </>
+    )}
+  </group>
+);
+
+const ClassroomAssembly: React.FC<{ progressCount: number }> = ({ progressCount }) => (
+  <group>
+    <mesh position={[0, 1.85, 0.36]} material={SHARED_MATERIALS.warmWood}>
+      <boxGeometry args={[3.05, 2.3, 0.16]} />
+    </mesh>
+    <mesh position={[0, 1.85, 0.24]} material={SHARED_MATERIALS.darkInk}>
+      <boxGeometry args={[2.72, 1.92, 0.08]} />
+    </mesh>
+    {[-1.02, -0.34, 0.34, 1.02].map((x, index) => (
+      <React.Fragment key={`class-map-card-${x}`}>
+        {index < progressCount && (
+          <Connector
+            start={[x * 0.55, 2.22, 0.16]}
+            end={[x * 0.55, 2.55, 0.16]}
+            material={index === 1 ? SHARED_MATERIALS.warmAccentLine : SHARED_MATERIALS.warmLine}
+            radius={0.022}
+          />
+        )}
+        <mesh
+          position={index < progressCount ? [x * 0.55, 2.04, 0.16] : [x, 0.84, -0.18]}
+          material={index < progressCount ? SHARED_MATERIALS.warmPaper : SHARED_MATERIALS.darkInk}
+        >
+          <boxGeometry args={[0.38, 0.5, 0.05]} />
+        </mesh>
+        {index < progressCount && (
+          <mesh position={[x * 0.55, 2.28, 0.19]} material={index === 1 ? SHARED_MATERIALS.warmAccentLine : SHARED_MATERIALS.darkInk}>
+            <boxGeometry args={[0.24, 0.018, 0.025]} />
+          </mesh>
+        )}
+        <mesh
+          position={[x * 0.55, 2.55, 0.16]}
+          material={index < progressCount ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.darkInk}
+        >
+          <sphereGeometry args={[0.09, 12, 8]} />
+        </mesh>
+      </React.Fragment>
+    ))}
+    <mesh position={[0, 0.48, -0.85]} material={SHARED_MATERIALS.warmWood}>
+      <boxGeometry args={[1.7, 0.13, 0.65]} />
+    </mesh>
+  </group>
+);
+
+const ReturnMap: React.FC<{
+  progressCount: number;
+  finaleComplete: boolean;
+}> = ({ progressCount, finaleComplete }) => {
+  const destinations: ReadonlyArray<readonly [number, number, number]> = [
+    [-1.12, 2.72, 0.12],
+    [-0.82, 1.25, 0.12],
+    [0.95, 2.4, 0.12],
+    [1.1, 1.08, 0.12],
+  ];
+  const hub: readonly [number, number, number] = [0.15, 1.85, 0.12];
+  return (
+    <group>
+      <mesh position={[0, 1.85, 0.3]} material={SHARED_MATERIALS.warmFrame}>
+        <boxGeometry args={[3.35, 2.75, 0.2]} />
+      </mesh>
+      <mesh position={[0, 1.85, 0.18]} material={SHARED_MATERIALS.warmPaper}>
+        <boxGeometry args={[3.05, 2.45, 0.06]} />
+      </mesh>
+      <mesh position={hub as [number, number, number]} material={SHARED_MATERIALS.warmAccent}>
+        <sphereGeometry args={[0.16, 14, 10]} />
+      </mesh>
+      {destinations.map((destination, index) => (
+        <React.Fragment key={`return-route-${index}`}>
+          <Connector
+            start={hub}
+            end={destination}
+            material={
+              index < progressCount
+                ? index === 3
+                  ? SHARED_MATERIALS.warmAccentLine
+                  : SHARED_MATERIALS.warmLine
+                : SHARED_MATERIALS.inactiveLine
+            }
+            radius={0.026}
+          />
+          <mesh
+            position={destination as [number, number, number]}
+            material={index < progressCount ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.darkInk}
+          >
+            <sphereGeometry args={[0.11, 12, 8]} />
+          </mesh>
+        </React.Fragment>
+      ))}
+      {finaleComplete &&
+        RETURN_MAP_FINALE_SEALS.map((seal) => (
+          <mesh
+            key={`return-map-final-seal-${seal.sealId}`}
+            position={seal.mapPosition as [number, number, number]}
+            material={SHARED_MATERIALS.warmAccent}
+            raycast={IGNORE_RAYCAST}
+          >
+            <sphereGeometry args={[0.08, 10, 8]} />
+          </mesh>
+        ))}
+      <mesh position={[0, 0.2, 0.3]} material={SHARED_MATERIALS.warmWood}>
+        <boxGeometry args={[2.25, 0.32, 0.95]} />
+      </mesh>
+    </group>
+  );
+};
+
+const JourneyCardDesk: React.FC<{ collected: boolean }> = ({ collected }) => (
+  <group>
+    <StudyDesk progressCount={collected ? 3 : 0} />
+    <mesh
+      position={[0, collected ? 1.54 : 1.38, collected ? 0.1 : -0.03]}
+      rotation={[-0.18, 0, collected ? -0.05 : 0]}
+      material={collected ? SHARED_MATERIALS.coldLine : SHARED_MATERIALS.coldAccent}
+    >
+      <boxGeometry args={[1.22, 0.04, 0.74]} />
+    </mesh>
+    <mesh position={[0, 1.42, -0.08]} rotation={[-0.18, 0, 0]} material={SHARED_MATERIALS.coldPaper}>
+      <boxGeometry args={[1.04, 0.035, 0.58]} />
+    </mesh>
+  </group>
+);
+
+const ArtifactAssembly: React.FC<{
+  kind: RoomFourStationKind;
+  progressCount: number;
+  completed: boolean;
+  finaleComplete: boolean;
+}> = ({ kind, progressCount, completed, finaleComplete }) => {
+  switch (kind) {
+    case 'journey-card':
+      return <JourneyCardDesk collected={completed} />;
+    case 'study-desk':
+      return <StudyDesk progressCount={progressCount} />;
+    case 'forum-globe':
+      return <ForumGlobe progressCount={progressCount} />;
+    case 'travel-ticket':
+      return <StudyDesk ticket progressCount={progressCount} />;
+    case 'mission-desk':
+      return <StudyDesk warm mission progressCount={progressCount} />;
+    case 'organisation-network':
+      return <OrganisationNetwork progressCount={progressCount} />;
+    case 'printing-press':
+      return <PrintingPress completed={completed} />;
+    case 'secret-classroom':
+      return <ClassroomAssembly progressCount={progressCount} />;
+    case 'return-map':
+      return <ReturnMap progressCount={progressCount} finaleComplete={finaleComplete} />;
+    default:
+      return null;
+  }
+};
+
+type StationStatus = 'locked' | 'active' | 'complete';
+
+const FocalBackdrop: React.FC<{
+  station: RoomFourStationLayout;
+  warm: boolean;
+  lineMaterial: THREE.Material;
+}> = ({ station, warm, lineMaterial }) => {
+  const approachDirection = station.stop[0] >= station.object[0] ? 1 : -1;
+  return (
+    <group
+      position={[
+        station.object[0] - approachDirection * 1.04,
+        0,
+        station.object[1],
+      ]}
+      rotation={[0, approachDirection * Math.PI / 2, 0]}
+    >
+      <mesh position={[0, 2.15, 0]} material={SHARED_MATERIALS.darkInk}>
+        <boxGeometry args={[3.55, 4.25, 0.08]} />
+      </mesh>
+      <mesh position={[0, 4.18, 0.055]} material={lineMaterial}>
+        <boxGeometry args={[3.2, 0.055, 0.035]} />
+      </mesh>
+      <mesh
+        position={[0, 0.16, 0.055]}
+        material={warm ? SHARED_MATERIALS.warmWood : SHARED_MATERIALS.coldFrame}
+      >
+        <boxGeometry args={[3.2, 0.16, 0.08]} />
+      </mesh>
+    </group>
+  );
+};
+
+const ActiveStationBeacon: React.FC<{
+  position: readonly [number, number];
+  radius: number;
+  warm: boolean;
+  animated: boolean;
+}> = ({ position, radius, warm, animated }) => {
+  const ringRef = useRef<THREE.Mesh>(null);
+  const elapsed = useRef(0);
+
+  useFrame((_, delta) => {
+    const ring = ringRef.current;
+    if (!animated || !ring) return;
+    elapsed.current += delta;
+    const pulse = 1 + Math.sin(elapsed.current * 2.2) * 0.1;
+    ring.scale.setScalar(pulse);
+    ring.position.y = 0.085 + Math.sin(elapsed.current * 1.7) * 0.012;
+  });
+
+  return (
+    <mesh
+      ref={ringRef}
+      position={[position[0], 0.085, position[1]]}
+      rotation={[-Math.PI / 2, 0, 0]}
+      renderOrder={3}
+    >
+      <ringGeometry args={[radius + 0.12, radius + 0.19, 36]} />
+      <meshBasicMaterial
+        color={warm ? WARM.line : COLD.line}
+        transparent
+        opacity={0.52}
+        depthWrite={false}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+};
+
+const StationFootPlaque: React.FC<{
+  station: RoomFourStationLayout;
+  language: 'vi' | 'en';
+  onExplore: () => void;
+}> = ({ station, language, onExplore }) => {
+  const content = ROOM_FOUR_FOOT_PLAQUES[station.id];
+  const time = language === 'vi' ? content.timeVi : content.timeEn;
+  const event = language === 'vi' ? content.eventVi : content.eventEn;
+  const [width] = station.footprint;
+  const approachDirection = station.stop[0] >= station.object[0] ? 1 : -1;
+  // The plaque rises at 45° and its front surface turns into the central
+  // walking lane on either side, so a passing visitor can stop and read it.
+  const plaquePitch = -Math.PI / 4;
+  const plaqueYaw = approachDirection * Math.PI / 2;
+
+  useEffect(
+    () => () => {
+      document.body.style.cursor = 'auto';
+    },
+    [],
+  );
 
   return (
     <group
-      position={position}
-      rotation={rotation}
-      onClick={handleNpcClick}
-      onPointerOver={handlePointerOver}
-      onPointerOut={handlePointerOut}
+      name={`room-four-${station.id}-foot-plaque`}
+      position={[station.object[0] + approachDirection * (width / 2 + 0.14), 0.29, station.object[1]]}
+      rotation={[0, plaqueYaw, 0]}
     >
-      {/* Glow ring on floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.47, 0]}>
-        <ringGeometry args={[0.62, 0.72, 32]} />
-        <meshBasicMaterial color={color} side={THREE.DoubleSide} transparent opacity={0.15 + activeIntensity * 0.75} />
+      <group rotation={[plaquePitch, 0, 0]}>
+      <mesh position={[0, 0, 0.04]} material={SHARED_MATERIALS.goldPlaqueGlow} raycast={IGNORE_RAYCAST} renderOrder={2}>
+        <boxGeometry args={[2.34, 1.02, 0.025]} />
       </mesh>
+      <mesh position={[0, 0, 0]} material={SHARED_MATERIALS.goldPlaqueFrame} raycast={IGNORE_RAYCAST} renderOrder={3}>
+        <boxGeometry args={[2.22, 0.94, 0.1]} />
+      </mesh>
+      <mesh position={[0, 0.13, 0.065]} material={SHARED_MATERIALS.goldPlaqueFace} raycast={IGNORE_RAYCAST} renderOrder={4}>
+        <boxGeometry args={[2.02, 0.6, 0.025]} />
+      </mesh>
+      <mesh position={[0, -0.23, 0.075]} material={SHARED_MATERIALS.goldPlaqueLine} raycast={IGNORE_RAYCAST} renderOrder={5}>
+        <boxGeometry args={[2.06, 0.024, 0.03]} />
+      </mesh>
+      <Text
+        position={[-0.92, 0.335, 0.085]}
+        anchorX="left"
+        anchorY="middle"
+        color={GOLD.text}
+        fontSize={0.135}
+        letterSpacing={0.018}
+        raycast={IGNORE_RAYCAST}
+      >
+        {time}
+      </Text>
+      <Text
+        position={[0, 0.065, 0.085]}
+        anchorX="center"
+        anchorY="middle"
+        color={GOLD.text}
+        fontSize={0.1}
+        maxWidth={1.84}
+        lineHeight={1.1}
+        textAlign="center"
+        overflowWrap="break-word"
+        raycast={IGNORE_RAYCAST}
+      >
+        {event}
+      </Text>
+      <mesh
+        name={`room-four-${station.id}-explore-button`}
+        position={[0, -0.355, 0.086]}
+        material={SHARED_MATERIALS.goldPlaqueButton}
+        onPointerDown={(pointerEvent) => {
+          pointerEvent.stopPropagation();
+          onExplore();
+        }}
+        onPointerOver={(pointerEvent) => {
+          pointerEvent.stopPropagation();
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+        renderOrder={5}
+      >
+        <boxGeometry args={[1.9, 0.16, 0.06]} />
+      </mesh>
+      <Text
+        position={[0, -0.355, 0.12]}
+        anchorX="center"
+        anchorY="middle"
+        color={GOLD.buttonText}
+        fontSize={0.105}
+        letterSpacing={0.02}
+        raycast={IGNORE_RAYCAST}
+      >
+        {language === 'vi' ? 'THAM QUAN' : 'EXPLORE'}
+      </Text>
+      </group>
+      {[-0.82, 0.82].map((x) => (
+        <mesh
+          key={`plaque-post-${x}`}
+          position={[x, -0.235, 0]}
+          material={SHARED_MATERIALS.goldPlaqueFrame}
+          raycast={IGNORE_RAYCAST}
+        >
+          <boxGeometry args={[0.05, 0.11, 0.06]} />
+        </mesh>
+      ))}
+    </group>
+  );
+};
 
-      {/* Representation */}
-      {textureUrl ? (
-        <NPCStandee url={textureUrl} color={color} />
-      ) : (
-        <group scale={1.5}>
-          {/* Head */}
-          <mesh position={[0, 0.7, 0]}>
-            <sphereGeometry args={[0.2, 24, 24]} />
-            <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
-          </mesh>
+const StationBay: React.FC<{
+  station: RoomFourStationLayout;
+  language: 'vi' | 'en';
+  status: StationStatus;
+  progressCount: number;
+  animated: boolean;
+  showFocalBackdrop: boolean;
+  showPlaque: boolean;
+  finaleComplete: boolean;
+  onOpen: (station: RoomFourStationLayout, isNear: boolean) => void;
+}> = ({
+  station,
+  language,
+  status,
+  progressCount,
+  animated,
+  showFocalBackdrop,
+  showPlaque,
+  finaleComplete,
+  onOpen,
+}) => {
+  const { camera, scene } = useThree();
+  const warm = station.section === 'guangzhou';
+  const material = warm ? SHARED_MATERIALS.warmFrame : SHARED_MATERIALS.coldFrame;
+  const ringMaterial =
+    status === 'complete'
+      ? SHARED_MATERIALS.completionLine
+      : status === 'active'
+        ? warm
+          ? SHARED_MATERIALS.warmLine
+          : SHARED_MATERIALS.coldLine
+        : SHARED_MATERIALS.inactiveLine;
+  const artifactLineMaterial =
+    status === 'complete'
+      ? warm
+        ? SHARED_MATERIALS.warmAccentLine
+        : SHARED_MATERIALS.coldAccentLine
+      : ringMaterial;
+  const displayGlowMaterial = warm
+    ? SHARED_MATERIALS.warmDisplayGlow
+    : SHARED_MATERIALS.coldDisplayGlow;
+  const [width, depth] = station.footprint;
+  const stopRadius = station.focalLevel === 1 ? 0.42 : 0.32;
+  const interactionRef = useRef<THREE.Group>(null);
+  const artifactWorldPosition = useRef(new THREE.Vector3()).current;
+  const playerWorldPosition = useRef(new THREE.Vector3()).current;
 
-          {/* Visor / Eyes */}
-          <mesh position={[0, 0.74, -0.17]}>
-            <boxGeometry args={[0.25, 0.05, 0.08]} />
-            <meshBasicMaterial color="#22d3ee" />
-          </mesh>
+  const exploreFromPlaque = useCallback(() => {
+    if (!interactionRef.current) {
+      onOpen(station, false);
+      return;
+    }
 
-          {/* Torso */}
-          <mesh position={[0, 0.28, 0]}>
-            <capsuleGeometry args={[0.16, 0.28, 8, 16]} />
-            <meshStandardMaterial color="#1e293b" metalness={0.7} roughness={0.3} />
-          </mesh>
+    interactionRef.current.getWorldPosition(artifactWorldPosition);
+    const player = scene.getObjectByName('player-character') ?? scene.getObjectByName('lobby-player');
+    (player ?? camera).getWorldPosition(playerWorldPosition);
+    onOpen(station, artifactWorldPosition.distanceToSquared(playerWorldPosition) <= 42.25);
+  }, [artifactWorldPosition, camera, onOpen, playerWorldPosition, scene, station]);
 
-          {/* Left hand */}
-          <mesh position={[-0.2, 0.38, 0]}>
-            <sphereGeometry args={[0.06, 12, 12]} />
-            <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
-          </mesh>
-
-          {/* Right hand */}
-          <mesh position={[0.2, 0.38, 0]}>
-            <sphereGeometry args={[0.06, 12, 12]} />
-            <meshStandardMaterial color={color} metalness={0.9} roughness={0.1} />
-          </mesh>
-
-          {/* Base Cylinder connection */}
-          <mesh position={[0, -0.15, 0]}>
-            <cylinderGeometry args={[0.1, 0.1, 0.3, 12]} />
-            <meshStandardMaterial color="#0f172a" metalness={0.8} />
-          </mesh>
-        </group>
+  return (
+    <group name={`room-four-${station.id}`}>
+      {showFocalBackdrop && station.focalLevel === 1 && (
+        <FocalBackdrop station={station} warm={warm} lineMaterial={artifactLineMaterial} />
       )}
-
-      {/* NPC speech bubble (HTML overlay) */}
-      {showBubble ? (
-        <Html position={[0, textureUrl ? 2.4 : 1.8, 0]} center occlude distanceFactor={8} zIndexRange={[16777271, 0]} className="pointer-events-auto select-none">
-          <div
-            onClick={handleNpcClick}
-            className="w-[270px] bg-slate-950/95 border px-4 py-2.5 rounded-2xl shadow-2xl text-slate-100 font-sans backdrop-blur-md cursor-pointer"
-            style={{ borderColor: `${color}40`, zIndex: 9999, position: 'relative' }}
-          >
-            <span
-              className="text-[9px] border px-2 py-0.5 rounded font-bold tracking-wider block w-max mx-auto mb-1.5 uppercase"
-              style={{ color, backgroundColor: `${color}10`, borderColor: `${color}20` }}
-            >
-              {isVi ? nameVi : nameEn}
-            </span>
-            <p className="text-xs font-bold leading-normal text-slate-200 text-center">
-              {isLocked
-                ? (isVi ? "Khóa! Bạn cần trò chuyện với chuyên gia ở phân khu trước." : "Locked! You must talk to the previous expert first.")
-                : (isVi ? infoVi : infoEn)}
-            </p>
-          </div>
-        </Html>
-      ) : (
-        <Html position={[0, textureUrl ? 2.2 : 1.7, 0]} center occlude distanceFactor={8} className="pointer-events-auto select-none">
-          <div
-            onClick={handleNpcClick}
-            className="w-8 h-8 rounded-full border bg-slate-950/90 flex items-center justify-center font-black text-sm shadow-2xl backdrop-blur-md animate-bounce select-none cursor-pointer"
-            style={{
-              borderColor: isLocked ? '#64748b' : color,
-              color: isLocked ? '#64748b' : color,
-              boxShadow: `0 0 12px ${isLocked ? 'rgba(100,116,139,0.3)' : color + '30'}`
-            }}
-          >
-            {isLocked ? '🔒' : '!'}
-          </div>
-        </Html>
+      <group
+        ref={interactionRef}
+        position={[station.object[0], 0, station.object[1]]}
+      >
+        <mesh position={[0, 0.03, 0]} material={material}>
+          <boxGeometry args={[width, 0.06, depth]} />
+        </mesh>
+        <mesh
+          position={[0, 0.068, 0]}
+          material={displayGlowMaterial}
+          raycast={IGNORE_RAYCAST}
+          renderOrder={1}
+        >
+          <boxGeometry args={[width * 0.8, 0.012, depth * 0.8]} />
+        </mesh>
+        <mesh position={[0, 0.07, 0]} rotation={[-Math.PI / 2, 0, 0]} material={ringMaterial}>
+          <ringGeometry args={[Math.max(width, depth) * 0.36, Math.max(width, depth) * 0.39, 48]} />
+        </mesh>
+        <ArtifactAssembly
+          kind={station.kind}
+          progressCount={progressCount}
+          completed={status === 'complete'}
+          finaleComplete={finaleComplete}
+        />
+        {status === 'complete' && (
+          <mesh position={[0, 0.32, -depth * 0.34]} material={artifactLineMaterial}>
+            <cylinderGeometry args={[0.055, 0.055, 0.58, 10]} />
+          </mesh>
+        )}
+      </group>
+      <mesh
+        position={[station.stop[0], 0.075, station.stop[1]]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        material={ringMaterial}
+      >
+        <ringGeometry args={[stopRadius, stopRadius + 0.055, 32]} />
+      </mesh>
+      {status === 'active' && (
+        <ActiveStationBeacon
+          position={station.stop}
+          radius={stopRadius}
+          warm={warm}
+          animated={animated}
+        />
+      )}
+      {showPlaque && (
+        <StationFootPlaque
+          station={station}
+          language={language}
+          onExplore={exploreFromPlaque}
+        />
       )}
     </group>
   );
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN — RoomFour Component
-// ═══════════════════════════════════════════════════════════════════════════
-const MINIGAME_SITUATIONS = [
-  { text: "Được mùa nhưng thu nhập lại giảm.", category: "market" },
-  { text: "Ít người sử dụng nhưng vẫn được đầu tư.", category: "state" },
-  { text: "Cùng một sản phẩm nhưng có rất nhiều đơn vị cùng cung cấp.", category: "multi_sector" },
-  { text: "Khó khăn về tài chính nhưng vẫn được tiếp cận dịch vụ.", category: "social" },
-  { text: "Một sản phẩm hoàn thành sau nhiều công đoạn ở nhiều quốc gia.", category: "integration" },
-  { text: "Nhu cầu tăng làm giá tăng.", category: "market" },
-  { text: "Không đạt tiêu chuẩn nên không được phép tiếp tục hoạt động.", category: "state" },
-  { text: "Nhiều mô hình cùng tồn tại trong một lĩnh vực.", category: "multi_sector" },
-  { text: "Điều kiện sống khác nhau nhưng cơ hội tiếp cận gần như giống nhau.", category: "social" },
-  { text: "Một đơn hàng phải đi qua nhiều quốc gia mới hoàn thành.", category: "integration" },
-  { text: "Bán chậm nên giá giảm.", category: "market" },
-  { text: "Phải thay đổi để đáp ứng quy định mới.", category: "state" },
-  { text: "Nhiều chủ sở hữu cùng tham gia một lĩnh vực.", category: "multi_sector" },
-  { text: "Không đủ khả năng chi trả nhưng vẫn được hỗ trợ.", category: "social" },
-  { text: "Một sản phẩm được tạo ra bởi nhiều quốc gia.", category: "integration" },
-  { text: "Nguồn cung giảm làm giá tăng.", category: "market" },
-  { text: "Chưa đáp ứng yêu cầu nên phải tạm dừng.", category: "state" },
-  { text: "Nhiều hình thức kinh doanh cùng cạnh tranh.", category: "multi_sector" },
-  { text: "Khoảng cách giữa các nhóm được thu hẹp.", category: "social" },
-  { text: "Một chuỗi sản xuất trải dài qua nhiều quốc gia.", category: "integration" }
-];
+const TransitionCorridor: React.FC<{
+  detailed: boolean;
+  activated: boolean;
+}> = ({
+  detailed,
+  activated,
+}) => (
+  <group>
+    {[
+      { x: -6.6, z: -40.1, rotation: -0.16, color: '#30414b' },
+      { x: 6.6, z: -38.1, rotation: 0.16, color: '#3d3b35' },
+      { x: -6.6, z: -36.1, rotation: -0.14, color: '#4e3b2f' },
+    ].map((wing, index) => (
+      <group key={`transition-wing-${wing.z}`} position={[wing.x, 2.35, wing.z]} rotation={[0, wing.rotation, 0]}>
+        <mesh>
+          <boxGeometry args={[2.5, 4.7, 0.18]} />
+          <meshStandardMaterial color={wing.color} roughness={0.82} metalness={0.12} />
+        </mesh>
+        {detailed &&
+          [0.72, 1.3, 1.88].map((y, lineIndex) => (
+            <Connector
+              key={`transition-map-line-${y}`}
+              start={[-0.85, y - 2.35, 0.12]}
+              end={[0.85, y - 2.1 + lineIndex * 0.12, 0.12]}
+              material={index === 0 ? SHARED_MATERIALS.coldLine : SHARED_MATERIALS.warmLine}
+              radius={0.018}
+            />
+          ))}
+      </group>
+    ))}
+    {activated && (
+      <group>
+        {[-40, -38.5, -37, -35.5].map((z, index) => (
+          <mesh
+            key={`transition-direction-${z}`}
+            position={[index % 2 === 0 ? -0.22 : 0.22, 0.13, z]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            material={index < 2 ? SHARED_MATERIALS.coldLine : SHARED_MATERIALS.warmLine}
+            raycast={IGNORE_RAYCAST}
+          >
+            <circleGeometry args={[0.07, 16]} />
+          </mesh>
+        ))}
+      </group>
+    )}
+  </group>
+);
 
-const MINIGAME_CATEGORIES = [
-  { id: "market", nameVi: "Cơ chế thị trường", nameEn: "Market Mechanism", icon: "💹", color: "from-emerald-400 to-teal-500 shadow-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-  { id: "state", nameVi: "Vai trò Nhà nước", nameEn: "State Regulation", icon: "🏛️", color: "from-blue-400 to-indigo-500 shadow-blue-500/20 text-blue-300 border-blue-500/30" },
-  { id: "multi_sector", nameVi: "Nhiều thành phần kinh tế", nameEn: "Multi-sector Economy", icon: "🏭", color: "from-purple-400 to-pink-500 shadow-purple-500/20 text-purple-300 border-purple-500/30" },
-  { id: "social", nameVi: "Công bằng xã hội", nameEn: "Social Welfare", icon: "❤️", color: "from-rose-400 to-red-500 shadow-rose-500/20 text-rose-300 border-rose-500/30" },
-  { id: "integration", nameVi: "Hội nhập quốc tế", nameEn: "Global Integration", icon: "🌍", color: "from-cyan-400 to-blue-500 shadow-cyan-500/20 text-cyan-300 border-cyan-500/30" }
-];
+const ThresholdSigns: React.FC<{ language: 'vi' | 'en'; journeyCompleted: boolean }> = ({
+  language,
+  journeyCompleted,
+}) => (
+  <group>
+    <Html position={[0, 3.85, 4.7]} center sprite distanceFactor={8.5} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+      <div
+        style={{
+          color: journeyCompleted ? '#f2dfb6' : '#8d8372',
+          background: 'rgba(24, 20, 17, 0.9)',
+          borderTop: `2px solid ${journeyCompleted ? WARM.line : '#4d4640'}`,
+          padding: '10px 18px',
+          textAlign: 'center',
+          whiteSpace: 'nowrap',
+          fontFamily: 'Georgia, serif',
+        }}
+      >
+        <div style={{ fontSize: ROOM_FOUR_PHASE_ELEVEN_TYPE_SCALE.exitThresholdPx, letterSpacing: '0.05em', lineHeight: 0.98 }}>
+          {journeyCompleted
+            ? language === 'vi'
+              ? 'HÀNH TRANG ĐÃ SẴN SÀNG'
+              : 'THE JOURNEY KIT IS READY'
+            : language === 'vi'
+              ? 'HOÀN THÀNH TÁM TRẠM'
+              : 'COMPLETE ALL EIGHT STATIONS'}
+        </div>
+        <div style={{ marginTop: 3, color: journeyCompleted ? WARM.line : '#6e665d', fontFamily: 'ui-monospace, monospace', fontSize: 9, letterSpacing: '0.15em' }}>
+          {journeyCompleted
+            ? language === 'vi'
+              ? 'CON ĐƯỜNG VỀ TỔ QUỐC'
+              : 'THE ROAD HOME'
+            : '1923—1927'}
+        </div>
+      </div>
+    </Html>
+  </group>
+);
 
-export const RoomFour: React.FC<BaseRoomProps> = ({ galleryId, customSettings, isVisible = true }) => {
-  const { activeGallery, language, talkedNpcs, addTalkedNpc, currentRoom } = useMuseum();
-  const isAdjacent = currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-ceramics';
-  const roomHeight = (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
+export const RoomFour: React.FC<BaseRoomProps> = ({
+  customSettings,
+  isVisible = true,
+  isInteractive = true,
+  lightingContext = 'standalone',
+  children,
+}) => {
+  const {
+    language,
+    settings,
+    talkedNpcs,
+    addTalkedNpc,
+    setRoomFourInteractionOpen,
+  } = useMuseum();
+  const [activeStationId, setActiveStationId] = useState<RoomFourStationId | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [activeJourneyLink, setActiveJourneyLink] = useState<ActiveJourneyLink | null>(null);
+  const [journeyLinkRequestId, setJourneyLinkRequestId] = useState(0);
+  const [finalePlaying, setFinalePlaying] = useState(false);
+  const [finaleRequestId, setFinaleRequestId] = useState(0);
+  // The data height (6 m) receives the single approved +1 m shell allowance here.
+  const roomHeight = (customSettings?.room_height ?? 6) + 1;
+  const resolvedLanguage: 'vi' | 'en' = language === 'en' ? 'en' : 'vi';
+  const journeyProgress = useMemo(
+    () => talkedNpcs.filter(isRoomFourJourneyToken),
+    [talkedNpcs],
+  );
+  const nextStationId = getNextRoomFourStation(journeyProgress);
+  const journeyFinaleReady = isRoomFourFinaleReady(journeyProgress);
+  const journeyFinaleComplete = journeyProgress.includes(roomFourFinaleToken());
+  const isUltraLow = settings.preset === 'ultra-low';
+  const reducedDetail = settings.preset !== 'medium';
+  const useStaticJourneyLinks = isUltraLow || !settings.animations;
+  const shouldAnimateFinale = !useStaticJourneyLinks;
+  const staticJourneyLink = useMemo(() => {
+    if (!activeJourneyLink || !useStaticJourneyLinks) return null;
+    return activeJourneyLink;
+  }, [activeJourneyLink, useStaticJourneyLinks]);
+  const ribStride = isUltraLow ? 3 : reducedDetail ? 2 : 1;
+  // The stronger entry key is only used while the room is previewed through a
+  // neighbouring doorway. Once inside, the lobby receives the exact same
+  // global rig as the standalone gallery page.
+  const isEntryPreview = lightingContext === 'connected' && !isInteractive;
+  const showJourneyUi = isVisible && isInteractive;
+  const fillIntensity = isEntryPreview
+    ? settings.reducedLights ? 0.58 : 0.72
+    : settings.reducedLights ? 0.46 : 0.34;
+  const coldKeyPosition: [number, number, number] = isEntryPreview ? [0, 5.3, -66.5] : [0, 5.3, -54];
+  const coldKeyIntensity = isEntryPreview ? 48 : 34;
+  const coldKeyDistance = isEntryPreview ? 40 : 42;
 
-  const modifiedSettings = {
-    room_width: customSettings?.room_width ?? activeGallery?.room_width ?? 12,
-    room_length: 80, // Thu ngắn phòng lại vừa vặn đến sau NPC Ronaldo (Z = 5.0)
-    room_height: roomHeight,
-    floor_color: customSettings?.floor_color ?? activeGallery?.floor_color ?? '#1e293b',
-    wall_color: customSettings?.wall_color ?? activeGallery?.wall_color ?? '#0f172a',
-    wainscoting_color: customSettings?.wainscoting_color ?? activeGallery?.wainscoting_color ?? '#1e293b',
-    floor_type: (customSettings?.floor_type ?? activeGallery?.floor_type ?? 'wood') as 'wood' | 'marble' | 'carpet',
-  };
+  const closeInteraction = useCallback(() => {
+    setActiveStationId(null);
+    setRoomFourInteractionOpen(false);
+  }, [setRoomFourInteractionOpen]);
 
-  // ── Narrative state (step 0→6) ──
-  const [step, setStep] = useState<number>(3);
+  const completeJourneyFinale = useCallback(() => {
+    setFinalePlaying(false);
+    if (!journeyFinaleComplete) addTalkedNpc(roomFourFinaleToken());
+    setNotice(
+      resolvedLanguage === 'vi'
+        ? 'Hành trang đã sẵn sàng — Con đường về Tổ quốc.'
+        : 'The journey kit is ready — The road home.',
+    );
+  }, [addTalkedNpc, journeyFinaleComplete, resolvedLanguage]);
 
-  // ── Zone 2 Intro state ──
-  const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const [npcSubtitles, setNpcSubtitles] = useState<string>('');
-  const [activePedestal, setActivePedestal] = useState<number | null>(null);
+  const replayJourneyFinale = useCallback(() => {
+    if (!journeyFinaleComplete || finalePlaying) return;
+    setFinalePlaying(true);
+    setFinaleRequestId((requestId) => requestId + 1);
+    setNotice(
+      resolvedLanguage === 'vi'
+        ? 'Xem lại: năm hành trang hội tụ về Mạng lưới trở về Tổ quốc.'
+        : 'Replay: the five imprints converge on the network homeward.',
+    );
+  }, [finalePlaying, journeyFinaleComplete, resolvedLanguage]);
 
-  // ── Minigame state ──
-  const [gameIndex, setGameIndex] = useState<number>(0);
-  const [score, setScore] = useState<number>(0);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [answerStatus, setAnswerStatus] = useState<'idle' | 'correct' | 'incorrect'>('idle');
-
-  // ── Summary NPC Minigame — state lives in GalleryCanvas, bridged via CustomEvent ──
-
-  // ── Zone dynamic lighting ──
-  const zoneIntensityRefs = useRef<number[]>([0, 0, 0, 0, 0, 0]);
-  const [zoneIntensities, setZoneIntensities] = useState<number[]>([0, 0, 0, 0, 0, 0]);
-  const entranceLightRef = useRef<number>(0.05);
-  const [entranceLight, setEntranceLight] = useState<number>(0.05);
-  const frameCounter = useRef<number>(0);
-  const stepRef = useRef<number>(0);
-  stepRef.current = step;
-
-  // Zone local-Z centers (room local space, offset from ZONE_ABS_OFFSET)
-  // Zone local positions [x, z]
-  const ZONE_LOCAL_POS = [
-    [-4.5, -41.0], // Zone 1: Ownership
-    [4.5, -41.0],  // Zone 2: Market
-    [4.5, -23.0],  // Zone 3: State regulation
-    [-4.5, -23.0], // Zone 4: Social welfare
-    [0.0, -9.5],   // Zone 5: Global integration
-    [0.0, 2.0]     // Zone 6: Ronaldo
-  ];
-
-  useFrame((state) => {
-    if (!isVisible) return;
-    const player = state.scene.getObjectByName('player-character') || state.scene.getObjectByName('lobby-player');
-    if (!player) return;
-
-    const absZ = player.position.z;
-    const isLobby = player.name === 'lobby-player';
-    const localZ = isLobby ? absZ - ZONE_ABS_OFFSET : absZ;
-
-
-
-
-    // Entrance ambient lerp
-    const entranceTarget = stepRef.current >= 1 ? 0.65 : 0.05;
-    entranceLightRef.current = THREE.MathUtils.lerp(entranceLightRef.current, entranceTarget, 0.02);
-
-    // Per-zone intensity (light up when nearby AND step >= 3)
-    let changed = false;
-    ZONE_LOCAL_POS.forEach((zonePos, i) => {
-      const dist = Math.abs(localZ - zonePos[1]);
-      const target = (dist < 13 && stepRef.current >= 3) ? 1.0 : 0.0;
-      const newVal = THREE.MathUtils.lerp(zoneIntensityRefs.current[i], target, 0.028);
-      if (Math.abs(newVal - zoneIntensityRefs.current[i]) > 0.004) {
-        zoneIntensityRefs.current[i] = newVal;
-        changed = true;
+  const openStation = useCallback(
+    (station: RoomFourStationLayout, isNear: boolean) => {
+      if (!isNear) {
+        setNotice(
+          resolvedLanguage === 'vi'
+            ? 'Hãy đến gần vật thể trung tâm của trạm để khám phá.'
+            : 'Move closer to the station’s central object to explore it.',
+        );
+        return;
       }
-    });
 
-    // Throttle React state updates to every 5 frames
-    frameCounter.current++;
-    if (frameCounter.current % 5 === 0) {
-      if (changed) setZoneIntensities([...zoneIntensityRefs.current]);
-      if (Math.abs(entranceLightRef.current - entranceLight) > 0.008) {
-        setEntranceLight(entranceLightRef.current);
+      const alreadyCompleted = journeyProgress.includes(roomFourCompletionToken(station.id));
+      if (!alreadyCompleted && station.id !== nextStationId) {
+        const nextContent = nextStationId ? ROOM_FOUR_JOURNEY_CONTENT[nextStationId] : null;
+        setNotice(
+          nextContent
+            ? resolvedLanguage === 'vi'
+              ? `Hành trình tiếp tục tại ${nextContent.eyebrowVi}.`
+              : `The journey continues at ${nextContent.eyebrowEn}.`
+            : resolvedLanguage === 'vi'
+              ? 'Hành trình đã hoàn thành.'
+              : 'The journey is complete.',
+        );
+        setActiveStationId(station.id);
+        setRoomFourInteractionOpen(true);
+        return;
       }
-    }
-  });
 
-  // ── Narrative effects ──
+      setNotice(null);
+      setActiveStationId(station.id);
+      setRoomFourInteractionOpen(true);
+    },
+    [journeyProgress, nextStationId, resolvedLanguage, setRoomFourInteractionOpen],
+  );
+
+  const openJourneyCard = useCallback(() => {
+    if (!journeyProgress.includes(roomFourCompletionToken('card'))) return;
+    setNotice(null);
+    setActiveStationId('card');
+    setRoomFourInteractionOpen(true);
+  }, [journeyProgress, setRoomFourInteractionOpen]);
+
+  const activateJourneyLink = useCallback(
+    (sealId: RoomFourSealId) => {
+      const link = ROOM_FOUR_SEAL_LINKS[sealId];
+      if (!link || !journeyProgress.includes(roomFourSealToken(sealId))) return;
+      const currentTargetIndex =
+        activeJourneyLink?.sealId === sealId
+          ? link.targetStationIds.indexOf(activeJourneyLink.targetStationId)
+          : -1;
+      const targetStationId =
+        link.targetStationIds[(currentTargetIndex + 1) % link.targetStationIds.length];
+      if (!targetStationId) return;
+
+      const requestId = journeyLinkRequestId + 1;
+      setJourneyLinkRequestId(requestId);
+      setActiveJourneyLink({
+        sealId,
+        sourceStationId: link.sourceStationId,
+        targetStationId,
+        requestId,
+      });
+      setNotice(
+        resolvedLanguage === 'vi'
+          ? `${ROOM_FOUR_SEALS.find((seal) => seal.id === sealId)?.labelVi} → ${ROOM_FOUR_JOURNEY_CONTENT[targetStationId].eyebrowVi}`
+          : `${ROOM_FOUR_SEALS.find((seal) => seal.id === sealId)?.labelEn} → ${ROOM_FOUR_JOURNEY_CONTENT[targetStationId].eyebrowEn}`,
+      );
+    },
+    [activeJourneyLink, journeyLinkRequestId, journeyProgress, resolvedLanguage],
+  );
+
+  const performStationStep = useCallback(
+    (stationId: RoomFourStationId, stepIndex: number) => {
+      const stationContent = ROOM_FOUR_JOURNEY_CONTENT[stationId];
+      const completedSteps = getRoomFourStationProgress(journeyProgress, stationId);
+      if (
+        journeyProgress.includes(roomFourCompletionToken(stationId)) ||
+        stationId !== nextStationId ||
+        stepIndex !== completedSteps
+      ) {
+        return;
+      }
+
+      const step = stationContent.steps[stepIndex];
+      if (!step) return;
+      addTalkedNpc(roomFourStepToken(stationId, step.id));
+
+      if (stepIndex === stationContent.steps.length - 1) {
+        stationContent.sealIds.forEach((sealId) => addTalkedNpc(roomFourSealToken(sealId)));
+        addTalkedNpc(roomFourCompletionToken(stationId));
+
+        const firstLinkedSeal = stationContent.sealIds.find((sealId) => ROOM_FOUR_SEAL_LINKS[sealId]);
+        if (firstLinkedSeal) {
+          const link = ROOM_FOUR_SEAL_LINKS[firstLinkedSeal];
+          const targetStationId = link?.targetStationIds[0];
+          if (link && targetStationId) {
+            const requestId = journeyLinkRequestId + 1;
+            setJourneyLinkRequestId(requestId);
+            setActiveJourneyLink({
+              sealId: firstLinkedSeal,
+              sourceStationId: link.sourceStationId,
+              targetStationId,
+              requestId,
+            });
+          }
+        }
+
+        const nextProgress = [
+          ...journeyProgress,
+          roomFourStepToken(stationId, step.id),
+          ...stationContent.sealIds.map(roomFourSealToken),
+          roomFourCompletionToken(stationId),
+        ];
+        if (stationId === 's8' && isRoomFourFinaleReady(nextProgress)) {
+          closeInteraction();
+          if (shouldAnimateFinale) {
+            setFinalePlaying(true);
+            setFinaleRequestId((requestId) => requestId + 1);
+            setNotice(
+              resolvedLanguage === 'vi'
+                ? 'Năm hành trang đang hội tụ về Mạng lưới trở về Tổ quốc.'
+                : 'Five imprints are converging on the network homeward.',
+            );
+          } else {
+            addTalkedNpc(roomFourFinaleToken());
+            setNotice(
+              resolvedLanguage === 'vi'
+                ? 'Hành trang đã sẵn sàng — Con đường về Tổ quốc.'
+                : 'The journey kit is ready — The road home.',
+            );
+          }
+        }
+      }
+    },
+    [
+      addTalkedNpc,
+      closeInteraction,
+      journeyLinkRequestId,
+      journeyProgress,
+      nextStationId,
+      resolvedLanguage,
+      shouldAnimateFinale,
+    ],
+  );
+
   useEffect(() => {
-    if (!isVisible) return;
-    if (step === 1) startSlideshow();
-    if (step === 2) runNpcIntro();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, isVisible]);
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 3200);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
 
-  const startSlideshow = () => {
-    let index = 0;
-    const interval = setInterval(() => {
-      index++;
-      if (index < SLIDESHOW_IMAGES.length) {
-        setCurrentSlide(index);
-      } else {
-        clearInterval(interval);
-        setStep(2);
+  useEffect(() => {
+    if (!activeJourneyLink || useStaticJourneyLinks) return;
+    const timer = window.setTimeout(
+      () => setActiveJourneyLink((current) =>
+        current?.requestId === activeJourneyLink.requestId ? null : current,
+      ),
+      JOURNEY_LINK_DURATION_SECONDS * 1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [activeJourneyLink, useStaticJourneyLinks]);
+
+  // Resume an interrupted first finale only when the visitor is back in Room4.
+  // The persisted finale token prevents this from replaying after completion.
+  useEffect(() => {
+    if (!isVisible || !journeyFinaleReady || journeyFinaleComplete || finalePlaying) return;
+    const timer = window.setTimeout(() => {
+      if (shouldAnimateFinale) {
+        setFinalePlaying(true);
+        setFinaleRequestId((requestId) => requestId + 1);
+        return;
       }
-    }, 2000);
-  };
+      completeJourneyFinale();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [
+    completeJourneyFinale,
+    finalePlaying,
+    isVisible,
+    journeyFinaleComplete,
+    journeyFinaleReady,
+    shouldAnimateFinale,
+  ]);
 
-  const runNpcIntro = async () => {
-    const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
-    const vi = language === 'vi';
-    setNpcSubtitles(vi ? 'Nhiều người cho rằng Việt Nam là nền kinh tế thị trường tư bản chủ nghĩa.' : 'Many think Vietnam has a capitalist market economy.');
-    await sleep(4000);
-    setNpcSubtitles(vi ? 'Một số người khác lại nghĩ Việt Nam vẫn là nền kinh tế kế hoạch hóa tập trung.' : 'Others believe Vietnam is still a centrally planned economy.');
-    await sleep(4000);
-    setNpcSubtitles(vi ? 'Theo bạn, đâu mới là câu trả lời đúng?' : 'What is the correct answer?');
-    await sleep(3500);
-    setNpcSubtitles(vi ? 'Đáp án là: KINH TẾ THỊ TRƯỜNG ĐỊNH HƯỚNG XHCN.' : 'The answer: SOCIALIST-ORIENTED MARKET ECONOMY.');
-    await sleep(4500);
-    setStep(4);
-    setNpcSubtitles(vi ? 'Hãy tham gia thử thách để chứng minh năng lực hoạch định chính sách!' : 'Take the challenge to prove your policy-making skills!');
-  };
+  useEffect(() => {
+    if (!finalePlaying || shouldAnimateFinale) return;
+    const timer = window.setTimeout(completeJourneyFinale, 0);
+    return () => window.clearTimeout(timer);
+  }, [completeJourneyFinale, finalePlaying, shouldAnimateFinale]);
 
-  const handleZoneClick = (zoneId: number) => {
-    if (step < 3) return;
-    setActivePedestal(zoneId);
-    const vi = language === 'vi';
-    const msgs: Record<number, string> = {
-      1: vi ? 'Đặc trưng 1: Nhiều loại hình DN: Nhà nước (Viettel), tư nhân (VinFast) và FDI (Samsung) cùng bình đẳng cạnh tranh.' : 'Char 1: State (Viettel), private (VinFast), and FDI (Samsung) enterprises compete equally.',
-      2: vi ? 'Đặc trưng 2: Giá hàng hóa vận hành linh hoạt theo cung – cầu, không bị áp đặt hành chính.' : 'Char 2: Prices fluctuate by supply and demand, not administrative order.',
-      3: vi ? 'Đặc trưng 3: Nhà nước quản lý vĩ mô, ban hành Luật DN, Luật Thuế, đầu tư Cao tốc Bắc–Nam và EVN.' : 'Char 3: State provides macro-regulation, legal frameworks, and public infrastructure.',
-      4: vi ? 'Đặc trưng 4: Tăng trưởng gắn với công bằng xã hội: bảo hiểm y tế, học bổng vùng cao, cứu trợ thiên tai.' : 'Char 4: Growth paired with social equity: healthcare, highland scholarships, disaster relief.',
-      5: vi ? 'Đặc trưng 5: Chủ động hội nhập WTO, ASEAN và thu hút FDI chất lượng cao từ Samsung, Intel.' : 'Char 5: Active integration in WTO, ASEAN and attracting high-quality FDI from Samsung, Intel.',
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && activeStationId) closeInteraction();
     };
-    setNpcSubtitles(msgs[zoneId] ?? '');
-  };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [activeStationId, closeInteraction]);
+
+  useEffect(
+    () => () => {
+      setRoomFourInteractionOpen(false);
+      document.body.style.cursor = 'auto';
+    },
+    [setRoomFourInteractionOpen],
+  );
+
+  useEffect(() => {
+    if (isVisible || !activeStationId) return;
+    const timer = window.setTimeout(closeInteraction, 0);
+    return () => window.clearTimeout(timer);
+  }, [activeStationId, closeInteraction, isVisible]);
 
   return (
-    <BaseRoomPlain galleryId={galleryId} customSettings={modifiedSettings} isVisible={isVisible}>
+    <group name="room-four-soviet-guangzhou" visible={isVisible}>
+      <RoomShell roomHeight={roomHeight} ribStride={ribStride} />
+      <RoomFourHistoricalFlags language={resolvedLanguage} visible={!activeStationId} />
+      <RoomFourHistoricalQuotes language={resolvedLanguage} visible={!activeStationId} />
 
-
-      {/* ── Global Lighting ── */}
-      <ambientLight intensity={currentRoom === 'gallery-market-economy' ? entranceLight : 0} />
-      <directionalLight position={[5, 10, 5]} intensity={isVisible && isAdjacent ? 0.55 : 0} />
-      <pointLight position={[0, roomHeight - 1, 0]} intensity={isVisible && isAdjacent ? 2.8 : 0} distance={38} color="#ffffff" />
-
-      {/* ── Zone 1 — Đa Thành Phần Kinh Tế ── */}
-      {isVisible && (
+      {/* Three-light budget: brighter fill plus two broad keys cover every display bay. */}
+      <hemisphereLight
+        color="#8da6b2"
+        groundColor="#12191b"
+        intensity={fillIntensity}
+      />
+      {!settings.reducedLights && (
         <>
-          <Zone1MultiSector
-            onZoneClick={handleZoneClick}
-            isActive={activePedestal === 1}
-            language={language}
-            intensity={zoneIntensities[0]}
-          />
-          <ZoneNPC
-            position={[-2.0, 0.05, -41.0]}
-            rotation={[0, Math.PI / 2, 0]}
-            nameVi="Chuyên gia Kinh tế (Sở hữu)"
-            nameEn="Economist (Ownership & Sectors)"
-            infoVi="Trong nền kinh tế Việt Nam hiện nay tồn tại nhiều loại hình doanh nghiệp: Doanh nghiệp Nhà nước · Doanh nghiệp tư nhân · Doanh nghiệp có vốn đầu tư nước ngoài. Các doanh nghiệp này cùng cạnh tranh và cùng phát triển."
-            infoEn="Vietnam's current economy includes multiple enterprise types: State-owned enterprises · Private enterprises · Foreign-invested enterprises. These entities compete and grow together."
-            language={language}
-            color="#ef4444"
-            isVisible={isVisible}
-            activeIntensity={zoneIntensities[0]}
-            npcId="expert-1"
-            onTalk={addTalkedNpc}
-            isLocked={false}
-          />
+          <pointLight position={coldKeyPosition} color="#b9d8e3" intensity={coldKeyIntensity} distance={coldKeyDistance} decay={2} />
+          <pointLight position={[0, 5.3, -14]} color="#e2a65f" intensity={42} distance={56} decay={2} />
         </>
       )}
-
-      {/* -- Zone 2 - Co Che Thi Truote -- */}
-      {isVisible && (
-        <>
-          <Zone2BalanceScale
-            onZoneClick={handleZoneClick}
-            isActive={activePedestal === 2}
-            language={language}
-            intensity={zoneIntensities[1]}
-          />
-          <ZoneNPC
-            position={[2.0, 0.05, -41.0]}
-            rotation={[0, -Math.PI / 2, 0]}
-            nameVi="Chuyên gia Kinh tế (Thị trường)"
-            nameEn="Economist (Market Mechanism)"
-            infoVi="Giá cả hàng hóa và dịch vụ được quyết định bởi quy luật cung - cầu khách quan, không còn bị áp đặt hành chính."
-            infoEn="Prices of goods and services are dynamically determined by supply and demand, free from administrative controls."
-            language={language}
-            color="#eab308"
-            isVisible={isVisible}
-            activeIntensity={zoneIntensities[1]}
-            npcId="expert-2"
-            onTalk={addTalkedNpc}
-            isLocked={!talkedNpcs.includes('expert-1')}
-          />
-        </>
+      {settings.reducedLights && isEntryPreview && (
+        <pointLight position={coldKeyPosition} color="#b9d8e3" intensity={24} distance={34} decay={2} />
       )}
 
-      {/* -- Zone 3 - Nha Nuoc Quan Ly -- */}
-      {isVisible && (
-        <>
-          <Zone3StateRegulation
-            onZoneClick={handleZoneClick}
-            isActive={activePedestal === 3}
-            language={language}
-            intensity={zoneIntensities[2]}
+      <RouteSpine reducedDetail={reducedDetail} />
+      {ROOM_FOUR_STATIONS.map((station) => {
+        const stationCompleted = journeyProgress.includes(roomFourCompletionToken(station.id));
+        const completed = stationCompleted && (station.id !== 's8' || journeyFinaleComplete);
+        const status: StationStatus = completed
+          ? 'complete'
+          : station.id === nextStationId || (station.id === 's8' && journeyFinaleReady)
+            ? 'active'
+            : 'locked';
+        return (
+          <StationBay
+            key={station.id}
+            station={station}
+            language={resolvedLanguage}
+            status={status}
+            progressCount={getRoomFourStationProgress(journeyProgress, station.id)}
+            animated={settings.animations}
+            showFocalBackdrop={!isUltraLow}
+            showPlaque={showJourneyUi && !activeStationId}
+            finaleComplete={journeyFinaleComplete && !finalePlaying}
+            onOpen={isInteractive ? openStation : () => undefined}
           />
-          <ZoneNPC
-            position={[2.0, 0.05, -23.0]}
-            rotation={[0, -Math.PI / 2, 0]}
-            nameVi="Chuyên gia Kinh tế (Nhà nước)"
-            nameEn="Economist (State Regulation)"
-            infoVi="Nhà nước quản lý vĩ mô bằng pháp luật (Luật DN, Thuế), đầu tư hạ tầng thiết yếu (EVN, Cao tốc) để giữ ổn định kinh tế."
-            infoEn="The State regulates the macroeconomy via laws (Tax, Enterprise) and invests in public infrastructure (EVN, Highway)."
-            language={language}
-            color="#06b6d4"
-            isVisible={isVisible}
-            activeIntensity={zoneIntensities[2]}
-            npcId="expert-3"
-            onTalk={addTalkedNpc}
-            isLocked={!talkedNpcs.includes('expert-2')}
-          />
-        </>
+        );
+      })}
+      <TransitionCorridor
+        detailed={!reducedDetail}
+        activated={journeyProgress.includes(roomFourCompletionToken('s3'))}
+      />
+      {activeJourneyLink && !useStaticJourneyLinks && (
+        <JourneyLinkEffect key={activeJourneyLink.requestId} link={activeJourneyLink} />
       )}
-
-      {/* -- Zone 4 - Cong Bang Xa Hoi -- */}
-      {isVisible && (
-        <>
-          <Zone4SocialEquity
-            onZoneClick={handleZoneClick}
-            isActive={activePedestal === 4}
-            language={language}
-            intensity={zoneIntensities[3]}
-          />
-          <ZoneNPC
-            position={[-2.0, 0.05, -23.0]}
-            rotation={[0, Math.PI / 2, 0]}
-            nameVi="Chuyên gia Kinh tế (An sinh)"
-            nameEn="Economist (Social Welfare)"
-            infoVi="Mục tiêu của Việt Nam không chỉ là tăng trưởng kinh tế. Mà còn hướng tới nâng cao chất lượng cuộc sống và bảo đảm cơ hội phát triển cho mọi người."
-            infoEn="Vietnam's goal is not merely economic growth — it also aims to improve quality of life and ensure equal development opportunities for everyone."
-            language={language}
-            color="#f97316"
-            isVisible={isVisible}
-            activeIntensity={zoneIntensities[3]}
-            npcId="expert-4"
-            onTalk={addTalkedNpc}
-            isLocked={!talkedNpcs.includes('expert-3')}
-          />
-        </>
-      )}
-
-      {/* -- Zone 5 - Hoi Nhap Quoc Te -- */}
-      {isVisible && (
-        <>
-          <Zone5InternationalIntegration
-            onZoneClick={handleZoneClick}
-            isActive={activePedestal === 5}
-            language={language}
-            intensity={zoneIntensities[4]}
-          />
-          <ZoneNPC
-            position={[2.4, 0.05, -9.5]}
-            rotation={[0, 0, 0]}
-            nameVi="Chuyên gia Kinh tế (Hội nhập)"
-            nameEn="Economist (Global Integration)"
-            infoVi="Việt Nam chủ động hợp tác với các quốc gia trên thế giới. Thu hút đầu tư. Mở rộng xuất khẩu. Nâng cao năng lực cạnh tranh."
-            infoEn="Vietnam proactively cooperates with countries worldwide — attracting investment, expanding exports, and enhancing its competitive capacity."
-            language={language}
-            color="#3b82f6"
-            isVisible={isVisible}
-            activeIntensity={zoneIntensities[4]}
-            npcId="expert-5"
-            onTalk={addTalkedNpc}
-            isLocked={!talkedNpcs.includes('expert-4')}
-          />
-        </>
-      )}
-
-      {/* -- Summary / Exit NPC in the last room -- */}
-      {isVisible && (
-        <ZoneNPC
-          position={[0, 0.05, 2.0]}
-          rotation={[0, 0, 0]}
-          nameVi="Ronaldo"
-          nameEn="Summary Specialist"
-          infoVi={
-            talkedNpcs.length < 5
-              ? "Chào cậu! Cậu cần trao đổi với tất cả 5 chuyên gia kinh tế ở các phân khu trước để tìm hiểu kiến thức thì mới có thể bắt đầu thử thách!"
-              : "Chào cậu! Cậu đã trao đổi với tất cả chuyên gia rồi đấy. Cậu sẵn sàng tham gia thử thách chưa? Hãy click vào tôi để bắt đầu minigame!"
-          }
-          infoEn={
-            talkedNpcs.length < 5
-              ? "Hi there! You must talk to all 5 economic experts in the zones to gather knowledge before you can start the challenge!"
-              : "Hi there! You've spoken to all experts. Are you ready for the challenge? Click on me to start the minigame!"
-          }
-          language={language}
-          color="#10b981"
-          isVisible={isVisible}
-          activeIntensity={zoneIntensities[5]}
-          textureUrl="/images/room4/ronaldo.jpg"
-          autoShowOnProximity={true}
-          onClick={() => {
-            const alreadyPlayed = typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true';
-            if (talkedNpcs.length === 5 || alreadyPlayed) {
-              window.dispatchEvent(new CustomEvent('openSummaryMinigame'));
-            }
-          }}
+      {finalePlaying && shouldAnimateFinale && (
+        <JourneyFinaleEffect
+          key={finaleRequestId}
+          onComplete={completeJourneyFinale}
         />
       )}
-
-      {/* minigame rendered via CustomEvent → GalleryCanvas */}
-    </BaseRoomPlain >
+      {showJourneyUi && !activeStationId && (
+        <ThresholdSigns language={resolvedLanguage} journeyCompleted={journeyFinaleComplete} />
+      )}
+      {showJourneyUi && (
+        <RoomFourJourneyOverlay
+          language={resolvedLanguage}
+          progress={journeyProgress}
+          activeStationId={activeStationId}
+          notice={notice}
+          reducedEffects={reducedDetail}
+          journeyFinaleReady={journeyFinaleReady}
+          journeyFinaleComplete={journeyFinaleComplete}
+          finalePlaying={finalePlaying}
+          onClose={closeInteraction}
+          onOpenCard={openJourneyCard}
+          onPerformStep={performStationStep}
+          activeJourneyLink={staticJourneyLink}
+          onSelectSeal={activateJourneyLink}
+          onReplayFinale={replayJourneyFinale}
+        />
+      )}
+      {children}
+    </group>
   );
 };
 

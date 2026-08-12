@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
+import roomFourSpatial from '@/lib/roomFourSpatial.json';
 
 export interface GraphicsSettings {
   preset: 'ultra-low' | 'low' | 'medium';
@@ -33,8 +34,8 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
   'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
   'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
-  'gallery-market-economy': { x: 0, y: 3.0, z: 133.0 },
-  'gallery-three': { x: 0, y: 3.0, z: 282.0 },
+  'gallery-market-economy': { x: 0, y: 3.0, z: roomFourSpatial.spawnWorldZ },
+  'gallery-three': { x: 0, y: 3.0, z: roomFourSpatial.roomFiveSpawnZ },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -105,6 +106,8 @@ interface MuseumContextType {
   clearTeleport: () => void;
   miniGameOpen: boolean;
   setMiniGameOpen: (open: boolean) => void;
+  roomFourInteractionOpen: boolean;
+  setRoomFourInteractionOpen: (open: boolean) => void;
   leaderboard: Array<{ nickname: string; score: number; time: string }>;
   hasPlayed: boolean;
   setHasPlayed: (played: boolean) => void;
@@ -227,6 +230,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
   const [miniGameOpen, setMiniGameOpen] = useState<boolean>(false);
+  const [roomFourInteractionOpen, setRoomFourInteractionOpen] = useState<boolean>(false);
   const [leaderboard, setLeaderboard] = useState<Array<{ nickname: string; score: number; time: string }>>([]);
   const [hasPlayed, setHasPlayedState] = useState<boolean>(false);
 
@@ -989,6 +993,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         clearTeleport,
         miniGameOpen,
         setMiniGameOpen,
+        roomFourInteractionOpen,
+        setRoomFourInteractionOpen,
         leaderboard,
         hasPlayed,
         setHasPlayed,

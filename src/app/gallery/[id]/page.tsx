@@ -8,7 +8,6 @@ import GalleryCanvas from '@/components/3d/GalleryCanvas';
 import ExhibitModal from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
-import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
 import { Users, MessageSquare, ArrowLeft, SendHorizontal, Settings } from 'lucide-react';
 
 interface ChatMessage {
@@ -354,7 +353,6 @@ export default function GalleryPage({ params }: PageProps) {
       {nickname && !inQueue && isAdmitted && <ExhibitModal />}
       {nickname && !inQueue && isAdmitted && miniGameOpen && <MiniGameModal />}
       {nickname && !inQueue && isAdmitted && <CeramicsCollection />}
-      {nickname && !inQueue && isAdmitted && <MarketEconomyQuest />}
 
       {/* 5. MÀN HÌNH HÀNG CHỜ KHI PHÒNG ĐẦY (QUEUE OVERLAY) */}
       {nickname && inQueue && (

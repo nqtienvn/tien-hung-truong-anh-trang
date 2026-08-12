@@ -2,6 +2,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const fs = require('fs');
 const path = require('path');
+const roomFourSpatial = require('./src/lib/roomFourSpatial.json');
 
 // Giới hạn số người tham quan đồng thời tối đa trong một phòng
 const MAX_USERS_PER_ROOM = 65;
@@ -385,9 +386,9 @@ io.on('connection', (socket) => {
       newRoom = 'gallery-paintings';
     } else if (data.z > 100.0 && data.z <= 130.0) {
       newRoom = 'gallery-ceramics';
-    } else if (data.z > 130.0 && data.z <= 280.0) {
+    } else if (data.z > roomFourSpatial.worldStartZ && data.z <= roomFourSpatial.worldEndZ) {
       newRoom = 'gallery-market-economy';
-    } else if (data.z > 280.0) {
+    } else if (data.z > roomFourSpatial.roomFiveStartZ && data.z <= roomFourSpatial.roomFiveEndZ) {
       newRoom = 'gallery-three';
     }
 
@@ -916,8 +917,8 @@ io.on('connection', (socket) => {
     if (targetRoom === 'gallery-subsidy') spawnPos = { x: 0, y: 3.0, z: 10.0 };
     else if (targetRoom === 'gallery-paintings') spawnPos = { x: 0, y: 3.0, z: 56.0 };
     else if (targetRoom === 'gallery-ceramics') spawnPos = { x: 0, y: 3.0, z: 102.0 };
-    else if (targetRoom === 'gallery-market-economy') spawnPos = { x: 0, y: 3.0, z: 133.0 };
-    else if (targetRoom === 'gallery-three') spawnPos = { x: 0, y: 3.0, z: 282.0 };
+    else if (targetRoom === 'gallery-market-economy') spawnPos = { x: 0, y: 3.0, z: roomFourSpatial.spawnWorldZ };
+    else if (targetRoom === 'gallery-three') spawnPos = { x: 0, y: 3.0, z: roomFourSpatial.roomFiveSpawnZ };
 
     let count = 0;
     Object.keys(activeUsers).forEach(sid => {

@@ -1,9 +1,10 @@
-import React, { Suspense, useRef, useState, useEffect } from 'react';
+import React, { Suspense, useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { ExhibitionRoom } from './ExhibitionRoom';
 import { ExhibitObject } from './ExhibitObject';
 import { LoadedRoom } from '@/context/MuseumContext';
+import roomFourSpatial from '@/lib/roomFourSpatial.json';
 
 /**
  * DynamicRoom — Component tải phòng triển lãm động tại offset Z cho trước
@@ -21,6 +22,8 @@ interface DynamicRoomProps {
   offsetY?: number;
   /** Trạng thái hiển thị của phòng */
   isVisible?: boolean;
+  /** Chỉ bật tương tác khi người chơi đã hoàn tất chuyển vào phòng này. */
+  isInteractive?: boolean;
 }
 
 // Bản đồ offset cho mỗi phòng (Gallery ID → Z offset từ sảnh)
@@ -28,13 +31,14 @@ interface DynamicRoomProps {
 //   center = 8 + 46/2 = 31  →  offset = 31, spans Z 8..54
 // Phòng 2: bắt đầu Z=54  →  center = 54 + 23 = 77,  spans Z 54..100
 // Phòng 3: bắt đầu Z=100 →  center = 100 + 15 = 115, spans Z 100..130
-// Phòng 4: bắt đầu Z=130 →  center = 130 + 75 = 205, spans Z 130..220
+// Phòng 4 dùng hệ local bất đối xứng -75..+5, đặt tại offset 205 → world Z 130..210.
+// Phòng 5 dài 50 m, bắt đầu ngay tại rear boundary Z=210 của Phòng 4.
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
   'gallery-paintings': { z: 77.35, y: 3.0 },   // Phòng 2: đẩy lùi 0.35 để tránh z-fighting với tường sau phòng 1
   'gallery-ceramics': { z: 115.7, y: 3.0 },    // Phòng 3: giữ khoảng hở nhỏ tương tự với phòng 2
-  'gallery-market-economy': { z: 205.0, y: 3.0 }, // Phòng 4: Kinh tế thị trường (Z 130 → 280)
-  'gallery-three': { z: 305.0, y: 3.0 },       // Phòng 5: Thành quả (Z 280 → 330)
+  'gallery-market-economy': { z: roomFourSpatial.worldOffsetZ, y: 3.0 }, // Phòng 4: Z 130 → 210
+  'gallery-three': { z: roomFourSpatial.roomFiveCenterZ, y: 3.0 },       // Phòng 5: Z 210 → 260
 };
 
 // Spawn point mặc định khi người chơi bước vào phòng
@@ -42,40 +46,60 @@ export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-subsidy': [0, 3.0, 10.0],           // Spawn gần cửa vào phòng 1 (Z=10)
   'gallery-paintings': [0, 3.0, 56.0],          // Spawn gần cửa vào phòng 2 (Z=56)
   'gallery-ceramics': [0, 3.0, 102.0],          // Spawn gần cửa vào phòng 3 (Z=102)
-  'gallery-market-economy': [0, 3.0, 133.0],   // Spawn gần cửa vào phòng 4 (Z=133)
-  'gallery-three': [0, 3.0, 282.0],            // Spawn gần cửa vào phòng 5 (Z=282)
+  'gallery-market-economy': [0, 3.0, roomFourSpatial.spawnWorldZ],
+  'gallery-three': [0, 3.0, roomFourSpatial.roomFiveSpawnZ],
   'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh
 };
 
-export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY = 0, isVisible = true }) => {
+export const DynamicRoom: React.FC<DynamicRoomProps> = ({
+  room,
+  offsetZ,
+  offsetY = 0,
+  isVisible = true,
+  isInteractive = true,
+}) => {
   const { galleryId, exhibits, gallery } = room;
   const groupRef = useRef<THREE.Group>(null);
+  const roomCullCenterZ = useMemo(
+    () => galleryId === 'gallery-market-economy'
+      ? (roomFourSpatial.worldStartZ + roomFourSpatial.worldEndZ) / 2
+      : offsetZ,
+    [galleryId, offsetZ],
+  );
+  const roomCullDistance = useMemo(
+    () => galleryId === 'gallery-market-economy'
+      ? roomFourSpatial.roomLength / 2 + 8
+      : 48,
+    [galleryId],
+  );
 
   // Cơ chế đếm số hiện vật được phép hiển thị để load từ từ (staggered loading)
-  const [visibleCount, setVisibleCount] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(() => isVisible ? Math.min(1, exhibits.length) : 0);
 
   // Khi phòng được hiển thị, tăng dần số lượng hiện vật để tránh giật lag đột ngột
   useEffect(() => {
-    if (!isVisible) {
-      setVisibleCount(0);
-      return;
+    const initialCount = isVisible ? Math.min(1, exhibits.length) : 0;
+    const resetTimer = window.setTimeout(() => setVisibleCount(initialCount), 0);
+
+    if (!isVisible || exhibits.length <= 1) {
+      return () => window.clearTimeout(resetTimer);
     }
 
-    // Đặt cái đầu tiên ngay lập tức
-    setVisibleCount(1);
-
     // Cứ mỗi 150ms mount thêm 1 hiện vật để chia đều tải tải lưới (geometry) và tải hoạ tiết (texture)
-    const interval = setInterval(() => {
+    const interval = window.setInterval(() => {
       setVisibleCount((prev) => {
         if (prev >= exhibits.length) {
-          clearInterval(interval);
+          window.clearInterval(interval);
           return prev;
         }
         return prev + 1;
       });
     }, 150);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(resetTimer);
+      window.clearInterval(interval);
+    };
   }, [isVisible, exhibits.length]);
 
   // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
@@ -90,12 +114,11 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
     const player = state.scene.getObjectByName('lobby-player');
     if (player) {
       const playerZ = player.position.z;
-      const roomZ = offsetZ;
-      const dist = Math.abs(playerZ - roomZ);
+      const dist = Math.abs(playerZ - roomCullCenterZ);
 
       // Nếu người chơi ở khoảng cách > 48 đơn vị Z (không nằm gần phòng này hoặc phòng liền kề),
       // ta ẩn phòng đi để giảm thiểu tối đa số lệnh vẽ (draw calls) và số lượng đỉnh đa giác.
-      const shouldBeVisible = dist < 48.0;
+      const shouldBeVisible = dist < roomCullDistance;
       if (groupRef.current.visible !== shouldBeVisible) {
         groupRef.current.visible = shouldBeVisible;
         console.log(`[LOD-CULLING] Phòng "${galleryId}" chuyển trạng thái visible = ${shouldBeVisible}`);
@@ -117,13 +140,15 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({ room, offsetZ, offsetY
   } : undefined;
 
   return (
-    <group ref={groupRef} position={[0, offsetY, offsetZ]}>
+    <group ref={groupRef} position={[0, offsetY, offsetZ]} visible={isVisible}>
       <Suspense fallback={null}>
         {/* Phòng triển lãm */}
         <ExhibitionRoom
           galleryId={galleryId}
           customSettings={customSettings}
           isVisible={isVisible}
+          isInteractive={isInteractive}
+          lightingContext="connected"
           ropeBarriersConfig={gallery?.rope_barriers_config}
         />
 

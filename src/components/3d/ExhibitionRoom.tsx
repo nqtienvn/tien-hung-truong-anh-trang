@@ -17,6 +17,8 @@ interface ExhibitionRoomProps {
     floor_type: 'wood' | 'marble' | 'carpet';
   };
   isVisible?: boolean;
+  isInteractive?: boolean;
+  lightingContext?: 'standalone' | 'connected';
   onRopeClick?: (ropeIndex: number) => void;
   ropeBarriersConfig?: string;
 }

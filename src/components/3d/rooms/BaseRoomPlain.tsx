@@ -16,6 +16,10 @@ export interface BaseRoomProps {
     floor_type: 'wood' | 'marble' | 'carpet';
   };
   isVisible?: boolean;
+  /** Whether the visitor is actively inside this room, rather than viewing it through an adjacent door. */
+  isInteractive?: boolean;
+  /** Standalone gallery pages provide a global light rig; connected rooms light their own threshold. */
+  lightingContext?: 'standalone' | 'connected';
   children?: React.ReactNode;
 }
 
