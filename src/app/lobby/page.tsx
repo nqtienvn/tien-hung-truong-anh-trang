@@ -1645,20 +1645,13 @@ export default function LobbyPage() {
                   />
                 ))}
 
-                {/* ═══ PHÒNG TRIỂN LÃM ĐỘNG (Dynamic Rooms) - Chỉ render phòng hoạt động hiện tại ═══ */}
+                {/* ═══ PHÒNG TRIỂN LÃM ĐỘNG (Dynamic Rooms) - Chỉ mount phòng sau khi đã chuyển vào ═══ */}
                 {loadedRooms.map((room) => {
                   const offset = ROOM_OFFSETS[room.galleryId];
                   if (!offset) return null;
 
                   const isCurrentRoom = currentRoom === room.galleryId;
-                  // Room 4 is mounted while the visitor approaches either adjacent door. Its own
-                  // LOD still culls it at distance, so the lit threshold and shaders are ready
-                  // before the room transition completes instead of revealing a black canvas.
-                  const isRoomFourDoorPreview =
-                    room.galleryId === 'gallery-market-economy' &&
-                    currentRoom === 'gallery-ceramics';
-                  const shouldRenderRoom = isCurrentRoom || isRoomFourDoorPreview;
-                  if (!shouldRenderRoom) return null;
+                  if (!isCurrentRoom) return null;
 
                   return (
                     <DynamicRoom
