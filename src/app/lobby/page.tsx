@@ -65,7 +65,8 @@ const RoomFourReferenceLightRig: React.FC = () => (
   </>
 );
 
-// Cấu hình cửa nối phòng dạng chuỗi tuần tự (Lobby -> Room 1 -> Room 2)
+// Tuyến tham quan bắt buộc: 01 -> 02 (Bến Nhà Rồng) -> 03 -> 04 -> 05 (Hội nghị).
+// Các phòng được tách bằng chuyển cảnh để giữ đúng thứ tự dù vị trí 3D cũ khác nhau.
 const DOOR_CONFIGS = [
   {
     doorId: 'door-room1',
@@ -77,16 +78,15 @@ const DOOR_CONFIGS = [
   },
   {
     doorId: 'door-room2',
-    targetRoom: 'gallery-paintings',
-    // Cửa từ Phòng 5 sang Phòng 2 (Y=3, Z=104)
-    position: [0, 3.0, 104.0] as [number, number, number],
+    targetRoom: 'gallery-three',
+    position: [0, 3.0, roomFiveSpatial.worldStartZ] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Phòng Hội Nghị',
+    label: 'Phòng 02: Bến Nhà Rồng 1911',
   },
   {
     doorId: 'door-room3',
     targetRoom: 'gallery-ceramics',
-    position: [0, 3.0, 150.0] as [number, number, number],
+    position: [0, 3.0, roomFiveSpatial.worldEndZ] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
     label: ROOM_THREE_DISPLAY_NAME,
   },
@@ -99,10 +99,10 @@ const DOOR_CONFIGS = [
   },
   {
     doorId: 'door-room5',
-    targetRoom: 'gallery-three',
-    position: [0, 3.0, roomFiveSpatial.worldStartZ] as [number, number, number],
+    targetRoom: 'gallery-paintings',
+    position: [0, 3.0, roomFourSpatial.worldEndZ] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 05: Bến Nhà Rồng 1911',
+    label: 'Phòng 05: Phòng Hội Nghị',
   },
 ];
 
@@ -129,55 +129,34 @@ const INTERACTIVE_DOORS = [
     promptVi: 'quay lại Sảnh chính',
     promptEn: 'return to Lobby'
   },
-  // --- ROOM 1 <-> ROOM 5 ---
+  // --- ROOM 1 <-> ROOM 2 (NHÀ RỒNG) ---
   {
-    id: 'room1-to-room5',
+    id: 'room1-to-room2',
     fromRoom: 'gallery-subsidy',
     toRoom: 'gallery-three',
-    doorId: 'door-room5',
+    doorId: 'door-room2',
     check: (x: number, z: number) => z >= 52.0 && z <= 54.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, roomFiveSpatial.spawnWorldZ] as [number, number, number],
-    promptVi: 'vào Phòng 05: Bến Nhà Rồng 1911',
-    promptEn: 'enter Room 05: Nhà Rồng Wharf 1911'
+    promptVi: 'vào Phòng 02: Bến Nhà Rồng 1911',
+    promptEn: 'enter Room 02: Nhà Rồng Wharf 1911'
   },
   {
-    id: 'room5-to-room1',
+    id: 'room2-to-room1',
     fromRoom: 'gallery-three',
     toRoom: 'gallery-subsidy',
-    doorId: 'door-room5',
+    doorId: 'door-room2',
     check: (x: number, z: number) => z >= 54.0 && z <= 56.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, roomFiveSpatial.returnToRoomOneWorldZ] as [number, number, number],
     promptVi: 'quay lại Phòng 01',
     promptEn: 'return to Room 01'
   },
-  // --- ROOM 5 <-> ROOM 2 ---
-  {
-    id: 'room5-to-room2',
-    fromRoom: 'gallery-three',
-    toRoom: 'gallery-paintings',
-    doorId: 'door-room2',
-    check: (x: number, z: number) => z >= roomFiveSpatial.worldEndZ - 2 && z <= roomFiveSpatial.worldEndZ && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 106.0] as [number, number, number],
-    promptVi: 'vào Phòng 02: Phòng Hội Nghị',
-    promptEn: 'enter Room 02: Conference Room'
-  },
-  {
-    id: 'room2-to-room5',
-    fromRoom: 'gallery-paintings',
-    toRoom: 'gallery-three',
-    doorId: 'door-room2',
-    check: (x: number, z: number) => z >= 104.0 && z <= 106.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, roomFiveSpatial.returnToRoomTwoWorldZ] as [number, number, number],
-    promptVi: 'quay lại Phòng 05: Bến Nhà Rồng 1911',
-    promptEn: 'return to Room 05: Nhà Rồng Wharf 1911'
-  },
-  // --- ROOM 2 <-> ROOM 3 ---
+  // --- ROOM 2 (NHÀ RỒNG) <-> ROOM 3 ---
   {
     id: 'room2-to-room3',
-    fromRoom: 'gallery-paintings',
+    fromRoom: 'gallery-three',
     toRoom: 'gallery-ceramics',
     doorId: 'door-room3',
-    check: (x: number, z: number) => z >= 148.0 && z <= 150.0 && Math.abs(x) < 2.2,
+    check: (x: number, z: number) => z >= roomFiveSpatial.worldEndZ - 2 && z <= roomFiveSpatial.worldEndZ && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 152.0] as [number, number, number],
     promptVi: `vào ${ROOM_THREE_DISPLAY_NAME}`,
     promptEn: 'enter Room 03: Integration Room'
@@ -185,10 +164,10 @@ const INTERACTIVE_DOORS = [
   {
     id: 'room3-to-room2',
     fromRoom: 'gallery-ceramics',
-    toRoom: 'gallery-paintings',
+    toRoom: 'gallery-three',
     doorId: 'door-room3',
     check: (x: number, z: number) => z >= 150.0 && z <= 152.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 148.0] as [number, number, number],
+    spawnPos: [0, 3.0, roomFiveSpatial.returnToRoomTwoWorldZ] as [number, number, number],
     promptVi: 'quay lại Phòng 02',
     promptEn: 'return to Room 02'
   },
@@ -212,6 +191,27 @@ const INTERACTIVE_DOORS = [
     spawnPos: [0, 3.0, 178.0] as [number, number, number],
     promptVi: `quay lại ${ROOM_THREE_DISPLAY_NAME}`,
     promptEn: 'return to Room 03'
+  },
+  // --- ROOM 4 <-> ROOM 5 (HỘI NGHỊ) ---
+  {
+    id: 'room4-to-room5',
+    fromRoom: 'gallery-market-economy',
+    toRoom: 'gallery-paintings',
+    doorId: 'door-room5',
+    check: (x: number, z: number) => z >= roomFourSpatial.worldEndZ - 2 && z <= roomFourSpatial.worldEndZ && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 106.0] as [number, number, number],
+    promptVi: 'vào Phòng 05: Phòng Hội Nghị',
+    promptEn: 'enter Room 05: Conference Room'
+  },
+  {
+    id: 'room5-to-room4',
+    fromRoom: 'gallery-paintings',
+    toRoom: 'gallery-market-economy',
+    doorId: 'door-room5',
+    check: (x: number, z: number) => z >= 104.0 && z <= 106.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, roomFourSpatial.worldEndZ - 2] as [number, number, number],
+    promptVi: 'quay lại Phòng 04',
+    promptEn: 'return to Room 04'
   }
 ];
 
@@ -231,7 +231,7 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 
   // Bậc thang và sàn các phòng triển lãm
   if (z > 8.0 && z <= roomFourSpatial.worldEndZ) {
-    // Phòng 2 (Hội trường / Paintings): 104.0 < Z <= 150.0
+    // Phòng 5 (Hội trường / Paintings): 104.0 < Z <= 150.0
     if (z > 104.0 && z <= 150.0) {
       // Chỉ áp dụng độ cao bậc thang ở khu vực có các tấm bê tông (Z từ 110.0 đến 144.0)
       if (z >= 110.0 && z <= 144.0) {
@@ -448,77 +448,47 @@ const LobbyCameraController: React.FC = () => {
     let minZ = -9.4;
     let maxZ = 7.8;
 
-    const forwardCameraLimit = !isDoor1Open
-      ? 7.8
-      : !isDoor5Open
-        ? 53.8
-        : !isDoor2Open
-          ? roomFiveSpatial.worldEndZ - 0.2
-          : !isDoor3Open
-            ? 149.8
-            : !isDoor4Open
-              ? 179.8
-              : roomFourSpatial.worldEndZ - 0.2;
-
     if (pz <= 8.0) {
       // Đang ở Sảnh
       minX = -LOBBY_W / 2 + 0.5;
       maxX = LOBBY_W / 2 - 0.5;
       minZ = -9.4;
-      maxZ = forwardCameraLimit;
+      maxZ = isDoor1Open ? 8.2 : 7.8;
     } 
     else if (pz > 8.0 && pz <= 54.0) {
       // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor1Open ? -9.4 : 8.2;
-      maxZ = !isDoor5Open
-        ? 53.8
-        : !isDoor2Open
-          ? roomFiveSpatial.worldEndZ - 0.2
-          : !isDoor3Open
-            ? 149.8
-            : !isDoor4Open
-              ? 179.8
-              : roomFourSpatial.worldEndZ - 0.2;
+      maxZ = isDoor2Open ? roomFiveSpatial.worldStartZ + 0.2 : 53.8;
     }
     else if (pz > roomFiveSpatial.worldStartZ && pz <= roomFiveSpatial.worldEndZ) {
-      // Đang ở Phòng 5
+      // Đang ở Phòng 2 (Bến Nhà Rồng)
       minX = -11.5;
       maxX = 11.5;
-      minZ = isDoor5Open ? (isDoor1Open ? -9.4 : 8.2) : roomFiveSpatial.worldStartZ + 0.2;
-      maxZ = !isDoor2Open
-        ? roomFiveSpatial.worldEndZ - 0.2
-        : !isDoor3Open
-          ? 149.8
-          : !isDoor4Open
-            ? 179.8
-            : roomFourSpatial.worldEndZ - 0.2;
+      minZ = isDoor2Open ? roomFiveSpatial.worldStartZ - 0.2 : roomFiveSpatial.worldStartZ + 0.2;
+      maxZ = isDoor3Open ? roomFiveSpatial.worldEndZ + 0.2 : roomFiveSpatial.worldEndZ - 0.2;
     } 
     else if (pz > 104.0 && pz <= 150.0) {
-      // Đang ở Phòng 2
+      // Đang ở Phòng 5 (Hội nghị)
       minX = -11.5;
       maxX = 11.5;
-      minZ = isDoor2Open ? (isDoor5Open ? (isDoor1Open ? -9.4 : 8.2) : roomFiveSpatial.worldStartZ + 0.2) : 104.2;
-      maxZ = !isDoor3Open
-        ? 149.8
-        : !isDoor4Open
-          ? 179.8
-          : roomFourSpatial.worldEndZ - 0.2;
+      minZ = isDoor5Open ? 103.8 : 104.2;
+      maxZ = 149.8;
     } 
     else if (pz > 150.0 && pz <= 180.0) {
       // Đang ở Phòng 3
       minX = -14.5;
       maxX = 14.5;
-      minZ = isDoor3Open ? (isDoor2Open ? (isDoor5Open ? (isDoor1Open ? -9.4 : 8.2) : roomFiveSpatial.worldStartZ + 0.2) : 104.2) : 150.2;
-      maxZ = !isDoor4Open ? 179.8 : roomFourSpatial.worldEndZ - 0.2;
+      minZ = isDoor3Open ? 149.8 : 150.2;
+      maxZ = isDoor4Open ? roomFourSpatial.worldStartZ + 0.2 : 179.8;
     }
     else if (pz > roomFourSpatial.worldStartZ && pz <= roomFourSpatial.worldEndZ) {
       // Đang ở Phòng 4 — hành trình Liên Xô đến Quảng Châu
       minX = -roomFourSpatial.roomWidth / 2 + 0.5;
       maxX = roomFourSpatial.roomWidth / 2 - 0.5;
-      minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor5Open ? (isDoor1Open ? -9.4 : 8.2) : roomFiveSpatial.worldStartZ + 0.2) : 104.2) : 150.2) : roomFourSpatial.worldStartZ + 0.2;
-      maxZ = roomFourSpatial.worldEndZ - 0.2;
+      minZ = isDoor4Open ? roomFourSpatial.worldStartZ - 0.2 : roomFourSpatial.worldStartZ + 0.2;
+      maxZ = isDoor5Open ? roomFourSpatial.worldEndZ + 0.2 : roomFourSpatial.worldEndZ - 0.2;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff + sitOffsetX));
@@ -615,12 +585,7 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomFiveProgress, roomThreeCollectedFragments } = useMuseum();
-  const roomFiveProgressRef = useRef(roomFiveProgress);
-
-  useEffect(() => {
-    roomFiveProgressRef.current = roomFiveProgress;
-  }, [roomFiveProgress]);
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomThreeCollectedFragments } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -631,7 +596,7 @@ const LobbyPlayer: React.FC<{
   const rightVec = useRef(new THREE.Vector3()).current;
   const moveDir = useRef(new THREE.Vector3()).current;
 
-  // Khởi tạo danh sách 60 ghế ngồi trong Phòng 2 bậc thang để check khoảng cách và tọa độ ngồi
+  // Khởi tạo danh sách 60 ghế ngồi trong Phòng 5 bậc thang để check khoảng cách và tọa độ ngồi
   const ROOM2_CHAIRS = useMemo(() => {
     const chairs: Array<{ x: number; y: number; z: number }> = [];
     const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
@@ -800,40 +765,40 @@ const LobbyPlayer: React.FC<{
           }
         }
 
-        // Cửa cuối phòng nối sang Phòng 5
+        // Cửa cuối phòng nối sang Phòng 2 (Bến Nhà Rồng)
         if (z > 53.3) {
-          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor5) return true;
+          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor2) return true;
         }
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 5 (gallery-three: Z 54.0 -> 104.0) ──
+      // ── PHÒNG TRIỂN LÃM 2 — Bến Nhà Rồng (gallery-three: Z 54.0 -> 104.0) ──
       if (z > roomFiveSpatial.worldStartZ && z <= roomFiveSpatial.worldEndZ) {
         if (z < roomFiveSpatial.worldStartZ + 0.6) {
-          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor5) return true;
+          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor2) return true;
         }
         if (x < -11.7 || x > 11.7) return true;
 
         if (z > roomFiveSpatial.worldEndZ - 0.7) {
-          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor2) return true;
+          const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor3) return true;
         }
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 2 (gallery-paintings: Z 104.0 -> 150.0) ──
+      // ── PHÒNG TRIỂN LÃM 5 — Hội nghị (gallery-paintings: Z 104.0 -> 150.0) ──
       if (z > 104.0 && z <= 150.0) {
-        // Chỉ chặn khi đi lùi về Phòng 5 qua cửa 2 đang đóng
+        // Phòng Hội nghị được vào từ Phòng 4 bằng cửa 5.
         if (z < 104.6) {
-          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor2) return true;
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
         }
 
         if (x < -11.7 || x > 11.7) return true;
 
-        // Chặn các bàn đại biểu và ghế trong Phòng 2 (X xoay dọc, 5 dãy bàn bậc thang)
+        // Chặn các bàn đại biểu và ghế trong Phòng 5 (X xoay dọc, 5 dãy bàn bậc thang)
         const localZ = z - 127.0;
         const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
         // Chặn bục sân khấu bên trái và lan can 2 đầu sân khấu (local X: -12.0 đến -7.6, local Z: -7.6 đến 7.6)
@@ -946,6 +911,11 @@ const LobbyPlayer: React.FC<{
           )
         ) return true;
 
+        if (z > roomFourSpatial.worldEndZ - 0.7) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
+
         return false;
       }
 
@@ -985,7 +955,7 @@ const LobbyPlayer: React.FC<{
         e.preventDefault();
         if (roomThreeOverlayOpen || roomThreeVideoOpen) return;
         if (sittingPositionRef.current) {
-          // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 2
+          // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 5
           if (playerRef.current && playerRef.current.position.z > 104.0 && playerRef.current.position.z <= 150.0) {
             setRoomTwoDocOpen((prev: boolean) => !prev);
           }
@@ -996,16 +966,6 @@ const LobbyPlayer: React.FC<{
           if (interaction.kind === 'desk') onOpenRoomThreeDesk();
         } else if (activeDoorRef.current) {
           const door = activeDoorRef.current;
-          const leavingUnfinishedRoomFive =
-            (door.id === 'room5-to-room1' || door.id === 'room5-to-room2')
-            && roomFiveProgressRef.current.fragments.length > 0
-            && !roomFiveProgressRef.current.completed;
-          if (leavingUnfinishedRoomFive) {
-            const shouldLeave = window.confirm(
-              'Hồ sơ hành trình Văn Ba chưa hoàn tất. Tiến độ đã được lưu; bạn có muốn rời Phòng 05 không?',
-            );
-            if (!shouldLeave) return;
-          }
           const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
           onTransitionRoomChange(door.toRoom, targetRoomName);
           onTransitionLoadingChange(true);
@@ -1537,10 +1497,10 @@ export default function LobbyPage() {
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Dấu chân tìm đường' },
-      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Hội Nghị' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 05: Phòng Hội Nghị' },
       'gallery-ceramics': { id: 'gallery-ceramics', name: ROOM_THREE_DISPLAY_NAME },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Liên Xô — Quảng Châu' },
-      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Bến Nhà Rồng 1911' },
+      'gallery-three': { id: 'gallery-three', name: 'Phòng 02: Bến Nhà Rồng 1911' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1621,10 +1581,10 @@ export default function LobbyPage() {
                 {/* ═══ CỬA NỐI PHÒNG (Door Portals) - Chỉ render cửa thuộc phòng hiện tại ═══ */}
                 {DOOR_CONFIGS.filter(config => {
                   if (config.doorId === 'door-room1') return currentRoom === 'lobby' || currentRoom === 'gallery-subsidy';
-                  if (config.doorId === 'door-room2') return currentRoom === 'gallery-three' || currentRoom === 'gallery-paintings';
-                  if (config.doorId === 'door-room3') return currentRoom === 'gallery-paintings' || currentRoom === 'gallery-ceramics';
+                  if (config.doorId === 'door-room2') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-three';
+                  if (config.doorId === 'door-room3') return currentRoom === 'gallery-three' || currentRoom === 'gallery-ceramics';
                   if (config.doorId === 'door-room4') return currentRoom === 'gallery-ceramics' || currentRoom === 'gallery-market-economy';
-                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-three';
+                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-paintings';
                   return false;
                 }).map((config) => (
                   <DoorPortal
@@ -1962,7 +1922,7 @@ export default function LobbyPage() {
        {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
 
-      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}
+      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 5 ═══ */}
       <RoomTwoDocumentModal />
 
       <RoomThreeVideoModal

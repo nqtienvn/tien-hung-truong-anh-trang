@@ -196,7 +196,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("/images/room4/anhphong2.jpg")',
+                    'url("/exhibits/nha-rong-departure.svg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -205,10 +205,10 @@ export default function Home() {
                   Phòng 02
                 </span>
                 <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Phòng Hội Nghị
+                  Bến Nhà Rồng 1911
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Tái hiện Hội nghị hợp nhất thành lập Đảng Cộng sản Việt Nam (3/2/1930) tại Cửu Long, Hồng Kông do Nguyễn Ái Quốc chủ trì.
+                  Khám phá Bến Nhà Rồng, chuyến tàu Amiral Latouche-Tréville và công việc phụ bếp của người thanh niên Nguyễn Tất Thành.
                 </p>
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("/exhibits/nha-rong-departure.svg")',
+                    'url("/images/room4/anhphong2.jpg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -274,10 +274,10 @@ export default function Home() {
                   Phòng 05
                 </span>
                 <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Bến Nhà Rồng 1911
+                  Phòng Hội Nghị
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá Bến Nhà Rồng, chuyến tàu Amiral Latouche-Tréville và công việc phụ bếp của người thanh niên Nguyễn Tất Thành.
+                  Tái hiện Hội nghị hợp nhất thành lập Đảng Cộng sản Việt Nam (3/2/1930) tại Cửu Long, Hồng Kông do Nguyễn Ái Quốc chủ trì.
                 </p>
               </div>
             </div>

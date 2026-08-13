@@ -870,7 +870,7 @@ export const RoomTwoDocumentModal: React.FC = () => {
                     ))}
                   </div>
                   <div className="bg-[#8B0000] text-white rounded-2xl px-6 py-3 shadow-md border border-amber-400/30">
-                    <span className="text-[11px] uppercase tracking-wider block text-amber-300">Tổng điểm tích lũy phòng 2</span>
+                    <span className="text-[11px] uppercase tracking-wider block text-amber-300">Tổng điểm tích lũy phòng 5</span>
                     <span className="text-3xl font-black font-mono">
                       {((roomTwoScore ?? 0) + (roomTwoScore2 ?? 0) + (roomTwoScore3 ?? 0) + (roomTwoScore4 ?? 0)).toFixed(1)}đ
                     </span>

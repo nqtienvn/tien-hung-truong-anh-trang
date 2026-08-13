@@ -30,14 +30,14 @@ interface DynamicRoomProps {
 // Bản đồ offset cho mỗi phòng (Gallery ID → Z offset từ sảnh)
 // Mỗi phòng dài 46 đơn vị. Phòng 1 bắt đầu ngay Z=8 (sau tường sảnh):
 //   center = 8 + 46/2 = 31  →  offset = 31, spans Z 8..54
-// Phòng 5: bắt đầu Z=54  →  center = 79, spans Z 54..104.
-// Phòng 2: bắt đầu Z=104 →  center = 127, spans Z 104..150.
+// Phòng 2 (Bến Nhà Rồng): bắt đầu Z=54  →  center = 79, spans Z 54..104.
+// Phòng 5 (Hội nghị): bắt đầu Z=104 →  center = 127, spans Z 104..150.
 // Phòng 3: bắt đầu Z=150 →  center = 165, spans Z 150..180.
 // Phòng 4 dùng hệ local bất đối xứng -75..+5, đặt tại offset 255 → world Z 180..260.
 export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
   'gallery-subsidy': { z: 31.0, y: 3.0 },      // Phòng 1: Bao cấp    (Z 8  → 54)
   'gallery-three': { z: roomFiveSpatial.worldCenterZ, y: 3.0 },
-  'gallery-paintings': { z: 127.35, y: 3.0 },  // Phòng 2: Z 104 → 150
+  'gallery-paintings': { z: 127.35, y: 3.0 },  // Phòng 5: Z 104 → 150
   'gallery-ceramics': { z: 165.7, y: 3.0 },    // Phòng 3: Z 150 → 180
   'gallery-market-economy': { z: roomFourSpatial.worldOffsetZ, y: 3.0 }, // Phòng 4: Z 180 → 260
 };
@@ -46,7 +46,7 @@ export const ROOM_OFFSETS: Record<string, { z: number; y: number }> = {
 export const ROOM_SPAWN_POINTS: Record<string, [number, number, number]> = {
   'gallery-subsidy': [0, 3.0, 10.0],           // Spawn gần cửa vào phòng 1 (Z=10)
   'gallery-three': [0, 3.0, roomFiveSpatial.spawnWorldZ],
-  'gallery-paintings': [0, 3.0, 106.0],         // Spawn gần cửa vào phòng 2 (Z=106)
+  'gallery-paintings': [0, 3.0, 106.0],         // Spawn gần cửa vào phòng 5 (Z=106)
   'gallery-ceramics': [0, 3.0, 152.0],          // Spawn gần cửa vào phòng 3 (Z=152)
   'gallery-market-economy': [0, 3.0, roomFourSpatial.spawnWorldZ],
   'lobby': [0, 0, -5.0],                        // Spawn giữa sảnh

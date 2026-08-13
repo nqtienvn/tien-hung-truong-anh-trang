@@ -51,7 +51,15 @@ try {
 // TRẠNG THÁI CỬA PHÒNG (Door States) — Admin điều khiển mở/đóng
 // Cấu trúc: { [doorId]: { isOpen: boolean, targetRoom: string } }
 // ═══════════════════════════════════════════════════════════════════════════
-const doorStates = {};
+// Cửa luôn mở sẵn theo tuyến 01 → 02 → 03 → 04 → 05.
+// Người chơi chỉ cần đứng gần cửa và nhấn E, không cần quản trị viên duyệt.
+const doorStates = {
+  'door-room1': { isOpen: true, targetRoom: 'gallery-subsidy' },
+  'door-room2': { isOpen: true, targetRoom: 'gallery-three' },
+  'door-room3': { isOpen: true, targetRoom: 'gallery-ceramics' },
+  'door-room4': { isOpen: true, targetRoom: 'gallery-market-economy' },
+  'door-room5': { isOpen: true, targetRoom: 'gallery-paintings' },
+};
 const closingTimers = {};
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -71,7 +79,7 @@ let roomOneState = 'waiting'; // 'waiting', 'countdown', 'started'
 let roomOneCountdownTimer = null;
 let roomOneStartTimestamp = null;
 
-// Trạng thái đồng bộ của phòng 2 (Hội nghị)
+// Trạng thái đồng bộ của phòng 5 (Hội nghị)
 let roomTwoSessionState = 'waiting'; // 'waiting', 'session1'
 
 const updateRoomOneReadyStatus = () => {
@@ -383,14 +391,14 @@ io.on('connection', (socket) => {
       newRoom = 'lobby';
     } else if (data.z > 8.0 && data.z <= 54.0) {
       newRoom = 'gallery-subsidy';
-    } else if (data.z > 54.0 && data.z <= 100.0) {
+    } else if (data.z > 54.0 && data.z <= 104.0) {
+      newRoom = 'gallery-three';
+    } else if (data.z > 104.0 && data.z <= 150.0) {
       newRoom = 'gallery-paintings';
-    } else if (data.z > 100.0 && data.z <= 130.0) {
+    } else if (data.z > 150.0 && data.z <= 180.0) {
       newRoom = 'gallery-ceramics';
     } else if (data.z > roomFourSpatial.worldStartZ && data.z <= roomFourSpatial.worldEndZ) {
       newRoom = 'gallery-market-economy';
-    } else if (data.z > roomFourSpatial.roomFiveStartZ && data.z <= roomFourSpatial.roomFiveEndZ) {
-      newRoom = 'gallery-three';
     }
 
     if (newRoom !== oldRoom) {
@@ -659,13 +667,12 @@ io.on('connection', (socket) => {
       // Phát sóng sự kiện kết thúc phiên chơi phòng 1 kèm kết quả xếp hạng
       io.to('museum-unified').emit('room1:session-ended', { results });
 
-      // Tự động mở cửa Phòng 2 để cho phép đi tiếp
-      doorStates['door-room2'] = { isOpen: true, targetRoom: 'gallery-paintings' };
-      io.emit('door-opened', { doorId: 'door-room2', targetRoom: 'gallery-paintings' });
+      // Cửa Phòng 02 (Bến Nhà Rồng) luôn mở sẵn để người chơi đi tiếp ngay.
+      doorStates['door-room2'] = { isOpen: true, targetRoom: 'gallery-three' };
+      io.emit('door-opened', { doorId: 'door-room2', targetRoom: 'gallery-three' });
       io.emit('door-states', doorStates);
 
-      // Tự động bật phòng 2 (gallery-paintings) hoạt động
-      roomStates['gallery-paintings'] = { isOpen: true };
+      roomStates['gallery-three'] = { isOpen: true };
       io.emit('room-states', roomStates);
 
       // Reset các trường đồng bộ Phòng 1 cho phiên chơi mới
@@ -762,13 +769,12 @@ io.on('connection', (socket) => {
       io.emit('leaderboard-updated', leaderboard);
       io.to('museum-unified').emit('room1:session-ended', { results });
 
-      // Tự động mở cửa Phòng 2 để cho phép đi tiếp
-      doorStates['door-room2'] = { isOpen: true, targetRoom: 'gallery-paintings' };
-      io.emit('door-opened', { doorId: 'door-room2', targetRoom: 'gallery-paintings' });
+      // Cửa Phòng 02 (Bến Nhà Rồng) luôn mở sẵn để người chơi đi tiếp ngay.
+      doorStates['door-room2'] = { isOpen: true, targetRoom: 'gallery-three' };
+      io.emit('door-opened', { doorId: 'door-room2', targetRoom: 'gallery-three' });
       io.emit('door-states', doorStates);
 
-      // Tự động bật phòng 2 (gallery-paintings) hoạt động
-      roomStates['gallery-paintings'] = { isOpen: true };
+      roomStates['gallery-three'] = { isOpen: true };
       io.emit('room-states', roomStates);
 
       // Reset Trạng thái phòng 1
@@ -784,38 +790,38 @@ io.on('connection', (socket) => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ROOM 2: CONFERENCE SESSION SYNC EVENTS
+  // ROOM 5: CONFERENCE SESSION SYNC EVENTS
   // ═══════════════════════════════════════════════════════════════════════════
   socket.on('admin:start-room2-session1', () => {
-    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ nhất ở Phòng 2 từ admin.');
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ nhất ở Phòng 5 từ admin.');
     roomTwoSessionState = 'session1';
     io.emit('room2:session1-start');
     broadcastRoomTwoPlayers();
   });
 
   socket.on('admin:start-room2-session2', () => {
-    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ hai ở Phòng 2 từ admin.');
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ hai ở Phòng 5 từ admin.');
     roomTwoSessionState = 'session2';
     io.emit('room2:session2-start');
     broadcastRoomTwoPlayers();
   });
 
   socket.on('admin:start-room2-session3', () => {
-    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ ba ở Phòng 2 từ admin.');
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ ba ở Phòng 5 từ admin.');
     roomTwoSessionState = 'session3';
     io.emit('room2:session3-start');
     broadcastRoomTwoPlayers();
   });
 
   socket.on('admin:start-room2-session4', () => {
-    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ tư ở Phòng 2 từ admin.');
+    console.log('[ADMIN] Yêu cầu bắt đầu Phiên thứ tư ở Phòng 5 từ admin.');
     roomTwoSessionState = 'session4';
     io.emit('room2:session4-start');
     broadcastRoomTwoPlayers();
   });
 
   socket.on('admin:start-room2-completed', () => {
-    console.log('[ADMIN] Yêu cầu HOÀN THÀNH họp Phòng 2 từ admin. Tự động mở cửa 3.');
+    console.log('[ADMIN] Yêu cầu HOÀN THÀNH họp Phòng 5 từ admin.');
     roomTwoSessionState = 'completed';
     io.emit('room2:completed-start');
 

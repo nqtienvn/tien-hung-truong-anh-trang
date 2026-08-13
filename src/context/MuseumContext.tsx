@@ -229,7 +229,13 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isAdmitted, setIsAdmitted] = useState<boolean>(false);
 
   // ═══ Door & Room State ═══
-  const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({});
+  const [doorStates, setDoorStates] = useState<Record<string, DoorState>>({
+    'door-room1': { isOpen: true, targetRoom: 'gallery-subsidy' },
+    'door-room2': { isOpen: true, targetRoom: 'gallery-three' },
+    'door-room3': { isOpen: true, targetRoom: 'gallery-ceramics' },
+    'door-room4': { isOpen: true, targetRoom: 'gallery-market-economy' },
+    'door-room5': { isOpen: true, targetRoom: 'gallery-paintings' },
+  });
   const [roomStates, setRoomStates] = useState<Record<string, RoomState>>({
     'gallery-subsidy': { isOpen: true },
     'gallery-paintings': { isOpen: true },
@@ -976,11 +982,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // ── Room 1 Multiplayer Sync Events ──
     newSocket.on('room1:state-sync', (data: { roomOneState: 'waiting' | 'countdown' | 'started'; roomOneStartTimestamp?: number }) => {
       setRoomOneState(data.roomOneState);
-      if (data.roomOneState !== 'started') {
-        setRoomOneLocked(true);
-      } else {
-        setRoomOneLocked(false);
-      }
+      setRoomOneLocked(false);
       if (data.roomOneStartTimestamp) {
         setRoomOneStartTimestamp(data.roomOneStartTimestamp);
       } else {
@@ -992,19 +994,19 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setRoomOneState('waiting');
       setRoomOneWaitingPlayers(data.readyPlayers);
       setRoomOneTotalPlayers(data.totalPlayers);
-      setRoomOneLocked(true);
+      setRoomOneLocked(false);
     });
 
     newSocket.on('room1:countdown-start', (data: { duration: number }) => {
       setRoomOneState('countdown');
       setRoomOneCountdownTime(data.duration);
-      setRoomOneLocked(true);
+      setRoomOneLocked(false);
     });
 
     newSocket.on('room1:countdown-cancelled', () => {
       setRoomOneState('waiting');
       setRoomOneCountdownTime(0);
-      setRoomOneLocked(true);
+      setRoomOneLocked(false);
     });
 
     newSocket.on('room1:start-game', (data?: { roomOneStartTimestamp?: number }) => {
@@ -1144,17 +1146,9 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => clearInterval(timer);
   }, [roomOneState, roomOneCountdownTime]);
 
-  // Khóa di chuyển ở Phòng 1 nếu game chưa bắt đầu
+  // Phòng 1 luôn cho phép di chuyển; trạng thái phiên không còn là điều kiện duyệt vào phòng.
   useEffect(() => {
-    if (activeGallery?.id === 'gallery-subsidy') {
-      if (roomOneState !== 'started') {
-        setRoomOneLocked(true);
-      } else {
-        setRoomOneLocked(false);
-      }
-    } else {
-      setRoomOneLocked(false);
-    }
+    setRoomOneLocked(false);
   }, [activeGallery?.id, roomOneState]);
 
   // Reset Room 2 states when leaving Room 2

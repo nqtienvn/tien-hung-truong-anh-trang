@@ -11,10 +11,10 @@ import { fetchAdminData } from '@/lib/adminData';
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
   { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Cửa 1: Sảnh ↔ Phòng 01', color: 'amber' },
-  { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 05 ↔ Phòng 02', color: 'cyan' },
+  { doorId: 'door-room2', targetRoom: 'gallery-three', label: 'Cửa 2: Phòng 01 ↔ Phòng 02', color: 'cyan' },
   { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: `Cửa 3: Phòng 02 ↔ ${ROOM_THREE_DISPLAY_NAME}`, color: 'emerald' },
   { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: `Cửa 4: ${ROOM_THREE_DISPLAY_NAME} ↔ Phòng 04`, color: 'rose' },
-  { doorId: 'door-room5', targetRoom: 'gallery-three', label: 'Cửa 5: Phòng 01 ↔ Phòng 05', color: 'amber' },
+  { doorId: 'door-room5', targetRoom: 'gallery-paintings', label: 'Cửa 5: Phòng 04 ↔ Phòng 05', color: 'amber' },
 ];
 
 interface DoorState {
@@ -157,9 +157,11 @@ export default function AdminDashboard() {
     if (doorId === 'door-room2') {
       teleportTo = 'gallery-subsidy';
     } else if (doorId === 'door-room3') {
-      teleportTo = 'gallery-paintings';
+      teleportTo = 'gallery-three';
     } else if (doorId === 'door-room4') {
       teleportTo = 'gallery-ceramics';
+    } else if (doorId === 'door-room5') {
+      teleportTo = 'gallery-market-economy';
     }
 
     adminSocket.emit('admin:close-door', { doorId, teleportTo });
@@ -171,9 +173,10 @@ export default function AdminDashboard() {
     const roomName = targetRoom === 'lobby' 
       ? 'Sảnh chờ' 
       : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Dấu chân tìm đường)'
-      : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
+      : targetRoom === 'gallery-three' ? 'Phòng 02 (Bến Nhà Rồng 1911)'
       : targetRoom === 'gallery-ceramics' ? ROOM_THREE_DISPLAY_NAME
-      : 'Phòng 04 (Kinh tế thị trường)';
+      : targetRoom === 'gallery-market-economy' ? 'Phòng 04 (Kinh tế thị trường)'
+      : 'Phòng 05 (Phòng Hội nghị)';
 
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
     if (window.confirm(confirmMsg)) {
@@ -204,28 +207,28 @@ export default function AdminDashboard() {
 
   const handleStartRoomTwoSessionOne = () => {
     if (!adminSocket) return;
-    if (window.confirm('Khai mạc Đại hội VI và bắt đầu Phiên họp thứ nhất ở Phòng 2?')) {
+    if (window.confirm('Khai mạc Đại hội VI và bắt đầu Phiên họp thứ nhất ở Phòng 5?')) {
       adminSocket.emit('admin:start-room2-session1');
     }
   };
 
   const handleStartRoomTwoSessionTwo = () => {
     if (!adminSocket) return;
-    if (window.confirm('Bắt đầu Phiên họp thứ hai (Báo cáo sản xuất) ở Phòng 2?')) {
+    if (window.confirm('Bắt đầu Phiên họp thứ hai (Báo cáo sản xuất) ở Phòng 5?')) {
       adminSocket.emit('admin:start-room2-session2');
     }
   };
 
   const handleStartRoomTwoSessionThree = () => {
     if (!adminSocket) return;
-    if (window.confirm('Bắt đầu Phiên họp thứ ba (Báo cáo nông nghiệp) ở Phòng 2?')) {
+    if (window.confirm('Bắt đầu Phiên họp thứ ba (Báo cáo nông nghiệp) ở Phòng 5?')) {
       adminSocket.emit('admin:start-room2-session3');
     }
   };
 
   const handleStartRoomTwoSessionFour = () => {
     if (!adminSocket) return;
-    if (window.confirm('Bắt đầu Phiên họp thứ tư (Đường lối phát triển) ở Phòng 2?')) {
+    if (window.confirm('Bắt đầu Phiên họp thứ tư (Đường lối phát triển) ở Phòng 5?')) {
       adminSocket.emit('admin:start-room2-session4');
     }
   };
@@ -354,13 +357,13 @@ export default function AdminDashboard() {
     if (doorId === 'door-room1') {
       isPrereqMet = roomStates['gallery-subsidy']?.isOpen || false;
     } else if (doorId === 'door-room2') {
-      isPrereqMet = (roomStates['gallery-three']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
+      isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-three']?.isOpen) || false;
     } else if (doorId === 'door-room3') {
-      isPrereqMet = (roomStates['gallery-paintings']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
+      isPrereqMet = (roomStates['gallery-three']?.isOpen && roomStates['gallery-ceramics']?.isOpen) || false;
     } else if (doorId === 'door-room4') {
       isPrereqMet = (roomStates['gallery-ceramics']?.isOpen && roomStates['gallery-market-economy']?.isOpen) || false;
     } else if (doorId === 'door-room5') {
-      isPrereqMet = (roomStates['gallery-subsidy']?.isOpen && roomStates['gallery-three']?.isOpen) || false;
+      isPrereqMet = (roomStates['gallery-market-economy']?.isOpen && roomStates['gallery-paintings']?.isOpen) || false;
     }
 
     return (
@@ -753,13 +756,13 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room1', 'gallery-subsidy', 'Cửa số 01: Sảnh ↔ Phòng 01')}
 
             {/* 3. PHÒNG 1 */}
-            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Dấu chân tìm đường', 'Hành trình tìm đường cứu nước của Nguyễn Ái Quốc, 1911–1930', ['door-room1', 'door-room5'])}
+            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Dấu chân tìm đường', 'Hành trình tìm đường cứu nước của Nguyễn Ái Quốc, 1911–1930', ['door-room1', 'door-room2'])}
 
             {/* 4. CỬA 2 */}
-            {renderAdminDoor('door-room2', 'gallery-paintings', 'Cửa số 02: Phòng 05 ↔ Phòng 02')}
+            {renderAdminDoor('door-room2', 'gallery-three', 'Cửa số 02: Phòng 01 ↔ Phòng 02')}
 
             {/* 5. PHÒNG 2 */}
-            {renderAdminRoom('gallery-paintings', 'Phòng 02: Tranh Hội Họa', 'Bộ sưu tập hội họa tranh vẽ nghệ thuật 2D', ['door-room2', 'door-room3'])}
+            {renderAdminRoom('gallery-three', 'Phòng 02: Bến Nhà Rồng 1911', 'Bến Nhà Rồng, tàu Amiral Latouche-Tréville và công việc phụ bếp của Văn Ba', ['door-room2', 'door-room3'])}
 
             {/* 6. CỬA 3 */}
             {renderAdminDoor('door-room3', 'gallery-ceramics', `Cửa số 03: Phòng 02 ↔ ${ROOM_THREE_DISPLAY_NAME}`)}
@@ -771,13 +774,13 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room4', 'gallery-market-economy', `Cửa số 04: ${ROOM_THREE_DISPLAY_NAME} ↔ Phòng 04`)}
 
             {/* 9. PHÒNG 4 */}
-            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Liên Xô — Quảng Châu', 'Hành trình Nguyễn Ái Quốc từ Liên Xô đến Quảng Châu (1923-1927)', ['door-room4'])}
+            {renderAdminRoom('gallery-market-economy', 'Phòng 04: Liên Xô — Quảng Châu', 'Hành trình Nguyễn Ái Quốc từ Liên Xô đến Quảng Châu (1923-1927)', ['door-room4', 'door-room5'])}
 
             {/* 10. CỬA 5 */}
-            {renderAdminDoor('door-room5', 'gallery-three', 'Cửa số 05: Phòng 01 ↔ Phòng 05')}
+            {renderAdminDoor('door-room5', 'gallery-paintings', 'Cửa số 05: Phòng 04 ↔ Phòng 05')}
 
             {/* 11. PHÒNG 5 */}
-            {renderAdminRoom('gallery-three', 'Phòng 05: Bến Nhà Rồng 1911', 'Bến Nhà Rồng, tàu Amiral Latouche-Tréville và công việc phụ bếp của Văn Ba', ['door-room5', 'door-room2'])}
+            {renderAdminRoom('gallery-paintings', 'Phòng 05: Phòng Hội Nghị', 'Tái hiện Hội nghị hợp nhất thành lập Đảng Cộng sản Việt Nam tại Cửu Long, Hồng Kông', ['door-room5'])}
           </div>
         </div>
 
@@ -1168,7 +1171,7 @@ export default function AdminDashboard() {
             <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
               <div className="flex items-center gap-2 text-amber-400 font-bold text-sm uppercase tracking-wider">
                 <Users size={16} />
-                <span>Đại biểu & Biểu quyết Phòng 02 (Đại hội VI)</span>
+                <span>Đại biểu & Biểu quyết Phòng 05 (Đại hội VI)</span>
               </div>
               <button
                 onClick={() => setIsRoomTwoResultsModalOpen(false)}
@@ -1182,7 +1185,7 @@ export default function AdminDashboard() {
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4">
               {roomTwoPlayers.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 text-xs">
-                  Không có đại biểu nào đang ở trong Phòng 02 (Đại hội VI).
+                  Không có đại biểu nào đang ở trong Phòng 05 (Đại hội VI).
                 </div>
               ) : (
                 <div className="border border-slate-800 bg-slate-950/50 rounded-xl overflow-hidden shadow-inner">
@@ -1247,7 +1250,7 @@ export default function AdminDashboard() {
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between gap-3 shrink-0">
               <span className="text-[10px] text-slate-500 font-mono">
-                Số đại biểu trong Phòng 02: {roomTwoPlayers.length}
+                Số đại biểu trong Phòng 05: {roomTwoPlayers.length}
               </span>
               <button
                 onClick={() => setIsRoomTwoResultsModalOpen(false)}

@@ -48,7 +48,7 @@ const GALLERY_CONFIGS: Record<string, {
       {
         icon: <DoorOpen size={28} className="text-amber-600" />,
         title: '④ Mở cửa sang phòng tiếp theo',
-        desc: 'Kết nối chính xác dòng chảy lịch sử và đóng dấu phê duyệt báo cáo để mở khóa cửa sang Phòng 02.',
+        desc: 'Cửa sang Phòng 02 luôn mở sẵn; đứng gần cửa và nhấn E để đi tiếp.',
       },
     ],
     summary: (
@@ -73,7 +73,7 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-paintings': {
-    headerTitle: 'PHÒNG 02 • PHÒNG HỘI NGHỊ',
+    headerTitle: 'PHÒNG 05 • PHÒNG HỘI NGHỊ',
     welcomeTitle: 'Chào mừng đến Phòng Hội Nghị!',
     introText: (
       <>
@@ -169,7 +169,7 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-three': {
-    headerTitle: 'PHÒNG 05 • BẾN NHÀ RỒNG 1911',
+    headerTitle: 'PHÒNG 02 • BẾN NHÀ RỒNG 1911',
     welcomeTitle: 'Chào mừng đến Bến Nhà Rồng!',
     introText: (
       <>
@@ -305,22 +305,9 @@ export const RoomWelcomeModal: React.FC = () => {
     if (config && step < config.steps.length - 1) {
       setStep(s => s + 1);
     } else {
-      if (activeGallery?.id === 'gallery-subsidy') {
-        if (roomOneState === 'started') {
-          // Nếu phòng 1 đã bắt đầu rồi (ví dụ người chơi vào muộn), cho vào chơi luôn
-          handleDismiss();
-        } else {
-          // Ngược lại, vào trạng thái chờ đồng bộ
-          setIsWaitingRoomOne(true);
-          socket?.emit('room:ready', { roomId: activeGallery.id });
-          socket?.emit('room1:ready');
-        }
-      } else if (activeGallery?.id && ['gallery-paintings', 'gallery-ceramics', 'gallery-market-economy'].includes(activeGallery.id)) {
-        setIsWaitingRoomOne(true);
-        socket?.emit('room:ready', { roomId: activeGallery.id });
-      } else {
-        handleDismiss();
-      }
+      // Hướng dẫn chỉ mang tính giới thiệu: người chơi luôn vào phòng ngay,
+      // không cần chờ phiên họp hoặc lệnh duyệt từ quản trị viên.
+      handleDismiss();
     }
   };
 
