@@ -16,6 +16,10 @@ import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
+import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
+import { RoomThreeExhibitModal } from '@/components/ui/RoomThreeExhibitModal';
+import { RoomThreeQuestHud } from '@/components/ui/RoomThreeQuestHud';
+import { RoomThreeQuestModal } from '@/components/ui/RoomThreeQuestModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
 import { RoomFiveMissionHud } from '@/components/ui/RoomFiveMissionHud';
 import {
@@ -26,6 +30,21 @@ import {
 } from '@/lib/roomFourLayout';
 import roomFourSpatial from '@/lib/roomFourSpatial.json';
 import roomFiveSpatial from '@/lib/roomFiveSpatial.json';
+import {
+  ROOM_THREE_DISPLAY_NAME,
+  ROOM_THREE_TRANSITION,
+} from '@/lib/roomThreeNarrative';
+import {
+  ROOM_THREE_FRAGMENTS,
+  ROOM_THREE_INTERACTION_POINTS,
+  RoomThreeInteractionPoint,
+} from '@/lib/roomThreeQuest';
+import {
+  findNearestRoomThreeInteraction,
+  getCollectedFragmentCount,
+  getRoomThreeMissionText,
+} from '@/lib/roomThreeQuestState';
+import { createTeleportMovePayload } from '@/lib/teleportSync';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CÁC HẰNG SỐ CỦA SẢNH
@@ -68,7 +87,7 @@ const DOOR_CONFIGS = [
     targetRoom: 'gallery-ceramics',
     position: [0, 3.0, 150.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Phòng Hội Nhập',
+    label: ROOM_THREE_DISPLAY_NAME,
   },
   {
     doorId: 'door-room4',
@@ -159,7 +178,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room3',
     check: (x: number, z: number) => z >= 148.0 && z <= 150.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 152.0] as [number, number, number],
-    promptVi: 'vào Phòng 03: Phòng Hội Nhập',
+    promptVi: `vào ${ROOM_THREE_DISPLAY_NAME}`,
     promptEn: 'enter Room 03: Integration Room'
   },
   {
@@ -190,7 +209,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room4',
     check: (x: number, z: number) => z >= roomFourSpatial.worldStartZ && z <= roomFourSpatial.worldStartZ + 2 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 178.0] as [number, number, number],
-    promptVi: 'quay lại Phòng 03',
+    promptVi: `quay lại ${ROOM_THREE_DISPLAY_NAME}`,
     promptEn: 'return to Room 03'
   }
 ];
@@ -562,14 +581,26 @@ const LobbyPlayer: React.FC<{
   activeDoorRef: React.RefObject<any>;
   transitionLoading: boolean;
   onTransitionLoadingChange: (loading: boolean) => void;
-  onTransitionRoomNameChange: (name: string) => void;
+  onTransitionRoomChange: (roomId: string, fallbackName: string) => void;
+  onOpenRoomThreeVideo: () => void;
+  onOpenRoomThreeFragment: (fragmentId: string) => void;
+  onOpenRoomThreeDesk: () => void;
+  onRoomThreeInteractionChange: (interaction: RoomThreeInteractionPoint | null) => void;
+  roomThreeVideoOpen: boolean;
+  roomThreeOverlayOpen: boolean;
 }> = ({
   onActiveDoorChange,
   activeDoor,
   activeDoorRef,
   transitionLoading,
   onTransitionLoadingChange,
-  onTransitionRoomNameChange,
+  onTransitionRoomChange,
+  onOpenRoomThreeVideo,
+  onOpenRoomThreeFragment,
+  onOpenRoomThreeDesk,
+  onRoomThreeInteractionChange,
+  roomThreeOverlayOpen,
+  roomThreeVideoOpen,
 }) => {
   const playerRef = useRef<THREE.Group>(null);
   const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
@@ -583,7 +614,7 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomFiveProgress } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomFiveProgress, roomThreeCollectedFragments } = useMuseum();
   const roomFiveProgressRef = useRef(roomFiveProgress);
 
   useEffect(() => {
@@ -592,6 +623,8 @@ const LobbyPlayer: React.FC<{
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
+  const roomThreeInteractionRef = useRef<RoomThreeInteractionPoint | null>(null);
+  const roomThreeInteractionKeyRef = useRef('');
 
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
@@ -645,9 +678,10 @@ const LobbyPlayer: React.FC<{
   useEffect(() => {
     if (teleportTarget && playerRef.current) {
       playerRef.current.position.set(teleportTarget.x, teleportTarget.y + baseY, teleportTarget.z);
+      socket?.emit('move', createTeleportMovePayload(teleportTarget, playerRef.current.rotation.y));
       clearTeleport();
     }
-  }, [teleportTarget, clearTeleport, baseY]);
+  }, [teleportTarget, clearTeleport, baseY, socket]);
 
   /**
    * Kiểm tra va chạm mở rộng (sảnh + phòng triển lãm)
@@ -948,11 +982,17 @@ const LobbyPlayer: React.FC<{
 
       if (e.code === 'KeyE') {
         e.preventDefault();
+        if (roomThreeOverlayOpen || roomThreeVideoOpen) return;
         if (sittingPositionRef.current) {
           // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 2
           if (playerRef.current && playerRef.current.position.z > 104.0 && playerRef.current.position.z <= 150.0) {
             setRoomTwoDocOpen((prev: boolean) => !prev);
           }
+        } else if (roomThreeInteractionRef.current) {
+          const interaction = roomThreeInteractionRef.current;
+          if (interaction.kind === 'video') onOpenRoomThreeVideo();
+          if (interaction.kind === 'fragment' && interaction.id) onOpenRoomThreeFragment(interaction.id);
+          if (interaction.kind === 'desk') onOpenRoomThreeDesk();
         } else if (activeDoorRef.current) {
           const door = activeDoorRef.current;
           const leavingUnfinishedRoomFive =
@@ -966,7 +1006,7 @@ const LobbyPlayer: React.FC<{
             if (!shouldLeave) return;
           }
           const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
-          onTransitionRoomNameChange(targetRoomName);
+          onTransitionRoomChange(door.toRoom, targetRoomName);
           onTransitionLoadingChange(true);
 
           setTimeout(() => {
@@ -980,6 +1020,7 @@ const LobbyPlayer: React.FC<{
 
             setTimeout(() => {
               onTransitionLoadingChange(false);
+              onTransitionRoomChange('', '');
             }, 800);
           }, 1200);
         }
@@ -1050,11 +1091,19 @@ const LobbyPlayer: React.FC<{
       window.removeEventListener('blur', resetAllKeys);
       document.removeEventListener('visibilitychange', resetAllKeys);
     };
-  }, []);
+  }, [baseY, language, onOpenRoomThreeDesk, onOpenRoomThreeFragment, onOpenRoomThreeVideo, roomThreeOverlayOpen, roomThreeVideoOpen, setCurrentRoom, setRoomTwoDocOpen, setSittingPosition, setSittingPrompt, setTeleportTarget]);
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit || transitionLoading || roomFourInteractionOpen) return;
+    if (roomThreeOverlayOpen) {
+      roomThreeInteractionRef.current = null;
+      if (roomThreeInteractionKeyRef.current) {
+        roomThreeInteractionKeyRef.current = '';
+        onRoomThreeInteractionChange(null);
+      }
+      return;
+    }
+    if (selectedExhibit || transitionLoading || roomFourInteractionOpen || roomThreeVideoOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -1065,6 +1114,18 @@ const LobbyPlayer: React.FC<{
 
     // Check khoảng cách ghế ngồi và cập nhật sittingPrompt
     const pPos = playerRef.current.position;
+    const nearestRoomThreeInteraction = currentRoom === 'gallery-ceramics' && !sittingPosition
+      ? findNearestRoomThreeInteraction(pPos, ROOM_THREE_INTERACTION_POINTS, roomThreeCollectedFragments)
+      : null;
+    roomThreeInteractionRef.current = nearestRoomThreeInteraction;
+    const interactionKey = nearestRoomThreeInteraction
+      ? `${nearestRoomThreeInteraction.kind}:${nearestRoomThreeInteraction.id ?? ''}`
+      : '';
+    if (interactionKey !== roomThreeInteractionKeyRef.current) {
+      roomThreeInteractionKeyRef.current = interactionKey;
+      onRoomThreeInteractionChange(nearestRoomThreeInteraction);
+    }
+
     if (sittingPosition) {
       if (sittingPrompt !== 'stand') setSittingPrompt('stand');
     } else {
@@ -1428,15 +1489,38 @@ export default function LobbyPage() {
     updateSettings,
     miniGameOpen,
     sittingPrompt,
+    otherUsers,
+    markRoomThreeVideoViewed,
+    roomThreeVideoViewed,
+    roomThreeCollectedFragments,
+    roomThreeCompleted,
+    collectRoomThreeFragment,
+    completeRoomThreeQuest,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
   const [entered, setEntered] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [roomThreeVideoOpen, setRoomThreeVideoOpen] = useState(false);
+  const [roomThreeFragmentOpen, setRoomThreeFragmentOpen] = useState<string | null>(null);
+  const [roomThreeDeskOpen, setRoomThreeDeskOpen] = useState(false);
+  const [roomThreeInteraction, setRoomThreeInteraction] = useState<RoomThreeInteractionPoint | null>(null);
+  const [roomThreeNotice, setRoomThreeNotice] = useState<string | null>(null);
+
+  const showRoomThreeNotice = useCallback((message: string) => {
+    setRoomThreeNotice(message);
+    window.setTimeout(() => setRoomThreeNotice(null), 2600);
+  }, []);
+
+  const roomThreeOverlayOpen = roomThreeVideoOpen || roomThreeFragmentOpen !== null || roomThreeDeskOpen || roomThreeNotice !== null;
+  const roomThreeFragmentCount = getCollectedFragmentCount(roomThreeCollectedFragments);
+  const roomThreeMissionText = getRoomThreeMissionText(roomThreeVideoViewed, roomThreeFragmentCount, roomThreeCompleted);
+  const activeRoomThreeFragment = ROOM_THREE_FRAGMENTS.find((fragment) => fragment.id === roomThreeFragmentOpen) ?? null;
 
   // Trạng thái chuyển phòng mượt mà qua màn hình loading (Tách không gian các phòng độc lập)
   const [transitionLoading, setTransitionLoading] = useState(false);
   const [transitionRoomName, setTransitionRoomName] = useState('');
+  const [transitionRoomId, setTransitionRoomId] = useState<string | null>(null);
   const [activeDoorInfo, setActiveDoorInfo] = useState<any | null>(null);
   const activeDoorInfoRef = useRef<any>(null);
   useEffect(() => {
@@ -1453,7 +1537,7 @@ export default function LobbyPage() {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Hội Nghị' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: ROOM_THREE_DISPLAY_NAME },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Liên Xô — Quảng Châu' },
       'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Bến Nhà Rồng 1911' },
     };
@@ -1509,7 +1593,22 @@ export default function LobbyPage() {
                   activeDoorRef={activeDoorInfoRef}
                   transitionLoading={transitionLoading}
                   onTransitionLoadingChange={setTransitionLoading}
-                  onTransitionRoomNameChange={setTransitionRoomName}
+                  onTransitionRoomChange={(roomId, fallbackName) => {
+                    setTransitionRoomId(roomId || null);
+                    setTransitionRoomName(fallbackName);
+                  }}
+                  onOpenRoomThreeVideo={() => setRoomThreeVideoOpen(true)}
+                  onOpenRoomThreeFragment={(fragmentId) => setRoomThreeFragmentOpen(fragmentId)}
+                  onOpenRoomThreeDesk={() => {
+                    if (roomThreeFragmentCount < ROOM_THREE_FRAGMENTS.length) {
+                      showRoomThreeNotice('Bạn chưa tìm đủ 8 mảnh yêu sách. Hãy tiếp tục tìm trong phòng triển lãm.');
+                    } else {
+                      setRoomThreeDeskOpen(true);
+                    }
+                  }}
+                  onRoomThreeInteractionChange={setRoomThreeInteraction}
+                  roomThreeVideoOpen={roomThreeVideoOpen}
+                  roomThreeOverlayOpen={roomThreeOverlayOpen}
                 />
 
                 {/* Multiplayer avatars */}
@@ -1863,6 +1962,42 @@ export default function LobbyPage() {
       {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}
       <RoomTwoDocumentModal />
 
+      <RoomThreeVideoModal
+        open={roomThreeVideoOpen}
+        onClose={() => setRoomThreeVideoOpen(false)}
+        onViewed={markRoomThreeVideoViewed}
+      />
+
+      <RoomThreeQuestHud
+        visible={entered && nickname !== '' && currentRoom === 'gallery-ceramics'}
+        missionText={roomThreeMissionText}
+        fragmentCount={roomThreeFragmentCount}
+        interaction={roomThreeInteraction}
+        notice={roomThreeNotice}
+      />
+
+      <RoomThreeExhibitModal
+        fragment={activeRoomThreeFragment}
+        videoViewed={roomThreeVideoViewed}
+        collected={activeRoomThreeFragment ? roomThreeCollectedFragments.includes(activeRoomThreeFragment.id) : false}
+        onClose={() => setRoomThreeFragmentOpen(null)}
+        onCollect={() => {
+          if (activeRoomThreeFragment) {
+            collectRoomThreeFragment(activeRoomThreeFragment.id);
+            setRoomThreeFragmentOpen(null);
+            showRoomThreeNotice(`Đã thu thập: ${activeRoomThreeFragment.title}`);
+          }
+        }}
+      />
+
+      <RoomThreeQuestModal
+        open={roomThreeDeskOpen}
+        fragmentIds={roomThreeCollectedFragments}
+        completed={roomThreeCompleted}
+        onClose={() => setRoomThreeDeskOpen(false)}
+        onComplete={completeRoomThreeQuest}
+      />
+
       {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
       {sittingPrompt && (
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40 bg-slate-950/95 border-2 border-cyan-500/30 backdrop-blur-md px-6 py-3 rounded-2xl flex items-center gap-3 shadow-2xl animate-bounce">
@@ -1915,12 +2050,31 @@ export default function LobbyPage() {
             </div>
 
             <div className="space-y-3">
-              <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
-              </span>
-              <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                {transitionRoomName}
-              </h2>
+              {transitionRoomId === 'gallery-ceramics' ? (
+                <>
+                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+                  </span>
+                  <p className="text-amber-400 text-xs font-black tracking-[0.28em] mt-2">
+                    {ROOM_THREE_TRANSITION.roomName}
+                  </p>
+                  <p className="text-cyan-300 text-sm font-bold tracking-[0.22em]">
+                    {ROOM_THREE_TRANSITION.period}
+                  </p>
+                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                    {ROOM_THREE_TRANSITION.description}
+                  </h2>
+                </>
+              ) : (
+                <>
+                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+                  </span>
+                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                    {transitionRoomName}
+                  </h2>
+                </>
+              )}
               <p className="text-slate-400 text-xs font-semibold italic animate-pulse">
                 {language === 'vi'
                   ? 'Đang chuẩn bị không gian triển lãm 3D...'

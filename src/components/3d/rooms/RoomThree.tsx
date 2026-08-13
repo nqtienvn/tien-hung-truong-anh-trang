@@ -2,6 +2,8 @@ import React from 'react';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
+import { VideoPillar } from '../VideoPillar';
+import { RoomThreeQuestSet } from './RoomThreeQuestSet';
 
 // Static Geometries for VelvetRopeBarrier (Cách B: Tái sử dụng hình khối để tránh giật lag GPU)
 const postGeom = new THREE.CylinderGeometry(0.055, 0.07, 0.96, 18);
@@ -104,6 +106,9 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
 
   return (
     <BaseRoom galleryId={galleryId} customSettings={customSettings} isVisible={isVisible} showPilasters={false}>
+
+      <VideoPillar />
+      <RoomThreeQuestSet isVisible={isVisible} />
 
       {/* ============================================================
           ĐÈN RỌI TRANH — TƯỜNG TRÁI (x = -halfW)
@@ -276,7 +281,7 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
 
       {/* 4. Tường cuối sau (z = halfL - 1.8 = 13.2) */}
       {doorXPositions.map((xPos) => {
-        // Loại bỏ hàng rào bên phải (xPos > 0) vì có máy chơi game ở đó
+        // Giữ lối đi bên phải phía sau cho bàn làm việc lịch sử.
         if (xPos > 0) return null;
         return (
           <VelvetRopeBarrier

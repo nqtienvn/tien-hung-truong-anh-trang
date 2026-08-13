@@ -19,6 +19,7 @@ import {
   Check,
   Compass
 } from 'lucide-react';
+import { ROOM_THREE_DISPLAY_NAME } from '@/lib/roomThreeNarrative';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Dữ liệu sự kiện — Game Session 1: Ghép thứ tự thời gian
@@ -876,6 +877,9 @@ export const RoomTwoDocumentModal: React.FC = () => {
                   </div>
                   <p className="text-[11px] text-slate-500 italic max-w-xs">
                     Cảm ơn bạn đã tham gia tái hiện Hội nghị thành lập Đảng Cộng sản Việt Nam, 3 tháng 2 năm 1930.
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Vui lòng đóng bảng tài liệu, đứng dậy (phím F) và sẵn sàng đi tiếp sang {ROOM_THREE_DISPLAY_NAME}!
                   </p>
                 </div>
               )}

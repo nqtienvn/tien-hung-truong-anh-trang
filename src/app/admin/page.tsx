@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
 import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Clock, Users, Award, X } from 'lucide-react';
+import { ROOM_THREE_DISPLAY_NAME } from '@/lib/roomThreeNarrative';
+import { fetchAdminData } from '@/lib/adminData';
 
 // Cấu hình cửa phòng
 const DOOR_CONFIGS = [
   { doorId: 'door-room1', targetRoom: 'gallery-subsidy', label: 'Cửa 1: Sảnh ↔ Phòng 01', color: 'amber' },
   { doorId: 'door-room2', targetRoom: 'gallery-paintings', label: 'Cửa 2: Phòng 05 ↔ Phòng 02', color: 'cyan' },
-  { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: 'Cửa 3: Phòng 02 ↔ Phòng 03', color: 'emerald' },
-  { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: 'Cửa 4: Phòng 03 ↔ Phòng 04', color: 'rose' },
+  { doorId: 'door-room3', targetRoom: 'gallery-ceramics', label: `Cửa 3: Phòng 02 ↔ ${ROOM_THREE_DISPLAY_NAME}`, color: 'emerald' },
+  { doorId: 'door-room4', targetRoom: 'gallery-market-economy', label: `Cửa 4: ${ROOM_THREE_DISPLAY_NAME} ↔ Phòng 04`, color: 'rose' },
   { doorId: 'door-room5', targetRoom: 'gallery-three', label: 'Cửa 5: Phòng 01 ↔ Phòng 05', color: 'amber' },
 ];
 
@@ -170,7 +172,7 @@ export default function AdminDashboard() {
       ? 'Sảnh chờ' 
       : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
       : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
-      : targetRoom === 'gallery-ceramics' ? 'Phòng 03 (Đồ gốm sứ)' 
+      : targetRoom === 'gallery-ceramics' ? ROOM_THREE_DISPLAY_NAME
       : 'Phòng 04 (Kinh tế thị trường)';
 
     const confirmMsg = `Bạn có chắc chắn muốn DỊCH CHUYỂN TOÀN BỘ người chơi đang ở ngoài phòng này lập tức vào: ${roomName}?`;
@@ -223,7 +225,7 @@ export default function AdminDashboard() {
 
   const handleStartRoomTwoCompleted = () => {
     if (!adminSocket) return;
-    if (window.confirm('Chốt nội dung Đại hội VI và mở cửa Phòng 3 sang phòng Gốm sứ?')) {
+    if (window.confirm(`Chốt nội dung Đại hội VI và mở cửa ${ROOM_THREE_DISPLAY_NAME}?`)) {
       adminSocket.emit('admin:start-room2-completed');
     }
   };
@@ -231,19 +233,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAuthorized) return;
 
-    // Tải toàn bộ galleries và exhibits
-    Promise.all([
-      fetch('/api/galleries').then(res => res.json()),
-      fetch('/api/exhibits').then(res => res.json())
-    ])
-      .then(([galleriesData, exhibitsData]) => {
-        setGalleries(galleriesData);
-        setExhibits(exhibitsData);
+    // Tải toàn bộ galleries và exhibits, có giới hạn thời gian để không kẹt spinner.
+    fetchAdminData()
+      .then(({ galleries: galleriesData, exhibits: exhibitsData }) => {
+        setGalleries(galleriesData as Gallery[]);
+        setExhibits(exhibitsData as Exhibit[]);
         setLoading(false);
       })
       .catch(err => {
         console.error('Lỗi tải dữ liệu admin:', err);
-        setError('Không thể kết nối đến máy chủ.');
+        setError(err instanceof Error ? err.message : 'Không thể kết nối đến máy chủ.');
         setLoading(false);
       });
   }, [isAuthorized]);
@@ -751,13 +750,13 @@ export default function AdminDashboard() {
             {renderAdminRoom('gallery-paintings', 'Phòng 02: Tranh Hội Họa', 'Bộ sưu tập hội họa tranh vẽ nghệ thuật 2D', ['door-room2', 'door-room3'])}
 
             {/* 6. CỬA 3 */}
-            {renderAdminDoor('door-room3', 'gallery-ceramics', 'Cửa số 03: Phòng 02 ↔ Phòng 03')}
+            {renderAdminDoor('door-room3', 'gallery-ceramics', `Cửa số 03: Phòng 02 ↔ ${ROOM_THREE_DISPLAY_NAME}`)}
 
             {/* 7. PHÒNG 3 */}
-            {renderAdminRoom('gallery-ceramics', 'Phòng 03: Gốm Sứ Hội Nhập', 'Các tác phẩm gốm sứ tinh xảo và câu chuyện làng nghề', ['door-room3', 'door-room4'])}
+            {renderAdminRoom('gallery-ceramics', ROOM_THREE_DISPLAY_NAME, 'PARIS · 1919 — Khôi phục Bản Yêu sách của nhân dân An Nam', ['door-room3', 'door-room4'])}
 
             {/* 8. CỬA 4 */}
-            {renderAdminDoor('door-room4', 'gallery-market-economy', 'Cửa số 04: Phòng 03 ↔ Phòng 04')}
+            {renderAdminDoor('door-room4', 'gallery-market-economy', `Cửa số 04: ${ROOM_THREE_DISPLAY_NAME} ↔ Phòng 04`)}
 
             {/* 9. PHÒNG 4 */}
             {renderAdminRoom('gallery-market-economy', 'Phòng 04: Liên Xô — Quảng Châu', 'Hành trình Nguyễn Ái Quốc từ Liên Xô đến Quảng Châu (1923-1927)', ['door-room4'])}
