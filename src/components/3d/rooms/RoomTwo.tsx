@@ -111,7 +111,16 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
   customSettings,
   isVisible = true,
 }) => {
-  const { nickname, sittingPosition, otherUsers, roomTwoDocOpen } = useMuseum();
+  const {
+    activeGallery,
+    nickname,
+    sittingPosition,
+    otherUsers,
+    roomTwoDocOpen,
+  } = useMuseum();
+
+  const ceilingHeight =
+    (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
 
   const getSittingUserNickname = (chairX: number, chairZ: number) => {
     if (
@@ -443,7 +452,10 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
       ═══════════════════════════════════════════════════════════════════ */}
       {[-12, -6, 0, 6, 12].map((z) =>
         [-8, 2].map((x) => (
-          <RedLantern key={`lantern-${z}-${x}`} position={[x, 4.8, z]} />
+          <RedLantern
+            key={`lantern-${z}-${x}`}
+            position={[x, ceilingHeight - 0.3, z]}
+          />
         ))
       )}
 

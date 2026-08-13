@@ -296,7 +296,7 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
 
         {/* 6. HỆ THỐNG ĐÈN CHÙM / ĐÈN RỌI HÀNH LANG - MESHES ONLY */}
         {[-roomLength * 0.4, -roomLength * 0.2, 0, roomLength * 0.2, roomLength * 0.4].map((zPos, idx) => (
-          <group key={`hall-light-mesh-${idx}`} position={[0, roomHeight - 1.0, zPos]}>
+          <group key={`hall-light-mesh-${idx}`} position={[0, roomHeight - 0.26, zPos]}>
             <mesh>
               <cylinderGeometry args={[0.15, 0.15, 0.1, 12]} />
               <meshStandardMaterial color="#334155" metalness={0.8} />
