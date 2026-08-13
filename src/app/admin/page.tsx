@@ -208,15 +208,20 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleStartRoomOneCountdown = () => {
+  const handleStartRoomOne = () => {
     if (!adminSocket) return;
-    if (window.confirm('Bắt đầu đếm ngược 7 giây cho tất cả người chơi trong Phòng 1?')) {
+    if (window.confirm('Bắt đầu Phòng 1? Trò chơi sẽ bắt đầu sau 5 giây đếm ngược.')) {
       adminSocket.emit('admin:start-room1-countdown');
     }
   };
 
+  const roomOnePlayersInRoom = roomOnePlayers.filter(
+    (player) => player.galleryId === 'gallery-subsidy'
+  );
   const canStartRoomOne =
-    roomOnePlayers.length > 0 && roomOnePlayers.every((p) => p.ready);
+    roomStates['gallery-subsidy']?.status === 'waiting' &&
+    roomOnePlayersInRoom.length > 0 &&
+    roomOnePlayersInRoom.every((player) => player.ready);
 
   const canStartRoomTwo =
     roomTwoPlayers.length > 0 && roomTwoPlayers.every((p) => p.ready);
@@ -510,7 +515,7 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       type="button"
-                      onClick={handleStartRoomOneCountdown}
+                      onClick={handleStartRoomOne}
                       disabled={!canStartRoomOne}
                       className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
                         canStartRoomOne
@@ -519,7 +524,7 @@ export default function AdminDashboard() {
                       }`}
                     >
                       <Clock size={12} />
-                      Bắt đầu đếm ngược (7s)
+                      Bắt đầu phòng
                     </button>
                     <button
                       type="button"

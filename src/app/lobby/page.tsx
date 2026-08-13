@@ -721,12 +721,6 @@ const LobbyPlayer: React.FC<{
         }
 
         // 6. Bàn lọ hoa trang trí (mỗi bên 3 bàn => Global Z = 15.0, 31.0, 47.0)
-        const dxVideoPedestal = x;
-        const dzVideoPedestal = z - 31.0;
-        if (Math.sqrt(dxVideoPedestal * dxVideoPedestal + dzVideoPedestal * dzVideoPedestal) < 1.7) {
-          return true;
-        }
-
         const decorTables = [
           { x: -7.2, z: 15.0 },
           { x: -7.2, z: 31.0 },

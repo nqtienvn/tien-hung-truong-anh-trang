@@ -165,10 +165,14 @@ const updateRoomOneReadyStatus = () => {
   if (totalPlayers === 0) {
     // Reset về waiting nếu không còn ai
     roomOneState = 'waiting';
+    roomOneStartTimestamp = null;
+    roomStates['gallery-subsidy'].status = 'waiting';
+    roomStates['gallery-subsidy'].startTimestamp = null;
     if (roomOneCountdownTimer) {
       clearTimeout(roomOneCountdownTimer);
       roomOneCountdownTimer = null;
     }
+    io.emit('room-states', roomStates);
     return;
   }
 
@@ -186,6 +190,7 @@ const broadcastRoomOnePlayers = () => {
       return {
         socketId: u.id,
         nickname: u.nickname,
+        galleryId: u.galleryId,
         ready: !!u.room1Ready,
         completed: !!u.room1Completed,
         cluesCollectedCount: u.cluesCollectedCount || 0,
@@ -684,19 +689,21 @@ io.on('connection', (socket) => {
       roomOneState = 'countdown';
       roomStates['gallery-subsidy'].status = 'countdown';
       roomStates['gallery-subsidy'].startTimestamp = null;
-      io.to('museum-unified').emit('room1:countdown-start', { duration: 7 });
-      console.log(`[ROOM-1] Bắt đầu đếm ngược 7 giây cho tất cả người chơi theo lệnh Admin.`);
+      io.emit('room-states', roomStates);
+      io.to('museum-unified').emit('room1:countdown-start', { duration: 5 });
+      console.log(`[ROOM-1] Bắt đầu đếm ngược 5 giây cho tất cả người chơi theo lệnh Admin.`);
 
       roomOneCountdownTimer = setTimeout(() => {
         roomOneState = 'started';
         roomOneStartTimestamp = Date.now();
         roomStates['gallery-subsidy'].status = 'playing';
         roomStates['gallery-subsidy'].startTimestamp = roomOneStartTimestamp;
+        io.emit('room-states', roomStates);
         io.to('museum-unified').emit('room1:start-game', { roomOneStartTimestamp });
         io.to('museum-unified').emit('room:start-game', { roomId: 'gallery-subsidy', startTimestamp: roomOneStartTimestamp });
         console.log(`[ROOM-1] Trò chơi đã bắt đầu theo lệnh Admin. Start time: ${roomOneStartTimestamp}`);
         roomOneCountdownTimer = null;
-      }, 7000);
+      }, 5000);
     }
   });
 
@@ -838,6 +845,7 @@ io.on('connection', (socket) => {
       roomOneState = 'waiting';
       roomStates['gallery-subsidy'].status = 'waiting';
       roomStates['gallery-subsidy'].startTimestamp = null;
+      io.emit('room-states', roomStates);
       io.to('museum-unified').emit('room1:state-sync', { roomOneState, roomOneStartTimestamp: null });
     }
   });
@@ -953,6 +961,7 @@ io.on('connection', (socket) => {
       roomOneState = 'waiting';
       roomStates['gallery-subsidy'].status = 'waiting';
       roomStates['gallery-subsidy'].startTimestamp = null;
+      io.emit('room-states', roomStates);
       io.to('museum-unified').emit('room1:state-sync', { roomOneState, roomOneStartTimestamp: null });
     }
   });
@@ -1048,6 +1057,7 @@ io.on('connection', (socket) => {
 
     roomStates[galleryId].status = 'playing';
     roomStates[galleryId].startTimestamp = Date.now();
+    io.emit('room-states', roomStates);
     io.to('museum-unified').emit('room:start-game', { roomId: galleryId, startTimestamp: roomStates[galleryId].startTimestamp });
     broadcastGenericRoomPlayers(galleryId);
     broadcastOverallResults();
@@ -1061,6 +1071,7 @@ io.on('connection', (socket) => {
     const startedAt = roomStates[galleryId]?.startTimestamp;
     const elapsed = startedAt ? Math.max(0, Math.floor((Date.now() - startedAt) / 1000)) : 0;
     roomStates[galleryId].status = 'ended';
+    io.emit('room-states', roomStates);
 
     getPlayersInGallery(galleryId).forEach(u => {
       ensureResultTracking(u);
