@@ -69,54 +69,54 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-paintings': {
-    headerTitle: 'PHÒNG 02 • PHÒNG ĐỔI MỚI',
-    welcomeTitle: 'Chào mừng đến Phòng Đổi Mới!',
+    headerTitle: 'PHÒNG 02 • PHÒNG HỘI NGHỊ',
+    welcomeTitle: 'Chào mừng đến Phòng Hội Nghị!',
     introText: (
       <>
         <span className="italic">Chủ đề: </span>
-        <strong>Đại hội Đảng lần thứ VI.</strong>
-        <span className="italic"> Tháng 12 năm 1986. Đất nước đang đứng trước nhiều khó khăn về kinh tế và đời sống. Bạn là thành viên của một nhóm đại biểu tham dự Đại hội VI. Trước khi đưa ra quyết định quan trọng, nhiệm vụ của các bạn là phân tích tình hình đất nước và đưa ra đề xuất phát triển kinh tế.</span>
+        <strong>Hội nghị thành lập Đảng Cộng sản Việt Nam.</strong>
+        <span className="italic"> Đầu năm 1930 tại Cửu Long (Hồng Kông), Lãnh tụ Nguyễn Ái Quốc đã chủ trì Hội nghị hợp nhất các tổ chức cộng sản, thành lập Đảng Cộng sản Việt Nam. Bạn là đại biểu tham dự sự kiện lịch sử này. Nhiệm vụ của bạn là lắng nghe bài phát biểu và hoàn thành thử thách sắp xếp các mốc lịch sử.</span>
       </>
     ),
     steps: [
       {
         icon: <Search size={28} className="text-amber-600" />,
         title: '① Chọn ghế đại biểu',
-        desc: 'Di chuyển đến khu vực bàn ghế đại biểu họp trong hội trường và chọn một ghế trống bất kỳ.',
+        desc: 'Di chuyển đến khu vực hàng ghế trong hội trường và chọn một vị trí ngồi bất kỳ.',
       },
       {
         icon: <FileCheck size={28} className="text-amber-600" />,
         title: '② Ngồi vào vị trí',
-        desc: 'Khi đứng gần ghế đại biểu, nhấn phím F để ngồi xuống chuẩn bị tham dự phiên họp.',
+        desc: 'Khi đứng gần ghế đại biểu, nhấn phím F để ngồi xuống tham dự hội nghị.',
       },
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
-        title: '③ Mở tài liệu phiên họp',
-        desc: 'Nhấn phím E khi đang ngồi để mở màn hình báo cáo tài liệu họp trước mặt bạn.',
+        title: '③ Mở tài liệu lịch sử',
+        desc: 'Nhấn phím E khi đang ngồi để mở màn hình tài liệu phiên họp trước mặt bạn.',
       },
       {
         icon: <Sparkles size={28} className="text-amber-600" />,
-        title: '④ Đánh giá & Kiến nghị',
-        desc: 'Khi admin bắt đầu phiên thứ nhất, nghiên cứu báo cáo và kéo thanh đánh giá mức độ nghiêm trọng từ 0 đến 100 để gửi biểu quyết.',
+        title: '④ Sắp xếp mốc lịch sử',
+        desc: 'Nghiên cứu các sự kiện lịch sử trọng đại của Hội nghị 3/2/1930 và kéo-thả để sắp xếp đúng thứ tự thời gian.',
       },
     ],
     summary: (
       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
         <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">📝</span>
-          <span>Phân tích tình hình kinh tế</span>
+          <span className="text-amber-600 font-bold shrink-0">📜</span>
+          <span>Hội nghị thành lập Đảng 3/2/1930</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🪑</span>
           <span>Ấn F để ngồi, ấn E mở tài liệu</span>
         </div>
         <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">📊</span>
-          <span>Đánh giá khủng hoảng 0 - 100</span>
+          <span className="text-amber-600 font-bold shrink-0">📅</span>
+          <span>Sắp xếp 8 mốc sự kiện lịch sử</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🏆</span>
-          <span>Gửi biểu quyết để nhận điểm</span>
+          <span>Hoàn thành nhiệm vụ đại biểu</span>
         </div>
       </div>
     ),
