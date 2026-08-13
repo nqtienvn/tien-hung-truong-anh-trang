@@ -1,6 +1,76 @@
 import React from 'react';
 import * as THREE from 'three';
+import { useTexture } from '@react-three/drei';
 import { useMuseum } from '@/context/MuseumContext';
+
+const LOBBY_ARTWORK_TEXTURES = [
+  '/images/lobby/ho-chi-minh-journey.png',
+  '/images/lobby/van-ba-latouche-treville.png',
+];
+const LOBBY_ARTWORK_WIDTH = 6.88;
+const LOBBY_ARTWORK_HEIGHT = 3.88;
+const LOBBY_ARTWORK_ASPECT_RATIO = LOBBY_ARTWORK_WIDTH / LOBBY_ARTWORK_HEIGHT;
+
+interface FramedLobbyArtworkProps {
+  positionX: number;
+  sourceAspectRatio: number;
+  texture: THREE.Texture;
+}
+
+const FramedLobbyArtwork: React.FC<FramedLobbyArtworkProps> = ({
+  positionX,
+  sourceAspectRatio,
+  texture,
+}) => {
+  const fittedTexture = React.useMemo(() => {
+    const clone = texture.clone();
+    clone.wrapS = THREE.ClampToEdgeWrapping;
+    clone.wrapT = THREE.ClampToEdgeWrapping;
+
+    // CSS `object-fit: cover` equivalent: crop centrally without stretching.
+    if (sourceAspectRatio > LOBBY_ARTWORK_ASPECT_RATIO) {
+      const visibleWidth = LOBBY_ARTWORK_ASPECT_RATIO / sourceAspectRatio;
+      clone.repeat.set(visibleWidth, 1);
+      clone.offset.set((1 - visibleWidth) / 2, 0);
+    } else {
+      const visibleHeight = sourceAspectRatio / LOBBY_ARTWORK_ASPECT_RATIO;
+      clone.repeat.set(1, visibleHeight);
+      clone.offset.set(0, (1 - visibleHeight) / 2);
+    }
+
+    clone.needsUpdate = true;
+    return clone;
+  }, [sourceAspectRatio, texture]);
+
+  React.useEffect(() => () => fittedTexture.dispose(), [fittedTexture]);
+
+  return (
+    <group position={[positionX, 6.8, 7.82]} rotation={[0, Math.PI, 0]}>
+      <mesh>
+        <boxGeometry args={[7.2, 4.2, 0.12]} />
+        <meshStandardMaterial color="#3b2415" roughness={0.58} />
+      </mesh>
+      <mesh position={[0, 0, 0.075]}>
+        <planeGeometry args={[LOBBY_ARTWORK_WIDTH, LOBBY_ARTWORK_HEIGHT]} />
+        <meshBasicMaterial map={fittedTexture} toneMapped={false} />
+      </mesh>
+
+      {/* Raised dark-wood rails make the former lattice openings read as picture frames. */}
+      {[-2.05, 2.05].map((y) => (
+        <mesh key={`artwork-horizontal-rail-${y}`} position={[0, y, 0.12]}>
+          <boxGeometry args={[7.38, 0.18, 0.16]} />
+          <meshStandardMaterial color="#24150d" roughness={0.42} metalness={0.08} />
+        </mesh>
+      ))}
+      {[-3.6, 3.6].map((x) => (
+        <mesh key={`artwork-vertical-rail-${x}`} position={[x, 0, 0.12]}>
+          <boxGeometry args={[0.18, 4.12, 0.16]} />
+          <meshStandardMaterial color="#24150d" roughness={0.42} metalness={0.08} />
+        </mesh>
+      ))}
+    </group>
+  );
+};
 
 /**
  * MuseumLobby - Không gian Sảnh Bảo tàng 3D
@@ -11,6 +81,16 @@ import { useMuseum } from '@/context/MuseumContext';
  */
 export const MuseumLobby: React.FC = () => {
   const { settings, currentRoom } = useMuseum();
+  const [hoChiMinhJourneyTexture, vanBaTexture] = useTexture(LOBBY_ARTWORK_TEXTURES);
+
+  React.useEffect(() => {
+    [hoChiMinhJourneyTexture, vanBaTexture].forEach((texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = 8;
+      texture.needsUpdate = true;
+    });
+  }, [hoChiMinhJourneyTexture, vanBaTexture]);
+
   const isLobbyLightActive = currentRoom === 'lobby' || currentRoom === 'gallery-subsidy';
   const W = 30;   // Chiều rộng (trục X)
   const L = 18;   // Chiều dài rút ngắn thành 18m để không đè lên Room 1 (Z=8)
@@ -82,44 +162,17 @@ export const MuseumLobby: React.FC = () => {
         <meshStandardMaterial color={sandstone} roughness={0.7} />
       </mesh>
 
-      {/* Hai hốc lõm trang trí tường sau đối xứng ở hai bên (lattice panels) */}
-      {/* Hốc trái */}
-      <mesh position={[-9.5, H * 0.6, 7.82]}>
-        <boxGeometry args={[7.0, 4.0, 0.02]} />
-        <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
-      </mesh>
-      {/* Lưới trang trí hốc trái */}
-      {Array.from({ length: 9 }).map((_, i) => (
-          <mesh key={`wall-lattice-l-h-${i}`} position={[-9.5, 4.8 + i * 0.5, 7.81]}>
-          <boxGeometry args={[7.0, 0.03, 0.03]} />
-          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
-        </mesh>
-      ))}
-      {Array.from({ length: 15 }).map((_, i) => (
-          <mesh key={`wall-lattice-l-v-${i}`} position={[-13.0 + i * 0.5, 6.8, 7.81]}>
-          <boxGeometry args={[0.03, 4.0, 0.03]} />
-          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
-        </mesh>
-      ))}
-
-      {/* Hốc phải */}
-      <mesh position={[9.5, H * 0.6, 7.82]}>
-        <boxGeometry args={[7.0, 4.0, 0.02]} />
-        <meshStandardMaterial color={sandstoneAlt} roughness={0.6} />
-      </mesh>
-      {/* Lưới trang trí hốc phải */}
-      {Array.from({ length: 9 }).map((_, i) => (
-          <mesh key={`wall-lattice-r-h-${i}`} position={[9.5, 4.8 + i * 0.5, 7.81]}>
-          <boxGeometry args={[7.0, 0.03, 0.03]} />
-          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
-        </mesh>
-      ))}
-      {Array.from({ length: 15 }).map((_, i) => (
-          <mesh key={`wall-lattice-r-v-${i}`} position={[6.0 + i * 0.5, 6.8, 7.81]}>
-          <boxGeometry args={[0.03, 4.0, 0.03]} />
-          <meshStandardMaterial color={sandstoneDark} roughness={0.5} />
-        </mesh>
-      ))}
+      {/* Hai tranh lịch sử lấp đúng hai khung trống ở tường sau. */}
+      <FramedLobbyArtwork
+        positionX={-9.5}
+        texture={hoChiMinhJourneyTexture}
+        sourceAspectRatio={1600 / 1125}
+      />
+      <FramedLobbyArtwork
+        positionX={9.5}
+        texture={vanBaTexture}
+        sourceAspectRatio={510 / 287}
+      />
 
       {/* --- Tường trước (Z = -10) - Tường có cổng vào --- */}
       {/* Phần tường trái */}
