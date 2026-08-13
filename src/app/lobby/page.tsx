@@ -14,7 +14,6 @@ import { ArrowLeft, AlertTriangle, Settings } from 'lucide-react';
 import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
-import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomOneSoundtrack } from '@/components/ui/RoomOneSoundtrack';
 import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
 import { RoomThreeExhibitModal } from '@/components/ui/RoomThreeExhibitModal';
@@ -32,7 +31,6 @@ import roomFourSpatial from '@/lib/roomFourSpatial.json';
 import roomFiveSpatial from '@/lib/roomFiveSpatial.json';
 import {
   ROOM_THREE_DISPLAY_NAME,
-  ROOM_THREE_TRANSITION,
 } from '@/lib/roomThreeNarrative';
 import {
   ROOM_THREE_FRAGMENTS,
@@ -52,6 +50,21 @@ import { createTeleportMovePayload } from '@/lib/teleportSync';
 const LOBBY_W = 30;
 const LOBBY_L = 20;
 const LOBBY_H = 12;
+
+const MU_RED = '#da291c';
+const MU_BLACK = '#101114';
+const MU_GOLD = '#f5c542';
+const MU_BADGE_RED = '#b51922';
+
+// A reusable, texture-free shirt panel keeps the moving lobby avatar lightweight.
+const MU_CHEST_CHEVRON = new THREE.Shape();
+MU_CHEST_CHEVRON.moveTo(-0.165, 0.09);
+MU_CHEST_CHEVRON.lineTo(0, -0.105);
+MU_CHEST_CHEVRON.lineTo(0.165, 0.09);
+MU_CHEST_CHEVRON.lineTo(0.165, 0.035);
+MU_CHEST_CHEVRON.lineTo(0, -0.16);
+MU_CHEST_CHEVRON.lineTo(-0.165, 0.035);
+MU_CHEST_CHEVRON.closePath();
 
 // This is intentionally identical to the reference light rig on /gallery/[id].
 // It is enabled only while Room 4 is active so the connected journey keeps the
@@ -104,6 +117,14 @@ const DOOR_CONFIGS = [
     label: 'Phòng 05: Phòng Hội Nghị',
   },
 ];
+
+const TRANSITION_ROOM_TITLES: Record<string, string> = {
+  'gallery-subsidy': 'Phòng 1: DẤU CHÂN TÌM ĐƯỜNG',
+  'gallery-three': 'Phòng 2: BẾN CẢNG RA KHƠI',
+  'gallery-ceramics': 'Phòng 3: TIẾNG NÓI TỪ AN NAM',
+  'gallery-market-economy': 'Phòng 4: NHỮNG ĐIỂM DỪNG CÁCH MẠNG',
+  'gallery-paintings': 'Phòng 5: HỘI TỤ TẠI HƯƠNG CẢNG',
+};
 
 // Cấu hình các cổng cửa dịch chuyển tương tác khi đứng gần và nhấn E (Tách phòng độc lập)
 const INTERACTIVE_DOORS = [
@@ -571,7 +592,7 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomThreeCollectedFragments } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomThreeCollectedFragments } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -1051,7 +1072,7 @@ const LobbyPlayer: React.FC<{
       }
       return;
     }
-    if (selectedExhibit || transitionLoading || roomFourInteractionOpen || roomThreeVideoOpen || roomOneLocked || welcomeModalOpen) return;
+    if (selectedExhibit || transitionLoading || roomFourInteractionOpen || roomThreeVideoOpen || roomOneLocked) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -1353,7 +1374,11 @@ const LobbyPlayer: React.FC<{
           </mesh>
           <mesh position={[0, 0.2, 0]}>
             <cylinderGeometry args={[0.07, 0.18, 0.5, 16]} />
-            <meshStandardMaterial {...skinProps} />
+            <meshStandardMaterial color={MU_RED} roughness={0.55} metalness={0} />
+          </mesh>
+          <mesh position={[0, 0.47, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.11, 0.022, 8, 16]} />
+            <meshStandardMaterial color={MU_BLACK} roughness={0.5} metalness={0} />
           </mesh>
           <mesh position={[0, -0.1, 0]}>
             <cylinderGeometry args={[0.22, 0.22, 0.1, 16]} />
@@ -1382,18 +1407,39 @@ const LobbyPlayer: React.FC<{
           )}
           <mesh position={[0, 0.28, 0]}>
             <capsuleGeometry args={[TORSO_R, TORSO_H, 10, 20]} />
-            <meshStandardMaterial {...skinProps} />
+            <meshStandardMaterial color={MU_RED} roughness={0.55} metalness={0} />
+          </mesh>
+          {/* Áo MU: cổ đen, chữ V đen ở cả hai mặt và huy hiệu nhỏ phía trước. */}
+          <mesh position={[0, 0.49, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[0.115, 0.022, 8, 16]} />
+            <meshStandardMaterial color={MU_BLACK} roughness={0.5} metalness={0} />
+          </mesh>
+          <mesh position={[0, 0.405, TORSO_R + 0.006]}>
+            <shapeGeometry args={[MU_CHEST_CHEVRON]} />
+            <meshStandardMaterial color={MU_BLACK} roughness={0.5} metalness={0} />
+          </mesh>
+          <mesh position={[0, 0.405, -TORSO_R - 0.006]} rotation={[0, Math.PI, 0]}>
+            <shapeGeometry args={[MU_CHEST_CHEVRON]} />
+            <meshStandardMaterial color={MU_BLACK} roughness={0.5} metalness={0} />
+          </mesh>
+          <mesh position={[0.092, 0.405, TORSO_R + 0.01]}>
+            <circleGeometry args={[0.035, 16]} />
+            <meshStandardMaterial color={MU_GOLD} roughness={0.45} metalness={0.05} />
+          </mesh>
+          <mesh position={[0.092, 0.405, TORSO_R + 0.014]}>
+            <circleGeometry args={[0.023, 16]} />
+            <meshStandardMaterial color={MU_BADGE_RED} roughness={0.5} metalness={0} />
           </mesh>
           <group ref={leftArmRef} position={[-ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
             <mesh position={[0, ARM_MESH_Y, 0]}>
               <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
-              <meshStandardMaterial {...skinProps} />
+              <meshStandardMaterial color={MU_RED} roughness={0.55} metalness={0} />
             </mesh>
           </group>
           <group ref={rightArmRef} position={[ARM_PIVOT_X, ARM_PIVOT_Y, 0]}>
             <mesh position={[0, ARM_MESH_Y, 0]}>
               <capsuleGeometry args={[ARM_R, ARM_LEN, 8, 16]} />
-              <meshStandardMaterial {...skinProps} />
+              <meshStandardMaterial color={MU_RED} roughness={0.55} metalness={0} />
             </mesh>
           </group>
           <group ref={leftLegRef} position={[-LEG_PIVOT_X, LEG_PIVOT_Y, 0]}>
@@ -1732,7 +1778,7 @@ export default function LobbyPage() {
                 {language === 'vi' ? 'Sảnh bảo tàng 3D' : '3D Museum Lobby'}
               </span>
               <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                {language === 'vi' ? 'Bảo tàng Tiến hóa Kinh tế' : 'Museum of Economic Evolution'}
+                {language === 'vi' ? 'Bảo tàng Theo Dấu Chân Người' : 'Museum of Economic Evolution'}
               </h2>
               <p className="text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xs mx-auto">
                 {language === 'vi'
@@ -1921,9 +1967,6 @@ export default function LobbyPage() {
 
        <RoomOneSoundtrack />
 
-       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
-      <RoomWelcomeModal />
-
       <RoomThreeVideoModal
         open={roomThreeVideoOpen}
         onClose={() => setRoomThreeVideoOpen(false)}
@@ -2012,31 +2055,14 @@ export default function LobbyPage() {
             </div>
 
             <div className="space-y-3">
-              {transitionRoomId === 'gallery-ceramics' ? (
-                <>
-                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
-                  </span>
-                  <p className="text-amber-400 text-xs font-black tracking-[0.28em] mt-2">
-                    {ROOM_THREE_TRANSITION.roomName}
-                  </p>
-                  <p className="text-cyan-300 text-sm font-bold tracking-[0.22em]">
-                    {ROOM_THREE_TRANSITION.period}
-                  </p>
-                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                    {ROOM_THREE_TRANSITION.description}
-                  </h2>
-                </>
-              ) : (
-                <>
-                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
-                  </span>
-                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                    {transitionRoomName}
-                  </h2>
-                </>
-              )}
+              <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+              </span>
+              <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                {language === 'vi' && transitionRoomId
+                  ? TRANSITION_ROOM_TITLES[transitionRoomId] ?? transitionRoomName
+                  : transitionRoomName}
+              </h2>
               <p className="text-slate-400 text-xs font-semibold italic animate-pulse">
                 {language === 'vi'
                   ? 'Đang chuẩn bị không gian triển lãm 3D...'

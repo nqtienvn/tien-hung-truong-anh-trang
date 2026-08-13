@@ -9,7 +9,6 @@ export interface RoomThreeFragment {
 }
 
 export const ROOM_THREE_VIDEO_URL = '/videos/room-three-pillar.mp4';
-export const ROOM_THREE_WELCOME_QUOTE = '“Một dân tộc muốn cất lên tiếng nói của mình.”';
 export const ROOM_THREE_VIDEO_PROMPT = 'Xem tư liệu: Bản Yêu sách 1919';
 export const ROOM_THREE_VIDEO_FOLLOW_UP =
   'Bạn đã nắm được bối cảnh lịch sử. Hãy tìm 8 mảnh yêu sách đang thất lạc trong phòng và mang chúng đến bàn làm việc để khôi phục văn kiện.';

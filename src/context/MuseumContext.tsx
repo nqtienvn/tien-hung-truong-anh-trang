@@ -192,9 +192,6 @@ interface MuseumContextType {
   roomTwoScore4: number | null;
   setRoomTwoScore4: React.Dispatch<React.SetStateAction<number | null>>;
 
-  // --- Welcome Modal Status ---
-  welcomeModalOpen: boolean;
-  setWelcomeModalOpen: (open: boolean) => void;
 }
 
 export interface GameEvent {
@@ -265,8 +262,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomTwoScore3, setRoomTwoScore3] = useState<number | null>(null);
   const [roomTwoScore4, setRoomTwoScore4] = useState<number | null>(null);
 
-  // --- Welcome Modal Status ---
-  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [teleportTarget, setTeleportTarget] = useState<{ x: number; y: number; z: number } | null>(null);
   const [miniGameOpen, setMiniGameOpen] = useState<boolean>(false);
   const [roomFourInteractionOpen, setRoomFourInteractionOpen] = useState<boolean>(false);
@@ -1271,9 +1266,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         roomTwoScore4,
         setRoomTwoScore4,
 
-        // --- Welcome Modal Status ---
-        welcomeModalOpen,
-        setWelcomeModalOpen,
       }}
     >
       {children}

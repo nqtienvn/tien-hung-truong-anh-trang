@@ -13,7 +13,6 @@ export const RoomOneSoundtrack: React.FC = () => {
     currentRoom,
     activeGallery,
     selectedExhibit,
-    welcomeModalOpen,
     audioPlaying,
   } = useMuseum();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -21,7 +20,7 @@ export const RoomOneSoundtrack: React.FC = () => {
   const [enabled, setEnabled] = useState(true);
 
   const isInRoomOne = currentRoom === 'gallery-subsidy' || activeGallery?.id === 'gallery-subsidy';
-  const shouldDuck = Boolean(selectedExhibit) || welcomeModalOpen || audioPlaying;
+  const shouldDuck = Boolean(selectedExhibit) || audioPlaying;
   const targetVolume = !enabled || !isInRoomOne
     ? 0
     : shouldDuck

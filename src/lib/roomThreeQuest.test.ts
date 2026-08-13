@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ROOM_THREE_FRAGMENTS,
-  ROOM_THREE_WELCOME_QUOTE,
-} from './roomThreeQuest';
+import { ROOM_THREE_FRAGMENTS } from './roomThreeQuest';
 
 describe('Room Three quest configuration', () => {
   it('defines eight fragments in reconstruction order', () => {
@@ -18,9 +15,5 @@ describe('Room Three quest configuration', () => {
       expect(fragment.position).toHaveLength(3);
       expect(fragment.description.length).toBeGreaterThan(0);
     }
-  });
-
-  it('keeps the approved Room Three welcome quote', () => {
-    expect(ROOM_THREE_WELCOME_QUOTE).toBe('“Một dân tộc muốn cất lên tiếng nói của mình.”');
   });
 });
