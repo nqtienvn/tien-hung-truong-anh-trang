@@ -16,7 +16,6 @@ import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomOneSoundtrack } from '@/components/ui/RoomOneSoundtrack';
-import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
 import { RoomThreeExhibitModal } from '@/components/ui/RoomThreeExhibitModal';
 import { RoomThreeQuestHud } from '@/components/ui/RoomThreeQuestHud';
@@ -265,19 +264,12 @@ const LobbyCameraController: React.FC = () => {
     doorStates,
     activeGallery,
     sittingPosition,
-    roomTwoDocOpen,
     roomFourInteractionOpen,
   } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
   const isZooming = useRef(false);
-  const roomTwoDocOpenRef = useRef(false);
-
-  useEffect(() => {
-    roomTwoDocOpenRef.current = !!roomTwoDocOpen;
-  }, [roomTwoDocOpen]);
-
   const targetCamPos = useRef(new THREE.Vector3()).current;
   const targetLookAt = useRef(new THREE.Vector3()).current;
 
@@ -337,7 +329,7 @@ const LobbyCameraController: React.FC = () => {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (roomTwoDocOpenRef.current || roomFourInteractionOpen) return;
+      if (roomFourInteractionOpen) return;
       const isLeftButtonHeld = (e.buttons & 1) === 1;
       if (!isLeftButtonHeld || !isInsideCanvas(e)) {
         if (!isLeftButtonHeld) isMouseDown.current = false;
@@ -400,16 +392,10 @@ const LobbyCameraController: React.FC = () => {
       const bodyYaw = sittingPosition.rotationY;
       const forwardTheta = bodyYaw + Math.PI; // Bù 180 độ vì camera hướng ngược chiều với mặt trước của body mặc định
       
-      if (roomTwoDocOpenRef.current) {
-        // Khóa hướng nhìn thẳng về phía trước khi đang mở màn hình tài liệu
-        theta.current = forwardTheta;
-        phi.current = Math.PI / 2;
-      } else {
-        let diff = theta.current - forwardTheta;
-        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-        const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
-        theta.current = forwardTheta + clampedDiff;
-      }
+      let diff = theta.current - forwardTheta;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      const clampedDiff = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, diff));
+      theta.current = forwardTheta + clampedDiff;
 
       // Dịch camera ra phía trước mặt 0.35m để tránh che khuất, và nâng cao thêm 0.08m
       sitOffsetX = -0.35 * Math.sin(forwardTheta);
@@ -955,7 +941,7 @@ const LobbyPlayer: React.FC<{
         e.preventDefault();
         if (roomThreeOverlayOpen || roomThreeVideoOpen) return;
         if (sittingPositionRef.current) {
-          // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 5
+          // Chỉ cho phép bật/tắt video trên banner khi đang ngồi ở phòng 5.
           if (playerRef.current && playerRef.current.position.z > 104.0 && playerRef.current.position.z <= 150.0) {
             setRoomTwoDocOpen((prev: boolean) => !prev);
           }
@@ -997,6 +983,7 @@ const LobbyPlayer: React.FC<{
           // Tính toán độ cao đứng lên dựa trên vị trí bậc thang tại tọa độ exitX
           const exitY = getLobbyGroundY(exitX, exitZ, doorStates) + baseY;
           exitPositionRef.current = { x: exitX, y: exitY, z: exitZ };
+          setRoomTwoDocOpen(false);
           setSittingPosition(null);
         } else if (nearestChairRef.current) {
           // Ngồi xuống ghế: Lấy đúng tọa độ y từ vật thể ghế đã tính độ cao bậc thang
@@ -1937,9 +1924,6 @@ export default function LobbyPage() {
        {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
 
-      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 5 ═══ */}
-      <RoomTwoDocumentModal />
-
       <RoomThreeVideoModal
         open={roomThreeVideoOpen}
         onClose={() => setRoomThreeVideoOpen(false)}
@@ -1988,7 +1972,7 @@ export default function LobbyPage() {
               language === 'vi' ? 'Ấn F để ngồi' : 'Press F to Sit'
             ) : (
               currentRoom === 'gallery-paintings' ? (
-                language === 'vi' ? 'Ấn F để đứng dậy | Ấn E để mở/đóng tài liệu' : 'Press F to Stand Up | Press E to open/close document'
+                language === 'vi' ? 'Ấn F để đứng dậy | Ấn E để xem/dừng video' : 'Press F to Stand Up | Press E to play/stop video'
               ) : (
                 language === 'vi' ? 'Ấn F để đứng dậy | Giữ chuột phải hoặc Z/C để Zoom' : 'Press F to Stand Up | Hold Right Click or Z/C to Zoom'
               )

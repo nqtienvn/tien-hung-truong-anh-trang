@@ -111,7 +111,16 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
   customSettings,
   isVisible = true,
 }) => {
-  const { activeGallery, nickname, sittingPosition, otherUsers } = useMuseum();
+  const {
+    activeGallery,
+    nickname,
+    sittingPosition,
+    otherUsers,
+    roomTwoDocOpen,
+  } = useMuseum();
+
+  const ceilingHeight =
+    (customSettings?.room_height ?? activeGallery?.room_height ?? 6) + 1;
 
   const getSittingUserNickname = (chairX: number, chairZ: number) => {
     if (
@@ -344,95 +353,6 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
           </mesh>
         </group>
 
-        {/* ── NHÂN VẬT BÁC HỒ đứng sau bục, tay giơ lên ── */}
-        <group position={[-0.3, 0.5, -1.5]}>
-          {/* Cơ thể — áo vải thô màu ghi */}
-          <mesh position={[0, 1.05, 0]}>
-            <boxGeometry args={[0.42, 0.82, 0.28]} />
-            <meshStandardMaterial color="#7a7a6e" roughness={0.85} />
-          </mesh>
-          {/* Cổ áo trắng */}
-          <mesh position={[0, 1.42, 0.08]}>
-            <boxGeometry args={[0.2, 0.12, 0.05]} />
-            <meshStandardMaterial color="#e8e8dc" roughness={0.9} />
-          </mesh>
-          {/* Đầu */}
-          <mesh position={[0, 1.72, 0]}>
-            <sphereGeometry args={[0.15, 12, 12]} />
-            <meshStandardMaterial color="#c8a080" roughness={0.8} />
-          </mesh>
-          {/* Tóc */}
-          <mesh position={[0, 1.84, -0.02]}>
-            <sphereGeometry args={[0.11, 10, 10]} />
-            <meshStandardMaterial color="#1a0a00" roughness={0.9} />
-          </mesh>
-          {/* Râu */}
-          <mesh position={[0, 1.62, 0.13]} rotation={[Math.PI / 10, 0, 0]}>
-            <cylinderGeometry args={[0.018, 0.006, 0.16, 6]} />
-            <meshStandardMaterial color="#6e4e28" roughness={0.9} />
-          </mesh>
-
-          {/* Cánh tay trái duỗi lên trời (đang phát biểu) */}
-          <group position={[-0.26, 1.3, 0]} rotation={[0, 0, Math.PI / 4]}>
-            <mesh>
-              <capsuleGeometry args={[0.055, 0.42, 4, 8]} />
-              <meshStandardMaterial color="#7a7a6e" roughness={0.85} />
-            </mesh>
-            {/* Bàn tay */}
-            <mesh position={[0, 0.29, 0]}>
-              <sphereGeometry args={[0.065, 8, 8]} />
-              <meshStandardMaterial color="#c8a080" roughness={0.8} />
-            </mesh>
-          </group>
-
-          {/* Cánh tay phải để xuống */}
-          <group position={[0.26, 1.05, 0]} rotation={[0, 0, -Math.PI / 12]}>
-            <mesh>
-              <capsuleGeometry args={[0.055, 0.35, 4, 8]} />
-              <meshStandardMaterial color="#7a7a6e" roughness={0.85} />
-            </mesh>
-            {/* Bàn tay */}
-            <mesh position={[0, -0.22, 0]}>
-              <sphereGeometry args={[0.065, 8, 8]} />
-              <meshStandardMaterial color="#c8a080" roughness={0.8} />
-            </mesh>
-          </group>
-
-          {/* Chân */}
-          {[-0.1, 0.1].map((x, i) => (
-            <mesh key={i} position={[x, 0.35, 0]}>
-              <boxGeometry args={[0.16, 0.7, 0.2]} />
-              <meshStandardMaterial color="#3a3a2e" roughness={0.85} />
-            </mesh>
-          ))}
-
-          {/* Label tên */}
-          <Html
-            position={[0, 2.05, 0]}
-            center
-            distanceFactor={12}
-            occlude
-            className="select-none pointer-events-none"
-          >
-            <div
-              style={{
-                background: "rgba(139,0,0,0.9)",
-                border: "1px solid #FFD700",
-                borderRadius: "6px",
-                padding: "3px 8px",
-                color: "#FFD700",
-                fontFamily: "serif",
-                fontSize: "11px",
-                fontWeight: "bold",
-                whiteSpace: "nowrap",
-                textAlign: "center",
-              }}
-            >
-              🌟 NGUYỄN ÁI QUỐC
-            </div>
-          </Html>
-        </group>
-
         {/* Bàn chủ tọa bên cạnh bục phát biểu */}
         <group position={[0.3, 0.5, 2.0]} rotation={[0, Math.PI / 2, 0]}>
           <mesh position={[0, 0.36, 0]}>
@@ -474,17 +394,57 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
       <group position={[-11.85, 4.2, 0]} rotation={[0, Math.PI / 2, 0]}>
         {/* Khung màn hình */}
         <mesh>
-          <boxGeometry args={[16.0, 4.8, 0.04]} />
+          <boxGeometry args={[14.4, 4.8, 0.04]} />
           <meshStandardMaterial color="#2e1005" roughness={0.7} />
         </mesh>
-        {/* Nội dung slide */}
+        {/* Banner mặc định; được thay bằng video chỉ trong lúc người chơi xem. */}
         <mesh position={[0, 0, 0.03]}>
-          <planeGeometry args={[15.4, 4.4]} />
+          <planeGeometry args={[13.8, 4.4]} />
           <meshBasicMaterial
             map={slideTexture || undefined}
             color={slideTexture ? "#ffffff" : "#8B0000"}
           />
         </mesh>
+        {roomTwoDocOpen && sittingPosition && (
+          <>
+            <mesh position={[0, 0, 0.05]}>
+              <planeGeometry args={[13.8, 4.4]} />
+              <meshBasicMaterial color="#000000" />
+            </mesh>
+            <Html
+              transform
+              center
+              position={[0, 0, 0.07]}
+              distanceFactor={3.26}
+              className="pointer-events-none select-none"
+              zIndexRange={[20, 0]}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  width: "960px",
+                  height: "540px",
+                  overflow: "hidden",
+                  background: "#000",
+                }}
+              >
+                <iframe
+                  width="960"
+                  height="540"
+                  src="https://www.youtube-nocookie.com/embed/7FtGvLISpIk?autoplay=1&controls=0&cc_load_policy=0&iv_load_policy=3&disablekb=1&fs=0&rel=0&playsinline=1"
+                  title="Video Hội nghị thành lập Đảng Cộng sản Việt Nam"
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  style={{
+                    display: "block",
+                    border: 0,
+                    background: "#000",
+                  }}
+                />
+              </div>
+            </Html>
+          </>
+        )}
       </group>
 
       {/* ═══════════════════════════════════════════════════════════════════
@@ -492,7 +452,10 @@ export const RoomTwo: React.FC<BaseRoomProps> = ({
       ═══════════════════════════════════════════════════════════════════ */}
       {[-12, -6, 0, 6, 12].map((z) =>
         [-8, 2].map((x) => (
-          <RedLantern key={`lantern-${z}-${x}`} position={[x, 4.8, z]} />
+          <RedLantern
+            key={`lantern-${z}-${x}`}
+            position={[x, ceilingHeight - 0.3, z]}
+          />
         ))
       )}
 

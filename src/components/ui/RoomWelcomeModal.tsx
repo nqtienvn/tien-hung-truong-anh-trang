@@ -79,7 +79,7 @@ const GALLERY_CONFIGS: Record<string, {
       <>
         <span className="italic">Chủ đề: </span>
         <strong>Hội nghị thành lập Đảng Cộng sản Việt Nam.</strong>
-        <span className="italic"> Đầu năm 1930 tại Cửu Long (Hồng Kông), Lãnh tụ Nguyễn Ái Quốc đã chủ trì Hội nghị hợp nhất các tổ chức cộng sản, thành lập Đảng Cộng sản Việt Nam. Bạn là đại biểu tham dự sự kiện lịch sử này. Nhiệm vụ của bạn là lắng nghe bài phát biểu và hoàn thành thử thách sắp xếp các mốc lịch sử.</span>
+        <span className="italic"> Đầu năm 1930 tại Cửu Long (Hồng Kông), Nguyễn Ái Quốc đã chủ trì Hội nghị hợp nhất các tổ chức cộng sản, thành lập Đảng Cộng sản Việt Nam. Hãy chọn ghế đại biểu và xem video tư liệu trên màn hình hội nghị.</span>
       </>
     ),
     steps: [
@@ -95,13 +95,13 @@ const GALLERY_CONFIGS: Record<string, {
       },
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
-        title: '③ Mở tài liệu lịch sử',
-        desc: 'Nhấn phím E khi đang ngồi để mở màn hình tài liệu phiên họp trước mặt bạn.',
+        title: '③ Xem video tư liệu',
+        desc: 'Nhấn phím E khi đang ngồi để phát video trên màn hình banner; nhấn E lần nữa để trở về banner cũ.',
       },
       {
         icon: <Sparkles size={28} className="text-amber-600" />,
-        title: '④ Sắp xếp mốc lịch sử',
-        desc: 'Nghiên cứu các sự kiện lịch sử trọng đại của Hội nghị 3/2/1930 và kéo-thả để sắp xếp đúng thứ tự thời gian.',
+        title: '④ Đứng dậy khi xem xong',
+        desc: 'Nhấn phím F để rời ghế; video sẽ tự dừng và màn hình trở về banner hội nghị.',
       },
     ],
     summary: (
@@ -112,15 +112,15 @@ const GALLERY_CONFIGS: Record<string, {
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🪑</span>
-          <span>Ấn F để ngồi, ấn E mở tài liệu</span>
+          <span>Ấn F để ngồi, ấn E xem video</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">📅</span>
-          <span>Sắp xếp 8 mốc sự kiện lịch sử</span>
+          <span>Video tư liệu hiển thị trực tiếp trên màn hình hội nghị</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🏆</span>
-          <span>Hoàn thành nhiệm vụ đại biểu</span>
+          <span>Ấn E lần nữa để trở về banner</span>
         </div>
       </div>
     ),
@@ -212,7 +212,6 @@ export const RoomWelcomeModal: React.FC = () => {
     nickname, 
     socket, 
     roomOneState, 
-    roomTwoSessionState,
     roomOneWaitingPlayers, 
     roomOneTotalPlayers, 
     roomOneCountdownTime,
@@ -260,13 +259,6 @@ export const RoomWelcomeModal: React.FC = () => {
       handleDismiss();
     }
   }, [roomOneState, activeGallery?.id, isWaitingRoomOne]);
-
-  useEffect(() => {
-    if (activeGallery?.id === 'gallery-paintings' && roomTwoSessionState !== 'waiting' && isWaitingRoomOne) {
-      setIsWaitingRoomOne(false);
-      handleDismiss();
-    }
-  }, [roomTwoSessionState, activeGallery?.id, isWaitingRoomOne]);
 
   useEffect(() => {
     if (!socket || !activeGallery?.id) return;
