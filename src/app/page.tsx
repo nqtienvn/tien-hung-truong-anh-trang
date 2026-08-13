@@ -141,7 +141,7 @@ export default function Home() {
               {rooms.map((room) => (
                 <Link
                   key={room.number}
-                  href={`/lobby?room=${room.room}`}
+                  href="/lobby"
                   className="group relative flex min-h-[460px] flex-col overflow-hidden rounded-[10px] border border-[#795033]/25 bg-[#f6ecd9] shadow-[0_6px_16px_rgba(66,39,20,.13)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(66,39,20,.2)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#741e13]"
                   aria-label={`Khám phá phòng ${room.number}: ${room.title}`}
                 >

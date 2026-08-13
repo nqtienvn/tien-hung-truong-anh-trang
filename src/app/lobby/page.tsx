@@ -59,160 +59,163 @@ const LOBBY_W = 30;
 const LOBBY_L = 20;
 const LOBBY_H = 12;
 
-// Cấu hình cửa nối phòng dạng chuỗi tuần tự (Lobby -> Room 1 -> Room 2)
-const DOOR_CONFIGS = [
+// Tuyến tham quan cho khách. Mỗi cổng luôn mở và chỉ cần đứng gần rồi nhấn E.
+// Admin không còn quyết định trạng thái của các cổng này.
+const VISITOR_PORTALS = [
+  // --- SẢNH <-> PHÒNG 1 ---
   {
-    doorId: 'door-room1',
-    targetRoom: 'gallery-subsidy',
-    // Cửa đặt ở tường sau sảnh, tầng 2 (Y=3, Z=8)
+    id: 'lobby-to-room1',
+    fromRoom: 'lobby',
+    toRoom: 'gallery-subsidy',
+    check: (x: number, z: number) => z >= 6.0 && z <= 8.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 10.0] as [number, number, number],
+    promptVi: 'vào Phòng 01: Dấu chân tìm đường',
+    promptEn: 'enter Room 01: Finding the Way',
     position: [0, 3.0, 8.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
     label: 'Phòng 01: Dấu chân tìm đường',
   },
   {
-    doorId: 'door-room2',
-    targetRoom: 'gallery-paintings',
-    // Cửa đặt ở cuối phòng 1 (Y=3, Z=54) nối sang phòng 2
-    position: [0, 3.0, 54.0] as [number, number, number],
-    rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Phòng Đổi Mới',
-  },
-  {
-    doorId: 'door-room3',
-    targetRoom: 'gallery-ceramics',
-    position: [0, 3.0, 100.0] as [number, number, number],
-    rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 03: Phòng Hội Nhập',
-  },
-  {
-    doorId: 'door-room4',
-    targetRoom: 'gallery-market-economy',
-    position: [0, 3.0, 130.0] as [number, number, number],
-    rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 04: Phòng Thị Trường',
-  },
-  {
-    doorId: 'door-room5',
-    targetRoom: 'gallery-three',
-    position: [0, 3.0, 280.0] as [number, number, number],
-    rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 05: Phòng Thành Quả',
-  },
-];
-
-// Cấu hình các cổng cửa dịch chuyển tương tác khi đứng gần và nhấn E (Tách phòng độc lập)
-const INTERACTIVE_DOORS = [
-  // --- LOBBY <-> ROOM 1 ---
-  {
-    id: 'lobby-to-room1',
-    fromRoom: 'lobby',
-    toRoom: 'gallery-subsidy',
-    doorId: 'door-room1',
-    check: (x: number, z: number) => z >= 6.0 && z <= 8.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 10.0] as [number, number, number],
-    promptVi: 'vào Phòng 01: Dấu chân tìm đường',
-    promptEn: 'enter Room 01: Subsidy Room'
-  },
-  {
     id: 'room1-to-lobby',
     fromRoom: 'gallery-subsidy',
     toRoom: 'lobby',
-    doorId: 'door-room1',
     check: (x: number, z: number) => z >= 8.0 && z <= 10.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 0, 6.5] as [number, number, number],
     promptVi: 'quay lại Sảnh chính',
-    promptEn: 'return to Lobby'
+    promptEn: 'return to the Lobby',
+    position: [0, 3.0, 8.0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    label: 'Sảnh chính',
   },
-  // --- ROOM 1 <-> ROOM 2 ---
+  // --- PHÒNG 1 <-> BẾN NHÀ RỒNG ---
   {
-    id: 'room1-to-room2',
+    id: 'room1-to-nha-rong',
     fromRoom: 'gallery-subsidy',
-    toRoom: 'gallery-paintings',
-    doorId: 'door-room2',
+    toRoom: 'gallery-three',
     check: (x: number, z: number) => z >= 52.0 && z <= 54.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 56.0] as [number, number, number],
-    promptVi: 'vào Phòng 02: Phòng Đổi Mới',
-    promptEn: 'enter Room 02: Doi Moi Room'
+    spawnPos: [0, 3.0, 282.0] as [number, number, number],
+    promptVi: 'vào Phòng 02: Bến Nhà Rồng',
+    promptEn: 'enter Room 02: Nha Rong Wharf',
+    position: [0, 3.0, 54.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 02: Bến Nhà Rồng',
   },
   {
-    id: 'room2-to-room1',
-    fromRoom: 'gallery-paintings',
+    id: 'nha-rong-to-room1',
+    fromRoom: 'gallery-three',
     toRoom: 'gallery-subsidy',
-    doorId: 'door-room2',
-    check: (x: number, z: number) => z >= 54.0 && z <= 56.0 && Math.abs(x) < 2.2,
+    check: (x: number, z: number) => z >= 280.0 && z <= 282.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 52.0] as [number, number, number],
     promptVi: 'quay lại Phòng 01',
-    promptEn: 'return to Room 01'
+    promptEn: 'return to Room 01',
+    position: [0, 3.0, 280.0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    label: 'Phòng 01: Dấu chân tìm đường',
   },
-  // --- ROOM 2 <-> ROOM 3 ---
+  // --- BẾN NHÀ RỒNG <-> PHÒNG 3 ---
   {
-    id: 'room2-to-room3',
-    fromRoom: 'gallery-paintings',
+    id: 'nha-rong-to-room3',
+    fromRoom: 'gallery-three',
     toRoom: 'gallery-ceramics',
-    doorId: 'door-room3',
-    check: (x: number, z: number) => z >= 98.0 && z <= 100.0 && Math.abs(x) < 2.2,
+    check: (x: number, z: number) => z >= 326.0 && z <= 328.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 102.0] as [number, number, number],
-    promptVi: 'vào Phòng 03: Phòng Hội Nhập',
-    promptEn: 'enter Room 03: Integration Room'
+    promptVi: 'vào Phòng 03: Tiếng nói từ An Nam',
+    promptEn: 'enter Room 03: Voice from An Nam',
+    position: [0, 3.0, 328.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 03: Tiếng nói từ An Nam',
   },
   {
-    id: 'room3-to-room2',
+    id: 'room3-to-nha-rong',
     fromRoom: 'gallery-ceramics',
-    toRoom: 'gallery-paintings',
-    doorId: 'door-room3',
+    toRoom: 'gallery-three',
     check: (x: number, z: number) => z >= 100.0 && z <= 102.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 98.0] as [number, number, number],
-    promptVi: 'quay lại Phòng 02',
-    promptEn: 'return to Room 02'
+    spawnPos: [0, 3.0, 326.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 02: Bến Nhà Rồng',
+    promptEn: 'return to Room 02: Nha Rong Wharf',
+    position: [0, 3.0, 100.0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    label: 'Phòng 02: Bến Nhà Rồng',
   },
-  // --- ROOM 3 <-> ROOM 4 ---
+  // --- PHÒNG 3 <-> LIÊN XÔ – QUẢNG CHÂU ---
   {
-    id: 'room3-to-room4',
+    id: 'room3-to-lien-xo-quang-chau',
     fromRoom: 'gallery-ceramics',
     toRoom: 'gallery-market-economy',
-    doorId: 'door-room4',
     check: (x: number, z: number) => z >= 128.0 && z <= 130.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 133.0] as [number, number, number],
-    promptVi: 'vào Phòng 04: Phòng Thị Trường',
-    promptEn: 'enter Room 04: Market Economy'
+    promptVi: 'vào Phòng 04: Liên Xô – Quảng Châu',
+    promptEn: 'enter Room 04: Soviet Union – Guangzhou',
+    position: [0, 3.0, 130.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 04: Liên Xô – Quảng Châu',
   },
   {
-    id: 'room4-to-room3',
+    id: 'lien-xo-quang-chau-to-room3',
     fromRoom: 'gallery-market-economy',
     toRoom: 'gallery-ceramics',
-    doorId: 'door-room4',
     check: (x: number, z: number) => z >= 130.0 && z <= 132.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 128.0] as [number, number, number],
     promptVi: 'quay lại Phòng 03',
-    promptEn: 'return to Room 03'
+    promptEn: 'return to Room 03',
+    position: [0, 3.0, 130.0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    label: 'Phòng 03: Tiếng nói từ An Nam',
   },
-  // --- ROOM 4 <-> ROOM 5 ---
+  // --- LIÊN XÔ – QUẢNG CHÂU <-> HỘI NGHỊ ---
   {
-    id: 'room4-to-room5',
+    id: 'lien-xo-quang-chau-to-hoi-nghi',
     fromRoom: 'gallery-market-economy',
-    toRoom: 'gallery-three',
-    doorId: 'door-room5',
+    toRoom: 'gallery-paintings',
     check: (x: number, z: number) => z >= 278.0 && z <= 280.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 282.0] as [number, number, number],
-    promptVi: 'vào Phòng 05: Phòng Thành Quả',
-    promptEn: 'enter Room 05: Achievements Room'
+    spawnPos: [0, 3.0, 56.0] as [number, number, number],
+    promptVi: 'vào Phòng 05: Hội nghị',
+    promptEn: 'enter Room 05: Conference',
+    position: [0, 3.0, 280.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Phòng 05: Hội nghị',
   },
   {
-    id: 'room5-to-room4',
-    fromRoom: 'gallery-three',
+    id: 'hoi-nghi-to-lien-xo-quang-chau',
+    fromRoom: 'gallery-paintings',
     toRoom: 'gallery-market-economy',
-    doorId: 'door-room5',
-    check: (x: number, z: number) => z >= 280.0 && z <= 282.0 && Math.abs(x) < 2.2,
+    check: (x: number, z: number) => z >= 54.0 && z <= 56.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 278.0] as [number, number, number],
-    promptVi: 'quay lại Phòng 04',
-    promptEn: 'return to Room 04'
+    promptVi: 'quay lại Phòng 04: Liên Xô – Quảng Châu',
+    promptEn: 'return to Room 04: Soviet Union – Guangzhou',
+    position: [0, 3.0, 54.0] as [number, number, number],
+    rotation: [0, 0, 0] as [number, number, number],
+    label: 'Phòng 04: Liên Xô – Quảng Châu',
+  },
+  {
+    id: 'hoi-nghi-to-lobby',
+    fromRoom: 'gallery-paintings',
+    toRoom: 'lobby',
+    check: (x: number, z: number) => z >= 98.0 && z <= 100.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 0, 6.5] as [number, number, number],
+    promptVi: 'kết thúc hành trình và quay lại Sảnh chính',
+    promptEn: 'finish the tour and return to the Lobby',
+    position: [0, 3.0, 100.0] as [number, number, number],
+    rotation: [0, Math.PI, 0] as [number, number, number],
+    label: 'Kết thúc hành trình',
   }
 ];
+
+// Khách đi theo một tuyến cố định. Nhấn E ở bất kỳ vị trí nào trong phòng hiện
+// tại sẽ sang chặng kế tiếp, không phụ thuộc vị trí vật lý của cửa hay admin.
+const VISITOR_TOUR_PORTAL_BY_ROOM: Record<string, string> = {
+  lobby: 'lobby-to-room1',
+  'gallery-subsidy': 'room1-to-nha-rong',
+  'gallery-three': 'nha-rong-to-room3',
+  'gallery-ceramics': 'room3-to-lien-xo-quang-chau',
+  'gallery-market-economy': 'lien-xo-quang-chau-to-hoi-nghi',
+  'gallery-paintings': 'hoi-nghi-to-lobby',
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HÀM HỖ TRỢ TÍNH TOÀN ĐỘ CAO MẶT ĐẤT/CẦU THANG CHO SẢNH
 // ═══════════════════════════════════════════════════════════════════════════
-const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOpen: boolean }>): number => {
+const getLobbyGroundY = (x: number, z: number): number => {
   // Sảnh chờ cầu thang
   if (x > -4.0 && x < 4.0) {
     if (z > 2.0 && z <= 7.0) {
@@ -240,8 +243,9 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     return 3.0;
   }
 
-  // Phòng 4 (gallery-market-economy) — Z từ 130.0 đến 245.0, Y = 3.0
-  if (z > 130.0 && z <= 245.0) {
+  // Sàn của Phòng 4, Bến Nhà Rồng và Phòng 5 cùng ở cao độ Y = 3.0.
+  // Trước đây đoạn Z > 245 trả về 0 khiến nhân vật rơi xuyên sàn sau teleport.
+  if (z > 130.0 && z <= 330.0) {
     return 3.0;
   }
 
@@ -253,7 +257,7 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const { doorStates, activeGallery, sittingPosition, roomTwoDocOpen } = useMuseum();
+  const { activeGallery, sittingPosition, roomTwoDocOpen } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
@@ -420,11 +424,12 @@ const LobbyCameraController: React.FC = () => {
     const zOff = idealDist * Math.cos(theta.current) * Math.sin(phi.current);
 
     // Xác định ranh giới camera dựa trên vị trí người chơi và trạng thái các cửa để tránh camera nhìn xuyên qua cửa đóng
-    const isDoor1Open = doorStates['door-room1']?.isOpen || false;
-    const isDoor2Open = doorStates['door-room2']?.isOpen || false;
-    const isDoor3Open = doorStates['door-room3']?.isOpen || false;
-    const isDoor4Open = doorStates['door-room4']?.isOpen || false;
-    const isDoor5Open = doorStates['door-room5']?.isOpen || false;
+    // Cổng tham quan luôn sẵn sàng cho khách, không phụ thuộc admin.
+    const isDoor1Open = true;
+    const isDoor2Open = true;
+    const isDoor3Open = true;
+    const isDoor4Open = true;
+    const isDoor5Open = true;
 
     let minX = -LOBBY_W / 2 + 0.5; // -14.5
     let maxX = LOBBY_W / 2 - 0.5;  // 14.5
@@ -478,7 +483,7 @@ const LobbyCameraController: React.FC = () => {
     const camZ = Math.max(minZ, Math.min(maxZ, pz + zOff + sitOffsetZ));
 
     // Tính toán độ cao sàn nhà thực tế tại vị trí camera để kẹp độ cao tối thiểu
-    const groundYAtCam = getLobbyGroundY(camX, camZ, doorStates);
+    const groundYAtCam = getLobbyGroundY(camX, camZ);
     const minCamY = groundYAtCam + 0.45;
 
     // Giới hạn camera không vượt quá trần nhà để chống nhìn xuyên trần
@@ -556,7 +561,7 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, currentRoomLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
+  const { settings, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
@@ -612,10 +617,11 @@ const LobbyPlayer: React.FC<{
   // Xử lý teleport
   useEffect(() => {
     if (teleportTarget && playerRef.current) {
-      playerRef.current.position.set(teleportTarget.x, teleportTarget.y + baseY, teleportTarget.z);
+      const groundY = getLobbyGroundY(teleportTarget.x, teleportTarget.z);
+      playerRef.current.position.set(teleportTarget.x, groundY + baseY, teleportTarget.z);
       socket?.emit('move', {
         x: teleportTarget.x,
-        y: teleportTarget.y,
+        y: groundY,
         z: teleportTarget.z,
         yaw: playerRef.current.rotation.y,
         isSitting: false,
@@ -661,7 +667,7 @@ const LobbyPlayer: React.FC<{
         // Tường sau sảnh Z = 8.0 — CHỈ chặn nếu cửa 1 ĐÓNG
         if (z > 7.3) {
           // Kiểm tra nếu người chơi đang đi qua cửa mở
-          const passingDoor1 = doorStates['door-room1']?.isOpen && x > -2.2 && x < 2.2 && currentY >= 2.5;
+          const passingDoor1 = x > -2.2 && x < 2.2 && currentY >= 2.5;
           if (!passingDoor1) {
             return true;
           }
@@ -695,7 +701,7 @@ const LobbyPlayer: React.FC<{
       if (z > 8.0 && z <= 54.0) {
         // Chỉ chặn khi đi lùi về sảnh qua cửa 1 đang đóng
         if (z < 8.6) {
-          const passingDoor1 = doorStates['door-room1']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor1 = x > -2.2 && x < 2.2;
           if (!passingDoor1) return true;
         }
 
@@ -739,7 +745,7 @@ const LobbyPlayer: React.FC<{
 
         // Cửa cuối phòng nối sang phòng 2
         if (z > 53.3) {
-          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor2 = x > -2.2 && x < 2.2;
           if (!passingDoor2) return true;
         }
         return false;
@@ -749,7 +755,7 @@ const LobbyPlayer: React.FC<{
       if (z > 54.0 && z <= 100.0) {
         // Chỉ chặn khi đi lùi về phòng 1 qua cửa 2 đang đóng
         if (z < 54.6) {
-          const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor2 = x > -2.2 && x < 2.2;
           if (!passingDoor2) return true;
         }
 
@@ -793,7 +799,7 @@ const LobbyPlayer: React.FC<{
         }
 
         if (z > 99.3) {
-          const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor3 = x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
         }
         return false;
@@ -803,7 +809,7 @@ const LobbyPlayer: React.FC<{
       if (z > 100.0 && z <= 130.0) {
         // Chỉ chặn khi đi lùi về phòng 2 qua cửa 3 đang đóng
         if (z < 100.6) {
-          const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor3 = x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
         }
 
@@ -843,7 +849,7 @@ const LobbyPlayer: React.FC<{
         }
 
         if (z > 129.3) {
-          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor4 = x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
         }
         return false;
@@ -853,7 +859,7 @@ const LobbyPlayer: React.FC<{
       if (z > 130.0 && z <= 280.0) {
         // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
         if (z < 130.6) {
-          const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor4 = x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
         }
 
@@ -862,7 +868,7 @@ const LobbyPlayer: React.FC<{
 
         // Tường sau phòng 4 (Z = 280.0)
         if (z > 279.3) {
-          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor5 = x > -2.2 && x < 2.2;
           if (!passingDoor5) return true;
         }
         return false;
@@ -871,7 +877,7 @@ const LobbyPlayer: React.FC<{
       // ── PHÒNG TRIỂN LÃM 5 (gallery-three: Z 280.0 -> 330.0) ──
       if (z > 280.0 && z <= 330.0) {
         if (z < 280.6) {
-          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          const passingDoor5 = x > -2.2 && x < 2.2;
           if (!passingDoor5) return true;
         }
         if (x < -11.7 || x > 11.7) return true;
@@ -880,7 +886,7 @@ const LobbyPlayer: React.FC<{
 
       return false;
     },
-    [doorStates]
+    []
   );
 
   // Bắt phím WASD
@@ -947,7 +953,7 @@ const LobbyPlayer: React.FC<{
           const exitX = sittingPositionRef.current.x + 1.2;
           const exitZ = sittingPositionRef.current.z;
           // Tính toán độ cao đứng lên dựa trên vị trí bậc thang tại tọa độ exitX
-          const exitY = getLobbyGroundY(exitX, exitZ, doorStates) + baseY;
+          const exitY = getLobbyGroundY(exitX, exitZ) + baseY;
           exitPositionRef.current = { x: exitX, y: exitY, z: exitZ };
           setSittingPosition(null);
         } else if (nearestChairRef.current) {
@@ -1008,7 +1014,7 @@ const LobbyPlayer: React.FC<{
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (selectedExhibit || transitionLoading || roomOneLocked || currentRoomLocked || welcomeModalOpen) return;
+    if (selectedExhibit || transitionLoading || roomOneLocked || welcomeModalOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -1048,18 +1054,11 @@ const LobbyPlayer: React.FC<{
       }
     }
 
-    // Kiểm tra khoảng cách đến các cửa dịch chuyển tương tác
-    let foundDoor = null;
-    if (!sittingPosition) {
-      for (const door of INTERACTIVE_DOORS) {
-        if (door.fromRoom === currentRoom && door.check(pPos.x, pPos.z)) {
-          if (doorStates[door.doorId]?.isOpen) {
-            foundDoor = door;
-            break;
-          }
-        }
-      }
-    }
+    // Luôn cho phép đi tiếp bằng E, không cần đứng đúng tại vị trí cửa.
+    const nextPortalId = VISITOR_TOUR_PORTAL_BY_ROOM[currentRoom];
+    const foundDoor = sittingPosition
+      ? null
+      : VISITOR_PORTALS.find((door) => door.id === nextPortalId) ?? null;
 
     if (foundDoor) {
       if (activeDoor?.id !== foundDoor.id) {
@@ -1137,7 +1136,7 @@ const LobbyPlayer: React.FC<{
 
       const speed = shift ? 10.0 : 6.0;
       const curPos = playerRef.current.position;
-      const curGroundY = getLobbyGroundY(curPos.x, curPos.z, doorStates);
+      const curGroundY = getLobbyGroundY(curPos.x, curPos.z);
 
       const movementDelta = Math.min(0.04, delta);
       const nextX = curPos.x + moveDir.x * speed * movementDelta;
@@ -1157,7 +1156,7 @@ const LobbyPlayer: React.FC<{
     }
 
     const curPos = playerRef.current.position;
-    const curGroundY = getLobbyGroundY(curPos.x, curPos.z, doorStates);
+    const curGroundY = getLobbyGroundY(curPos.x, curPos.z);
 
     let bobY = 0;
     const t = state.clock.getElapsedTime();
@@ -1187,26 +1186,8 @@ const LobbyPlayer: React.FC<{
       curPos.y = minAllowedY;
     }
 
-    // Cập nhật phòng hiện tại dựa trên vị trí tuần tự trục Z
-    if (curPos.z <= 8.0) {
-      setCurrentRoom('lobby');
-    } else if (curPos.z > 8.0 && curPos.z <= 54.0) {
-      setCurrentRoom('gallery-subsidy');
-    } else if (curPos.z > 54.0 && curPos.z <= 100.0) {
-      setCurrentRoom('gallery-paintings');
-    } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
-      setCurrentRoom('gallery-ceramics');
-    } else if (curPos.z > 130.0 && curPos.z <= 210.0) {
-      setCurrentRoom('gallery-market-economy');
-    } else if (curPos.z > 210.0) {
-      // Dịch chuyển ngược lại Sảnh chính khi đi qua cửa ra
-      curPos.set(0, baseY, -5.0);
-      setCurrentRoom('lobby');
-      if (playerRef.current) {
-        playerRef.current.position.set(0, baseY, -5.0);
-        playerRef.current.rotation.set(0, 0, 0);
-      }
-    }
+    // Các phòng là không gian độc lập. Chỉ cổng E mới thay đổi currentRoom,
+    // để khách luôn đi theo đúng tuyến tham quan thay vì bị suy ra từ tọa độ Z.
 
     // Arm/Leg swing
     const swingSpeed = shift ? 16 : 11;
@@ -1376,7 +1357,6 @@ export default function LobbyPage() {
     language,
     settings,
     setActiveGallery,
-    doorStates,
     roomStates,
     loadedRooms,
     roomClosingAlert,
@@ -1587,10 +1567,10 @@ export default function LobbyPage() {
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Dấu chân tìm đường' },
-      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
-      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
-      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
+      'gallery-three': { id: 'gallery-three', name: 'Phòng 02: Bến Nhà Rồng' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Tiếng nói từ An Nam' },
+      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Liên Xô – Quảng Châu' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 05: Hội nghị' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1605,21 +1585,6 @@ export default function LobbyPage() {
     }
     setInputError('');
     setNickname(inputNickname.trim());
-
-    const requestedRoom = new URLSearchParams(window.location.search).get('room');
-    const directRoomSpawns: Record<string, { x: number; y: number; z: number }> = {
-      'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
-      'gallery-three': { x: 0, y: 3.0, z: roomFiveSpatial.spawnWorldZ },
-      'gallery-ceramics': { x: 0, y: 3.0, z: 152.0 },
-      'gallery-market-economy': { x: 0, y: 3.0, z: roomFourSpatial.spawnWorldZ },
-      'gallery-paintings': { x: 0, y: 3.0, z: 106.0 },
-    };
-
-    if (requestedRoom && directRoomSpawns[requestedRoom]) {
-      setCurrentRoom(requestedRoom);
-      setTeleportTarget(directRoomSpawns[requestedRoom]);
-    }
-
     setEntered(true);
   };
 
@@ -1660,22 +1625,15 @@ export default function LobbyPage() {
                 {/* Bộ precompiler ép GPU tải trước vật liệu */}
                 <RoomPrecompiler />
 
-                {/* ═══ CỬA NỐI PHÒNG (Door Portals) - Chỉ render cửa thuộc phòng hiện tại ═══ */}
-                {DOOR_CONFIGS.filter(config => {
-                  if (config.doorId === 'door-room1') return currentRoom === 'lobby' || currentRoom === 'gallery-subsidy';
-                  if (config.doorId === 'door-room2') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-paintings';
-                  if (config.doorId === 'door-room3') return currentRoom === 'gallery-paintings' || currentRoom === 'gallery-ceramics';
-                  if (config.doorId === 'door-room4') return currentRoom === 'gallery-ceramics' || currentRoom === 'gallery-market-economy';
-                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-three';
-                  return false;
-                }).map((config) => (
+                {/* ═══ CỔNG THAM QUAN - luôn mở, khách chỉ cần đứng gần và nhấn E ═══ */}
+                {VISITOR_PORTALS.filter((portal) => portal.id === VISITOR_TOUR_PORTAL_BY_ROOM[currentRoom]).map((portal) => (
                   <DoorPortal
-                    key={config.doorId}
-                    doorId={config.doorId}
-                    position={config.position}
-                    rotation={config.rotation}
-                    isOpen={doorStates[config.doorId]?.isOpen || false}
-                    label={config.label}
+                    key={portal.id}
+                    doorId={portal.id}
+                    position={portal.position}
+                    rotation={portal.rotation}
+                    isOpen
+                    label={portal.label}
                   />
                 ))}
 
@@ -1778,7 +1736,7 @@ export default function LobbyPage() {
           <div className="w-px h-3 bg-white/20" />
           <span>🖱️ <b>Nhấn giữ &amp; Rê chuột</b> xoay camera</span>
           <div className="w-px h-3 bg-white/20" />
-          <span>🚪 <b>Đi qua cửa mở</b> → vào phòng triển lãm</span>
+          <span>🚪 <b>Nhấn E</b> → qua phòng tiếp theo</span>
         </div>
       )}
 

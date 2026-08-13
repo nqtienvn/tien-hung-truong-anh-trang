@@ -40,6 +40,16 @@ const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'gallery-three': { x: 0, y: 3.0, z: roomFiveSpatial.spawnWorldZ },
 };
 
+// Khách luôn có thể vào đủ năm phòng; trạng thái đóng/mở từ admin không tác động
+// đến việc tải phòng hoặc dịch chuyển của người tham quan.
+const VISITOR_ROOM_IDS = [
+  'gallery-subsidy',
+  'gallery-three',
+  'gallery-ceramics',
+  'gallery-market-economy',
+  'gallery-paintings',
+] as const;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TRẠNG THÁI CỬA (Door State)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -828,12 +838,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, []);
 
-  const unloadRoom = useCallback((galleryId: string) => {
-    loadedRoomIdsRef.current.delete(galleryId);
-    setLoadedRooms(prev => prev.filter(r => r.galleryId !== galleryId));
-    console.log(`[ROOM-UNLOADED] Phòng "${galleryId}" đã được dỡ bỏ.`);
-  }, []);
-
   // ═══════════════════════════════════════════════════════════════════════════
   // SOCKET.IO — KẾT NỐI & LẮNG NGHE SỰ KIỆN
   // ═══════════════════════════════════════════════════════════════════════════
@@ -850,71 +854,8 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       hasJoinedRef.current = false;
     });
 
-    // ── Door Events ──
-    newSocket.on('door-states', (states: Record<string, DoorState>) => {
-      // Loại bỏ closingTimer từ server (không serialize được)
-      const cleanStates: Record<string, DoorState> = {};
-      for (const [key, val] of Object.entries(states)) {
-        cleanStates[key] = {
-          isOpen: (val as any).isOpen,
-          targetRoom: (val as any).targetRoom,
-        };
-      }
-      setDoorStates(cleanStates);
-    });
-
-    newSocket.on('door-opened', (data: { doorId: string; targetRoom: string }) => {
-      setDoorStates(prev => ({
-        ...prev,
-        [data.doorId]: { isOpen: true, targetRoom: data.targetRoom },
-      }));
-    });
-
-    newSocket.on('door-closing', (data: { doorId: string; teleportTo: string; countdownMs: number }) => {
-      setDoorClosingAlert(data);
-      // Tự động clear alert sau countdown
-      setTimeout(() => setDoorClosingAlert(null), data.countdownMs + 500);
-    });
-
-    newSocket.on('door-closed', (data: { doorId: string }) => {
-      setDoorStates(prev => ({
-        ...prev,
-        [data.doorId]: { isOpen: false, targetRoom: '' },
-      }));
-      setDoorClosingAlert(null);
-      console.log(`[DOOR] Cửa "${data.doorId}" đã đóng.`);
-    });
-
-    // ── Room Events ──
-    newSocket.on('room-states', (states: Record<string, RoomState>) => {
-      setRoomStates(states);
-    });
-
-    newSocket.on('room-closing', (data: RoomClosingAlert) => {
-      setRoomClosingAlert(data);
-      // Tự động clear alert sau countdown
-      setTimeout(() => setRoomClosingAlert(null), data.countdownMs + 500);
-    });
-
-    newSocket.on('room-closed', (data: { roomId: string; teleportTo: string }) => {
-      setRoomClosingAlert(null);
-      setCurrentRoom((prevRoom) => {
-        if (prevRoom === data.roomId) {
-          const target = data.teleportTo || 'lobby';
-          const spawn = SPAWN_POINTS[target] || SPAWN_POINTS['lobby'];
-          setTeleportTarget(spawn);
-          console.log(`[TELEPORT] Phòng "${data.roomId}" bị tắt. Di chuyển người chơi về phòng "${target}" tại tọa độ Z = ${spawn.z}`);
-          return target;
-        }
-        return prevRoom;
-      });
-    });
-
-    newSocket.on('admin:teleported-by-force', (data: { targetRoom: string; spawnPos: { x: number; y: number; z: number } }) => {
-      setCurrentRoom(data.targetRoom);
-      setTeleportTarget(data.spawnPos);
-      console.log(`[ADMIN-TELEPORT] Bạn đã bị admin dịch chuyển bắt buộc sang phòng "${data.targetRoom}" tại tọa độ:`, data.spawnPos);
-    });
+    // Luồng tham quan của khách độc lập với các sự kiện đóng/mở cửa, đóng phòng
+    // hoặc dịch chuyển cưỡng bức từ admin.
 
     // ── Multiplayer Events ──
     newSocket.on('join-success', () => {
@@ -1085,49 +1026,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
   }, [socket, nickname, activeGallery?.id]);
 
-  // Pre-load all rooms ngầm lúc rảnh rỗi nếu cấu hình là 'medium' và phòng đó đang bật
+  // Tải sẵn toàn bộ phòng cho khách, không dỡ phòng theo trạng thái admin.
   useEffect(() => {
-    if (settings.preset !== 'medium') return;
-
-    const idleCallback = typeof window !== 'undefined'
-      ? (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 2000)))
-      : null;
-
-    if (!idleCallback) return;
-
-    const idleId = idleCallback(() => {
-      if (roomStates['gallery-subsidy']?.isOpen) loadRoom('gallery-subsidy');
-      if (roomStates['gallery-paintings']?.isOpen) loadRoom('gallery-paintings');
-      if (roomStates['gallery-ceramics']?.isOpen) loadRoom('gallery-ceramics');
-      if (roomStates['gallery-market-economy']?.isOpen) loadRoom('gallery-market-economy');
-      if (roomStates['gallery-three']?.isOpen) loadRoom('gallery-three');
-      console.log('[PRELOAD] [MEDIUM-PRESET] Tải trước ngầm các phòng triển lãm đang bật.');
-    }, { timeout: 5000 });
-
-    const cancelCallback = typeof window !== 'undefined'
-      ? (window.cancelIdleCallback || ((id: any) => clearTimeout(id)))
-      : null;
-
-    return () => {
-      if (cancelCallback && idleId) {
-        cancelCallback(idleId);
-      }
-    };
-  }, [settings.preset, roomStates, loadRoom]);
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TỰ ĐỘNG TẢI/DỠ PHÒNG TRIỂN LÃM ĐỘNG (GIẢI PHÓNG GPU KHI TẮT PHÒNG)
-  // ═══════════════════════════════════════════════════════════════════════════
-  useEffect(() => {
-    // Tải phòng vào bộ nhớ/GPU nếu phòng đó được Admin bật, dỡ bỏ ngay lập tức nếu bị tắt
-    for (const [galleryId, rState] of Object.entries(roomStates)) {
-      if (rState.isOpen) {
-        loadRoom(galleryId);
-      } else {
-        unloadRoom(galleryId);
-      }
+    for (const galleryId of VISITOR_ROOM_IDS) {
+      loadRoom(galleryId);
     }
-  }, [roomStates, loadRoom, unloadRoom]);
+  }, [loadRoom]);
 
   // Hiệu ứng đếm ngược Room 1 cục bộ
   useEffect(() => {
