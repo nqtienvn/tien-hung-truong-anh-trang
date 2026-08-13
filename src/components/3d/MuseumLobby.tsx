@@ -1,6 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
-import { useTexture } from '@react-three/drei';
+import { Text, useTexture } from '@react-three/drei';
 import { useMuseum } from '@/context/MuseumContext';
 
 const LOBBY_ARTWORK_TEXTURES = [
@@ -173,6 +173,32 @@ export const MuseumLobby: React.FC = () => {
         texture={vanBaTexture}
         sourceAspectRatio={510 / 287}
       />
+
+      {/* Biển tiêu đề cố định phía trên lối vào Phòng 1, giữa hai tranh. */}
+      <group position={[0, 9.65, 7.68]} rotation={[0, Math.PI, 0]}>
+        <mesh position={[0, 0, 0.08]}>
+          <boxGeometry args={[12.2, 1.35, 0.12]} />
+          <meshStandardMaterial color="#2d1a10" roughness={0.42} metalness={0.08} />
+        </mesh>
+        {[-0.55, 0.55].map((y) => (
+          <mesh key={`room-one-title-trim-${y}`} position={[0, y, 0.16]}>
+            <boxGeometry args={[11.85, 0.07, 0.04]} />
+            <meshStandardMaterial color={goldAccent} metalness={0.88} roughness={0.14} />
+          </mesh>
+        ))}
+        <Text
+          position={[0, 0, 0.17]}
+          anchorX="center"
+          anchorY="middle"
+          color="#ffe6a3"
+          fontSize={0.6}
+          letterSpacing={0.015}
+          maxWidth={11.4}
+          textAlign="center"
+        >
+          BẢO TÀNG THEO DẤU CHÂN NGƯỜI
+        </Text>
+      </group>
 
       {/* --- Tường trước (Z = -10) - Tường có cổng vào --- */}
       {/* Phần tường trái */}
