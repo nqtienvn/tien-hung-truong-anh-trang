@@ -1,326 +1,228 @@
-"use client";
-
-import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ROOM_THREE_DISPLAY_NAME } from "@/lib/roomThreeNarrative";
+
+const rooms = [
+  {
+    number: "01",
+    title: "Dấu chân tìm đường",
+    period: "1911 – 1930",
+    description:
+      "Khám phá hành trình tìm đường cứu nước của Nguyễn Ái Quốc qua những quốc gia, địa danh và dấu mốc quan trọng từ năm 1911 đến năm 1930.",
+    images: ["/exhibits/nguoi-ra-di.jpg"],
+    room: "gallery-subsidy",
+  },
+  {
+    number: "02",
+    title: "Bến cảng ra khơi",
+    period: "Bến Nhà Rồng · 1911",
+    description:
+      "Trở về Bến Nhà Rồng năm 1911, nơi người thanh niên Nguyễn Tất Thành bắt đầu hành trình ra đi tìm con đường mới cho độc lập, tự do của dân tộc.",
+    images: ["/images/ben-nha-rong-1911.jpg"],
+    room: "gallery-three",
+  },
+  {
+    number: "03",
+    title: "Tiếng nói từ An Nam",
+    period: "Paris · 1919",
+    description:
+      "Tìm hiểu sự kiện Nguyễn Ái Quốc gửi Yêu sách của nhân dân An Nam tới Hội nghị Versailles, đưa quyền của người dân Việt Nam đến diễn đàn quốc tế.",
+    images: ["/exhibits/tieng-noi-mot-dan-toc.jpg"],
+    room: "gallery-ceramics",
+  },
+  {
+    number: "04",
+    title: "Những điểm dừng cách mạng",
+    period: "Liên Xô – Quảng Châu · 1923–1927",
+    description:
+      "Theo dấu Nguyễn Ái Quốc qua những điểm dừng quan trọng từ Liên Xô đến Quảng Châu, cùng các sự kiện và hoạt động cách mạng.",
+    images: ["/images/nhung-diem-dung-cach-mang.jpg"],
+    room: "gallery-market-economy",
+  },
+  {
+    number: "05",
+    title: "Hội tụ tại Hương Cảng",
+    period: "Hồng Kông · 1930",
+    description:
+      "Khám phá dấu mốc đầu năm 1930 tại Hương Cảng, nơi Nguyễn Ái Quốc chủ trì hội nghị hợp nhất, dẫn tới sự ra đời của Đảng Cộng sản Việt Nam.",
+    images: ["/images/hoi-tu-huong-cang-1930.jpg"],
+    room: "gallery-paintings",
+  },
+];
+
+const features = [
+  ["360", "Trải nghiệm 3D sống động", "Không gian trưng bày chân thực, tái hiện các địa danh và sự kiện lịch sử."],
+  ["menu_book", "Tư liệu & hiện vật", "Hình ảnh, tài liệu và hiện vật quý giá được sưu tầm, số hóa."],
+  ["groups", "Tương tác & khám phá", "Hệ thống tương tác và câu hỏi giúp hành trình trở nên thú vị, dễ nhớ."],
+  ["favorite", "Giá trị và cảm hứng", "Khơi dậy lòng yêu nước, tự hào dân tộc và khát vọng cống hiến."],
+];
 
 export default function Home() {
   return (
-    <div className="bg-[#fbf9f8] text-[#1b1c1c] min-h-screen flex flex-col relative overflow-x-hidden">
-      {/* TopNavBar */}
-      <nav className="bg-[#fbf9f8]/80 backdrop-blur-md text-[#5f5e5e] border-b border-[#c4c7c6]/30 fixed top-0 w-full z-50 flex justify-between items-center px-16 py-4 hidden md:flex">
-        <div className="font-headline-md text-[32px] font-bold text-[#5f5e5e] whitespace-nowrap overflow-hidden text-ellipsis max-w-sm">
-          Bảo tàng Tiến hóa Kinh tế
+    <div className="min-h-screen overflow-x-hidden bg-[#e9dcc2] text-[#26160f]">
+      <header className="relative z-30 border-b border-[#6f1d13]/20 bg-[#f7f0e2]/95 shadow-[0_3px_18px_rgba(69,35,16,.12)]">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-5 px-5 py-4 sm:px-8 lg:px-12">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center border-y-2 border-[#741e13] text-[#741e13]">
+              <span className="material-symbols-outlined text-[42px]">account_balance</span>
+            </div>
+            <div className="uppercase leading-tight">
+              <p className="text-[10px] font-bold tracking-[.18em] text-[#741e13]">Bảo tàng 3D</p>
+              <p className="mt-1 max-w-[250px] font-label-sm text-sm font-extrabold tracking-wide sm:text-base">
+                Hành trình tìm đường cứu nước của Bác
+              </p>
+              <p className="mt-1 text-[10px] font-bold tracking-[.15em]">1911 – 1930</p>
+            </div>
+          </div>
+          <Link
+            href="/lobby"
+            className="group inline-flex shrink-0 items-center gap-2 rounded-md bg-[#741e13] px-4 py-3 text-[11px] font-bold uppercase tracking-[.08em] text-[#fff8e9] shadow-[0_8px_22px_rgba(79,20,13,.2)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#56140d] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#741e13] sm:px-6"
+          >
+            <span className="material-symbols-outlined text-base">museum</span>
+            <span className="hidden sm:inline">Bắt đầu hành trình</span>
+            <span className="sm:hidden">Bắt đầu</span>
+          </Link>
         </div>
+      </header>
 
-        {/* <div className="flex items-center gap-6">
-          <Link
-            href="/"
-            className="text-[#725b29] border-b-2 border-[#725b29] pb-1 font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Sảnh chính
-          </Link>
-          <Link
-            href="/gallery/gallery-paintings"
-            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Khởi nguồn
-          </Link>
-          <Link
-            href="/gallery/gallery-ceramics"
-            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Gốm sứ
-          </Link>
-          <Link
-            href="/gallery/gallery-market-economy"
-            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Thị trường
-          </Link>
-          <Link
-            href="/gallery/gallery-paintings"
-            className="text-[#444747] hover:text-[#5f5e5e] transition-colors font-label-sm text-[12px] hover:bg-[#e3e2e2]/50 transition-all duration-300 px-2 py-1 uppercase tracking-wider font-semibold"
-          >
-            Việt Nam
-          </Link>
-        </div> */}
+      <main>
+        <section className="relative isolate min-h-[610px] overflow-hidden border-b border-[#6f1d13]/20 lg:min-h-[590px]">
+          <Image
+            src="/exhibits/nha-rong-harbor-1911.png"
+            alt="Bến Nhà Rồng và con tàu khởi hành năm 1911"
+            fill
+            priority
+            className="object-cover object-center sepia-[.28]"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(30,19,12,.16)_0%,rgba(241,226,195,.70)_38%,rgba(239,224,192,.92)_100%)]" />
+          <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(#6d3e20_.65px,transparent_.65px)] [background-size:5px_5px]" />
 
-        <div className="flex items-center gap-4">
-          <button className="text-[#444747] hover:text-[#5f5e5e] transition-colors p-2 rounded-full hover:bg-[#e3e2e2]/50 flex items-center justify-center">
-            <span className="material-symbols-outlined font-normal">
-              search
-            </span>
-          </button>
-          {/* <Link
-            href="/gallery/gallery-paintings"
-            className="bg-[#5f5e5e]/10 text-[#5f5e5e] border border-[#5f5e5e]/30 px-6 py-2 rounded scale-95 active:opacity-80 transition-all font-label-sm text-[12px] font-semibold hover:bg-[#5f5e5e] hover:text-white uppercase tracking-widest text-center"
-          >
-            Tham quan
-          </Link> */}
-        </div>
-      </nav>
-
-      {/* SideNavBar (Mobile Bottom Navigation) */}
-      <nav className="md:hidden fixed bottom-0 w-full bg-[#f5f3f3]/95 backdrop-blur-xl border-t border-[#c4c7c6]/20 z-50 flex justify-around py-3 px-5">
-        <Link
-          className="flex flex-col items-center gap-1 text-[#725b29]"
-          href="/"
-        >
-          <div className="bg-[#fcf9f8] text-[#737272] rounded-full p-1 px-4">
-            <span className="material-symbols-outlined text-xl font-semibold">
-              account_balance
-            </span>
-          </div>
-          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
-            Sảnh chính
-          </span>
-        </Link>
-        <Link
-          className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
-          href="/gallery/gallery-paintings"
-        >
-          <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
-            <span className="material-symbols-outlined text-xl">
-              history_edu
-            </span>
-          </div>
-          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
-            Khởi nguồn
-          </span>
-        </Link>
-        <Link
-          className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
-          href="/gallery/gallery-market-economy"
-        >
-          <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
-            <span className="material-symbols-outlined text-xl">
-              account_tree
-            </span>
-          </div>
-          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
-            Thị trường
-          </span>
-        </Link>
-        <Link
-          className="flex flex-col items-center gap-1 text-[#444747] hover:text-[#725b29] transition-all"
-          href="/gallery/gallery-paintings"
-        >
-          <div className="p-1 px-4 hover:bg-[#e3e2e2] rounded-full">
-            <span className="material-symbols-outlined text-xl">explore</span>
-          </div>
-          <span className="font-label-sm text-[10px] uppercase font-bold tracking-wider">
-            Việt Nam
-          </span>
-        </Link>
-      </nav>
-
-      {/* Main Content Canvas */}
-      <main className="flex-grow pt-24 md:pt-32 pb-[120px] flex flex-col items-center w-full z-10">
-        {/* Hero Section */}
-        <section className="w-full max-w-[1440px] px-5 md:px-16 mb-[120px] relative">
-          <div className="relative w-full aspect-[4/3] md:aspect-[21/9] rounded-xl overflow-hidden flex items-center justify-center">
-            {/* Atmospheric Background Image */}
-            <div
-              className="absolute inset-0 bg-cover bg-center z-0"
-              style={{
-                backgroundImage:
-                  'url("https://lh3.googleusercontent.com/aida-public/AB6AXuA25Y0I_1xm3GK_b0qEfPJytu2jKXdqF8FKJ1edhkR96uKHmo_NzpkZaSe4zVI3bFiEhUQex4uz7cGxJjphMiwvUTxWlVYTrSpGEhCxiNdoMZ31L_lNOAr7ZiERiGGb328ESRbpxERoKJW-Z7hwYEWwG0Bjq8C3aEEWnxoNUWdJpMNaPDjsBfej0S2w_KtsBN5myBRT-DI8jD_GqU9p-Sa9m2zaRf9UE6-n6QeG4GOcLO4X_k8nnqnNaroAZY3e4TwccQqe8p78yl4")',
-              }}
-            />
-            {/* Gradient Overlay for readability and depth */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10"></div>
-            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-transparent z-10"></div>
-
-            <div className="relative z-20 text-center md:text-left md:absolute md:left-20 md:bottom-20 max-w-3xl px-6 md:px-0">
-              <h1 className="font-display-lg text-[40px] sm:text-[64px] font-medium mb-6 drop-shadow-lg text-white leading-tight">
-                Bảo tàng Tiến hóa Kinh tế &amp; Tọa độ Việt Nam
+          <div className="relative mx-auto grid min-h-[610px] max-w-[1500px] items-center px-5 py-16 sm:px-8 lg:min-h-[590px] lg:grid-cols-[.76fr_1.24fr] lg:px-12">
+            <div className="hidden lg:block" />
+            <div className="max-w-[780px] text-center lg:pl-10">
+              <p className="mb-4 text-xs font-extrabold uppercase tracking-[.22em] text-[#552117]">
+                Bảo tàng 3D trải nghiệm
+              </p>
+              <h1 className="font-headline-lg text-[clamp(3.1rem,6.7vw,6.8rem)] font-bold uppercase leading-[.84] tracking-[-.055em] text-[#741e13] [text-shadow:0_2px_0_#ead9b8]">
+                Theo dấu<br />chân Người
               </h1>
-              <p className="font-body-lg text-[16px] sm:text-[18px] mb-10 max-w-2xl drop-shadow-md text-white/95 leading-relaxed">
-                Hành trình khám phá sự phát triển của nền kinh tế nhân loại từ
-                sơ khai đến hội nhập toàn cầu.
+              <p className="mt-6 font-headline-lg text-2xl italic text-[#3e2418] sm:text-3xl">
+                Hành trình tìm đường cứu nước
+              </p>
+              <div className="mx-auto mt-4 flex max-w-sm items-center gap-4 text-[#741e13]">
+                <span className="h-px flex-1 bg-current/50" />
+                <span className="font-headline-lg text-xl font-bold tracking-[.14em]">1911 – 1930</span>
+                <span className="h-px flex-1 bg-current/50" />
+              </div>
+              <p className="mx-auto mt-7 max-w-xl text-sm font-medium leading-7 text-[#321f16] sm:text-[15px]">
+                Khám phá hành trình của Nguyễn Ái Quốc từ Bến Nhà Rồng năm 1911 đến Hương Cảng năm 1930 — hành trình tìm kiếm con đường giải phóng dân tộc, giải phóng con người.
               </p>
               <Link
                 href="/lobby"
-                className="group inline-flex items-center gap-3 bg-[#725b29] px-8 py-4 rounded-full border border-[#725b29] hover:bg-[#725b29]/90 transition-all duration-300 drop-shadow-lg text-white cursor-pointer"
+                className="group mt-7 inline-flex items-center gap-3 rounded-md bg-[#741e13] px-7 py-3.5 text-xs font-bold uppercase tracking-[.1em] text-[#fff7e8] shadow-[0_8px_25px_rgba(82,24,15,.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#56140d] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#741e13]"
               >
-                <span className="font-label-sm text-[12px] uppercase tracking-widest font-semibold">
-                  Bắt đầu chuyến tham quan
-                </span>
-                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
-                  arrow_forward
-                </span>
+                <span className="material-symbols-outlined text-lg">directions_walk</span>
+                Bắt đầu hành trình
+                <span className="material-symbols-outlined text-base transition-transform group-hover:translate-x-1">arrow_forward</span>
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Museum Map Section (Bản đồ tham quan) */}
-        <section className="w-full max-w-[1440px] px-5 md:px-16">
-          <div className="mb-16 flex items-center gap-6">
-            <h2 className="font-headline-lg text-[40px] text-[#1b1c1c] font-medium">
-              Bản đồ tham quan
-            </h2>
-            <div className="h-[1px] flex-grow bg-gradient-to-r from-[#725b29]/50 to-transparent"></div>
-          </div>
-
-          {/* Bento Grid Layout for Rooms */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 auto-rows-[400px]">
-            {/* Room 1 */}
-            <div className="md:col-span-7 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
-                style={{
-                  backgroundImage:
-                    'url("/images/room4/anhphong1.jpg")',
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
-              <div className="relative z-20 flex flex-col gap-4">
-                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 01
-                </span>
-                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Phòng Dấu chân tìm đường
-                </h3>
-                <p className="font-body-md text-[16px] text-white/90 max-w-md line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá hành trình tìm đường cứu nước của Nguyễn Ái Quốc,
-                  thu thập tư liệu và kết nối các dấu mốc lịch sử 1911–1930.
-                </p>
-              </div>
+        <section className="relative px-4 pb-10 pt-8 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-[1600px]">
+            <div className="mb-8 flex items-center justify-center gap-4 text-[#3e2016]">
+              <span className="hidden h-px w-24 bg-[#741e13]/30 sm:block" />
+              <h2 className="font-headline-lg text-3xl font-bold uppercase tracking-tight sm:text-4xl">5 chặng hành trình</h2>
+              <span className="hidden h-px w-24 bg-[#741e13]/30 sm:block" />
             </div>
 
-            {/* Room 2 */}
-            <div className="md:col-span-5 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
-                style={{
-                  backgroundImage:
-                    'url("/exhibits/nha-rong-departure.svg")',
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
-              <div className="relative z-20 flex flex-col gap-4">
-                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 02
-                </span>
-                <h3 className="font-headline-md text-[32px] font-bold text-white drop-shadow-md">
-                  Bến Nhà Rồng 1911
-                </h3>
-                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá Bến Nhà Rồng, chuyến tàu Amiral Latouche-Tréville và công việc phụ bếp của người thanh niên Nguyễn Tất Thành.
-                </p>
-              </div>
-            </div>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5 xl:gap-5">
+              {rooms.map((room) => (
+                <Link
+                  key={room.number}
+                  href={`/lobby?room=${room.room}`}
+                  className="group relative flex min-h-[460px] flex-col overflow-hidden rounded-[10px] border border-[#795033]/25 bg-[#f6ecd9] shadow-[0_6px_16px_rgba(66,39,20,.13)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_28px_rgba(66,39,20,.2)] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#741e13]"
+                  aria-label={`Khám phá phòng ${room.number}: ${room.title}`}
+                >
+                  <div className="flex min-h-[92px] items-start gap-3 px-4 pb-3 pt-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#741e13] font-headline-lg text-[27px] font-bold leading-none text-[#fff1d6] shadow-[inset_0_0_0_1px_rgba(255,240,211,.18)]">
+                      {room.number}
+                    </span>
+                    <div className="min-w-0 pt-0.5">
+                      <h3 className="text-[16px] font-extrabold uppercase leading-[1.1] tracking-[-.015em] text-[#24140e]">
+                        {room.title}
+                      </h3>
+                      <p className="mt-2 text-[13px] font-semibold leading-tight text-[#4d3124]">{room.period}</p>
+                    </div>
+                  </div>
 
-            {/* Room 3 */}
-            <div className="md:col-span-4 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
-                style={{
-                  backgroundImage:
-                    'url("/images/room4/anhphong3.jpg")',
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
-              <div className="relative z-20 flex flex-col gap-4">
-                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 03
-                </span>
-                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  {ROOM_THREE_DISPLAY_NAME}
-                </h3>
-                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  PARIS · 1919 — Khôi phục Bản Yêu sách của nhân dân An Nam.
-                </p>
-              </div>
-            </div>
+                  <div className="relative h-[190px] shrink-0 overflow-hidden border-y border-[#6e452b]/20 bg-[#cbb58e] sm:h-[210px] xl:h-[165px] 2xl:h-[185px]">
+                    <div className={`absolute inset-0 grid ${room.images.length > 1 ? "grid-cols-2 gap-px" : "grid-cols-1"}`}>
+                      {room.images.map((image, imageIndex) => (
+                        <div key={image} className="relative overflow-hidden">
+                          <Image
+                            src={image}
+                            alt={`${room.title} — tư liệu ${imageIndex + 1}`}
+                            fill
+                            className="object-cover sepia-[.3] contrast-[.94] saturate-[.78] transition duration-500 group-hover:scale-[1.035] group-hover:sepia-[.12] group-hover:saturate-100"
+                            sizes="(min-width: 1280px) 280px, (min-width: 768px) 50vw, 100vw"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#28130d]/20 via-transparent to-[#f4e8d2]/5" />
+                  </div>
 
-            {/* Room 4 */}
-            <div className="md:col-span-4 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
-                style={{
-                  backgroundImage:
-                    'url("/images/room4/anhphong4.jpg")',
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
-              <div className="relative z-20 flex flex-col gap-4">
-                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 04
-                </span>
-                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Phòng Thị Trường
-                </h3>
-                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Khám phá các đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam trong kỷ nguyên mới.
-                </p>
-              </div>
-            </div>
+                  <p className="px-4 pb-4 pt-4 text-[14px] font-medium leading-[1.6] text-[#38251b]">
+                    {room.description}
+                  </p>
 
-            {/* Room 5 */}
-            <div className="md:col-span-4 glass-panel artifact-card rounded-xl overflow-hidden relative group flex flex-col justify-end p-8">
-              <div
-                className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
-                style={{
-                  backgroundImage:
-                    'url("/images/room4/anhphong2.jpg")',
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
-              <div className="relative z-20 flex flex-col gap-4">
-                <span className="font-label-sm text-[12px] inline-block uppercase tracking-widest font-bold bg-black/60 backdrop-blur-md px-3 py-1 rounded-full w-fit text-white">
-                  Phòng 05
-                </span>
-                <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Phòng Hội Nghị
-                </h3>
-                <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Tái hiện Hội nghị hợp nhất thành lập Đảng Cộng sản Việt Nam (3/2/1930) tại Cửu Long, Hồng Kông do Nguyễn Ái Quốc chủ trì.
-                </p>
-              </div>
+                  <span className="mt-auto flex items-center justify-between border-t border-[#6e452b]/20 px-4 py-3.5 text-[13px] font-extrabold uppercase tracking-[.08em] text-[#741e13]">
+                    Khám phá
+                    <span className="material-symbols-outlined text-xl transition-transform group-hover:translate-x-1">arrow_forward</span>
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
-      </main>
 
-      {/* Footer */}
-      <footer className="bg-[#ffffff] border-t border-[#c4c7c6]/20 w-full py-[120px] px-16 flex flex-col items-center gap-6 z-10 relative mb-16 md:mb-0">
-        <div className="font-headline-md text-[32px] text-[#725b29] mb-4 text-center font-bold">
-          Bảo tàng Tiến hóa Kinh tế &amp; Tọa độ Việt Nam
-        </div>
-        {/* <div className="flex flex-wrap justify-center gap-8 mb-8">
-          <Link
-            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
-            href="#"
-          >
-            Điều khoản
-          </Link>
-          <Link
-            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
-            href="#"
-          >
-            Bảo mật
-          </Link>
-          <Link
-            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
-            href="#"
-          >
-            Lưu trữ
-          </Link>
-          <Link
-            className="text-[#444747] hover:text-[#1b1c1c] underline decoration-[#725b29] underline-offset-4 opacity-80 hover:opacity-100 transition-opacity font-label-sm text-[12px] uppercase font-bold tracking-wider"
-            href="#"
-          >
-            Tọa độ số
-          </Link>
-        </div> */}
-        <p className="text-[#5f5e5e] font-body-md text-[16px] text-center max-w-2xl opacity-70 leading-relaxed">
-          © 2026 Bảo tàng Tiến hóa Kinh tế &amp; Tọa độ Việt Nam. Một sản phẩm
-          của Nhóm 7 - MLN122.
-        </p>
-      </footer>
+        <section className="border-y border-[#6e452b]/20 bg-[#ddc9a7]/75 px-5 py-8 sm:px-8">
+          <div className="mx-auto grid max-w-[1400px] gap-6 md:grid-cols-2 xl:grid-cols-4">
+            {features.map(([icon, title, copy]) => (
+              <div key={title} className="flex gap-4 xl:border-r xl:border-[#6e452b]/20 xl:pr-6 xl:last:border-r-0">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#741e13] text-[#f5ddb2]">
+                  <span className="material-symbols-outlined text-3xl">{icon}</span>
+                </div>
+                <div>
+                  <h3 className="text-xs font-extrabold uppercase tracking-[.05em]">{title}</h3>
+                  <p className="mt-2 text-[12px] leading-5 text-[#4b3326]">{copy}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <footer className="relative overflow-hidden bg-[#671b13] px-5 py-8 text-[#f7e8c9] sm:px-8">
+          <div className="absolute inset-0 opacity-15 [background-image:radial-gradient(#f5ddb2_.7px,transparent_.7px)] [background-size:6px_6px]" />
+          <div className="relative mx-auto grid max-w-[1200px] items-center gap-7 md:grid-cols-[1fr_auto]">
+            <blockquote className="text-center font-headline-lg text-lg leading-7 md:text-left md:text-xl">
+              “Tôi chỉ có một ham muốn, ham muốn tột bậc, là làm sao cho nước ta được hoàn toàn độc lập, dân ta được hoàn toàn tự do.”
+              <cite className="mt-2 block font-label-sm text-[10px] not-italic uppercase tracking-[.16em] text-[#e9c98d]">— Nguyễn Ái Quốc —</cite>
+            </blockquote>
+            <div className="relative mx-auto h-28 w-44 overflow-hidden rounded-sm border border-[#f5ddb2]/20 grayscale md:mx-0">
+              <Image
+                src="/images/nguyen-ai-quoc-writing.jpg"
+                alt="Chủ tịch Hồ Chí Minh làm việc và viết tài liệu"
+                fill
+                className="object-cover object-center sepia-[.2]"
+                sizes="176px"
+              />
+            </div>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }
