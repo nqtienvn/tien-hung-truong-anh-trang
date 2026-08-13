@@ -103,7 +103,6 @@ const FINAL_ANSWERS = [
 
 export function RoomFiveMissionHud() {
   const {
-    language,
     nickname,
     activeGallery,
     currentRoom,
@@ -126,7 +125,7 @@ export function RoomFiveMissionHud() {
   const completedCount = roomFiveProgress.fragments.length;
   const collectedAll = completedCount === FRAGMENTS.length;
   const nextFragment = FRAGMENTS.find((item) => !roomFiveProgress.fragments.includes(item.id));
-  const lang = language;
+  const lang = 'vi' as const;
 
   const openSummary = () => {
     setSummaryPhase(roomFiveProgress.completed ? 'passport' : 'ordering');
@@ -164,7 +163,7 @@ export function RoomFiveMissionHud() {
 
   return (
     <>
-      <aside className="pointer-events-auto absolute left-3 top-24 z-40 w-[min(310px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-amber-400/25 bg-slate-950/90 text-slate-100 shadow-2xl backdrop-blur-xl">
+      <aside className="nha-rong-typography pointer-events-auto absolute left-3 top-24 z-40 w-[min(310px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-amber-400/25 bg-slate-950/90 text-slate-100 shadow-2xl backdrop-blur-xl">
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
@@ -216,7 +215,7 @@ export function RoomFiveMissionHud() {
       </aside>
 
       {summaryOpen && collectedAll && (
-        <div className="pointer-events-auto absolute inset-0 z-[70] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md">
+        <div className="nha-rong-typography pointer-events-auto absolute inset-0 z-[70] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md">
           <section className="relative max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-3xl border border-amber-400/25 bg-[#07101f] p-5 text-slate-100 shadow-2xl md:p-8">
             <button type="button" onClick={() => setSummaryOpen(false)} className="absolute right-4 top-4 cursor-pointer rounded-full border border-slate-700 bg-slate-900 p-2 text-slate-300 hover:text-white"><X size={18} /></button>
 
@@ -225,7 +224,6 @@ export function RoomFiveMissionHud() {
                 <div className="pr-10">
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-amber-300">{lang === 'vi' ? 'Tổng kết · Bước 1/2' : 'Summary · Step 1/2'}</span>
                   <h2 className="mt-2 font-sans text-2xl font-black md:text-3xl">{lang === 'vi' ? 'Dựng lại mạch lịch sử' : 'Rebuild the historical chain'}</h2>
-                  <p className="mt-2 font-sans text-sm leading-relaxed text-slate-400">{lang === 'vi' ? 'Chọn lần lượt các sự kiện từ nguyên nhân đến trải nghiệm trên hành trình.' : 'Select each event in order, from motivation to the voyage experience.'}</p>
                 </div>
 
                 <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/45 p-4">
@@ -234,7 +232,7 @@ export function RoomFiveMissionHud() {
                     return (
                       <div key={item.id} className={`flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2 ${placed ? 'border-emerald-400/30 bg-emerald-500/10' : 'border-dashed border-slate-700 bg-slate-900/30'}`}>
                         <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-bold ${placed ? 'bg-emerald-400 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>{placed ? <Check size={14} /> : index + 1}</span>
-                        <span className={`font-sans text-xs leading-relaxed ${placed ? 'text-slate-100' : 'text-slate-600'}`}>{placed ? item[lang] : (lang === 'vi' ? 'Chưa xác định' : 'Not identified')}</span>
+                        <span className={`font-sans text-base leading-relaxed ${placed ? 'text-slate-100' : 'text-slate-600'}`}>{placed ? item[lang] : (lang === 'vi' ? 'Chưa xác định' : 'Not identified')}</span>
                       </div>
                     );
                   })}
@@ -245,7 +243,7 @@ export function RoomFiveMissionHud() {
                     {SHUFFLED_CHAIN_IDS.filter((id) => !orderedIds.includes(id)).map((id) => {
                       const item = HISTORY_CHAIN.find((entry) => entry.id === id)!;
                       return (
-                        <button key={id} type="button" onClick={() => chooseOrderItem(id)} className={`cursor-pointer rounded-xl border p-3 text-left font-sans text-xs leading-relaxed transition-colors ${wrongOrderId === id ? 'border-rose-400/50 bg-rose-500/15 text-rose-100' : 'border-slate-700 bg-slate-900/70 text-slate-200 hover:border-amber-400/45 hover:bg-amber-500/8'}`}>{item[lang]}</button>
+                        <button key={id} type="button" onClick={() => chooseOrderItem(id)} className={`cursor-pointer rounded-xl border p-4 text-left font-sans text-base leading-relaxed transition-colors ${wrongOrderId === id ? 'border-rose-400/50 bg-rose-500/15 text-rose-100' : 'border-slate-700 bg-slate-900/70 text-slate-200 hover:border-amber-400/45 hover:bg-amber-500/8'}`}>{item[lang]}</button>
                       );
                     })}
                   </div>
@@ -264,7 +262,7 @@ export function RoomFiveMissionHud() {
                 <div className="pr-10">
                   <span className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-teal-300">{lang === 'vi' ? 'Tổng kết · Bước 2/2' : 'Summary · Step 2/2'}</span>
                   <h2 className="mt-2 font-sans text-2xl font-black md:text-3xl">{lang === 'vi' ? 'Câu hỏi xuyên suốt phòng' : 'The room’s central question'}</h2>
-                  <p className="mt-3 rounded-2xl border border-teal-500/25 bg-teal-500/8 p-4 font-sans text-base font-bold leading-relaxed text-white">
+                  <p className="mt-3 rounded-2xl border border-teal-500/25 bg-teal-500/8 p-5 font-sans text-xl font-bold leading-relaxed text-white">
                     {lang === 'vi' ? 'Nguyễn Tất Thành đã bắt đầu hành trình tìm đường cứu nước bằng cách nào?' : 'How did Nguyễn Tất Thành begin his journey to seek a path for national liberation?'}
                   </p>
                 </div>
@@ -273,7 +271,7 @@ export function RoomFiveMissionHud() {
                     const selected = finalAnswer === index;
                     const correct = answerChecked && index === 1;
                     const wrong = answerChecked && selected && index !== 1;
-                    return <button key={answer.vi} type="button" disabled={answerChecked} onClick={() => setFinalAnswer(index)} className={`w-full cursor-pointer rounded-xl border p-4 text-left font-sans text-sm leading-relaxed disabled:cursor-default ${correct ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100' : wrong ? 'border-rose-400/50 bg-rose-500/15 text-rose-100' : selected ? 'border-teal-400/50 bg-teal-500/15 text-white' : 'border-slate-800 bg-slate-900/55 text-slate-300 hover:border-teal-400/40'}`}>{answer[lang]}</button>;
+                    return <button key={answer.vi} type="button" disabled={answerChecked} onClick={() => setFinalAnswer(index)} className={`w-full cursor-pointer rounded-xl border p-5 text-left font-sans text-base leading-relaxed disabled:cursor-default ${correct ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100' : wrong ? 'border-rose-400/50 bg-rose-500/15 text-rose-100' : selected ? 'border-teal-400/50 bg-teal-500/15 text-white' : 'border-slate-800 bg-slate-900/55 text-slate-300 hover:border-teal-400/40'}`}>{answer[lang]}</button>;
                   })}
                 </div>
                 {!answerChecked ? (

@@ -56,7 +56,8 @@ const HOTSPOTS: Array<{
   },
 ];
 
-export function ShipExplorationMission({ language, visitedHotspots, onVisit }: ShipExplorationMissionProps) {
+export function ShipExplorationMission({ visitedHotspots, onVisit }: ShipExplorationMissionProps) {
+  const language: Language = 'vi';
   const [activeHotspot, setActiveHotspot] = useState<RoomFiveShipHotspotId | null>(visitedHotspots[0] ?? null);
   const active = HOTSPOTS.find((hotspot) => hotspot.id === activeHotspot);
   const completed = HOTSPOTS.every((hotspot) => visitedHotspots.includes(hotspot.id));
@@ -76,14 +77,11 @@ export function ShipExplorationMission({ language, visitedHotspots, onVisit }: S
         <h2 className="font-sans text-2xl font-black leading-tight text-white lg:text-3xl">
           {language === 'vi' ? 'Tìm hiểu tàu Amiral Latouche-Tréville' : 'Explore the Amiral Latouche-Tréville'}
         </h2>
-        <p className="mt-1 font-sans text-sm text-slate-400">
-          {language === 'vi' ? 'Mở đủ bốn bộ phận để hiểu môi trường của chuyến đi.' : 'Inspect all four areas to understand the voyage environment.'}
-        </p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-800 bg-[#071824]">
         <div className="relative aspect-[16/8] overflow-hidden">
-          <img src="/exhibits/nha-rong-ship.svg" alt="Amiral Latouche-Tréville" className="h-full w-full object-contain p-3 opacity-90" />
+          <img src="/exhibits/nha-rong-amiral-photo.png" alt="Tàu Amiral Latouche-Tréville" className="h-full w-full object-contain p-3" />
           <div className="absolute inset-x-3 bottom-3 grid grid-cols-4 gap-1.5">
             {HOTSPOTS.map((hotspot, index) => {
               const seen = visitedHotspots.includes(hotspot.id);
@@ -93,7 +91,7 @@ export function ShipExplorationMission({ language, visitedHotspots, onVisit }: S
                   key={hotspot.id}
                   type="button"
                   onClick={() => inspect(hotspot.id)}
-                  className={`cursor-pointer rounded-lg border px-1 py-2 text-center font-sans text-[10px] font-bold backdrop-blur transition-colors ${selected ? 'border-cyan-300 bg-cyan-400 text-slate-950' : seen ? 'border-emerald-400/50 bg-emerald-500/85 text-slate-950' : 'border-white/20 bg-slate-950/80 text-slate-200 hover:border-cyan-400/60'}`}
+                  className={`cursor-pointer rounded-lg border px-2 py-3 text-center font-sans text-sm font-bold backdrop-blur transition-colors ${selected ? 'border-cyan-300 bg-cyan-400 text-slate-950' : seen ? 'border-emerald-400/50 bg-emerald-500/85 text-slate-950' : 'border-white/20 bg-slate-950/80 text-slate-200 hover:border-cyan-400/60'}`}
                 >
                   <span className="mb-1 flex items-center justify-center">{seen ? <Check size={13} /> : <span className="font-mono">0{index + 1}</span>}</span>
                   {hotspot.label[language]}
@@ -110,7 +108,7 @@ export function ShipExplorationMission({ language, visitedHotspots, onVisit }: S
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-300"><active.icon size={20} /></div>
             <div>
               <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-cyan-300">{active.label[language]}</span>
-              <p className="mt-1.5 font-sans text-sm leading-relaxed text-slate-200">{active.fact[language]}</p>
+              <p className="mt-1.5 font-sans text-base leading-relaxed text-slate-200">{active.fact[language]}</p>
             </div>
           </div>
         </div>

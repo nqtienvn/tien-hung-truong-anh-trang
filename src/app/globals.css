@@ -56,20 +56,20 @@
   --spacing-margin-desktop: 64px;
   --spacing-unit: 8px;
 
-  --font-headline-lg-mobile: 'EB Garamond', serif;
-  --font-display-lg: 'EB Garamond', serif;
-  --font-label-sm: 'Hanken Grotesk', sans-serif;
-  --font-body-md: 'Manrope', sans-serif;
-  --font-headline-lg: 'EB Garamond', serif;
-  --font-body-lg: 'Manrope', sans-serif;
-  --font-headline-md: 'EB Garamond', serif;
-  --font-display-lg-mobile: 'EB Garamond', serif;
+  --font-headline-lg-mobile: var(--font-eb-garamond), Georgia, serif;
+  --font-display-lg: var(--font-eb-garamond), Georgia, serif;
+  --font-label-sm: var(--font-hanken-grotesk), Arial, sans-serif;
+  --font-body-md: var(--font-manrope), Arial, sans-serif;
+  --font-headline-lg: var(--font-eb-garamond), Georgia, serif;
+  --font-body-lg: var(--font-manrope), Arial, sans-serif;
+  --font-headline-md: var(--font-eb-garamond), Georgia, serif;
+  --font-display-lg-mobile: var(--font-eb-garamond), Georgia, serif;
 }
 
 body {
   background-color: #fbf9f8;
   color: #1b1c1c;
-  font-family: 'Manrope', sans-serif;
+  font-family: var(--font-manrope), Arial, sans-serif;
 }
 
 /* Chữ trên bảng HTML trong không gian 3D: ưu tiên font hệ thống có đủ dấu tiếng Việt. */
@@ -77,6 +77,28 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   font-kerning: normal;
   font-synthesis: none;
+}
+
+/* Typography của Phòng Bến Nhà Rồng dùng cùng hệ chữ tư liệu của Phòng 4. */
+.nha-rong-typography,
+.nha-rong-typography .font-sans {
+  font-family: var(--font-hanken-grotesk), var(--font-manrope), Arial, sans-serif;
+  font-kerning: normal;
+  font-synthesis: none;
+}
+
+.nha-rong-typography .font-mono {
+  font-family: var(--font-space-grotesk), var(--font-hanken-grotesk), Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.nha-rong-typography h2,
+.nha-rong-display {
+  font-family: var(--font-eb-garamond), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  text-wrap: balance;
 }
 
 /* Custom scrollbar for an elegant feel */

@@ -5,7 +5,6 @@ import {
   Check,
   ClipboardCheck,
   Clock3,
-  Globe,
   History,
   RotateCcw,
   Utensils,
@@ -100,13 +99,12 @@ const HISTORICAL_FIELDS: HistoricalField[] = [
 ];
 
 export function GalleyWorkMission({
-  language,
-  setLanguage,
   nickname,
   completed: externallyCompleted = false,
   onComplete,
   onReset,
 }: GalleyWorkMissionProps) {
+  const language: Language = 'vi';
   const storageKey = `room5_galley_mission_${nickname || 'guest'}`;
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [checked, setChecked] = useState(false);
@@ -156,28 +154,6 @@ export function GalleyWorkMission({
         <h2 className="font-sans text-2xl font-black leading-tight text-white lg:text-3xl">
           {language === 'vi' ? 'Khôi phục hồ sơ lao động' : 'Restore the employment record'}
         </h2>
-        <p className="mt-1 font-sans text-sm text-slate-400">
-          {language === 'vi' ? 'Hoàn thiện bốn dữ kiện về Văn Ba trên tàu' : 'Complete four facts about Văn Ba aboard the ship'}
-        </p>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border border-slate-800/70 bg-slate-900/55 p-2.5">
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400">
-          <Globe size={14} />
-          {language === 'vi' ? 'NGÔN NGỮ NỘI DUNG' : 'CONTENT LANGUAGE'}
-        </span>
-        <div className="flex rounded-lg border border-slate-800 bg-slate-950 p-0.5">
-          {(['vi', 'en'] as Language[]).map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setLanguage(item)}
-              className={`cursor-pointer rounded-md px-2.5 py-1 font-mono text-[10px] font-semibold uppercase transition-colors ${language === item ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="rounded-2xl border border-orange-500/20 bg-orange-500/8 p-4">
@@ -216,7 +192,7 @@ export function GalleyWorkMission({
                       <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-amber-400">
                         {language === 'vi' ? `Dữ kiện ${fieldIndex + 1}/4` : `Fact ${fieldIndex + 1}/4`} · {field.label[language]}
                       </span>
-                      <p className="mt-1 font-sans text-sm font-semibold leading-relaxed text-white">{field.question[language]}</p>
+                      <p className="mt-2 font-sans text-lg font-semibold leading-relaxed text-white">{field.question[language]}</p>
                     </div>
                     {checked && fieldCorrect && <Check className="mt-1 shrink-0 text-emerald-400" size={18} />}
                     {showIncorrect && <X className="mt-1 shrink-0 text-rose-400" size={18} />}
@@ -230,7 +206,7 @@ export function GalleyWorkMission({
                           key={option.vi}
                           type="button"
                           onClick={() => selectAnswer(field.id, optionIndex)}
-                          className={`min-h-12 cursor-pointer rounded-xl border p-2.5 text-left font-sans text-[11px] leading-relaxed transition-colors ${
+                          className={`min-h-16 cursor-pointer rounded-xl border p-4 text-left font-sans text-base leading-relaxed transition-colors ${
                             isSelected
                               ? showIncorrect
                                 ? 'border-rose-400/55 bg-rose-500/15 text-rose-100'

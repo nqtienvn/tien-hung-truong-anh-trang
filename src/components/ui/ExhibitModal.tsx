@@ -257,6 +257,7 @@ export const ExhibitModal: React.FC = () => {
   const isVanBaProfile = selectedExhibit?.id === 'nha-rong-latouche-treville' && exhibitModalMode === 'game';
   const isGalleyWorkMission = selectedExhibit?.id === 'nha-rong-galley-work' && exhibitModalMode === 'game';
   const isShipExplorationMission = selectedExhibit?.id === 'nha-rong-ship-exploration' && exhibitModalMode === 'game';
+  const isNhaRongExhibit = selectedExhibit?.gallery_id === 'gallery-three';
 
   const [gameState, setGameState] = useState<'observe' | 'quiz' | 'info'>('observe');
   const effectiveGameState = exhibitModalMode === 'info' ? 'info' : gameState;
@@ -546,7 +547,7 @@ export const ExhibitModal: React.FC = () => {
 
   return (
     <div className="absolute inset-x-4 top-16 bottom-16 z-50 flex items-center justify-center pointer-events-none select-none">
-      <div className="w-full max-w-7xl h-full bg-slate-950/92 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row text-slate-100 transition-all duration-300 pointer-events-auto">
+      <div className={`w-full max-w-7xl h-full bg-slate-950/92 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row text-slate-100 transition-all duration-300 pointer-events-auto ${isNhaRongExhibit ? 'nha-rong-typography' : ''}`}>
         {/* Ảnh xem trước lớn bên trái */}
         <div className="relative h-[38vh] lg:h-full lg:w-[48%] xl:w-[52%] bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0 flex items-center justify-center">
           {previewImages.length > 0 ? (

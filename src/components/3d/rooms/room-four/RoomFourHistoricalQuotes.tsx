@@ -87,7 +87,7 @@ const HistoricalQuotePanel = ({
         >
           <div
             style={{
-              fontFamily: '"EB Garamond", Georgia, serif',
+              fontFamily: 'var(--font-eb-garamond), Georgia, serif',
               fontSize: 25,
               fontStyle: 'italic',
               fontWeight: 700,
@@ -104,7 +104,7 @@ const HistoricalQuotePanel = ({
           <div
             style={{
               color: isSoviet ? '#9db9c2' : '#d7b17c',
-              fontFamily: '"EB Garamond", Georgia, serif',
+              fontFamily: 'var(--font-eb-garamond), Georgia, serif',
               fontSize: 13,
               fontWeight: 600,
               fontStyle: 'italic',

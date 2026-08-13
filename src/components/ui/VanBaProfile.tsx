@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, Clock3, Globe, HelpCircle, IdCard, Ship, UserRound } from 'lucide-react';
+import { Check, Clock3, HelpCircle, IdCard, Ship, UserRound } from 'lucide-react';
 
 type Language = 'vi' | 'en';
 
@@ -57,7 +57,8 @@ const ANSWERS = [
   },
 ];
 
-export function VanBaProfile({ language, setLanguage, completed = false, onComplete }: VanBaProfileProps) {
+export function VanBaProfile({ completed = false, onComplete }: VanBaProfileProps) {
+  const language: Language = 'vi';
   const [activeDate, setActiveDate] = useState(0);
   const [visitedDates, setVisitedDates] = useState<number[]>(completed ? [0, 1, 2] : [0]);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(completed ? 1 : null);
@@ -88,28 +89,6 @@ export function VanBaProfile({ language, setLanguage, completed = false, onCompl
         <h2 className="font-sans text-2xl font-black leading-tight text-white lg:text-3xl">
           {language === 'vi' ? 'Hồ sơ Văn Ba' : 'The Văn Ba profile'}
         </h2>
-        <p className="mt-1 font-sans text-sm text-slate-400">
-          {language === 'vi' ? 'Ba ngày trước khi rời Bến Nhà Rồng' : 'Three days before leaving Nhà Rồng Wharf'}
-        </p>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border border-slate-800/70 bg-slate-900/55 p-2.5">
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400">
-          <Globe size={14} />
-          {language === 'vi' ? 'NGÔN NGỮ NỘI DUNG' : 'CONTENT LANGUAGE'}
-        </span>
-        <div className="flex rounded-lg border border-slate-800 bg-slate-950 p-0.5">
-          {(['vi', 'en'] as Language[]).map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setLanguage(item)}
-              className={`cursor-pointer rounded-md px-2.5 py-1 font-mono text-[10px] font-semibold uppercase transition-colors ${language === item ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'}`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div>
@@ -162,7 +141,7 @@ export function VanBaProfile({ language, setLanguage, completed = false, onCompl
             <HelpCircle size={14} />
             {language === 'vi' ? 'Câu hỏi kết nối' : 'Reflection question'}
           </div>
-          <p className="font-sans text-sm font-bold leading-relaxed text-white">
+          <p className="font-sans text-lg font-bold leading-relaxed text-white">
             {language === 'vi'
               ? 'Điều gì giúp Văn Ba có thể bắt đầu hành trình trên con tàu này?'
               : 'What enabled Văn Ba to begin his journey aboard this ship?'}
@@ -178,7 +157,7 @@ export function VanBaProfile({ language, setLanguage, completed = false, onCompl
                   type="button"
                   disabled={answerChecked}
                   onClick={() => setSelectedAnswer(index)}
-                  className={`w-full cursor-pointer rounded-xl border p-3 text-left font-sans text-xs leading-relaxed transition-colors disabled:cursor-default ${correctOption ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-200' : wrongOption ? 'border-rose-400/50 bg-rose-500/15 text-rose-200' : selected ? 'border-teal-400/50 bg-teal-500/15 text-teal-100' : 'border-slate-800 bg-slate-950/45 text-slate-300 hover:border-teal-400/40'}`}
+                  className={`w-full cursor-pointer rounded-xl border p-4 text-left font-sans text-base leading-relaxed transition-colors disabled:cursor-default ${correctOption ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-200' : wrongOption ? 'border-rose-400/50 bg-rose-500/15 text-rose-200' : selected ? 'border-teal-400/50 bg-teal-500/15 text-teal-100' : 'border-slate-800 bg-slate-950/45 text-slate-300 hover:border-teal-400/40'}`}
                 >
                   {answer[language]}
                 </button>
