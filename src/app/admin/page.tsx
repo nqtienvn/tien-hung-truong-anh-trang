@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { io, Socket } from 'socket.io-client';
 import { Exhibit, Gallery } from '@/lib/db';
-import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Clock, Users, Award, X } from 'lucide-react';
+import { Shield, Lock, Plus, Trash2, Sliders, ArrowLeft, Save, Edit3, Compass, Sparkles, DoorOpen, DoorClosed, Loader2, Zap, Power, Users, Award, X } from 'lucide-react';
 import { ROOM_THREE_DISPLAY_NAME } from '@/lib/roomThreeNarrative';
 import { fetchAdminData } from '@/lib/adminData';
 
@@ -183,20 +183,6 @@ export default function AdminDashboard() {
       adminSocket.emit('admin:teleport-all', { targetRoom });
     }
   };
-
-  const handleStartRoomOne = () => {
-    if (!adminSocket) return;
-    if (window.confirm('Bắt đầu Phòng 1? Trò chơi sẽ bắt đầu sau 5 giây đếm ngược.')) {
-      adminSocket.emit('admin:start-room1-countdown');
-    }
-  };
-
-  const roomOnePlayersInRoom = roomOnePlayers.filter(
-    (player) => player.galleryId === 'gallery-subsidy'
-  );
-  const canStartRoomOne =
-    roomOnePlayersInRoom.length > 0 &&
-    roomOnePlayersInRoom.every((player) => player.ready);
 
   const handleForceEndRoomOne = () => {
     if (!adminSocket) return;
@@ -476,19 +462,6 @@ export default function AdminDashboard() {
                     >
                       <Users size={12} />
                       Danh sách kết quả
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleStartRoomOne}
-                      disabled={!canStartRoomOne}
-                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
-                        canStartRoomOne
-                          ? 'cursor-pointer bg-violet-500/10 hover:bg-violet-500/25 border-violet-500/25 text-violet-400'
-                          : 'cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600'
-                      }`}
-                    >
-                      <Clock size={12} />
-                      Bắt đầu đếm ngược (7s)
                     </button>
                     <button
                       type="button"

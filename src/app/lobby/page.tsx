@@ -17,35 +17,40 @@ import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
 import { RoomOneSoundtrack } from '@/components/ui/RoomOneSoundtrack';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
-import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
-import { RoomThreeExhibitModal } from '@/components/ui/RoomThreeExhibitModal';
-import { RoomThreeQuestHud } from '@/components/ui/RoomThreeQuestHud';
-import { RoomThreeQuestModal } from '@/components/ui/RoomThreeQuestModal';
 import { CeramicsCollection } from '@/components/ui/CeramicsCollection';
-import { RoomFiveMissionHud } from '@/components/ui/RoomFiveMissionHud';
-import {
-  isPointInsideRoomFourCollider,
-  ROOM_FOUR_PLAYER_COLLISION_MARGIN,
-  ROOM_FOUR_WALL_INSET,
-  worldToRoomFourLocalZ,
-} from '@/lib/roomFourLayout';
-import roomFourSpatial from '@/lib/roomFourSpatial.json';
-import roomFiveSpatial from '@/lib/roomFiveSpatial.json';
-import {
-  ROOM_THREE_DISPLAY_NAME,
-  ROOM_THREE_TRANSITION,
-} from '@/lib/roomThreeNarrative';
-import {
-  ROOM_THREE_FRAGMENTS,
-  ROOM_THREE_INTERACTION_POINTS,
-  RoomThreeInteractionPoint,
-} from '@/lib/roomThreeQuest';
-import {
-  findNearestRoomThreeInteraction,
-  getCollectedFragmentCount,
-  getRoomThreeMissionText,
-} from '@/lib/roomThreeQuestState';
-import { createTeleportMovePayload } from '@/lib/teleportSync';
+import { MarketEconomyQuest } from '@/components/ui/MarketEconomyQuest';
+
+// ── Summary Minigame data (mirrored from RoomFour constants) ──
+const MG_SITUATIONS = [
+  { text: 'Được mùa nhưng thu nhập lại giảm.', category: 'market' },
+  { text: 'Ít người sử dụng nhưng vẫn được đầu tư.', category: 'state' },
+  { text: 'Cùng một sản phẩm nhưng có rất nhiều đơn vị cùng cung cấp.', category: 'multi_sector' },
+  { text: 'Khó khăn về tài chính nhưng vẫn được tiếp cận dịch vụ.', category: 'social' },
+  { text: 'Một sản phẩm hoàn thành sau nhiều công đoạn ở nhiều quốc gia.', category: 'integration' },
+  { text: 'Nhu cầu tăng làm giá tăng.', category: 'market' },
+  { text: 'Không đạt tiêu chuẩn nên không được phép tiếp tục hoạt động.', category: 'state' },
+  { text: 'Nhiều mô hình cùng tồn tại trong một lĩnh vực.', category: 'multi_sector' },
+  { text: 'Điều kiện sống khác nhau nhưng cơ hội tiếp cận gần như giống nhau.', category: 'social' },
+  { text: 'Một đơn hàng phải đi qua nhiều quốc gia mới hoàn thành.', category: 'integration' },
+  { text: 'Bán chậm nên giá giảm.', category: 'market' },
+  { text: 'Phải thay đổi để đáp ứng quy định mới.', category: 'state' },
+  { text: 'Nhiều chủ sở hữu cùng tham gia một lĩnh vực.', category: 'multi_sector' },
+  { text: 'Không đủ khả năng chi trả nhưng vẫn được hỗ trợ.', category: 'social' },
+  { text: 'Một sản phẩm được tạo ra bởi nhiều quốc gia.', category: 'integration' },
+  { text: 'Nguồn cung giảm làm giá tăng.', category: 'market' },
+  { text: 'Chưa đáp ứng yêu cầu nên phải tạm dừng.', category: 'state' },
+  { text: 'Nhiều hình thức kinh doanh cùng cạnh tranh.', category: 'multi_sector' },
+  { text: 'Khoảng cách giữa các nhóm được thu hẹp.', category: 'social' },
+  { text: 'Một chuỗi sản xuất trải dài qua nhiều quốc gia.', category: 'integration' },
+];
+
+const MG_CATEGORIES = [
+  { id: 'market', nameVi: 'Cơ chế thị trường', nameEn: 'Market Mechanism', icon: '💹' },
+  { id: 'state', nameVi: 'Vai trò Nhà nước', nameEn: 'State Regulation', icon: '🏛️' },
+  { id: 'multi_sector', nameVi: 'Nhiều thành phần kinh tế', nameEn: 'Multi-sector Economy', icon: '🏭' },
+  { id: 'social', nameVi: 'Công bằng xã hội', nameEn: 'Social Welfare', icon: '❤️' },
+  { id: 'integration', nameVi: 'Hội nhập quốc tế', nameEn: 'Global Integration', icon: '🌍' },
+];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CÁC HẰNG SỐ CỦA SẢNH
@@ -54,19 +59,7 @@ const LOBBY_W = 30;
 const LOBBY_L = 20;
 const LOBBY_H = 12;
 
-// This is intentionally identical to the reference light rig on /gallery/[id].
-// It is enabled only while Room 4 is active so the connected journey keeps the
-// same readable presentation without flattening the other gallery rooms.
-const RoomFourReferenceLightRig: React.FC = () => (
-  <>
-    <ambientLight intensity={0.8} />
-    <directionalLight position={[5, 12, 5]} intensity={0.7} />
-    <directionalLight position={[0, 10, 0]} intensity={1.2} color="#f0f9ff" />
-  </>
-);
-
-// Tuyến tham quan bắt buộc: 01 -> 02 (Bến Nhà Rồng) -> 03 -> 04 -> 05 (Hội nghị).
-// Các phòng được tách bằng chuyển cảnh để giữ đúng thứ tự dù vị trí 3D cũ khác nhau.
+// Cấu hình cửa nối phòng dạng chuỗi tuần tự (Lobby -> Room 1 -> Room 2)
 const DOOR_CONFIGS = [
   {
     doorId: 'door-room1',
@@ -78,31 +71,32 @@ const DOOR_CONFIGS = [
   },
   {
     doorId: 'door-room2',
-    targetRoom: 'gallery-three',
-    position: [0, 3.0, roomFiveSpatial.worldStartZ] as [number, number, number],
+    targetRoom: 'gallery-paintings',
+    // Cửa đặt ở cuối phòng 1 (Y=3, Z=54) nối sang phòng 2
+    position: [0, 3.0, 54.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 02: Bến Nhà Rồng 1911',
+    label: 'Phòng 02: Phòng Đổi Mới',
   },
   {
     doorId: 'door-room3',
     targetRoom: 'gallery-ceramics',
-    position: [0, 3.0, roomFiveSpatial.worldEndZ] as [number, number, number],
+    position: [0, 3.0, 100.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: ROOM_THREE_DISPLAY_NAME,
+    label: 'Phòng 03: Phòng Hội Nhập',
   },
   {
     doorId: 'door-room4',
     targetRoom: 'gallery-market-economy',
-    position: [0, 3.0, roomFourSpatial.worldStartZ] as [number, number, number],
+    position: [0, 3.0, 130.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 04: Liên Xô — Quảng Châu',
+    label: 'Phòng 04: Phòng Thị Trường',
   },
   {
     doorId: 'door-room5',
-    targetRoom: 'gallery-paintings',
-    position: [0, 3.0, roomFourSpatial.worldEndZ] as [number, number, number],
+    targetRoom: 'gallery-three',
+    position: [0, 3.0, 280.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 05: Phòng Hội Nghị',
+    label: 'Phòng 05: Phòng Thành Quả',
   },
 ];
 
@@ -129,45 +123,45 @@ const INTERACTIVE_DOORS = [
     promptVi: 'quay lại Sảnh chính',
     promptEn: 'return to Lobby'
   },
-  // --- ROOM 1 <-> ROOM 2 (NHÀ RỒNG) ---
+  // --- ROOM 1 <-> ROOM 2 ---
   {
     id: 'room1-to-room2',
     fromRoom: 'gallery-subsidy',
-    toRoom: 'gallery-three',
+    toRoom: 'gallery-paintings',
     doorId: 'door-room2',
     check: (x: number, z: number) => z >= 52.0 && z <= 54.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, roomFiveSpatial.spawnWorldZ] as [number, number, number],
-    promptVi: 'vào Phòng 02: Bến Nhà Rồng 1911',
-    promptEn: 'enter Room 02: Nhà Rồng Wharf 1911'
+    spawnPos: [0, 3.0, 56.0] as [number, number, number],
+    promptVi: 'vào Phòng 02: Phòng Đổi Mới',
+    promptEn: 'enter Room 02: Doi Moi Room'
   },
   {
     id: 'room2-to-room1',
-    fromRoom: 'gallery-three',
+    fromRoom: 'gallery-paintings',
     toRoom: 'gallery-subsidy',
     doorId: 'door-room2',
     check: (x: number, z: number) => z >= 54.0 && z <= 56.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, roomFiveSpatial.returnToRoomOneWorldZ] as [number, number, number],
+    spawnPos: [0, 3.0, 52.0] as [number, number, number],
     promptVi: 'quay lại Phòng 01',
     promptEn: 'return to Room 01'
   },
-  // --- ROOM 2 (NHÀ RỒNG) <-> ROOM 3 ---
+  // --- ROOM 2 <-> ROOM 3 ---
   {
     id: 'room2-to-room3',
-    fromRoom: 'gallery-three',
+    fromRoom: 'gallery-paintings',
     toRoom: 'gallery-ceramics',
     doorId: 'door-room3',
-    check: (x: number, z: number) => z >= roomFiveSpatial.worldEndZ - 2 && z <= roomFiveSpatial.worldEndZ && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 152.0] as [number, number, number],
-    promptVi: `vào ${ROOM_THREE_DISPLAY_NAME}`,
+    check: (x: number, z: number) => z >= 98.0 && z <= 100.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 102.0] as [number, number, number],
+    promptVi: 'vào Phòng 03: Phòng Hội Nhập',
     promptEn: 'enter Room 03: Integration Room'
   },
   {
     id: 'room3-to-room2',
     fromRoom: 'gallery-ceramics',
-    toRoom: 'gallery-three',
+    toRoom: 'gallery-paintings',
     doorId: 'door-room3',
-    check: (x: number, z: number) => z >= 150.0 && z <= 152.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, roomFiveSpatial.returnToRoomTwoWorldZ] as [number, number, number],
+    check: (x: number, z: number) => z >= 100.0 && z <= 102.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 98.0] as [number, number, number],
     promptVi: 'quay lại Phòng 02',
     promptEn: 'return to Room 02'
   },
@@ -177,39 +171,39 @@ const INTERACTIVE_DOORS = [
     fromRoom: 'gallery-ceramics',
     toRoom: 'gallery-market-economy',
     doorId: 'door-room4',
-    check: (x: number, z: number) => z >= roomFourSpatial.worldStartZ - 2 && z <= roomFourSpatial.worldStartZ && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, roomFourSpatial.spawnWorldZ] as [number, number, number],
-    promptVi: 'vào Phòng 04: Hành trình Liên Xô — Quảng Châu',
-    promptEn: 'enter Room 04: The Soviet–Guangzhou Journey'
+    check: (x: number, z: number) => z >= 128.0 && z <= 130.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 133.0] as [number, number, number],
+    promptVi: 'vào Phòng 04: Phòng Thị Trường',
+    promptEn: 'enter Room 04: Market Economy'
   },
   {
     id: 'room4-to-room3',
     fromRoom: 'gallery-market-economy',
     toRoom: 'gallery-ceramics',
     doorId: 'door-room4',
-    check: (x: number, z: number) => z >= roomFourSpatial.worldStartZ && z <= roomFourSpatial.worldStartZ + 2 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 178.0] as [number, number, number],
-    promptVi: `quay lại ${ROOM_THREE_DISPLAY_NAME}`,
+    check: (x: number, z: number) => z >= 130.0 && z <= 132.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 128.0] as [number, number, number],
+    promptVi: 'quay lại Phòng 03',
     promptEn: 'return to Room 03'
   },
-  // --- ROOM 4 <-> ROOM 5 (HỘI NGHỊ) ---
+  // --- ROOM 4 <-> ROOM 5 ---
   {
     id: 'room4-to-room5',
     fromRoom: 'gallery-market-economy',
-    toRoom: 'gallery-paintings',
+    toRoom: 'gallery-three',
     doorId: 'door-room5',
-    check: (x: number, z: number) => z >= roomFourSpatial.worldEndZ - 2 && z <= roomFourSpatial.worldEndZ && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, 106.0] as [number, number, number],
-    promptVi: 'vào Phòng 05: Phòng Hội Nghị',
-    promptEn: 'enter Room 05: Conference Room'
+    check: (x: number, z: number) => z >= 278.0 && z <= 280.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 282.0] as [number, number, number],
+    promptVi: 'vào Phòng 05: Phòng Thành Quả',
+    promptEn: 'enter Room 05: Achievements Room'
   },
   {
     id: 'room5-to-room4',
-    fromRoom: 'gallery-paintings',
+    fromRoom: 'gallery-three',
     toRoom: 'gallery-market-economy',
     doorId: 'door-room5',
-    check: (x: number, z: number) => z >= 104.0 && z <= 106.0 && Math.abs(x) < 2.2,
-    spawnPos: [0, 3.0, roomFourSpatial.worldEndZ - 2] as [number, number, number],
+    check: (x: number, z: number) => z >= 280.0 && z <= 282.0 && Math.abs(x) < 2.2,
+    spawnPos: [0, 3.0, 278.0] as [number, number, number],
     promptVi: 'quay lại Phòng 04',
     promptEn: 'return to Room 04'
   }
@@ -230,11 +224,11 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
   }
 
   // Bậc thang và sàn các phòng triển lãm
-  if (z > 8.0 && z <= roomFourSpatial.worldEndZ) {
-    // Phòng 5 (Hội trường / Paintings): 104.0 < Z <= 150.0
-    if (z > 104.0 && z <= 150.0) {
-      // Chỉ áp dụng độ cao bậc thang ở khu vực có các tấm bê tông (Z từ 110.0 đến 144.0)
-      if (z >= 110.0 && z <= 144.0) {
+  if (z > 8.0 && z <= 130.0) {
+    // Phòng 2 (Hội trường / Paintings): 54.0 < Z <= 100.0
+    if (z > 54.0 && z <= 100.0) {
+      // Chỉ áp dụng độ cao bậc thang ở khu vực có các tấm bê tông (Z từ 60.0 đến 94.0)
+      if (z >= 60.0 && z <= 94.0) {
         if (x < -3.4) return 3.0;
         if (x < -0.2) return 3.3;
         if (x < 3.0) return 3.6;
@@ -246,10 +240,8 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
     return 3.0;
   }
 
-  if (
-    (z > roomFiveSpatial.worldStartZ && z <= roomFiveSpatial.worldEndZ)
-    || (z > roomFourSpatial.worldStartZ && z <= roomFourSpatial.worldEndZ)
-  ) {
+  // Phòng 4 (gallery-market-economy) — Z từ 130.0 đến 245.0, Y = 3.0
+  if (z > 130.0 && z <= 245.0) {
     return 3.0;
   }
 
@@ -261,13 +253,7 @@ const getLobbyGroundY = (x: number, z: number, doorStates: Record<string, { isOp
 // ═══════════════════════════════════════════════════════════════════════════
 const LobbyCameraController: React.FC = () => {
   const { camera, gl } = useThree();
-  const {
-    doorStates,
-    activeGallery,
-    sittingPosition,
-    roomTwoDocOpen,
-    roomFourInteractionOpen,
-  } = useMuseum();
+  const { doorStates, activeGallery, sittingPosition, roomTwoDocOpen } = useMuseum();
   const theta = useRef(Math.PI);
   const phi = useRef(Math.PI / 2.3);
   const isMouseDown = useRef(false);
@@ -290,7 +276,6 @@ const LobbyCameraController: React.FC = () => {
     };
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (roomFourInteractionOpen) return;
       if (e.button === 2) {
         isZooming.current = true;
       }
@@ -304,7 +289,6 @@ const LobbyCameraController: React.FC = () => {
 
     // Hỗ trợ phím tắt Z/C cho những máy dùng Touchpad không click chuột phải được dễ dàng
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (roomFourInteractionOpen) return;
       if (e.code === 'KeyZ' || e.code === 'KeyC') {
         isZooming.current = true;
       }
@@ -327,7 +311,6 @@ const LobbyCameraController: React.FC = () => {
     };
 
     const handlePointerDown = (e: PointerEvent) => {
-      if (roomFourInteractionOpen) return;
       if (e.button !== 0 || !isInsideCanvas(e)) return;
       isMouseDown.current = true;
     };
@@ -337,7 +320,7 @@ const LobbyCameraController: React.FC = () => {
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if (roomTwoDocOpenRef.current || roomFourInteractionOpen) return;
+      if (roomTwoDocOpenRef.current) return;
       const isLeftButtonHeld = (e.buttons & 1) === 1;
       if (!isLeftButtonHeld || !isInsideCanvas(e)) {
         if (!isLeftButtonHeld) isMouseDown.current = false;
@@ -373,7 +356,7 @@ const LobbyCameraController: React.FC = () => {
       window.removeEventListener('pointercancel', handlePointerUp);
       window.removeEventListener('pointermove', handlePointerMove);
     };
-  }, [gl, roomFourInteractionOpen]);
+  }, [gl]);
 
   useFrame((state, delta) => {
     // Thực hiện hiệu ứng Zoom mềm mại bằng cách thay đổi FOV (ép kiểu PerspectiveCamera)
@@ -453,42 +436,42 @@ const LobbyCameraController: React.FC = () => {
       minX = -LOBBY_W / 2 + 0.5;
       maxX = LOBBY_W / 2 - 0.5;
       minZ = -9.4;
-      maxZ = isDoor1Open ? 8.2 : 7.8;
+      maxZ = isDoor1Open ? (isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8) : 53.8) : 7.8;
     } 
     else if (pz > 8.0 && pz <= 54.0) {
       // Đang ở Phòng 1
       minX = -11.5;
       maxX = 11.5;
       minZ = isDoor1Open ? -9.4 : 8.2;
-      maxZ = isDoor2Open ? roomFiveSpatial.worldStartZ + 0.2 : 53.8;
-    }
-    else if (pz > roomFiveSpatial.worldStartZ && pz <= roomFiveSpatial.worldEndZ) {
-      // Đang ở Phòng 2 (Bến Nhà Rồng)
+      maxZ = isDoor2Open ? (isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8) : 53.8;
+    } 
+    else if (pz > 54.0 && pz <= 100.0) {
+      // Đang ở Phòng 2
       minX = -11.5;
       maxX = 11.5;
-      minZ = isDoor2Open ? roomFiveSpatial.worldStartZ - 0.2 : roomFiveSpatial.worldStartZ + 0.2;
-      maxZ = isDoor3Open ? roomFiveSpatial.worldEndZ + 0.2 : roomFiveSpatial.worldEndZ - 0.2;
+      minZ = isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2;
+      maxZ = isDoor3Open ? (isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8) : 99.8;
     } 
-    else if (pz > 104.0 && pz <= 150.0) {
-      // Đang ở Phòng 5 (Hội nghị)
-      minX = -11.5;
-      maxX = 11.5;
-      minZ = isDoor5Open ? 103.8 : 104.2;
-      maxZ = 149.8;
-    } 
-    else if (pz > 150.0 && pz <= 180.0) {
-      // Đang ở Phòng 3
+    else if (pz > 100.0 && pz <= 130.0) {
+      // Đang ở Phòng 3 (Gốm sứ)
       minX = -14.5;
       maxX = 14.5;
-      minZ = isDoor3Open ? 149.8 : 150.2;
-      maxZ = isDoor4Open ? roomFourSpatial.worldStartZ + 0.2 : 179.8;
+      minZ = isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2;
+      maxZ = isDoor4Open ? (isDoor5Open ? 329.8 : 279.8) : 129.8;
+    } 
+    else if (pz > 130.0 && pz <= 280.0) {
+      // Đang ở Phòng 4 (Kinh tế thị trường)
+      minX = -8.5;
+      maxX = 8.5;
+      minZ = isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2;
+      maxZ = isDoor5Open ? 329.8 : 279.8;
     }
-    else if (pz > roomFourSpatial.worldStartZ && pz <= roomFourSpatial.worldEndZ) {
-      // Đang ở Phòng 4 — hành trình Liên Xô đến Quảng Châu
-      minX = -roomFourSpatial.roomWidth / 2 + 0.5;
-      maxX = roomFourSpatial.roomWidth / 2 - 0.5;
-      minZ = isDoor4Open ? roomFourSpatial.worldStartZ - 0.2 : roomFourSpatial.worldStartZ + 0.2;
-      maxZ = isDoor5Open ? roomFourSpatial.worldEndZ + 0.2 : roomFourSpatial.worldEndZ - 0.2;
+    else if (pz > 280.0 && pz <= 330.0) {
+      // Đang ở Phòng 5 (Thành quả)
+      minX = -11.5;
+      maxX = 11.5;
+      minZ = isDoor5Open ? (isDoor4Open ? (isDoor3Open ? (isDoor2Open ? (isDoor1Open ? -9.4 : 8.2) : 54.2) : 100.2) : 130.2) : 280.2;
+      maxZ = 329.8;
     }
 
     const camX = Math.max(minX, Math.min(maxX, px + xOff + sitOffsetX));
@@ -552,26 +535,14 @@ const LobbyPlayer: React.FC<{
   activeDoorRef: React.RefObject<any>;
   transitionLoading: boolean;
   onTransitionLoadingChange: (loading: boolean) => void;
-  onTransitionRoomChange: (roomId: string, fallbackName: string) => void;
-  onOpenRoomThreeVideo: () => void;
-  onOpenRoomThreeFragment: (fragmentId: string) => void;
-  onOpenRoomThreeDesk: () => void;
-  onRoomThreeInteractionChange: (interaction: RoomThreeInteractionPoint | null) => void;
-  roomThreeVideoOpen: boolean;
-  roomThreeOverlayOpen: boolean;
+  onTransitionRoomNameChange: (name: string) => void;
 }> = ({
   onActiveDoorChange,
   activeDoor,
   activeDoorRef,
   transitionLoading,
   onTransitionLoadingChange,
-  onTransitionRoomChange,
-  onOpenRoomThreeVideo,
-  onOpenRoomThreeFragment,
-  onOpenRoomThreeDesk,
-  onRoomThreeInteractionChange,
-  roomThreeOverlayOpen,
-  roomThreeVideoOpen,
+  onTransitionRoomNameChange,
 }) => {
   const playerRef = useRef<THREE.Group>(null);
   const keys = useRef({ w: false, a: false, s: false, d: false, e: false, shift: false, space: false });
@@ -585,18 +556,16 @@ const LobbyPlayer: React.FC<{
   const rightArmRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
 
-  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language, roomFourInteractionOpen, roomThreeCollectedFragments } = useMuseum();
+  const { settings, doorStates, loadedRooms, teleportTarget, setTeleportTarget, clearTeleport, currentRoom, setCurrentRoom, socket, selectedExhibit, sittingPosition, setSittingPosition, sittingPrompt, setSittingPrompt, roomOneLocked, currentRoomLocked, welcomeModalOpen, roomOneCompleted, roomTwoDocOpen, setRoomTwoDocOpen, roomTwoScore, language } = useMuseum();
   const isPawn = settings.preset === 'low';
   const baseY = isPawn ? 0.24 : 0.472;
   const lastUpdate = useRef(0);
-  const roomThreeInteractionRef = useRef<RoomThreeInteractionPoint | null>(null);
-  const roomThreeInteractionKeyRef = useRef('');
 
   const frontVec = useRef(new THREE.Vector3()).current;
   const rightVec = useRef(new THREE.Vector3()).current;
   const moveDir = useRef(new THREE.Vector3()).current;
 
-  // Khởi tạo danh sách 60 ghế ngồi trong Phòng 5 bậc thang để check khoảng cách và tọa độ ngồi
+  // Khởi tạo danh sách 60 ghế ngồi trong Phòng 2 bậc thang để check khoảng cách và tọa độ ngồi
   const ROOM2_CHAIRS = useMemo(() => {
     const chairs: Array<{ x: number; y: number; z: number }> = [];
     const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
@@ -617,7 +586,7 @@ const LobbyPlayer: React.FC<{
         chairs.push({
           x: xCol - 0.4,
           y: 3.35 + tierY, // Độ cao ngồi = 3.35 (đệm ghế) + độ cao bậc thang
-          z: 127.0 + zVal
+          z: 77.0 + zVal
         });
       }
     }
@@ -644,7 +613,14 @@ const LobbyPlayer: React.FC<{
   useEffect(() => {
     if (teleportTarget && playerRef.current) {
       playerRef.current.position.set(teleportTarget.x, teleportTarget.y + baseY, teleportTarget.z);
-      socket?.emit('move', createTeleportMovePayload(teleportTarget, playerRef.current.rotation.y));
+      socket?.emit('move', {
+        x: teleportTarget.x,
+        y: teleportTarget.y,
+        z: teleportTarget.z,
+        yaw: playerRef.current.rotation.y,
+        isSitting: false,
+        headYaw: 0,
+      });
       clearTeleport();
     }
   }, [teleportTarget, clearTeleport, baseY, socket]);
@@ -659,27 +635,23 @@ const LobbyPlayer: React.FC<{
       let activeRoom = 'lobby';
       if (playerZ > 8.0 && playerZ <= 54.0) {
         activeRoom = 'gallery-subsidy';
-      } else if (playerZ > roomFiveSpatial.worldStartZ && playerZ <= roomFiveSpatial.worldEndZ) {
-        activeRoom = 'gallery-three';
-      } else if (playerZ > 104.0 && playerZ <= 150.0) {
+      } else if (playerZ > 54.0 && playerZ <= 100.0) {
         activeRoom = 'gallery-paintings';
-      } else if (playerZ > 150.0 && playerZ <= 180.0) {
+      } else if (playerZ > 100.0 && playerZ <= 130.0) {
         activeRoom = 'gallery-ceramics';
-      } else if (playerZ > roomFourSpatial.worldStartZ && playerZ <= roomFourSpatial.worldEndZ) {
+      } else if (playerZ > 130.0 && playerZ <= 280.0) {
         activeRoom = 'gallery-market-economy';
+      } else if (playerZ > 280.0) {
+        activeRoom = 'gallery-three';
       }
 
       // Ranh giới vật lý cứng giữa các phòng triển lãm để ngăn người chơi đi bộ xuyên phòng (bắt buộc nhấn E)
       if (activeRoom === 'lobby' && z > 7.7) return true;
       if (activeRoom === 'gallery-subsidy' && (z < 8.3 || z > 53.7)) return true;
-      if (activeRoom === 'gallery-three' && (z < roomFiveSpatial.worldStartZ + 0.3 || z > roomFiveSpatial.worldEndZ - 0.3)) return true;
-      if (activeRoom === 'gallery-paintings' && (z < 104.3 || z > 149.7)) return true;
-      if (activeRoom === 'gallery-ceramics' && (z < 150.3 || z > 179.7)) return true;
-      if (
-        activeRoom === 'gallery-market-economy' &&
-        (z < roomFourSpatial.worldStartZ + ROOM_FOUR_WALL_INSET ||
-          z > roomFourSpatial.worldEndZ - ROOM_FOUR_WALL_INSET)
-      ) return true;
+      if (activeRoom === 'gallery-paintings' && (z < 54.3 || z > 99.7)) return true;
+      if (activeRoom === 'gallery-ceramics' && (z < 100.3 || z > 129.7)) return true;
+      if (activeRoom === 'gallery-market-economy' && (z < 130.3 || z > 279.7)) return true;
+      if (activeRoom === 'gallery-three' && z < 280.3) return true;
 
       // ── VÙNG SẢNH (Lobby) ──
       if (z <= 8.0) {
@@ -765,7 +737,7 @@ const LobbyPlayer: React.FC<{
           }
         }
 
-        // Cửa cuối phòng nối sang Phòng 2 (Bến Nhà Rồng)
+        // Cửa cuối phòng nối sang phòng 2
         if (z > 53.3) {
           const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor2) return true;
@@ -773,33 +745,18 @@ const LobbyPlayer: React.FC<{
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 2 — Bến Nhà Rồng (gallery-three: Z 54.0 -> 104.0) ──
-      if (z > roomFiveSpatial.worldStartZ && z <= roomFiveSpatial.worldEndZ) {
-        if (z < roomFiveSpatial.worldStartZ + 0.6) {
+      // ── PHÒNG TRIỂN LÃM 2 (gallery-paintings: Z 54.0 -> 100.0) ──
+      if (z > 54.0 && z <= 100.0) {
+        // Chỉ chặn khi đi lùi về phòng 1 qua cửa 2 đang đóng
+        if (z < 54.6) {
           const passingDoor2 = doorStates['door-room2']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor2) return true;
         }
-        if (x < -11.7 || x > 11.7) return true;
-
-        if (z > roomFiveSpatial.worldEndZ - 0.7) {
-          const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor3) return true;
-        }
-        return false;
-      }
-
-      // ── PHÒNG TRIỂN LÃM 5 — Hội nghị (gallery-paintings: Z 104.0 -> 150.0) ──
-      if (z > 104.0 && z <= 150.0) {
-        // Phòng Hội nghị được vào từ Phòng 4 bằng cửa 5.
-        if (z < 104.6) {
-          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
-          if (!passingDoor5) return true;
-        }
 
         if (x < -11.7 || x > 11.7) return true;
 
-        // Chặn các bàn đại biểu và ghế trong Phòng 5 (X xoay dọc, 5 dãy bàn bậc thang)
-        const localZ = z - 127.0;
+        // Chặn các bàn đại biểu và ghế trong Phòng 2 (X xoay dọc, 5 dãy bàn bậc thang)
+        const localZ = z - 77.0;
         const deskXCoords = [-5.0, -1.8, 1.4, 4.6, 7.8];
         // Chặn bục sân khấu bên trái và lan can 2 đầu sân khấu (local X: -12.0 đến -7.6, local Z: -7.6 đến 7.6)
         if (x < -7.6 && localZ > -7.6 && localZ < 7.6) return true;
@@ -827,95 +784,97 @@ const LobbyPlayer: React.FC<{
           }
         }
 
-        // Chặn va chạm ở 2 đầu lan can biên Z (Z global = 110.0 và 144.0) khi đứng trên các bậc (X > -3.4)
+        // Chặn va chạm ở 2 đầu lan can biên Z (Z global = 60.0 và 94.0) khi đứng trên các bậc (X > -3.4)
         if (x > -3.4) {
-          if (z >= 109.6 && z <= 110.4) return true;
-          if (z >= 143.6 && z <= 144.4) return true;
+          // Chặn ở đầu Z = 60.0 (giới hạn an toàn từ 59.6 đến 60.4)
+          if (z >= 59.6 && z <= 60.4) return true;
+          // Chặn ở đầu Z = 94.0 (giới hạn an toàn từ 93.6 đến 94.4)
+          if (z >= 93.6 && z <= 94.4) return true;
         }
 
-        if (z > 149.3) {
+        if (z > 99.3) {
           const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
         }
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 150.0 -> 180.0) ──
-      if (z > 150.0 && z <= 180.0) {
+      // ── PHÒNG TRIỂN LÃM 3 (gallery-ceramics: Z 100.0 -> 130.0) ──
+      if (z > 100.0 && z <= 130.0) {
         // Chỉ chặn khi đi lùi về phòng 2 qua cửa 3 đang đóng
-        if (z < 150.6) {
+        if (z < 100.6) {
           const passingDoor3 = doorStates['door-room3']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor3) return true;
         }
 
         if (x < -14.7 || x > 14.7) return true;
 
-        // 1. Va chạm với máy chơi game tại X = 8.0, Z = 178.6 (global)
-        if (x > 6.6 && x < 9.4 && z > 177.4 && z < 179.5) {
+        // 1. Va chạm với máy chơi game tại X = 8.0, Z = 128.6 (global)
+        if (x > 6.6 && x < 9.4 && z > 127.4 && z < 129.5) {
           return true;
         }
 
         // 2. Va chạm với hàng rào bên trái (X = -13.2)
         if (x < -12.4) {
-          if ((z > 154.2 && z < 159.8) || (z > 162.2 && z < 167.8) || (z > 170.2 && z < 175.8)) {
+          if ((z > 104.2 && z < 109.8) || (z > 112.2 && z < 117.8) || (z > 120.2 && z < 125.8)) {
             return true;
           }
         }
 
         // 3. Va chạm với hàng rào bên phải (X = 13.2)
         if (x > 12.4) {
-          if ((z > 154.2 && z < 159.8) || (z > 162.2 && z < 167.8) || (z > 170.2 && z < 175.8)) {
+          if ((z > 104.2 && z < 109.8) || (z > 112.2 && z < 117.8) || (z > 120.2 && z < 125.8)) {
             return true;
           }
         }
 
-        // 4. Va chạm với hàng rào cửa vào trước (Z = 151.8 global)
-        if (z < 152.6) {
+        // 4. Va chạm với hàng rào cửa vào trước (Z = 101.8 global)
+        if (z < 102.6) {
           if ((x > -10.8 && x < -5.2) || (x > 5.2 && x < 10.8)) {
             return true;
           }
         }
 
-        // 5. Va chạm với hàng rào phía sau bên trái (Z = 178.2 global)
-        if (z > 177.4) {
+        // 5. Va chạm với hàng rào phía sau bên trái (Z = 128.2 global)
+        if (z > 127.4) {
           if (x > -10.8 && x < -5.2) {
             return true;
           }
         }
 
-        if (z > 179.3) {
+        if (z > 129.3) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
         }
         return false;
       }
 
-      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 180.0 -> 260.0) ──
-      if (z > roomFourSpatial.worldStartZ && z <= roomFourSpatial.worldEndZ) {
+      // ── PHÒNG TRIỂN LÃM 4 (gallery-market-economy: Z 130.0 -> 280.0) ──
+      if (z > 130.0 && z <= 280.0) {
         // Chỉ chặn khi đi lùi về phòng 3 qua cửa 4 đang đóng
-        if (z < roomFourSpatial.worldStartZ + 0.6) {
+        if (z < 130.6) {
           const passingDoor4 = doorStates['door-room4']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor4) return true;
         }
 
         // Biên giới tường bên (rộng 18m, X = ±9m)
-        const roomFourHalfWidth = roomFourSpatial.roomWidth / 2 - ROOM_FOUR_WALL_INSET;
-        if (x < -roomFourHalfWidth || x > roomFourHalfWidth) return true;
+        if (x < -8.7 || x > 8.7) return true;
 
-        // Collider dùng cùng layout datum với station bay và transition wings của RoomFour.
-        if (
-          isPointInsideRoomFourCollider(
-            x,
-            worldToRoomFourLocalZ(z),
-            ROOM_FOUR_PLAYER_COLLISION_MARGIN,
-          )
-        ) return true;
-
-        if (z > roomFourSpatial.worldEndZ - 0.7) {
+        // Tường sau phòng 4 (Z = 280.0)
+        if (z > 279.3) {
           const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
           if (!passingDoor5) return true;
         }
+        return false;
+      }
 
+      // ── PHÒNG TRIỂN LÃM 5 (gallery-three: Z 280.0 -> 330.0) ──
+      if (z > 280.0 && z <= 330.0) {
+        if (z < 280.6) {
+          const passingDoor5 = doorStates['door-room5']?.isOpen && x > -2.2 && x < 2.2;
+          if (!passingDoor5) return true;
+        }
+        if (x < -11.7 || x > 11.7) return true;
         return false;
       }
 
@@ -953,21 +912,15 @@ const LobbyPlayer: React.FC<{
 
       if (e.code === 'KeyE') {
         e.preventDefault();
-        if (roomThreeOverlayOpen || roomThreeVideoOpen) return;
         if (sittingPositionRef.current) {
-          // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 5
-          if (playerRef.current && playerRef.current.position.z > 104.0 && playerRef.current.position.z <= 150.0) {
+          // Chỉ cho phép mở tài liệu khi đang ngồi ở phòng 2
+          if (playerRef.current && playerRef.current.position.z > 54.0 && playerRef.current.position.z <= 100.0) {
             setRoomTwoDocOpen((prev: boolean) => !prev);
           }
-        } else if (roomThreeInteractionRef.current) {
-          const interaction = roomThreeInteractionRef.current;
-          if (interaction.kind === 'video') onOpenRoomThreeVideo();
-          if (interaction.kind === 'fragment' && interaction.id) onOpenRoomThreeFragment(interaction.id);
-          if (interaction.kind === 'desk') onOpenRoomThreeDesk();
         } else if (activeDoorRef.current) {
           const door = activeDoorRef.current;
           const targetRoomName = language === 'vi' ? door.promptVi : door.promptEn;
-          onTransitionRoomChange(door.toRoom, targetRoomName);
+          onTransitionRoomNameChange(targetRoomName);
           onTransitionLoadingChange(true);
 
           setTimeout(() => {
@@ -981,7 +934,6 @@ const LobbyPlayer: React.FC<{
 
             setTimeout(() => {
               onTransitionLoadingChange(false);
-              onTransitionRoomChange('', '');
             }, 800);
           }, 1200);
         }
@@ -1052,19 +1004,11 @@ const LobbyPlayer: React.FC<{
       window.removeEventListener('blur', resetAllKeys);
       document.removeEventListener('visibilitychange', resetAllKeys);
     };
-  }, [baseY, language, onOpenRoomThreeDesk, onOpenRoomThreeFragment, onOpenRoomThreeVideo, roomThreeOverlayOpen, roomThreeVideoOpen, setCurrentRoom, setRoomTwoDocOpen, setSittingPosition, setSittingPrompt, setTeleportTarget]);
+  }, []);
 
   useFrame((state, delta) => {
     if (!playerRef.current) return;
-    if (roomThreeOverlayOpen) {
-      roomThreeInteractionRef.current = null;
-      if (roomThreeInteractionKeyRef.current) {
-        roomThreeInteractionKeyRef.current = '';
-        onRoomThreeInteractionChange(null);
-      }
-      return;
-    }
-    if (selectedExhibit || transitionLoading || roomFourInteractionOpen || roomThreeVideoOpen || roomOneLocked || welcomeModalOpen) return;
+    if (selectedExhibit || transitionLoading || roomOneLocked || currentRoomLocked || welcomeModalOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -1075,22 +1019,10 @@ const LobbyPlayer: React.FC<{
 
     // Check khoảng cách ghế ngồi và cập nhật sittingPrompt
     const pPos = playerRef.current.position;
-    const nearestRoomThreeInteraction = currentRoom === 'gallery-ceramics' && !sittingPosition
-      ? findNearestRoomThreeInteraction(pPos, ROOM_THREE_INTERACTION_POINTS, roomThreeCollectedFragments)
-      : null;
-    roomThreeInteractionRef.current = nearestRoomThreeInteraction;
-    const interactionKey = nearestRoomThreeInteraction
-      ? `${nearestRoomThreeInteraction.kind}:${nearestRoomThreeInteraction.id ?? ''}`
-      : '';
-    if (interactionKey !== roomThreeInteractionKeyRef.current) {
-      roomThreeInteractionKeyRef.current = interactionKey;
-      onRoomThreeInteractionChange(nearestRoomThreeInteraction);
-    }
-
     if (sittingPosition) {
       if (sittingPrompt !== 'stand') setSittingPrompt('stand');
     } else {
-      if (pPos.z > 104.0 && pPos.z <= 150.0) {
+      if (pPos.z > 54.0 && pPos.z <= 100.0) {
         let minDist = Infinity;
         let closest: { x: number; y: number; z: number } | null = null;
         for (const chair of ROOM2_CHAIRS) {
@@ -1260,14 +1192,20 @@ const LobbyPlayer: React.FC<{
       setCurrentRoom('lobby');
     } else if (curPos.z > 8.0 && curPos.z <= 54.0) {
       setCurrentRoom('gallery-subsidy');
-    } else if (curPos.z > roomFiveSpatial.worldStartZ && curPos.z <= roomFiveSpatial.worldEndZ) {
-      setCurrentRoom('gallery-three');
-    } else if (curPos.z > 104.0 && curPos.z <= 150.0) {
+    } else if (curPos.z > 54.0 && curPos.z <= 100.0) {
       setCurrentRoom('gallery-paintings');
-    } else if (curPos.z > 150.0 && curPos.z <= 180.0) {
+    } else if (curPos.z > 100.0 && curPos.z <= 130.0) {
       setCurrentRoom('gallery-ceramics');
-    } else if (curPos.z > roomFourSpatial.worldStartZ && curPos.z <= roomFourSpatial.worldEndZ) {
+    } else if (curPos.z > 130.0 && curPos.z <= 210.0) {
       setCurrentRoom('gallery-market-economy');
+    } else if (curPos.z > 210.0) {
+      // Dịch chuyển ngược lại Sảnh chính khi đi qua cửa ra
+      curPos.set(0, baseY, -5.0);
+      setCurrentRoom('lobby');
+      if (playerRef.current) {
+        playerRef.current.position.set(0, baseY, -5.0);
+        playerRef.current.rotation.set(0, 0, 0);
+      }
     }
 
     // Arm/Leg swing
@@ -1446,47 +1384,199 @@ export default function LobbyPage() {
     setCurrentRoom,
     setTeleportTarget,
     clearTeleport,
+    socket,
     updatePreset,
     updateSettings,
     miniGameOpen,
+    setMiniGameOpen,
     sittingPrompt,
     otherUsers,
-    markRoomThreeVideoViewed,
-    roomThreeVideoViewed,
-    roomThreeCollectedFragments,
-    roomThreeCompleted,
-    collectRoomThreeFragment,
-    completeRoomThreeQuest,
   } = useMuseum();
   const [inputNickname, setInputNickname] = useState('');
   const [inputError, setInputError] = useState('');
   const [entered, setEntered] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [roomThreeVideoOpen, setRoomThreeVideoOpen] = useState(false);
-  const [roomThreeFragmentOpen, setRoomThreeFragmentOpen] = useState<string | null>(null);
-  const [roomThreeDeskOpen, setRoomThreeDeskOpen] = useState(false);
-  const [roomThreeInteraction, setRoomThreeInteraction] = useState<RoomThreeInteractionPoint | null>(null);
-  const [roomThreeNotice, setRoomThreeNotice] = useState<string | null>(null);
-
-  const showRoomThreeNotice = useCallback((message: string) => {
-    setRoomThreeNotice(message);
-    window.setTimeout(() => setRoomThreeNotice(null), 2600);
-  }, []);
-
-  const roomThreeOverlayOpen = roomThreeVideoOpen || roomThreeFragmentOpen !== null || roomThreeDeskOpen || roomThreeNotice !== null;
-  const roomThreeFragmentCount = getCollectedFragmentCount(roomThreeCollectedFragments);
-  const roomThreeMissionText = getRoomThreeMissionText(roomThreeVideoViewed, roomThreeFragmentCount, roomThreeCompleted);
-  const activeRoomThreeFragment = ROOM_THREE_FRAGMENTS.find((fragment) => fragment.id === roomThreeFragmentOpen) ?? null;
 
   // Trạng thái chuyển phòng mượt mà qua màn hình loading (Tách không gian các phòng độc lập)
   const [transitionLoading, setTransitionLoading] = useState(false);
   const [transitionRoomName, setTransitionRoomName] = useState('');
-  const [transitionRoomId, setTransitionRoomId] = useState<string | null>(null);
   const [activeDoorInfo, setActiveDoorInfo] = useState<any | null>(null);
   const activeDoorInfoRef = useRef<any>(null);
   useEffect(() => {
     activeDoorInfoRef.current = activeDoorInfo;
   }, [activeDoorInfo]);
+
+  // ── Summary Minigame state (Room 4) ──
+  const [mgOpen, setMgOpen] = useState(false);
+  const [mgStep, setMgStep] = useState<'rules' | 'game' | 'complete'>('rules');
+  const [mgHasProgress, setMgHasProgress] = useState(false);
+  const [mgIndex, setMgIndex] = useState(0);
+  const [mgScore, setMgScore] = useState(0);
+  const [mgDragOver, setMgDragOver] = useState<string | null>(null);
+  const [mgFeedback, setMgFeedback] = useState<'correct' | 'incorrect' | 'timeout' | null>(null);
+  const [mgQuestions, setMgQuestions] = useState<typeof MG_SITUATIONS>(MG_SITUATIONS);
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(15);
+  const [mgEarnedPoints, setMgEarnedPoints] = useState<number | null>(null);
+
+  const shuffleQuestions = (array: typeof MG_SITUATIONS) => {
+    const copy = [...array];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  // Load played status on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const played = localStorage.getItem('minigame_played_gallery_four') === 'true';
+      if (played) {
+        const savedScore = localStorage.getItem('minigame_score_gallery_four');
+        if (savedScore) {
+          const parsedScore = parseInt(savedScore, 10);
+          setMgScore(parsedScore);
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: parsedScore });
+          }
+        }
+      }
+    }
+  }, [socket]);
+
+  // Đếm ngược 15s cho mỗi câu hỏi
+  useEffect(() => {
+    if (mgStep !== 'game' || mgFeedback !== null || !mgOpen) {
+      return;
+    }
+
+    if (questionTimeLeft <= 0) {
+      setMgFeedback('timeout');
+      return;
+    }
+
+    const interval = setTimeout(() => {
+      setQuestionTimeLeft(prev => prev - 1);
+    }, 1000);
+
+    return () => clearTimeout(interval);
+  }, [mgStep, mgFeedback, questionTimeLeft, mgOpen]);
+
+  // Tự động chuyển câu hỏi khi bị hết giờ (timeout)
+  useEffect(() => {
+    if (mgFeedback !== 'timeout' || mgStep !== 'game' || !mgOpen) {
+      return;
+    }
+
+    const timerComplete = setTimeout(() => {
+      setMgFeedback(null);
+      setMgEarnedPoints(null);
+      if (mgIndex < mgQuestions.length - 1) {
+        setMgIndex(prev => prev + 1);
+        setQuestionTimeLeft(15);
+      } else {
+        setMgStep('complete');
+        setMgHasProgress(false);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('minigame_played_gallery_four', 'true');
+          localStorage.setItem('minigame_score_gallery_four', mgScore.toString());
+        }
+        if (socket && socket.connected) {
+          socket.emit('update-score', { score: mgScore });
+        }
+      }
+    }, 1200);
+
+    return () => clearTimeout(timerComplete);
+  }, [mgStep, mgFeedback, mgIndex, mgQuestions.length, mgOpen, mgScore, socket]);
+
+  // Listen for CustomEvent from RoomFour
+  useEffect(() => {
+    const handler = () => {
+      setMgOpen(true);
+      setMiniGameOpen(true);
+      if (typeof window !== 'undefined' && localStorage.getItem('minigame_played_gallery_four') === 'true') {
+        setMgStep('complete');
+        const savedScore = localStorage.getItem('minigame_score_gallery_four');
+        if (savedScore) {
+          const parsedScore = parseInt(savedScore, 10);
+          setMgScore(parsedScore);
+          if (socket && socket.connected) {
+            socket.emit('update-score', { score: parsedScore });
+          }
+        }
+      } else {
+        if (mgHasProgress) {
+          setMgStep('rules');
+        } else {
+          setMgStep('rules');
+          setMgIndex(0);
+          setMgScore(0);
+          setMgFeedback(null);
+          setQuestionTimeLeft(15);
+          setMgEarnedPoints(null);
+        }
+      }
+    };
+    window.addEventListener('openSummaryMinigame', handler);
+    return () => window.removeEventListener('openSummaryMinigame', handler);
+  }, [socket, setMiniGameOpen, mgHasProgress]);
+
+  const handleCloseMinigame = () => {
+    setMgOpen(false);
+    setMiniGameOpen(false);
+    setMgStep('rules');
+    setMgIndex(0);
+    setMgScore(0);
+    setMgFeedback(null);
+    setQuestionTimeLeft(15);
+    setMgEarnedPoints(null);
+    setMgHasProgress(false);
+  };
+
+  const handleCloseMinigameWithoutReset = () => {
+    setMgOpen(false);
+    setMiniGameOpen(false);
+  };
+
+  const handleMgAnswer = (catId: string) => {
+    if (mgFeedback !== null || questionTimeLeft <= 0) return;
+    const correct = mgQuestions[mgIndex].category;
+    let nextScore = mgScore;
+
+    // Trả lời trước 10s (thời gian đếm ngược còn >= 5s) được 10 điểm, còn lại được 5 điểm
+    const points = questionTimeLeft >= 5 ? 10 : 5;
+
+    if (catId === correct) {
+      setMgFeedback('correct');
+      setMgEarnedPoints(points);
+      nextScore = mgScore + points;
+      setMgScore(nextScore);
+    } else {
+      setMgFeedback('incorrect');
+    }
+
+    const timerAns = setTimeout(() => {
+      setMgFeedback(null);
+      setMgEarnedPoints(null);
+      if (mgIndex < mgQuestions.length - 1) {
+        setMgIndex(prev => prev + 1);
+        setQuestionTimeLeft(15);
+      } else {
+        setMgStep('complete');
+        setMgHasProgress(false);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('minigame_played_gallery_four', 'true');
+          localStorage.setItem('minigame_score_gallery_four', nextScore.toString());
+        }
+        if (socket && socket.connected) {
+          socket.emit('update-score', { score: nextScore });
+        }
+      }
+    }, 1200);
+
+    return () => clearTimeout(timerAns);
+  };
 
   // Sync activeGallery với currentRoom trong sảnh + phòng triển lãm 3D liên tục
   useEffect(() => {
@@ -1497,10 +1587,10 @@ export default function LobbyPage() {
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
       'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Dấu chân tìm đường' },
-      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 05: Phòng Hội Nghị' },
-      'gallery-ceramics': { id: 'gallery-ceramics', name: ROOM_THREE_DISPLAY_NAME },
-      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Liên Xô — Quảng Châu' },
-      'gallery-three': { id: 'gallery-three', name: 'Phòng 02: Bến Nhà Rồng 1911' },
+      'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Đổi Mới' },
+      'gallery-ceramics': { id: 'gallery-ceramics', name: 'Phòng 03: Phòng Hội Nhập' },
+      'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Phòng Thị Trường' },
+      'gallery-three': { id: 'gallery-three', name: 'Phòng 05: Phòng Thành Quả' },
     };
     const meta = ROOM_GALLERY_MAP[currentRoom] ?? { id: currentRoom, name: currentRoom };
     setActiveGallery({ id: meta.id, name: meta.name, description: '', scene_asset_url: '', is_active: true });
@@ -1518,8 +1608,6 @@ export default function LobbyPage() {
     setEntered(true);
   };
 
-  const isRoomFourPresentation = currentRoom === 'gallery-market-economy';
-
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-[#0a0a0d] flex flex-col">
       {/* ═══ LỚP CANVAS 3D TOÀN MÀN HÌNH ═══ */}
@@ -1534,14 +1622,8 @@ export default function LobbyPage() {
             >
               <AdaptiveDpr pixelated />
               <AdaptiveEvents />
-              <color attach="background" args={[isRoomFourPresentation ? '#14141a' : '#0d0d12']} />
-              <fog
-                attach="fog"
-                args={isRoomFourPresentation
-                  ? ['#14141a', 15, 60]
-                  : ['#0d0d12', settings.preset === 'ultra-low' ? 10 : settings.preset === 'low' ? 20 : 30, settings.preset === 'ultra-low' ? 60 : settings.preset === 'low' ? 80 : 120]}
-              />
-              {isRoomFourPresentation && <RoomFourReferenceLightRig />}
+              <color attach="background" args={['#0d0d12']} />
+              <fog attach="fog" args={['#0d0d12', settings.preset === 'ultra-low' ? 10 : settings.preset === 'low' ? 20 : 30, settings.preset === 'ultra-low' ? 60 : settings.preset === 'low' ? 80 : 120]} />
 
               <Suspense fallback={null}>
                 {/* Sảnh bảo tàng - Chỉ render khi người chơi đang ở Sảnh để tối ưu hóa hiệu năng vẽ */}
@@ -1554,22 +1636,7 @@ export default function LobbyPage() {
                   activeDoorRef={activeDoorInfoRef}
                   transitionLoading={transitionLoading}
                   onTransitionLoadingChange={setTransitionLoading}
-                  onTransitionRoomChange={(roomId, fallbackName) => {
-                    setTransitionRoomId(roomId || null);
-                    setTransitionRoomName(fallbackName);
-                  }}
-                  onOpenRoomThreeVideo={() => setRoomThreeVideoOpen(true)}
-                  onOpenRoomThreeFragment={(fragmentId) => setRoomThreeFragmentOpen(fragmentId)}
-                  onOpenRoomThreeDesk={() => {
-                    if (roomThreeFragmentCount < ROOM_THREE_FRAGMENTS.length) {
-                      showRoomThreeNotice('Bạn chưa tìm đủ 8 mảnh yêu sách. Hãy tiếp tục tìm trong phòng triển lãm.');
-                    } else {
-                      setRoomThreeDeskOpen(true);
-                    }
-                  }}
-                  onRoomThreeInteractionChange={setRoomThreeInteraction}
-                  roomThreeVideoOpen={roomThreeVideoOpen}
-                  roomThreeOverlayOpen={roomThreeOverlayOpen}
+                  onTransitionRoomNameChange={setTransitionRoomName}
                 />
 
                 {/* Multiplayer avatars */}
@@ -1581,10 +1648,10 @@ export default function LobbyPage() {
                 {/* ═══ CỬA NỐI PHÒNG (Door Portals) - Chỉ render cửa thuộc phòng hiện tại ═══ */}
                 {DOOR_CONFIGS.filter(config => {
                   if (config.doorId === 'door-room1') return currentRoom === 'lobby' || currentRoom === 'gallery-subsidy';
-                  if (config.doorId === 'door-room2') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-three';
-                  if (config.doorId === 'door-room3') return currentRoom === 'gallery-three' || currentRoom === 'gallery-ceramics';
+                  if (config.doorId === 'door-room2') return currentRoom === 'gallery-subsidy' || currentRoom === 'gallery-paintings';
+                  if (config.doorId === 'door-room3') return currentRoom === 'gallery-paintings' || currentRoom === 'gallery-ceramics';
                   if (config.doorId === 'door-room4') return currentRoom === 'gallery-ceramics' || currentRoom === 'gallery-market-economy';
-                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-paintings';
+                  if (config.doorId === 'door-room5') return currentRoom === 'gallery-market-economy' || currentRoom === 'gallery-three';
                   return false;
                 }).map((config) => (
                   <DoorPortal
@@ -1602,15 +1669,9 @@ export default function LobbyPage() {
                   const offset = ROOM_OFFSETS[room.galleryId];
                   if (!offset) return null;
 
-                  const isCurrentRoom = currentRoom === room.galleryId;
-                  // Room 4 is mounted while the visitor approaches either adjacent door. Its own
-                  // LOD still culls it at distance, so the lit threshold and shaders are ready
-                  // before the room transition completes instead of revealing a black canvas.
-                  const isRoomFourDoorPreview =
-                    room.galleryId === 'gallery-market-economy' &&
-                    currentRoom === 'gallery-ceramics';
-                  const shouldRenderRoom = isCurrentRoom || isRoomFourDoorPreview;
-                  if (!shouldRenderRoom) return null;
+                  // Tách biệt hoàn toàn không gian các phòng (chỉ render phòng hiện tại)
+                  const isVisible = currentRoom === room.galleryId;
+                  if (!isVisible) return null;
 
                   return (
                     <DynamicRoom
@@ -1619,7 +1680,6 @@ export default function LobbyPage() {
                       offsetZ={offset.z}
                       offsetY={offset.y}
                       isVisible={true}
-                      isInteractive={isCurrentRoom}
                     />
                   );
                 })}
@@ -1703,13 +1763,7 @@ export default function LobbyPage() {
           <div className="w-px h-3 bg-white/20" />
           <span>🖱️ <b>Nhấn giữ &amp; Rê chuột</b> xoay camera</span>
           <div className="w-px h-3 bg-white/20" />
-          <span>
-            {currentRoom === 'gallery-market-economy' ? (
-              language === 'vi' ? <>🧭 <b>Đi theo đường sáng</b> qua tám trạm</> : <>🧭 <b>Follow the light path</b> through eight stations</>
-            ) : (
-              language === 'vi' ? <>🚪 <b>Đi qua cửa mở</b> → vào phòng triển lãm</> : <>🚪 <b>Use an open door</b> to enter the next gallery</>
-            )}
-          </span>
+          <span>🚪 <b>Đi qua cửa mở</b> → vào phòng triển lãm</span>
         </div>
       )}
 
@@ -1908,58 +1962,276 @@ export default function LobbyPage() {
 
       {/* ═══ MODAL CHI TIẾT HIỆN VẬT (Exhibit Modal) ═══ */}
       <ExhibitModal />
-      <RoomFiveMissionHud />
       {miniGameOpen && <MiniGameModal />}
 
+      {/* ── SUMMARY MINIGAME FULLSCREEN OVERLAY (pure DOM, outside Canvas) ── */}
+      {mgOpen && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 2147483647, fontFamily: 'Inter, system-ui, sans-serif', display: 'flex', flexDirection: 'column' }}
+        >
+          {/* Background */}
+          <div style={{ position: 'absolute', inset: 0, background: '#020617' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.10) 0%, transparent 70%)' }} />
 
+          {/* Content */}
+          <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', padding: '24px 32px', boxSizing: 'border-box' }}>
 
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1e293b', paddingBottom: '16px', marginBottom: '24px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '20px' }}>🏆</span>
+                <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.1em' }}>THỬ THÁCH KINH TẾ ĐỊNH HƯỚNG XHCN</span>
+              </div>
+              <button
+                onClick={handleCloseMinigameWithoutReset}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #334155',
+                  color: '#94a3b8',
+                  cursor: 'pointer',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s ease',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#ef4444';
+                  e.currentTarget.style.color = '#ef4444';
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#334155';
+                  e.currentTarget.style.color = '#94a3b8';
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                ✕ {language === 'vi' ? 'Đóng' : 'Close'}
+              </button>
+            </div>
 
-      {/* ═══ SỔ NHIỆM VỤ ĐIỀU TRA PHÒNG BAO CẤP ═══ */}
-       <InvestigationNotebook />
+            {/* RULES */}
+            {mgStep === 'rules' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '28px', maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
+                <span style={{ fontSize: '56px' }}>🎮</span>
+                <div>
+                  <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>LUẬT CHƠI MINIGAME</h4>
+                  <p style={{ fontSize: '13px', color: '#cbd5e1', lineHeight: 1.7, background: 'rgba(2,6,23,0.6)', padding: '16px 20px', borderRadius: '12px', border: '1px solid #1e293b', textAlign: 'left' }}>
+                    Hệ thống sẽ đưa ra <strong style={{ color: '#fff' }}>20 tình huống thực tế</strong> tương ứng với các đặc trưng kinh tế của Việt Nam.<br />
+                    • Nhiệm vụ: <strong style={{ color: '#10b981' }}>kéo (drag)</strong> thẻ tình huống thả vào đúng biểu tượng, hoặc <strong style={{ color: '#10b981' }}>click</strong> thẳng vào ô.<br />
+                    • Thời gian đếm ngược cho mỗi câu hỏi là <strong style={{ color: '#eab308' }}>15 giây</strong>.<br />
+                    • Điểm số: Trả lời đúng <strong style={{ color: '#10b981' }}>trước 10 giây</strong> (đồng hồ còn &gt; 5s) được <strong style={{ color: '#10b981' }}>+10 điểm</strong>. Trả lời đúng <strong style={{ color: '#eab308' }}>sau 10 giây</strong> (đồng hồ còn &le; 5s) được <strong style={{ color: '#eab308' }}>+5 điểm</strong>.
+                  </p>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', width: '100%' }}>
+                  {MG_CATEGORIES.map(cat => (
+                    <div key={cat.id} style={{ background: 'rgba(2,6,23,0.5)', border: '1px solid #1e293b', padding: '12px 8px', borderRadius: '14px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '24px' }}>{cat.icon}</span>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', lineHeight: 1.3 }}>{language === 'vi' ? cat.nameVi : cat.nameEn}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>Tổng điểm tối đa: <span style={{ fontFamily: 'monospace', fontSize: '14px' }}>200</span> điểm</p>
+                {mgHasProgress ? (
+                  <button
+                    onClick={() => {
+                      setMgStep('game');
+                    }}
+                    style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
+                  >
+                    ▶️ {language === 'vi' ? `Tiếp tục chơi (Câu ${mgIndex + 1})` : `Continue (Q${mgIndex + 1})`}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setMgQuestions(shuffleQuestions(MG_SITUATIONS));
+                      setMgStep('game');
+                      setQuestionTimeLeft(15);
+                      setMgEarnedPoints(null);
+                      setMgHasProgress(true);
+                    }}
+                    style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', boxShadow: '0 0 30px rgba(16,185,129,0.3)' }}
+                  >
+                    🚀 {language === 'vi' ? 'Bắt đầu chơi' : 'Start Game'}
+                  </button>
+                )}
+              </div>
+            )}
 
-       <RoomOneSoundtrack />
+            {/* GAME */}
+            {mgStep === 'game' && (
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 700 }}>📝 Tình huống {mgIndex + 1} / {mgQuestions.length}</span>
+                    <div style={{ flex: 1, height: '4px', background: '#1e293b', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${((mgIndex + 1) / mgQuestions.length) * 100}%`, background: 'linear-gradient(to right, #10b981, #34d399)', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(2,6,23,0.8)', border: '1px solid #1e293b', padding: '6px 16px', borderRadius: '10px', fontSize: '13px', color: '#10b981', fontWeight: 700, marginLeft: '20px', flexShrink: 0 }}>
+                    <span style={{ color: questionTimeLeft <= 5 ? '#ef4444' : '#eab308', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      ⏳ Đếm ngược: <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: 900 }}>{questionTimeLeft}</span>s
+                    </span>
+                    <div style={{ width: '1px', height: '12px', background: '#334155' }} />
+                    <span>Điểm: <span style={{ fontFamily: 'monospace', fontSize: '16px', fontWeight: 900 }}>{mgScore}</span> / 200</span>
+                  </div>
+                </div>
 
-       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
+                <div style={{ display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    draggable={mgFeedback === null}
+                    onDragStart={(e) => e.dataTransfer.setData('text/plain', mgQuestions[mgIndex].category)}
+                    style={{
+                      maxWidth: '560px', width: '100%', padding: '28px 32px', borderRadius: '18px', border: '1px solid', textAlign: 'center', position: 'relative',
+                      cursor: mgFeedback === null ? 'grab' : 'default', userSelect: 'none', transition: 'all 0.25s ease', boxSizing: 'border-box',
+                      background: mgFeedback === 'correct' ? 'rgba(6,78,59,0.4)' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? 'rgba(69,10,10,0.4)' : 'rgba(2,6,23,0.7)',
+                      borderColor: mgFeedback === 'correct' ? '#10b981' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '#ef4444' : '#334155',
+                      boxShadow: mgFeedback === 'correct' ? '0 0 40px rgba(16,185,129,0.2)' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '0 0 40px rgba(239,68,68,0.2)' : '0 8px 40px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    <span style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translateX(-50%)', fontSize: '9px', background: '#1e293b', color: '#64748b', border: '1px solid #334155', padding: '2px 10px', borderRadius: '99px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Kéo thẻ này thả vào ô tương ứng bên dưới</span>
+                    <p style={{ fontSize: '16px', fontWeight: 800, color: mgFeedback === 'correct' ? '#6ee7b7' : (mgFeedback === 'incorrect' || mgFeedback === 'timeout') ? '#fca5a5' : '#f1f5f9', lineHeight: 1.6, marginTop: '8px' }}>
+                      &ldquo;{mgQuestions[mgIndex].text}&rdquo;
+                    </p>
+                    {mgFeedback === 'correct' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,185,129,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#10b981', background: 'rgba(2,6,23,0.95)', border: '1px solid #10b981', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>✨ CHÍNH XÁC +{mgEarnedPoints || 10}đ</span>
+                      </div>
+                    )}
+                    {mgFeedback === 'incorrect' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>❌ CHƯA CHÍNH XÁC</span>
+                      </div>
+                    )}
+                    {mgFeedback === 'timeout' && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(239,68,68,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '18px' }}>
+                        <span style={{ fontWeight: 900, fontSize: '13px', color: '#ef4444', background: 'rgba(2,6,23,0.95)', border: '1px solid #ef4444', padding: '8px 20px', borderRadius: '99px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>⏰ HẾT GIỜ!</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: '10px' }}>
+                  <p style={{ textAlign: 'center', fontSize: '10px', color: '#475569', fontStyle: 'italic' }}>(Mẹo: Kéo thả hoặc click trực tiếp vào ô bên dưới)</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                    {MG_CATEGORIES.map(cat => {
+                      const isOver = mgDragOver === cat.id;
+                      return (
+                        <div
+                          key={cat.id}
+                          onDragOver={(e) => { e.preventDefault(); if (mgFeedback === null) setMgDragOver(cat.id); }}
+                          onDragLeave={() => setMgDragOver(null)}
+                          onDrop={(e) => { e.preventDefault(); setMgDragOver(null); handleMgAnswer(cat.id); }}
+                          onClick={() => handleMgAnswer(cat.id)}
+                          style={{
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '16px 8px',
+                            borderRadius: '16px', border: `2px solid ${isOver ? '#10b981' : '#1e293b'}`,
+                            background: isOver ? '#0f2a23' : 'rgba(2,6,23,0.6)', cursor: 'pointer', userSelect: 'none',
+                            transition: 'all 0.15s ease', transform: isOver ? 'scale(1.05)' : 'scale(1)',
+                            boxShadow: isOver ? '0 0 20px rgba(16,185,129,0.3)' : 'none', minHeight: '110px',
+                          }}
+                        >
+                          <span style={{ fontSize: '28px', marginBottom: '8px' }}>{cat.icon}</span>
+                          <span style={{ fontSize: '9px', fontWeight: 800, color: isOver ? '#6ee7b7' : '#94a3b8', textAlign: 'center', lineHeight: 1.3, textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                            {language === 'vi' ? cat.nameVi : cat.nameEn}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* COMPLETE */}
+            {mgStep === 'complete' && (() => {
+              const allPlayerScores = [
+                { nickname: nickname || (language === 'vi' ? 'Bạn' : 'You'), score: mgScore, isMe: true },
+                ...otherUsers.map(u => ({ nickname: u.nickname, score: u.score || 0, isMe: false }))
+              ].sort((a, b) => b.score - a.score);
+
+              return (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', maxWidth: '640px', margin: '0 auto', textAlign: 'center', width: '100%' }}>
+                  <span style={{ fontSize: '56px' }}>🏆</span>
+                  <div>
+                    <h4 style={{ fontWeight: 900, fontSize: '22px', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '8px' }}>THỬ THÁCH HOÀN THÀNH!</h4>
+                    <p style={{ fontWeight: 850, fontSize: '15px', color: '#10b981' }}>
+                      Bạn đạt được: <span style={{ fontFamily: 'monospace', fontSize: '20px' }}>{mgScore}</span> / 200 điểm
+                    </p>
+                  </div>
+
+                  {/* Leaderboard Table Container */}
+                  <div style={{ width: '100%', background: 'rgba(15,23,42,0.4)', border: '1px solid #1e293b', borderRadius: '16px', overflow: 'hidden' }}>
+                    <div style={{ background: '#0f172a', padding: '12px 20px', borderBottom: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', fontWeight: 800, fontSize: '11px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span>Hạng / Người chơi</span>
+                      <div style={{ display: 'flex', gap: '40px' }}>
+                        <span style={{ width: '80px', textAlign: 'right' }}>Điểm số</span>
+                      </div>
+                    </div>
+                    <div style={{ maxHeight: '180px', overflowY: 'auto', padding: '4px 0' }}>
+                      {allPlayerScores.map((p, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 20px',
+                            background: p.isMe ? 'rgba(16,185,129,0.1)' : 'transparent',
+                            borderBottom: idx < allPlayerScores.length - 1 ? '1px solid rgba(30,41,59,0.5)' : 'none',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '20px', height: '20px', borderRadius: '99px',
+                              fontSize: '10px', fontWeight: 900,
+                              background: idx === 0 ? '#eab308' : idx === 1 ? '#cbd5e1' : idx === 2 ? '#cd7f32' : 'transparent',
+                              color: idx < 3 ? '#020617' : '#475569',
+                              border: idx >= 3 ? '1px solid #334155' : 'none'
+                            }}>
+                              {idx + 1}
+                            </span>
+                            <span style={{ fontSize: '12px', fontWeight: p.isMe ? 900 : 600, color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.nickname} {p.isMe && <span style={{ fontSize: '9px', background: '#10b981', color: '#020617', padding: '1px 5px', borderRadius: '4px', marginLeft: '6px', fontWeight: 900 }}>BẠN</span>}
+                            </span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '40px', fontFamily: 'monospace', fontSize: '13px', fontWeight: 800 }}>
+                            <span style={{ width: '80px', textAlign: 'right', color: p.isMe ? '#10b981' : '#cbd5e1' }}>
+                              {p.score}đ
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '11px', color: '#94a3b8', lineHeight: 1.6, margin: 0, fontStyle: 'italic', maxWidth: '500px' }}>
+                    &ldquo;Qua chuyến tham quan, chúng ta đã chứng kiến đầy đủ 5 đặc trưng của nền Kinh tế Thị trường định hướng XHCN Việt Nam.&rdquo;
+                  </p>
+
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <button onClick={handleCloseMinigame} style={{ background: '#10b981', color: '#020617', fontWeight: 900, padding: '12px 36px', borderRadius: '12px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.06em', cursor: 'pointer', border: 'none', boxShadow: '0 0 20px rgba(16,185,129,0.3)' }}>🚪 Thoát</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ SỔ NHIỆM VỤ PHÒNG DẤU CHÂN TÌM ĐƯỜNG ═══ */}
+      <InvestigationNotebook />
+
+      {/* ═══ NHẠC NỀN RIÊNG PHÒNG DẤU CHÂN TÌM ĐƯỜNG ═══ */}
+      <RoomOneSoundtrack />
+
+      {/* ═══ POPUP HƯỚNG DẪN PHÒNG DẤU CHÂN TÌM ĐƯỜNG ═══ */}
       <RoomWelcomeModal />
 
-      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 5 ═══ */}
+      {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}
       <RoomTwoDocumentModal />
-
-      <RoomThreeVideoModal
-        open={roomThreeVideoOpen}
-        onClose={() => setRoomThreeVideoOpen(false)}
-        onViewed={markRoomThreeVideoViewed}
-      />
-
-      <RoomThreeQuestHud
-        visible={entered && nickname !== '' && currentRoom === 'gallery-ceramics'}
-        missionText={roomThreeMissionText}
-        fragmentCount={roomThreeFragmentCount}
-        interaction={roomThreeInteraction}
-        notice={roomThreeNotice}
-      />
-
-      <RoomThreeExhibitModal
-        fragment={activeRoomThreeFragment}
-        videoViewed={roomThreeVideoViewed}
-        collected={activeRoomThreeFragment ? roomThreeCollectedFragments.includes(activeRoomThreeFragment.id) : false}
-        onClose={() => setRoomThreeFragmentOpen(null)}
-        onCollect={() => {
-          if (activeRoomThreeFragment) {
-            collectRoomThreeFragment(activeRoomThreeFragment.id);
-            setRoomThreeFragmentOpen(null);
-            showRoomThreeNotice(`Đã thu thập: ${activeRoomThreeFragment.title}`);
-          }
-        }}
-      />
-
-      <RoomThreeQuestModal
-        open={roomThreeDeskOpen}
-        fragmentIds={roomThreeCollectedFragments}
-        completed={roomThreeCompleted}
-        onClose={() => setRoomThreeDeskOpen(false)}
-        onComplete={completeRoomThreeQuest}
-      />
 
       {/* ═══ HUD HƯỚNG DẪN NGỒI GHẾ ĐẠI BIỂU ═══ */}
       {sittingPrompt && (
@@ -2013,31 +2285,12 @@ export default function LobbyPage() {
             </div>
 
             <div className="space-y-3">
-              {transitionRoomId === 'gallery-ceramics' ? (
-                <>
-                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
-                  </span>
-                  <p className="text-amber-400 text-xs font-black tracking-[0.28em] mt-2">
-                    {ROOM_THREE_TRANSITION.roomName}
-                  </p>
-                  <p className="text-cyan-300 text-sm font-bold tracking-[0.22em]">
-                    {ROOM_THREE_TRANSITION.period}
-                  </p>
-                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                    {ROOM_THREE_TRANSITION.description}
-                  </h2>
-                </>
-              ) : (
-                <>
-                  <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
-                    {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
-                  </span>
-                  <h2 className="text-xl font-bold text-white tracking-tight mt-2">
-                    {transitionRoomName}
-                  </h2>
-                </>
-              )}
+              <span className="text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/25 px-3 py-1 rounded-full font-bold uppercase tracking-widest">
+                {language === 'vi' ? 'Đang chuyển phòng' : 'Transitioning Room'}
+              </span>
+              <h2 className="text-xl font-bold text-white tracking-tight mt-2">
+                {transitionRoomName}
+              </h2>
               <p className="text-slate-400 text-xs font-semibold italic animate-pulse">
                 {language === 'vi'
                   ? 'Đang chuẩn bị không gian triển lãm 3D...'
@@ -2051,6 +2304,8 @@ export default function LobbyPage() {
       {/* ═══ ALBUM BỘ SƯU TẬP PHÒNG GỐM SỨ ═══ */}
       <CeramicsCollection />
 
+      {/* ═══ SỔ TAY NHIỆM VỤ PHÒNG KINH TẾ THỊ TRƯỜNG ═══ */}
+      <MarketEconomyQuest />
     </div>
   );
 }

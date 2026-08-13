@@ -362,3 +362,4 @@ export const RoomOne: React.FC<RoomOneProps> = ({
 };
 
 export default RoomOne;
+

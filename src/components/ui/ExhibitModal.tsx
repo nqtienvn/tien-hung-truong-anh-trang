@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Globe, User, BookOpen, Gamepad2, HelpCircle, Check, AlertTriangle, ArrowRight, Save, Clock, Volume2, Pause, Play } from 'lucide-react';
+import { X, Globe, User, BookOpen, Gamepad2, HelpCircle, Check, AlertTriangle, ArrowRight, Save, Volume2, Pause, Play } from 'lucide-react';
 import { useMuseum } from '@/context/MuseumContext';
 import { FirstVoyageGame } from './FirstVoyageGame';
 import { GalleyWorkMission } from './GalleyWorkMission';
@@ -258,37 +258,14 @@ export const ExhibitModal: React.FC = () => {
   const isGalleyWorkMission = selectedExhibit?.id === 'nha-rong-galley-work' && exhibitModalMode === 'game';
   const isShipExplorationMission = selectedExhibit?.id === 'nha-rong-ship-exploration' && exhibitModalMode === 'game';
 
-  const [gameState, setGameState] = useState<'observe' | 'quiz' | 'info'>('observe');
+  const [gameState, setGameState] = useState<'quiz' | 'info'>('quiz');
   const effectiveGameState = exhibitModalMode === 'info' ? 'info' : gameState;
-  const [countdown, setCountdown] = useState(0);
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]); // Cho chi-choice
   const [answerChecked, setAnswerChecked] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [canCollectCurrentClue, setCanCollectCurrentClue] = useState(false);
-  const [failedQuizIds, setFailedQuizIds] = useState<string[]>([]);
-
-  // Tải danh sách câu hỏi đã làm sai từ localStorage để lưu trữ vĩnh viễn không bị reset khi load lại trang
-  useEffect(() => {
-    if (typeof window !== 'undefined' && nickname) {
-      const saved = localStorage.getItem(`failed_quizzes_${nickname}`);
-      if (saved) {
-        try {
-          setFailedQuizIds(JSON.parse(saved));
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  }, [nickname]);
-
-  const updateFailedQuizIds = (newFailed: string[]) => {
-    setFailedQuizIds(newFailed);
-    if (typeof window !== 'undefined' && nickname) {
-      localStorage.setItem(`failed_quizzes_${nickname}`, JSON.stringify(newFailed));
-    }
-  };
 
   const lastExhibitIdRef = useRef<string | null>(null);
 
@@ -326,13 +303,12 @@ export const ExhibitModal: React.FC = () => {
       }
 
       const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
-      const alreadyFailed = failedQuizIds.includes(selectedExhibit.id);
-      if (alreadyCollected || alreadyFailed) {
+      if (alreadyCollected) {
         setGameState('info');
         setCanCollectCurrentClue(false);
       } else {
-        setGameState(gameData.hasTimer ? 'observe' : 'quiz');
-        setCountdown(gameData.timerDuration);
+        // Mở tranh là vào câu hỏi ngay; Room 1 không có thời gian chờ quan sát.
+        setGameState('quiz');
         setCurrentQuizIndex(0);
         setSelectedOption(null);
         setSelectedOptions([]);
@@ -341,7 +317,7 @@ export const ExhibitModal: React.FC = () => {
         setCanCollectCurrentClue(false);
       }
     }
-  }, [selectedExhibit?.id, cluesCollected, failedQuizIds, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, roomOneCompleted]);
+  }, [selectedExhibit?.id, cluesCollected, isSubsidyRoom, isCeramicsRoom, gameData, exhibitModalMode, roomOneCompleted]);
 
   // Bộ đếm ngược 10 giây cho phòng gốm sứ
   useEffect(() => {
@@ -352,20 +328,6 @@ export const ExhibitModal: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [isCeramicsRoom, selectedExhibit, collectedCeramics, ceramicsCountdown]);
-
-  // Bộ đếm ngược thời gian quan sát hiện vật
-  useEffect(() => {
-    if (exhibitModalMode === 'info') return;
-
-    if (isSubsidyRoom && gameState === 'observe' && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(prev => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (isSubsidyRoom && gameState === 'observe' && countdown === 0 && gameData) {
-      setGameState('quiz');
-    }
-  }, [gameState, countdown, gameData, isSubsidyRoom, exhibitModalMode]);
 
   // Mô phỏng Audio thuyết minh chạy giây tăng dần
   useEffect(() => {
@@ -516,13 +478,14 @@ export const ExhibitModal: React.FC = () => {
     setIsCorrect(correct);
     setAnswerChecked(true);
     setCanCollectCurrentClue(correct);
+  };
 
-    if (!correct && selectedExhibit) {
-      const newFailed = failedQuizIds.includes(selectedExhibit.id)
-        ? failedQuizIds
-        : [...failedQuizIds, selectedExhibit.id];
-      updateFailedQuizIds(newFailed);
-    }
+  const handleRetryQuestion = () => {
+    setSelectedOption(null);
+    setSelectedOptions([]);
+    setAnswerChecked(false);
+    setIsCorrect(false);
+    setCanCollectCurrentClue(false);
   };
 
   const handleNextStep = () => {
@@ -534,6 +497,7 @@ export const ExhibitModal: React.FC = () => {
       setSelectedOptions([]);
       setAnswerChecked(false);
       setIsCorrect(false);
+      setCanCollectCurrentClue(false);
     } else {
       setGameState('info');
     }
@@ -666,26 +630,7 @@ export const ExhibitModal: React.FC = () => {
                 </div>
                 <hr className="border-slate-800/80" />
 
-                {/* BƯỚC 1: QUAN SÁT HIỆN VẬT CÓ ĐẾM NGƯỢC */}
-                {effectiveGameState === 'observe' && (
-                  <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
-                    <div className="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center border border-amber-500/20 animate-pulse relative">
-                      <Clock size={24} />
-                      <div className="absolute inset-0 rounded-full border border-amber-500/35 animate-ping opacity-25" />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-amber-400 font-mono uppercase tracking-widest">
-                        Thời gian quan sát hiện vật
-                      </span>
-                      <h3 className="text-3xl font-mono font-black text-white">{countdown} giây</h3>
-                      <p className="text-[11px] text-slate-400 max-w-xs leading-relaxed font-sans pt-1">
-                        Hãy rê chuột xung quanh hoặc ngắm kỹ bức tranh/hiện vật trong phòng 3D. Hết thời gian quan sát sẽ mở khóa câu hỏi trắc nghiệm lịch sử.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* BƯỚC 2: TRẢ LỜI CÂU HỎI TRẮC NGHIỆM */}
+                {/* CÂU HỎI HIỆN NGAY KHI MỞ HIỆN VẬT */}
                 {effectiveGameState === 'quiz' && currentQuiz && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider">
@@ -748,12 +693,12 @@ export const ExhibitModal: React.FC = () => {
                           <div className="bg-rose-500/10 border border-rose-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-rose-400">
                             <AlertTriangle size={30} />
                             <span className="font-mono font-bold text-sm">Lựa chọn chưa đúng.</span>
-                            <p className="text-xs text-rose-300/80">Câu hỏi này đã khóa cho lượt chơi của bạn. Bạn vẫn có thể đọc tư liệu nhưng không thu thập được vật phẩm này.</p>
+                            <p className="text-xs text-rose-300/80">Hãy trả lời lại câu này. Chỉ khi trả lời đúng bạn mới được sang câu tiếp theo.</p>
                           </div>
                         )}
 
                         <button
-                          onClick={handleNextStep}
+                          onClick={isCorrect ? handleNextStep : handleRetryQuestion}
                           className={`w-full text-slate-950 font-bold py-3.5 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase font-mono tracking-wider ${
                             isCorrect ? 'bg-emerald-500 hover:bg-emerald-400' : 'bg-slate-300 hover:bg-slate-200'
                           }`}
@@ -764,7 +709,7 @@ export const ExhibitModal: React.FC = () => {
                               <ArrowRight size={14} />
                             </>
                           ) : (
-                            'Tiếp tục xem tư liệu'
+                            'Trả lời lại'
                           )}
                         </button>
                       </div>

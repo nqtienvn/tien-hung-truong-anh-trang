@@ -3,10 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMuseum } from '@/context/MuseumContext';
 import { BookOpen, Search, FileCheck, DoorOpen, X, ChevronRight, Sparkles, Gamepad2 } from 'lucide-react';
-import {
-  ROOM_THREE_DISPLAY_NAME,
-  ROOM_THREE_WELCOME,
-} from '@/lib/roomThreeNarrative';
 
 const GALLERY_CONFIGS: Record<string, {
   headerTitle: string;
@@ -48,7 +44,7 @@ const GALLERY_CONFIGS: Record<string, {
       {
         icon: <DoorOpen size={28} className="text-amber-600" />,
         title: '④ Mở cửa sang phòng tiếp theo',
-        desc: 'Cửa sang Phòng 02 luôn mở sẵn; đứng gần cửa và nhấn E để đi tiếp.',
+        desc: 'Kết nối chính xác dòng chảy lịch sử và đóng dấu phê duyệt báo cáo để mở khóa cửa sang Phòng 02.',
       },
     ],
     summary: (
@@ -73,134 +69,108 @@ const GALLERY_CONFIGS: Record<string, {
     ),
   },
   'gallery-paintings': {
-    headerTitle: 'PHÒNG 05 • PHÒNG HỘI NGHỊ',
-    welcomeTitle: 'Chào mừng đến Phòng Hội Nghị!',
+    headerTitle: 'PHÒNG 02 • PHÒNG ĐỔI MỚI',
+    welcomeTitle: 'Chào mừng đến Phòng Đổi Mới!',
     introText: (
       <>
         <span className="italic">Chủ đề: </span>
-        <strong>Hội nghị thành lập Đảng Cộng sản Việt Nam.</strong>
-        <span className="italic"> Đầu năm 1930 tại Cửu Long (Hồng Kông), Lãnh tụ Nguyễn Ái Quốc đã chủ trì Hội nghị hợp nhất các tổ chức cộng sản, thành lập Đảng Cộng sản Việt Nam. Bạn là đại biểu tham dự sự kiện lịch sử này. Nhiệm vụ của bạn là lắng nghe bài phát biểu và hoàn thành thử thách sắp xếp các mốc lịch sử.</span>
+        <strong>Đại hội Đảng lần thứ VI.</strong>
+        <span className="italic"> Tháng 12 năm 1986. Đất nước đang đứng trước nhiều khó khăn về kinh tế và đời sống. Bạn là thành viên của một nhóm đại biểu tham dự Đại hội VI. Trước khi đưa ra quyết định quan trọng, nhiệm vụ của các bạn là phân tích tình hình đất nước và đưa ra đề xuất phát triển kinh tế.</span>
       </>
     ),
     steps: [
       {
         icon: <Search size={28} className="text-amber-600" />,
         title: '① Chọn ghế đại biểu',
-        desc: 'Di chuyển đến khu vực hàng ghế trong hội trường và chọn một vị trí ngồi bất kỳ.',
+        desc: 'Di chuyển đến khu vực bàn ghế đại biểu họp trong hội trường và chọn một ghế trống bất kỳ.',
       },
       {
         icon: <FileCheck size={28} className="text-amber-600" />,
         title: '② Ngồi vào vị trí',
-        desc: 'Khi đứng gần ghế đại biểu, nhấn phím F để ngồi xuống tham dự hội nghị.',
+        desc: 'Khi đứng gần ghế đại biểu, nhấn phím F để ngồi xuống chuẩn bị tham dự phiên họp.',
       },
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
-        title: '③ Mở tài liệu lịch sử',
-        desc: 'Nhấn phím E khi đang ngồi để mở màn hình tài liệu phiên họp trước mặt bạn.',
+        title: '③ Mở tài liệu phiên họp',
+        desc: 'Nhấn phím E khi đang ngồi để mở màn hình báo cáo tài liệu họp trước mặt bạn.',
       },
       {
         icon: <Sparkles size={28} className="text-amber-600" />,
-        title: '④ Sắp xếp mốc lịch sử',
-        desc: 'Nghiên cứu các sự kiện lịch sử trọng đại của Hội nghị 3/2/1930 và kéo-thả để sắp xếp đúng thứ tự thời gian.',
+        title: '④ Đánh giá & Kiến nghị',
+        desc: 'Khi admin bắt đầu phiên thứ nhất, nghiên cứu báo cáo và kéo thanh đánh giá mức độ nghiêm trọng từ 0 đến 100 để gửi biểu quyết.',
       },
     ],
     summary: (
       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
         <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">📜</span>
-          <span>Hội nghị thành lập Đảng 3/2/1930</span>
+          <span className="text-amber-600 font-bold shrink-0">📝</span>
+          <span>Phân tích tình hình kinh tế</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🪑</span>
           <span>Ấn F để ngồi, ấn E mở tài liệu</span>
         </div>
         <div className="flex items-start gap-1.5">
-          <span className="text-amber-600 font-bold shrink-0">📅</span>
-          <span>Sắp xếp 8 mốc sự kiện lịch sử</span>
+          <span className="text-amber-600 font-bold shrink-0">📊</span>
+          <span>Đánh giá khủng hoảng 0 - 100</span>
         </div>
         <div className="flex items-start gap-1.5">
           <span className="text-amber-600 font-bold shrink-0">🏆</span>
-          <span>Hoàn thành nhiệm vụ đại biểu</span>
+          <span>Gửi biểu quyết để nhận điểm</span>
         </div>
       </div>
     ),
   },
   'gallery-ceramics': {
-    headerTitle: ROOM_THREE_DISPLAY_NAME,
-    welcomeTitle: 'PARIS · 1919',
+    headerTitle: 'PHÒNG 03 • PHÒNG HỘI NHẬP',
+    welcomeTitle: 'Chào mừng đến Phòng Hội Nhập!',
     introText: (
       <>
-        <p className="text-xl sm:text-2xl font-serif italic text-slate-800 leading-relaxed">
-          {ROOM_THREE_WELCOME.quote}
-        </p>
-        <p className="mt-3">
-          <strong>{ROOM_THREE_WELCOME.mission}</strong>
-        </p>
+        <span className="italic">Chủ đề: </span>
+        <strong>Việt Nam mở cửa với thế giới.</strong>
+        <span className="italic"> Bạn sẽ tìm hiểu về chặng đường hội nhập kinh tế quốc tế của nước nhà qua các bức tranh tư liệu lịch sử. Đọc kỹ thông tin để chuẩn bị cho mini game!</span>
       </>
     ),
     steps: [
       {
         icon: <Search size={28} className="text-amber-600" />,
-        title: `① ${ROOM_THREE_WELCOME.steps[0].title}`,
-        desc: ROOM_THREE_WELCOME.steps[0].description,
+        title: '① Khám phá tác phẩm',
+        desc: 'Đi xung quanh phòng triển lãm, nhấp vào các bức tranh trên tường để đọc chi tiết thông tin lịch sử về từng sự kiện mở cửa.',
       },
       {
         icon: <BookOpen size={28} className="text-amber-600" />,
-        title: `② ${ROOM_THREE_WELCOME.steps[1].title}`,
-        desc: ROOM_THREE_WELCOME.steps[1].description,
+        title: '② Thu thập dữ kiện',
+        desc: 'Mỗi bức tranh sau khi đọc sẽ được ghi nhận vào "Bộ sưu tập" ở góc dưới bên phải màn hình. Hãy thu thập đủ 9 dữ kiện.',
       },
       {
         icon: <Gamepad2 size={28} className="text-amber-600" />,
-        title: `③ ${ROOM_THREE_WELCOME.steps[2].title}`,
-        desc: ROOM_THREE_WELCOME.steps[2].description,
+        title: '③ Tham gia Mini Game',
+        desc: 'Đến khu vực máy chơi game "Game dòng chảy lịch sử" ở cuối phòng để bắt đầu trò chơi sắp xếp 9 sự kiện theo đúng trình tự thời gian.',
       },
       {
         icon: <FileCheck size={28} className="text-amber-600" />,
-        title: `④ ${ROOM_THREE_WELCOME.steps[3].title}`,
-        desc: ROOM_THREE_WELCOME.steps[3].description,
-      },
-    ],
-    summary: (
-      <div className="space-y-2 text-[11px] text-slate-700">
-        <p className="font-semibold leading-relaxed text-slate-800">
-          {ROOM_THREE_WELCOME.flow}
-        </p>
-      </div>
-    ),
-  },
-  'gallery-three': {
-    headerTitle: 'PHÒNG 02 • BẾN NHÀ RỒNG 1911',
-    welcomeTitle: 'Chào mừng đến Bến Nhà Rồng!',
-    introText: (
-      <>
-        <span className="italic">Nhiệm vụ xuyên suốt: </span>
-        <strong>Hoàn thiện hồ sơ hành trình Văn Ba — 1911.</strong>
-        <span className="italic"> Thu thập năm mảnh Khởi hành, Danh tính, Phương tiện, Lao động và Hải trình để trả lời Nguyễn Tất Thành đã bắt đầu hành trình tìm đường cứu nước bằng cách nào.</span>
-      </>
-    ),
-    steps: [
-      {
-        icon: <Search size={28} className="text-amber-600" />,
-        title: '① Thu thập năm mảnh hồ sơ',
-        desc: 'Lần lượt khám phá Bến Nhà Rồng, hồ sơ Văn Ba, mô hình tàu, công việc phụ bếp và hải trình đầu tiên.',
-      },
-      {
-        icon: <BookOpen size={28} className="text-amber-600" />,
-        title: '② Theo dõi trạm tiếp theo',
-        desc: 'Mở thanh Hồ sơ hành trình Văn Ba ở góc trái để xem tiến độ 0/5 và chỉ dẫn đến dữ kiện còn thiếu.',
-      },
-      {
-        icon: <Sparkles size={28} className="text-amber-600" />,
-        title: '③ Hoàn thiện hồ sơ 1911',
-        desc: 'Khi đủ 5/5 mảnh, dựng lại chuỗi lịch sử, trả lời câu hỏi trung tâm và nhận Hộ chiếu hành trình 1911.',
+        title: '④ Hoàn thành thử thách',
+        desc: 'Sắp xếp chính xác các sự kiện để đạt điểm số cao nhất. Bạn có 3 phút thực hiện và chỉ được nộp kết quả duy nhất một lần!',
       },
     ],
     summary: (
       <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
-        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">◉</span><span>5 trạm lịch sử liên kết</span></div>
-        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">✓</span><span>Tiến độ lưu theo biệt danh</span></div>
-        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">🗺️</span><span>Nhiệm vụ tổng kết cuối phòng</span></div>
-        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">▣</span><span>Hộ chiếu hành trình 1911</span></div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🖼️</span>
+          <span>9 bức tranh cần đọc</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">📁</span>
+          <span>Bộ sưu tập → góc dưới phải</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">⏱️</span>
+          <span>Giới hạn 3 phút chơi game</span>
+        </div>
+        <div className="flex items-start gap-1.5">
+          <span className="text-amber-600 font-bold shrink-0">🎯</span>
+          <span>Chỉ nộp bài duy nhất 1 lần</span>
+        </div>
       </div>
     ),
   },
@@ -232,7 +202,10 @@ export const RoomWelcomeModal: React.FC = () => {
     setTeleportTarget({ x: 0, y: 0.5, z: -5.0 }); // Dịch chuyển người chơi quay lại vị trí Sảnh chờ
   };
 
-  const config = activeGallery?.id ? GALLERY_CONFIGS[activeGallery.id] : null;
+  // Phòng 1 vào thẳng bằng phím E, không hiển thị bước hướng dẫn/sẵn sàng.
+  const config = activeGallery?.id && activeGallery.id !== 'gallery-subsidy'
+    ? GALLERY_CONFIGS[activeGallery.id]
+    : null;
 
   // Cập nhật trạng thái mở của welcome modal lên global context để khóa di chuyển
   useEffect(() => {
@@ -305,9 +278,12 @@ export const RoomWelcomeModal: React.FC = () => {
     if (config && step < config.steps.length - 1) {
       setStep(s => s + 1);
     } else {
-      // Hướng dẫn chỉ mang tính giới thiệu: người chơi luôn vào phòng ngay,
-      // không cần chờ phiên họp hoặc lệnh duyệt từ quản trị viên.
-      handleDismiss();
+      if (activeGallery?.id && ['gallery-paintings', 'gallery-ceramics', 'gallery-market-economy'].includes(activeGallery.id)) {
+        setIsWaitingRoomOne(true);
+        socket?.emit('room:ready', { roomId: activeGallery.id });
+      } else {
+        handleDismiss();
+      }
     }
   };
 
