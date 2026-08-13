@@ -118,6 +118,7 @@ function ArtifactHotspot({ artifact }: { artifact: typeof ARTIFACTS[number] }) {
   const firstIncomplete = ROOM_FIVE_FRAGMENT_ORDER.find((id) => !roomFiveProgress.fragments.includes(id));
   const completed = roomFiveProgress.fragments.includes(fragmentId);
   const statusColor = completed ? '#34d399' : firstIncomplete === fragmentId ? '#22d3ee' : artifact.accent;
+  const hasDisplayPedestal = artifact.id !== 'nha-rong-latouche-treville';
 
   useFrame((_, delta) => {
     if (ringRef.current) ringRef.current.rotation.z += delta * 0.9;
@@ -148,20 +149,24 @@ function ArtifactHotspot({ artifact }: { artifact: typeof ARTIFACTS[number] }) {
   return (
     // Trụ tàu giữ hướng về cửa; hai trụ cuối phòng nằm ngang, song song với tường bên tương ứng.
     <group position={artifact.position} rotation={[0, artifact.rotationY, 0]}>
-      <mesh onPointerDown={openArtifact} onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
-        <cylinderGeometry args={[1.2, 1.35, 0.22, 32]} />
-        <meshStandardMaterial color="#20150f" metalness={0.7} roughness={0.25} />
-      </mesh>
-      <mesh position={[0, 0.13, 0]} onPointerDown={openArtifact}>
-        <cylinderGeometry args={[0.92, 0.92, 0.08, 32]} />
-        <meshStandardMaterial color={statusColor} emissive={statusColor} emissiveIntensity={firstIncomplete === fragmentId ? 0.75 : 0.3} metalness={0.55} roughness={0.3} />
-      </mesh>
-      <mesh ref={ringRef} position={[0, 0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.02, 0.025, 8, 40]} />
-        <meshBasicMaterial color={statusColor} transparent opacity={0.8} />
-      </mesh>
+      {hasDisplayPedestal && (
+        <>
+          <mesh onPointerDown={openArtifact} onPointerOver={() => { document.body.style.cursor = 'pointer'; }} onPointerOut={() => { document.body.style.cursor = 'auto'; }}>
+            <cylinderGeometry args={[1.2, 1.35, 0.22, 32]} />
+            <meshStandardMaterial color="#20150f" metalness={0.7} roughness={0.25} />
+          </mesh>
+          <mesh position={[0, 0.13, 0]} onPointerDown={openArtifact}>
+            <cylinderGeometry args={[0.92, 0.92, 0.08, 32]} />
+            <meshStandardMaterial color={statusColor} emissive={statusColor} emissiveIntensity={firstIncomplete === fragmentId ? 0.75 : 0.3} metalness={0.55} roughness={0.3} />
+          </mesh>
+          <mesh ref={ringRef} position={[0, 0.18, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[1.02, 0.025, 8, 40]} />
+            <meshBasicMaterial color={statusColor} transparent opacity={0.8} />
+          </mesh>
+        </>
+      )}
       <TwoSidedBanner position={artifact.bannerPosition} distanceFactor={6} className="pointer-events-none select-none">
-        <div className="museum-room-sign w-40 rounded-lg border border-amber-200/60 bg-stone-950 px-3 py-2 text-center font-sans shadow-xl">
+        <div className="museum-room-sign nha-rong-typography w-40 rounded-lg border border-amber-200/60 bg-stone-950 px-3 py-2 text-center shadow-xl">
           <p className="text-[10px] font-bold leading-tight text-amber-100">{language === 'vi' ? artifact.title.vi : artifact.title.en}</p>
           <p className="mt-1 text-[8px] font-semibold uppercase tracking-wider text-amber-400">
             {artifact.id === 'nha-rong-first-voyage' || artifact.id === 'nha-rong-galley-work'
@@ -318,15 +323,13 @@ export const RoomNhaRong: React.FC<RoomNhaRongProps> = ({ galleryId, customSetti
       <directionalLight position={[-5, 8, 3]} intensity={isCurrentRoom ? 1.6 : 0} color="#ffd9a1" />
       <pointLight position={[0, 4.8, 0]} intensity={isCurrentRoom ? 24 : 0} distance={14} color="#fbbf77" />
       <group visible={isVisible}>
-        <mesh position={[0, 0.08, -7.5]}><boxGeometry args={[20, 0.16, 1.2]} /><meshStandardMaterial color="#54341f" roughness={0.72} /></mesh>
-        {[-8, -4, 4, 8].map((x) => <group key={x} position={[x, 1.15, -7.45]}><mesh><cylinderGeometry args={[0.12, 0.16, 2.1, 12]} /><meshStandardMaterial color="#2c2823" metalness={0.55} roughness={0.32} /></mesh><mesh position={[0, 1.05, 0]}><sphereGeometry args={[0.19, 14, 14]} /><meshStandardMaterial color="#d4af37" metalness={0.7} roughness={0.18} /></mesh></group>)}
         <ShipModel />
         <GalleyAndMap />
         {hotspotArtifacts.map((artifact) => <ArtifactHotspot key={artifact.id} artifact={artifact} />)}
         <TwoSidedBanner position={[0, 5.1, -9.8]} distanceFactor={9} className="pointer-events-none select-none">
-          <div className="museum-room-sign w-80 border-y border-amber-200/70 bg-stone-950 px-5 py-3 text-center font-sans shadow-2xl">
+          <div className="museum-room-sign nha-rong-typography w-80 border-y border-amber-200/70 bg-stone-950 px-5 py-3 text-center shadow-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300">05.06.1911</p>
-            <p className="mt-1.5 text-[18px] font-extrabold leading-snug text-amber-50">Bến Nhà Rồng — Khởi đầu một hành trình</p>
+            <p className="nha-rong-display mt-1.5 text-[20px] text-amber-50">Bến Nhà Rồng — Khởi đầu một hành trình</p>
           </div>
         </TwoSidedBanner>
       </group>

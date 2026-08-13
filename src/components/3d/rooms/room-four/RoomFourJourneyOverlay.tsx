@@ -15,9 +15,9 @@ interface RoomFourJourneyOverlayProps {
   onClose: () => void;
 }
 
-const FONT_STACK = '"Hanken Grotesk", "Manrope", sans-serif';
-const DISPLAY_STACK = '"EB Garamond", Georgia, serif';
-const LABEL_STACK = '"Space Grotesk", ui-monospace, monospace';
+const FONT_STACK = 'var(--font-hanken-grotesk), var(--font-manrope), sans-serif';
+const DISPLAY_STACK = 'var(--font-eb-garamond), Georgia, serif';
+const LABEL_STACK = 'var(--font-space-grotesk), ui-monospace, monospace';
 
 /**
  * A quiet archival reading view for a station. The visitor can freely open any

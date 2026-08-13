@@ -101,7 +101,7 @@ const FramedFlag = ({
           <div
             style={{
               color: '#f2e5cc',
-              fontFamily: '"EB Garamond", Georgia, serif',
+              fontFamily: 'var(--font-eb-garamond), Georgia, serif',
               fontSize: 34,
               fontWeight: 700,
               letterSpacing: '0.06em',
@@ -113,7 +113,7 @@ const FramedFlag = ({
           <div
             style={{
               color: '#d6ab69',
-              fontFamily: '"Space Grotesk", ui-monospace, monospace',
+              fontFamily: 'var(--font-space-grotesk), ui-monospace, monospace',
               fontSize: 11,
               fontWeight: 700,
               letterSpacing: '0.2em',

@@ -44,7 +44,8 @@ const ANSWERS = [
   },
 ] as const;
 
-export function DepartureMission({ language, completed = false, onComplete, onReset }: DepartureMissionProps) {
+export function DepartureMission({ completed = false, onComplete, onReset }: DepartureMissionProps) {
+  const language: Language = 'vi';
   const [activeSource, setActiveSource] = useState(0);
   const [viewedSources, setViewedSources] = useState<number[]>(completed ? [0, 1] : [0]);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(completed ? 0 : null);
@@ -86,9 +87,6 @@ export function DepartureMission({ language, completed = false, onComplete, onRe
         <h2 className="font-sans text-2xl font-black leading-tight text-white lg:text-3xl">
           {language === 'vi' ? 'Xác định thời khắc khởi hành' : 'Identify the departure moment'}
         </h2>
-        <p className="mt-1 font-sans text-sm text-slate-400">
-          {language === 'vi' ? 'Quan sát đủ hai tư liệu trước khi trả lời.' : 'Inspect both sources before answering.'}
-        </p>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/65">
@@ -132,7 +130,7 @@ export function DepartureMission({ language, completed = false, onComplete, onRe
               {language === 'vi' ? 'Câu hỏi xác minh' : 'Verification question'}
             </span>
           </div>
-          <p className="font-sans text-sm font-bold leading-relaxed text-white">
+          <p className="font-sans text-lg font-bold leading-relaxed text-white">
             {language === 'vi' ? 'Nguyễn Tất Thành rời Tổ quốc từ đâu và vào ngày nào?' : 'From where and on what date did Nguyễn Tất Thành leave Vietnam?'}
           </p>
           <div className="space-y-2">
@@ -146,7 +144,7 @@ export function DepartureMission({ language, completed = false, onComplete, onRe
                   type="button"
                   disabled={checked}
                   onClick={() => setSelectedAnswer(index)}
-                  className={`w-full cursor-pointer rounded-xl border p-3 text-left font-sans text-xs transition-colors disabled:cursor-default ${showCorrect ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100' : showWrong ? 'border-rose-400/50 bg-rose-500/15 text-rose-100' : selected ? 'border-teal-400/50 bg-teal-500/15 text-white' : 'border-slate-800 bg-slate-950/45 text-slate-300 hover:border-teal-400/40'}`}
+                  className={`w-full cursor-pointer rounded-xl border p-4 text-left font-sans text-base leading-relaxed transition-colors disabled:cursor-default ${showCorrect ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-100' : showWrong ? 'border-rose-400/50 bg-rose-500/15 text-rose-100' : selected ? 'border-teal-400/50 bg-teal-500/15 text-white' : 'border-slate-800 bg-slate-950/45 text-slate-300 hover:border-teal-400/40'}`}
                 >
                   {answer[language]}
                 </button>

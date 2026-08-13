@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Check,
   Flag,
-  Globe,
   Lightbulb,
   MapPinned,
   RotateCcw,
@@ -134,13 +133,12 @@ const VOYAGE_ROUTE: VoyageStop[] = [
 const OPTION_ORDER = ['port-said', 'dunkerque', 'keppel', 'le-havre', 'sri-lanka', 'marseille'];
 
 export function FirstVoyageGame({
-  language,
-  setLanguage,
   onClose,
   completed = false,
   onComplete,
   onReset,
 }: FirstVoyageGameProps) {
+  const language: Language = 'vi';
   const [phase, setPhase] = useState<GamePhase>(completed ? 'complete' : 'intro');
   const [currentLeg, setCurrentLeg] = useState(0);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
@@ -206,27 +204,6 @@ export function FirstVoyageGame({
         <h2 className="font-sans text-2xl font-black leading-tight text-white lg:text-3xl">
           {language === 'vi' ? 'Hải trình đầu tiên' : 'The first voyage'}
         </h2>
-      </div>
-
-      <div className="flex items-center justify-between rounded-xl border border-slate-800/70 bg-slate-900/55 p-2.5">
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-400">
-          <Globe size={14} />
-          {language === 'vi' ? 'NGÔN NGỮ TRÒ CHƠI' : 'GAME LANGUAGE'}
-        </span>
-        <div className="flex rounded-lg border border-slate-800 bg-slate-950 p-0.5">
-          {(['vi', 'en'] as Language[]).map((item) => (
-            <button
-              key={item}
-              type="button"
-              onClick={() => setLanguage(item)}
-              className={`cursor-pointer rounded-md px-2.5 py-1 font-mono text-[10px] font-semibold uppercase transition-colors ${
-                language === item ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
       </div>
 
       {phase === 'intro' && (
@@ -315,7 +292,7 @@ export function FirstVoyageGame({
           </div>
 
           <div>
-            <p className="mb-2 font-sans text-sm font-bold text-white">
+            <p className="mb-3 font-sans text-lg font-bold text-white">
               {language === 'vi' ? 'Điểm dừng tiếp theo là đâu?' : 'Where did the ship stop next?'}
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -329,7 +306,7 @@ export function FirstVoyageGame({
                     type="button"
                     disabled={answerStatus === 'correct'}
                     onClick={() => chooseStop(stop.id)}
-                    className={`min-h-14 cursor-pointer rounded-xl border p-3 text-left font-sans transition-colors disabled:cursor-default ${
+                    className={`min-h-16 cursor-pointer rounded-xl border p-4 text-left font-sans transition-colors disabled:cursor-default ${
                       isCorrectSelection
                         ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-200'
                         : isWrongSelection
@@ -337,8 +314,8 @@ export function FirstVoyageGame({
                           : 'border-slate-800 bg-slate-900/55 text-slate-300 hover:border-teal-400/45 hover:bg-teal-500/8 hover:text-white'
                     }`}
                   >
-                    <span className="block text-xs font-bold leading-tight">{stop.name[language]}</span>
-                    <span className="mt-1 block text-[9px] uppercase tracking-wide text-slate-500">{stop.country[language]}</span>
+                    <span className="block text-base font-bold leading-tight">{stop.name[language]}</span>
+                    <span className="mt-1.5 block text-xs uppercase tracking-wide text-slate-500">{stop.country[language]}</span>
                   </button>
                 );
               })}
