@@ -5,7 +5,6 @@ import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
 import roomFourSpatial from '@/lib/roomFourSpatial.json';
 import roomFiveSpatial from '@/lib/roomFiveSpatial.json';
-import { collectFragment, readRoomThreeProgress } from '@/lib/roomThreeQuestState';
 
 export interface GraphicsSettings {
   preset: 'ultra-low' | 'low' | 'medium';
@@ -150,14 +149,6 @@ interface MuseumContextType {
   sittingPrompt: 'sit' | 'stand' | null;
   setSittingPrompt: (prompt: 'sit' | 'stand' | null) => void;
 
-  collectedCeramics: string[];
-  addCeramic: (id: string) => void;
-  roomThreeVideoViewed: boolean;
-  roomThreeCollectedFragments: string[];
-  roomThreeCompleted: boolean;
-  markRoomThreeVideoViewed: () => void;
-  collectRoomThreeFragment: (id: string) => void;
-  completeRoomThreeQuest: () => void;
   talkedNpcs: string[];
   addTalkedNpc: (npcId: string) => void;
 
@@ -305,10 +296,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [roomOneCompleted, setRoomOneCompleted] = useState<boolean>(false);
   const [sittingPosition, setSittingPosition] = useState<{ x: number; y: number; z: number; rotationY?: number } | null>(null);
   const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
-  const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
-  const [roomThreeVideoViewed, setRoomThreeVideoViewed] = useState(false);
-  const [roomThreeCollectedFragments, setRoomThreeCollectedFragments] = useState<string[]>([]);
-  const [roomThreeCompleted, setRoomThreeCompleted] = useState(false);
   const [talkedNpcs, setTalkedNpcs] = useState<string[]>([]);
   const [roomFiveProgress, setRoomFiveProgress] = useState<RoomFiveMissionProgress>(EMPTY_ROOM_FIVE_PROGRESS);
 
@@ -317,9 +304,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
-    setRoomThreeVideoViewed(false);
-    setRoomThreeCollectedFragments([]);
-    setRoomThreeCompleted(false);
   }, [nickname]);
 
   const addClue = useCallback((clueId: string) => {
@@ -336,117 +320,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const handleSetRoomOneCompleted = useCallback((completed: boolean) => {
     setRoomOneCompleted(completed);
   }, []);
-
-  // Sync Room 3 gameplay progress (collectedCeramics)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!nickname) {
-      setCollectedCeramics([]);
-      return;
-    }
-
-    const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
-    const savedProgress = localStorage.getItem(progressKey);
-
-    if (!savedProgress) {
-      setCollectedCeramics([]);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(savedProgress) as {
-        collectedCeramics?: string[];
-      };
-      setCollectedCeramics(Array.isArray(parsed.collectedCeramics) ? parsed.collectedCeramics : []);
-    } catch (e) {
-      console.error('Lỗi phân tích tiến trình Room 3:', e);
-      setCollectedCeramics([]);
-    }
-  }, [nickname]);
-
-  const addCeramic = useCallback((ceramicId: string) => {
-    setCollectedCeramics((prev) => {
-      if (prev.includes(ceramicId)) return prev;
-      const updated = [...prev, ceramicId];
-      if (typeof window !== 'undefined' && nickname) {
-        const progressKey = `roomThreeProgress:${nickname.trim().toLowerCase()}`;
-        localStorage.setItem(progressKey, JSON.stringify({
-          collectedCeramics: updated,
-        }));
-      }
-      return updated;
-    });
-  }, [nickname]);
-
-  // Sync the new Room 3 Paris 1919 quest progress independently from legacy ceramics data.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    if (!nickname) {
-      setRoomThreeVideoViewed(false);
-      setRoomThreeCollectedFragments([]);
-      setRoomThreeCompleted(false);
-      return;
-    }
-
-    const progressKey = `roomThreeQuestProgress:${nickname.trim().toLowerCase()}`;
-    const progress = readRoomThreeProgress(localStorage.getItem(progressKey));
-    setRoomThreeVideoViewed(progress.videoViewed);
-    setRoomThreeCollectedFragments(progress.collectedFragments);
-    setRoomThreeCompleted(progress.completed);
-  }, [nickname]);
-
-  const saveRoomThreeProgress = useCallback((progress: {
-    videoViewed: boolean;
-    collectedFragments: string[];
-    completed: boolean;
-  }) => {
-    if (typeof window !== 'undefined' && nickname) {
-      const progressKey = `roomThreeQuestProgress:${nickname.trim().toLowerCase()}`;
-      localStorage.setItem(progressKey, JSON.stringify(progress));
-    }
-  }, [nickname]);
-
-  const markRoomThreeVideoViewed = useCallback(() => {
-    setRoomThreeVideoViewed((previous) => {
-      if (previous) return previous;
-      saveRoomThreeProgress({
-        videoViewed: true,
-        collectedFragments: roomThreeCollectedFragments,
-        completed: roomThreeCompleted,
-      });
-      return true;
-    });
-  }, [roomThreeCollectedFragments, roomThreeCompleted, saveRoomThreeProgress]);
-
-  const collectRoomThreeFragment = useCallback((fragmentId: string) => {
-    setRoomThreeCollectedFragments((previous) => {
-      const updated = collectFragment(previous, fragmentId);
-      if (updated.length === previous.length) return previous;
-      saveRoomThreeProgress({
-        videoViewed: roomThreeVideoViewed,
-        collectedFragments: updated,
-        completed: roomThreeCompleted,
-      });
-      return updated;
-    });
-  }, [roomThreeCompleted, roomThreeVideoViewed, saveRoomThreeProgress]);
-
-  const completeRoomThreeQuest = useCallback(() => {
-    setRoomThreeCompleted((previous) => {
-      if (previous) return previous;
-      saveRoomThreeProgress({
-        videoViewed: roomThreeVideoViewed,
-        collectedFragments: roomThreeCollectedFragments,
-        completed: true,
-      });
-      if (socket?.connected) {
-        socket.emit('room3:quest-completed');
-      }
-      return true;
-    });
-  }, [roomThreeCollectedFragments, roomThreeVideoViewed, saveRoomThreeProgress, socket]);
 
   // Sync Room 4 gameplay progress (talkedNpcs)
   useEffect(() => {
@@ -599,23 +472,15 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const resetRoomOne = useCallback(() => {
     setCluesCollected([]);
     setRoomOneCompleted(false);
-    setCollectedCeramics([]);
-    setRoomThreeVideoViewed(false);
-    setRoomThreeCollectedFragments([]);
-    setRoomThreeCompleted(false);
     setTalkedNpcs([]);
     if (typeof window !== 'undefined') {
       if (nickname) {
         localStorage.removeItem(`roomOneProgress:${nickname.trim().toLowerCase()}`);
-        localStorage.removeItem(`roomThreeProgress:${nickname.trim().toLowerCase()}`);
-        localStorage.removeItem(`roomThreeQuestProgress:${nickname.trim().toLowerCase()}`);
         localStorage.removeItem(`roomFourProgress:${nickname.trim().toLowerCase()}`);
       }
       Object.keys(localStorage).forEach((key) => {
         if (
           key.startsWith('roomOneProgress:') ||
-          key.startsWith('roomThreeProgress:') ||
-          key.startsWith('roomThreeQuestProgress:') ||
           key.startsWith('roomFourProgress:') ||
           key.startsWith('museum_room1_failed_quizzes')
         ) {
@@ -625,7 +490,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Dọn key cũ để tránh người chơi mới bị kế thừa tiến trình global.
       localStorage.removeItem('cluesCollected');
       localStorage.removeItem('roomOneCompleted');
-      localStorage.removeItem('collectedCeramics');
       localStorage.removeItem('roomFourProgress');
     }
   }, [nickname]);
@@ -1226,14 +1090,6 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setSittingPosition,
         sittingPrompt,
         setSittingPrompt,
-        collectedCeramics,
-        addCeramic,
-        roomThreeVideoViewed,
-        roomThreeCollectedFragments,
-        roomThreeCompleted,
-        markRoomThreeVideoViewed,
-        collectRoomThreeFragment,
-        completeRoomThreeQuest,
         talkedNpcs,
         addTalkedNpc,
         roomFiveProgress,

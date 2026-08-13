@@ -768,7 +768,7 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room3', 'gallery-ceramics', `Cửa số 03: Phòng 02 ↔ ${ROOM_THREE_DISPLAY_NAME}`)}
 
             {/* 7. PHÒNG 3 */}
-            {renderAdminRoom('gallery-ceramics', ROOM_THREE_DISPLAY_NAME, 'PARIS · 1919 — Khôi phục Bản Yêu sách của nhân dân An Nam', ['door-room3', 'door-room4'])}
+            {renderAdminRoom('gallery-ceramics', ROOM_THREE_DISPLAY_NAME, 'PARIS · 1919 — Tiếng nói từ An Nam', ['door-room3', 'door-room4'])}
 
             {/* 8. CỬA 4 */}
             {renderAdminDoor('door-room4', 'gallery-market-economy', `Cửa số 04: ${ROOM_THREE_DISPLAY_NAME} ↔ Phòng 04`)}

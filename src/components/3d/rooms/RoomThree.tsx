@@ -1,12 +1,12 @@
 import React from 'react';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
 import { VideoPillar } from '../VideoPillar';
-import { RoomThreeQuestSet } from './RoomThreeQuestSet';
+import { RoomThreeHistoricExhibits } from './RoomThreeHistoricExhibits';
 
 /**
  * Room Three deliberately inherits the same clear BaseRoom shell as Room Two.
- * Its only room-specific meshes are the quest exhibits and video pillar, which
- * keeps the route through the room open and the task objects easy to identify.
+ * Its only room-specific meshes are historic exhibits and the video pillar,
+ * which keeps the route through the room open and the displays easy to identify.
  */
 export const RoomThree: React.FC<BaseRoomProps> = ({
   galleryId,
@@ -18,8 +18,8 @@ export const RoomThree: React.FC<BaseRoomProps> = ({
     customSettings={customSettings}
     isVisible={isVisible}
   >
-    <VideoPillar />
-    <RoomThreeQuestSet isVisible={isVisible} />
+    <VideoPillar isVisible={isVisible} />
+    <RoomThreeHistoricExhibits isVisible={isVisible} />
   </BaseRoom>
 );
 

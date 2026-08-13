@@ -510,30 +510,6 @@ io.on('connection', (socket) => {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // 6. PHÒNG 3: HOÀN THÀNH BẢN YÊU SÁCH (unlocks Door 04 for every player)
-  // ═══════════════════════════════════════════════════════════════════════════
-  socket.on('room3:quest-completed', () => {
-    const doorId = 'door-room4';
-    const targetRoom = 'gallery-market-economy';
-    const currentDoor = doorStates[doorId];
-
-    if (currentDoor?.isOpen) {
-      socket.emit('door-states', doorStates);
-      return;
-    }
-
-    if (closingTimers[doorId]) {
-      clearTimeout(closingTimers[doorId]);
-      delete closingTimers[doorId];
-    }
-
-    doorStates[doorId] = { isOpen: true, targetRoom };
-    io.emit('door-opened', { doorId, targetRoom });
-    io.emit('door-states', doorStates);
-    console.log(`[ROOM-3] Khôi phục Bản Yêu sách: mở cửa "${doorId}" → phòng "${targetRoom}" cho tất cả người chơi.`);
-  });
-
-  // ═══════════════════════════════════════════════════════════════════════════
   // 7. ADMIN: LẤY TRẠNG THÁI CỬA VÀ PHÒNG
   // ═══════════════════════════════════════════════════════════════════════════
   socket.on('admin:get-door-status', () => {
