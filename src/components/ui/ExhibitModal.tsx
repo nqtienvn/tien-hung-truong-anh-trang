@@ -3,7 +3,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, Globe, User, BookOpen, Gamepad2, HelpCircle, Check, AlertTriangle, ArrowRight, Save, Clock, Volume2, Pause, Play } from 'lucide-react';
 import { useMuseum } from '@/context/MuseumContext';
-import confetti from 'canvas-confetti';
+import { FirstVoyageGame } from './FirstVoyageGame';
+import { GalleyWorkMission } from './GalleyWorkMission';
+import { VanBaProfile } from './VanBaProfile';
+import { DepartureMission } from './DepartureMission';
+import { ShipExplorationMission } from './ShipExplorationMission';
 
 interface QuizQuestion {
   question: string;
@@ -18,6 +22,60 @@ interface GameplayData {
   quizzes: QuizQuestion[];
   historyText: string;
   clueText: string;
+}
+
+interface ExhibitMediaCarouselProps {
+  images: string[];
+  alt: string;
+  objectPosition: string;
+}
+
+const NHA_RONG_DEPARTURE_IMAGES = [
+  '/exhibits/nha-rong-harbor-1911.png',
+  '/exhibits/nha-rong-postcard-1911.png',
+];
+
+function ExhibitMediaCarousel({ images, alt, objectPosition }: ExhibitMediaCarouselProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    if (images.length < 2) return;
+
+    const intervalId = window.setInterval(() => {
+      setActiveIndex((currentIndex) => (currentIndex + 1) % images.length);
+    }, 4500);
+
+    return () => window.clearInterval(intervalId);
+  }, [images]);
+
+  return (
+    <>
+      {images.map((imageUrl, index) => (
+        <img
+          key={imageUrl}
+          src={imageUrl}
+          alt={index === activeIndex ? alt : ''}
+          aria-hidden={index !== activeIndex}
+          className={`absolute inset-0 w-full h-full object-contain lg:object-cover bg-slate-950 transition-opacity duration-700 ${
+            index === activeIndex ? 'opacity-95' : 'opacity-0'
+          }`}
+          style={{ objectPosition }}
+        />
+      ))}
+      {images.length > 1 && (
+        <div className="absolute bottom-5 right-5 z-10 flex gap-1.5" aria-label="Ảnh tư liệu">
+          {images.map((imageUrl, index) => (
+            <span
+              key={`${imageUrl}-indicator`}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === activeIndex ? 'w-5 bg-amber-400' : 'w-1.5 bg-slate-300/60'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+    </>
+  );
 }
 
 const GAMEPLAY_DICTIONARY: Record<string, GameplayData> = {
@@ -172,12 +230,18 @@ export const ExhibitModal: React.FC = () => {
     nickname,
     collectedCeramics,
     addCeramic,
-    roomOneCompleted
+    roomOneCompleted,
+    roomFiveProgress,
+    completeRoomFiveFragment,
+    resetRoomFiveFragment,
+    visitRoomFiveShipHotspot,
   } = useMuseum();
 
   // --- States cho Audio thuyết minh mặc định ---
   const [audioProgress, setAudioProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(150);
+  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const speechKeyRef = useRef<string | null>(null);
   // --- States cho phòng gốm sứ (gallery-ceramics) ---
   const isCeramicsRoom = activeGallery?.id === 'gallery-ceramics';
   const [ceramicsCountdown, setCeramicsCountdown] = useState(10);
@@ -185,6 +249,11 @@ export const ExhibitModal: React.FC = () => {
   // --- States cho Gameplay Bao cấp (gallery-subsidy) ---
   const isSubsidyRoom = activeGallery?.id === 'gallery-subsidy';
   const gameData = selectedExhibit ? GAMEPLAY_DICTIONARY[selectedExhibit.id] : null;
+  const isDepartureMission = selectedExhibit?.id === 'nha-rong-departure-1911' && exhibitModalMode === 'game';
+  const isFirstVoyageGame = selectedExhibit?.id === 'nha-rong-first-voyage' && exhibitModalMode === 'game';
+  const isVanBaProfile = selectedExhibit?.id === 'nha-rong-latouche-treville' && exhibitModalMode === 'game';
+  const isGalleyWorkMission = selectedExhibit?.id === 'nha-rong-galley-work' && exhibitModalMode === 'game';
+  const isShipExplorationMission = selectedExhibit?.id === 'nha-rong-ship-exploration' && exhibitModalMode === 'game';
 
   const [gameState, setGameState] = useState<'observe' | 'quiz' | 'info'>('observe');
   const effectiveGameState = exhibitModalMode === 'info' ? 'info' : gameState;
@@ -233,6 +302,11 @@ export const ExhibitModal: React.FC = () => {
 
     setAudioProgress(0);
     setAudioPlaying(false);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      speechUtteranceRef.current = null;
+      speechKeyRef.current = null;
+    }
 
     const length = selectedExhibit.id.length * 7 + 80;
     setAudioDuration(length);
@@ -307,6 +381,52 @@ export const ExhibitModal: React.FC = () => {
     return () => clearInterval(timer);
   }, [audioPlaying, audioDuration, setAudioPlaying]);
 
+  // Đọc nội dung thuyết minh bằng giọng nói do trình duyệt cung cấp.
+  // Thanh tiến trình vẫn được giữ để người dùng dễ theo dõi trạng thái nghe.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    const synthesis = window.speechSynthesis;
+    if (!audioPlaying) {
+      if (synthesis.speaking && !synthesis.paused) synthesis.pause();
+      return;
+    }
+
+    if (!selectedExhibit) return;
+
+    const key = `${selectedExhibit.id}-${language}`;
+    if (speechKeyRef.current === key && synthesis.paused) {
+      synthesis.resume();
+      return;
+    }
+
+    synthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(
+      language === 'vi' ? selectedExhibit.description.vi : selectedExhibit.description.en
+    );
+    utterance.lang = language === 'vi' ? 'vi-VN' : 'en-US';
+    utterance.rate = 0.9;
+    utterance.onend = () => {
+      if (speechUtteranceRef.current !== utterance) return;
+      setAudioPlaying(false);
+      setAudioProgress(0);
+    };
+    utterance.onerror = () => {
+      if (speechUtteranceRef.current !== utterance) return;
+      setAudioPlaying(false);
+    };
+
+    speechUtteranceRef.current = utterance;
+    speechKeyRef.current = key;
+    synthesis.speak(utterance);
+  }, [audioPlaying, language, selectedExhibit, setAudioPlaying]);
+
+  useEffect(() => () => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
@@ -334,10 +454,37 @@ export const ExhibitModal: React.FC = () => {
       .sort(() => random() - 0.5);
   }, [currentQuiz, currentQuizIndex, nickname, selectedExhibit]);
 
+  const previewImages = useMemo(() => {
+    if (!selectedExhibit) return [];
+    if (selectedExhibit.id === 'vn-back-right') return ['/exhibits/anhgame.jpg'];
+    // Room 05 có thể đã được preload trước khi dữ liệu JSON mới được tải lại.
+    // Ưu tiên danh sách ảnh cố định này để modal luôn thay poster SVG cũ.
+    if (selectedExhibit.id === 'nha-rong-departure-1911') return NHA_RONG_DEPARTURE_IMAGES;
+    if (selectedExhibit.id === 'nha-rong-first-voyage') return ['/exhibits/nha-rong-first-voyage.png'];
+    if (selectedExhibit.id === 'nha-rong-latouche-treville' && exhibitModalMode === 'game') {
+      return ['/exhibits/nha-rong-van-ba-profile.png'];
+    }
+    if (selectedExhibit.id === 'nha-rong-galley-work' && exhibitModalMode === 'game') {
+      return ['/exhibits/nha-rong-galley-archive.png'];
+    }
+    if (selectedExhibit.id === 'nha-rong-ship-exploration') return ['/exhibits/nha-rong-ship.svg'];
+
+    const slideshowImages = selectedExhibit.image_urls?.filter(Boolean) ?? [];
+    return slideshowImages.length > 0
+      ? slideshowImages
+      : selectedExhibit.thumbnail_url
+        ? [selectedExhibit.thumbnail_url]
+        : [];
+  }, [selectedExhibit, exhibitModalMode]);
+
   if (!selectedExhibit) return null;
 
-  const titleText = language === 'vi' ? selectedExhibit.title.vi : selectedExhibit.title.en;
-  const authorText = language === 'vi' ? selectedExhibit.author.vi : selectedExhibit.author.en;
+  const titleText = isVanBaProfile
+    ? (language === 'vi' ? 'Hồ sơ Văn Ba' : 'The Văn Ba profile')
+    : (language === 'vi' ? selectedExhibit.title.vi : selectedExhibit.title.en);
+  const authorText = isVanBaProfile
+    ? (language === 'vi' ? 'Tư liệu nhân thân và lao động' : 'Identity and labour archive')
+    : (language === 'vi' ? selectedExhibit.author.vi : selectedExhibit.author.en);
   const descriptionText = language === 'vi' ? selectedExhibit.description.vi : selectedExhibit.description.en;
 
   const handleSelectOption = (idx: number) => {
@@ -399,20 +546,14 @@ export const ExhibitModal: React.FC = () => {
       <div className="w-full max-w-7xl h-full bg-slate-950/92 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row text-slate-100 transition-all duration-300 pointer-events-auto">
         {/* Ảnh xem trước lớn bên trái */}
         <div className="relative h-[38vh] lg:h-full lg:w-[48%] xl:w-[52%] bg-slate-900 border-b lg:border-b-0 lg:border-r border-slate-800 shrink-0 flex items-center justify-center">
-          {(() => {
-            const thumbnailUrl = selectedExhibit.id === 'vn-back-right'
-              ? '/exhibits/anhgame.jpg'
-              : selectedExhibit.thumbnail_url;
-            return thumbnailUrl ? (
-              <img
-                src={thumbnailUrl}
-                alt={titleText}
-                className="w-full h-full object-contain lg:object-cover opacity-95 bg-slate-950"
-                style={{
-                  objectPosition: selectedExhibit.id === 'exhibit-priceboard' ? 'right center' : 'center'
-                }}
-              />
-            ) : (
+          {previewImages.length > 0 ? (
+            <ExhibitMediaCarousel
+              key={selectedExhibit.id}
+              images={previewImages}
+              alt={titleText}
+              objectPosition={selectedExhibit.id === 'exhibit-priceboard' ? 'right center' : 'center'}
+            />
+          ) : (
               <div className="w-full h-full bg-slate-950 flex flex-col items-center justify-center p-6 text-center space-y-4">
                 <div className="w-24 h-24 bg-cyan-500/10 text-cyan-400 rounded-2xl flex items-center justify-center border border-cyan-500/20 shadow-lg shadow-cyan-500/5">
                   <Gamepad2 size={48} className="animate-pulse" />
@@ -426,13 +567,24 @@ export const ExhibitModal: React.FC = () => {
                   </p>
                 </div>
               </div>
-            );
-          })()}
+          )}
           <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-slate-950/85 via-slate-950/10 to-transparent pointer-events-none" />
 
           {/* Nhãn loại hiện vật */}
           <span className="absolute bottom-5 left-5 bg-amber-500/20 text-amber-200 border border-amber-500/35 text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-lg uppercase font-sans">
-            {isSubsidyRoom ? 'Bao Cấp Việt Nam' : (selectedExhibit.model_3d_url ? 'Điêu Khắc 3D' : 'Hội Họa 2D')}
+            {isDepartureMission
+              ? (language === 'vi' ? 'Nhiệm vụ khởi hành' : 'Departure mission')
+              : isShipExplorationMission
+              ? (language === 'vi' ? 'Khám phá con tàu' : 'Ship exploration')
+              : isGalleyWorkMission
+              ? (language === 'vi' ? 'Nhiệm vụ lịch sử' : 'Historical mission')
+              : isVanBaProfile
+              ? (language === 'vi' ? 'Hồ sơ tương tác' : 'Interactive profile')
+              : isFirstVoyageGame
+              ? (language === 'vi' ? 'Trò chơi hải trình' : 'Voyage game')
+              : isSubsidyRoom
+                ? 'Bao Cấp Việt Nam'
+                : (selectedExhibit.model_3d_url ? 'Điêu Khắc 3D' : 'Hội Họa 2D')}
           </span>
         </div>
 
@@ -440,7 +592,13 @@ export const ExhibitModal: React.FC = () => {
         <div className="flex-1 flex flex-col min-w-0 relative">
           {/* Nút đóng */}
           <button
-            onClick={() => setSelectedExhibit(null)}
+            onClick={() => {
+              if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+              }
+              setAudioPlaying(false);
+              setSelectedExhibit(null);
+            }}
             className="absolute top-4 right-4 lg:top-6 lg:right-6 bg-slate-900/85 hover:bg-slate-800/90 text-slate-200 hover:text-white p-3 rounded-full border border-slate-700/60 backdrop-blur-sm transition-colors cursor-pointer z-50 shadow-md"
           >
             <X size={20} />
@@ -451,7 +609,48 @@ export const ExhibitModal: React.FC = () => {
             {/* ═══════════════════════════════════════════════════════════════
                 TRƯỜNG HỢP 1: GAMEPLAY KHÁM PHÁ THỜI BAO CẤP (PHÒNG BAO CẤP)
                 ═══════════════════════════════════════════════════════════════ */}
-            {isSubsidyRoom && gameData ? (
+            {isDepartureMission ? (
+              <DepartureMission
+                language={language}
+                completed={roomFiveProgress.fragments.includes('departure')}
+                onComplete={() => completeRoomFiveFragment('departure')}
+                onReset={() => resetRoomFiveFragment('departure')}
+              />
+            ) : isShipExplorationMission ? (
+              <ShipExplorationMission
+                language={language}
+                visitedHotspots={roomFiveProgress.shipHotspots}
+                onVisit={visitRoomFiveShipHotspot}
+              />
+            ) : isGalleyWorkMission ? (
+              <GalleyWorkMission
+                language={language}
+                setLanguage={setLanguage}
+                nickname={nickname}
+                completed={roomFiveProgress.fragments.includes('labour')}
+                onComplete={() => completeRoomFiveFragment('labour')}
+                onReset={() => resetRoomFiveFragment('labour')}
+              />
+            ) : isVanBaProfile ? (
+              <VanBaProfile
+                language={language}
+                setLanguage={setLanguage}
+                completed={roomFiveProgress.fragments.includes('identity')}
+                onComplete={() => completeRoomFiveFragment('identity')}
+              />
+            ) : isFirstVoyageGame ? (
+              <FirstVoyageGame
+                language={language}
+                setLanguage={setLanguage}
+                completed={roomFiveProgress.fragments.includes('voyage')}
+                onComplete={() => completeRoomFiveFragment('voyage')}
+                onReset={() => resetRoomFiveFragment('voyage')}
+                onClose={() => {
+                  setAudioPlaying(false);
+                  setSelectedExhibit(null);
+                }}
+              />
+            ) : isSubsidyRoom && gameData ? (
               <div className="space-y-4">
                 {/* Tiêu đề hiện vật */}
                 <div className="pr-12">

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { io, Socket } from 'socket.io-client';
 import { Gallery, Exhibit } from '@/lib/db';
 import roomFourSpatial from '@/lib/roomFourSpatial.json';
+import roomFiveSpatial from '@/lib/roomFiveSpatial.json';
 
 export interface GraphicsSettings {
   preset: 'ultra-low' | 'low' | 'medium';
@@ -32,10 +33,10 @@ export interface MultiplayerUser {
 const SPAWN_POINTS: Record<string, { x: number; y: number; z: number }> = {
   'lobby': { x: 0, y: 0, z: -5.0 },
   'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
-  'gallery-paintings': { x: 0, y: 3.0, z: 56.0 },
-  'gallery-ceramics': { x: 0, y: 3.0, z: 102.0 },
+  'gallery-paintings': { x: 0, y: 3.0, z: 106.0 },
+  'gallery-ceramics': { x: 0, y: 3.0, z: 152.0 },
   'gallery-market-economy': { x: 0, y: 3.0, z: roomFourSpatial.spawnWorldZ },
-  'gallery-three': { x: 0, y: 3.0, z: roomFourSpatial.roomFiveSpawnZ },
+  'gallery-three': { x: 0, y: 3.0, z: roomFiveSpatial.spawnWorldZ },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -62,6 +63,23 @@ export interface LoadedRoom {
   exhibits: Exhibit[];
   gallery: Gallery | null;
 }
+
+export type RoomFiveFragmentId = 'departure' | 'identity' | 'vessel' | 'labour' | 'voyage';
+export type RoomFiveShipHotspotId = 'hull' | 'funnel' | 'galley' | 'deck';
+
+export interface RoomFiveMissionProgress {
+  fragments: RoomFiveFragmentId[];
+  shipHotspots: RoomFiveShipHotspotId[];
+  completed: boolean;
+}
+
+const ROOM_FIVE_FRAGMENT_IDS: RoomFiveFragmentId[] = ['departure', 'identity', 'vessel', 'labour', 'voyage'];
+const ROOM_FIVE_SHIP_HOTSPOT_IDS: RoomFiveShipHotspotId[] = ['hull', 'funnel', 'galley', 'deck'];
+const EMPTY_ROOM_FIVE_PROGRESS: RoomFiveMissionProgress = {
+  fragments: [],
+  shipHotspots: [],
+  completed: false,
+};
 
 interface MuseumContextType {
   language: 'vi' | 'en';
@@ -135,6 +153,14 @@ interface MuseumContextType {
   addCeramic: (id: string) => void;
   talkedNpcs: string[];
   addTalkedNpc: (npcId: string) => void;
+
+  // --- Room 5: Hành trình Văn Ba năm 1911 ---
+  roomFiveProgress: RoomFiveMissionProgress;
+  completeRoomFiveFragment: (fragmentId: RoomFiveFragmentId) => void;
+  resetRoomFiveFragment: (fragmentId: RoomFiveFragmentId) => void;
+  visitRoomFiveShipHotspot: (hotspotId: RoomFiveShipHotspotId) => void;
+  completeRoomFiveMission: () => void;
+  resetRoomFiveMission: () => void;
 
   // --- Room 1 Game Start Synchronizer ---
   roomOneLocked: boolean;
@@ -273,6 +299,7 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [sittingPrompt, setSittingPrompt] = useState<'sit' | 'stand' | null>(null);
   const [collectedCeramics, setCollectedCeramics] = useState<string[]>([]);
   const [talkedNpcs, setTalkedNpcs] = useState<string[]>([]);
+  const [roomFiveProgress, setRoomFiveProgress] = useState<RoomFiveMissionProgress>(EMPTY_ROOM_FIVE_PROGRESS);
 
   // Reset gameplay progress khi đổi người chơi trong phiên hiện tại.
   // Không lưu localStorage để người chơi mới không bị kế thừa sổ điều tra/câu hỏi từ người trước.
@@ -378,6 +405,112 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
       return updated;
     });
+  }, [nickname]);
+
+  const persistRoomFiveProgress = useCallback((progress: RoomFiveMissionProgress) => {
+    if (typeof window === 'undefined' || !nickname) return;
+    localStorage.setItem(
+      `roomFiveProgress:${nickname.trim().toLowerCase()}`,
+      JSON.stringify(progress),
+    );
+  }, [nickname]);
+
+  // Mỗi khách có một hồ sơ Room 5 riêng. Đồng thời nhập kết quả nhiệm vụ phụ bếp
+  // từ key cũ để các lượt chơi trước khi có nhiệm vụ chung không bị mất tiến độ.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!nickname) {
+      const resetTimer = window.setTimeout(() => setRoomFiveProgress(EMPTY_ROOM_FIVE_PROGRESS), 0);
+      return () => window.clearTimeout(resetTimer);
+    }
+
+    const progressKey = `roomFiveProgress:${nickname.trim().toLowerCase()}`;
+    const legacyGalleyCompleted = localStorage.getItem(`room5_galley_mission_${nickname}`) === 'completed';
+    const savedProgress = localStorage.getItem(progressKey);
+
+    let restored: RoomFiveMissionProgress = EMPTY_ROOM_FIVE_PROGRESS;
+    if (savedProgress) {
+      try {
+        const parsed = JSON.parse(savedProgress) as Partial<RoomFiveMissionProgress>;
+        const fragments = Array.isArray(parsed.fragments)
+          ? parsed.fragments.filter((id): id is RoomFiveFragmentId => ROOM_FIVE_FRAGMENT_IDS.includes(id as RoomFiveFragmentId))
+          : [];
+        const shipHotspots = Array.isArray(parsed.shipHotspots)
+          ? parsed.shipHotspots.filter((id): id is RoomFiveShipHotspotId => ROOM_FIVE_SHIP_HOTSPOT_IDS.includes(id as RoomFiveShipHotspotId))
+          : [];
+        restored = {
+          fragments: [...new Set(fragments)],
+          shipHotspots: [...new Set(shipHotspots)],
+          completed: Boolean(parsed.completed),
+        };
+      } catch (error) {
+        console.error('Lỗi phân tích tiến trình Room 5:', error);
+      }
+    }
+
+    if (legacyGalleyCompleted && !restored.fragments.includes('labour')) {
+      restored = { ...restored, fragments: [...restored.fragments, 'labour'] };
+      localStorage.setItem(progressKey, JSON.stringify(restored));
+    }
+    const restoreTimer = window.setTimeout(() => setRoomFiveProgress(restored), 0);
+    return () => window.clearTimeout(restoreTimer);
+  }, [nickname]);
+
+  const completeRoomFiveFragment = useCallback((fragmentId: RoomFiveFragmentId) => {
+    setRoomFiveProgress((previous) => {
+      if (previous.fragments.includes(fragmentId)) return previous;
+      const next = {
+        ...previous,
+        fragments: [...previous.fragments, fragmentId],
+        completed: false,
+      };
+      persistRoomFiveProgress(next);
+      return next;
+    });
+  }, [persistRoomFiveProgress]);
+
+  const resetRoomFiveFragment = useCallback((fragmentId: RoomFiveFragmentId) => {
+    setRoomFiveProgress((previous) => {
+      const next: RoomFiveMissionProgress = {
+        fragments: previous.fragments.filter((id) => id !== fragmentId),
+        shipHotspots: fragmentId === 'vessel' ? [] : previous.shipHotspots,
+        completed: false,
+      };
+      persistRoomFiveProgress(next);
+      return next;
+    });
+  }, [persistRoomFiveProgress]);
+
+  const visitRoomFiveShipHotspot = useCallback((hotspotId: RoomFiveShipHotspotId) => {
+    setRoomFiveProgress((previous) => {
+      if (previous.shipHotspots.includes(hotspotId) && previous.fragments.includes('vessel')) return previous;
+      const shipHotspots = previous.shipHotspots.includes(hotspotId)
+        ? previous.shipHotspots
+        : [...previous.shipHotspots, hotspotId];
+      const inspectedAll = ROOM_FIVE_SHIP_HOTSPOT_IDS.every((id) => shipHotspots.includes(id));
+      const fragments = inspectedAll && !previous.fragments.includes('vessel')
+        ? [...previous.fragments, 'vessel' as const]
+        : previous.fragments;
+      const next = { ...previous, shipHotspots, fragments, completed: false };
+      persistRoomFiveProgress(next);
+      return next;
+    });
+  }, [persistRoomFiveProgress]);
+
+  const completeRoomFiveMission = useCallback(() => {
+    setRoomFiveProgress((previous) => {
+      if (previous.fragments.length < ROOM_FIVE_FRAGMENT_IDS.length) return previous;
+      const next = { ...previous, completed: true };
+      persistRoomFiveProgress(next);
+      return next;
+    });
+  }, [persistRoomFiveProgress]);
+
+  const resetRoomFiveMission = useCallback(() => {
+    setRoomFiveProgress(EMPTY_ROOM_FIVE_PROGRESS);
+    if (typeof window === 'undefined' || !nickname) return;
+    localStorage.removeItem(`roomFiveProgress:${nickname.trim().toLowerCase()}`);
+    localStorage.removeItem(`room5_galley_mission_${nickname}`);
   }, [nickname]);
 
   const resetRoomOne = useCallback(() => {
@@ -1021,6 +1154,12 @@ export const MuseumProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addCeramic,
         talkedNpcs,
         addTalkedNpc,
+        roomFiveProgress,
+        completeRoomFiveFragment,
+        resetRoomFiveFragment,
+        visitRoomFiveShipHotspot,
+        completeRoomFiveMission,
+        resetRoomFiveMission,
 
         // --- Room 1 Game Start Synchronizer ---
         roomOneLocked,

@@ -297,6 +297,7 @@ function MapBuilderContent() {
             {gallery && (
               <ExhibitionRoom 
                 galleryId={gallery.id} 
+                exhibits={exhibits}
                 customSettings={{
                   room_width: roomWidth,
                   room_length: roomLength,

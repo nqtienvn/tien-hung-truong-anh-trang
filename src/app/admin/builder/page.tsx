@@ -443,6 +443,7 @@ function BuilderContent() {
             {gallery && (
               <ExhibitionRoom
                 galleryId={gallery.id}
+                exhibits={exhibits}
                 customSettings={{
                   rope_barriers_config: JSON.stringify(ropes),
                 } as any}

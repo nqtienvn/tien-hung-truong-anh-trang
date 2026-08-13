@@ -4,14 +4,9 @@
   "roomLength": 80,
   "localStartZ": -75,
   "localEndZ": 5,
-  "worldOffsetZ": 205,
-  "worldStartZ": 130,
-  "worldEndZ": 210,
+  "worldOffsetZ": 255,
+  "worldStartZ": 180,
+  "worldEndZ": 260,
   "spawnLocalZ": -72,
-  "spawnWorldZ": 133,
-  "returnFromRoomFiveWorldZ": 208,
-  "roomFiveStartZ": 210,
-  "roomFiveEndZ": 260,
-  "roomFiveCenterZ": 235,
-  "roomFiveSpawnZ": 212
+  "spawnWorldZ": 183
 }

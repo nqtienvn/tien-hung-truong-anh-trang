@@ -264,7 +264,7 @@ export default function Home() {
                 className="absolute inset-0 bg-cover bg-center group-hover:opacity-70 transition-opacity duration-500 z-0"
                 style={{
                   backgroundImage:
-                    'url("/images/room4/anhphong5.jpg")',
+                    'url("/exhibits/nha-rong-departure.svg")',
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent z-10"></div>
@@ -273,10 +273,10 @@ export default function Home() {
                   Phòng 05
                 </span>
                 <h3 className="font-headline-md text-[28px] font-bold text-white drop-shadow-md">
-                  Phòng Thành Quả
+                  Bến Nhà Rồng 1911
                 </h3>
                 <p className="font-body-md text-[16px] text-white/90 max-w-sm line-clamp-2 drop-shadow-sm leading-relaxed">
-                  Tổng kết những thành quả, bài học kinh nghiệm và các thách thức trong tiến triển phát triển kinh tế của đất nước.
+                  Khám phá Bến Nhà Rồng, chuyến tàu Amiral Latouche-Tréville và công việc phụ bếp của người thanh niên Nguyễn Tất Thành.
                 </p>
               </div>
             </div>

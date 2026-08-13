@@ -174,6 +174,42 @@ const GALLERY_CONFIGS: Record<string, {
       </div>
     ),
   },
+  'gallery-three': {
+    headerTitle: 'PHÒNG 05 • BẾN NHÀ RỒNG 1911',
+    welcomeTitle: 'Chào mừng đến Bến Nhà Rồng!',
+    introText: (
+      <>
+        <span className="italic">Nhiệm vụ xuyên suốt: </span>
+        <strong>Hoàn thiện hồ sơ hành trình Văn Ba — 1911.</strong>
+        <span className="italic"> Thu thập năm mảnh Khởi hành, Danh tính, Phương tiện, Lao động và Hải trình để trả lời Nguyễn Tất Thành đã bắt đầu hành trình tìm đường cứu nước bằng cách nào.</span>
+      </>
+    ),
+    steps: [
+      {
+        icon: <Search size={28} className="text-amber-600" />,
+        title: '① Thu thập năm mảnh hồ sơ',
+        desc: 'Lần lượt khám phá Bến Nhà Rồng, hồ sơ Văn Ba, mô hình tàu, công việc phụ bếp và hải trình đầu tiên.',
+      },
+      {
+        icon: <BookOpen size={28} className="text-amber-600" />,
+        title: '② Theo dõi trạm tiếp theo',
+        desc: 'Mở thanh Hồ sơ hành trình Văn Ba ở góc trái để xem tiến độ 0/5 và chỉ dẫn đến dữ kiện còn thiếu.',
+      },
+      {
+        icon: <Sparkles size={28} className="text-amber-600" />,
+        title: '③ Hoàn thiện hồ sơ 1911',
+        desc: 'Khi đủ 5/5 mảnh, dựng lại chuỗi lịch sử, trả lời câu hỏi trung tâm và nhận Hộ chiếu hành trình 1911.',
+      },
+    ],
+    summary: (
+      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">◉</span><span>5 trạm lịch sử liên kết</span></div>
+        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">✓</span><span>Tiến độ lưu theo biệt danh</span></div>
+        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">🗺️</span><span>Nhiệm vụ tổng kết cuối phòng</span></div>
+        <div className="flex items-start gap-1.5"><span className="text-amber-600 font-bold shrink-0">▣</span><span>Hộ chiếu hành trình 1911</span></div>
+      </div>
+    ),
+  },
 };
 
 export const RoomWelcomeModal: React.FC = () => {

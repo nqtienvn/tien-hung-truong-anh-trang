@@ -35,11 +35,11 @@ export const BaseRoom: React.FC<BaseRoomProps> = ({
 
     const adjacencies: Record<string, string[]> = {
       'lobby': ['gallery-subsidy'],
-      'gallery-subsidy': ['lobby', 'gallery-paintings'],
-      'gallery-paintings': ['gallery-subsidy', 'gallery-ceramics'],
+      'gallery-subsidy': ['lobby', 'gallery-three'],
+      'gallery-three': ['gallery-subsidy', 'gallery-paintings'],
+      'gallery-paintings': ['gallery-three', 'gallery-ceramics'],
       'gallery-ceramics': ['gallery-paintings', 'gallery-market-economy'],
-      'gallery-market-economy': ['gallery-ceramics', 'gallery-three'],
-      'gallery-three': ['gallery-market-economy'],
+      'gallery-market-economy': ['gallery-ceramics'],
     };
 
     return adjacencies[currentRoom]?.includes(galleryId) ?? false;
