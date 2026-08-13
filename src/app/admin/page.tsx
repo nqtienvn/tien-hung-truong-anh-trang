@@ -170,7 +170,7 @@ export default function AdminDashboard() {
     if (!adminSocket) return;
     const roomName = targetRoom === 'lobby' 
       ? 'Sảnh chờ' 
-      : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Thời bao cấp)' 
+      : targetRoom === 'gallery-subsidy' ? 'Phòng 01 (Dấu chân tìm đường)'
       : targetRoom === 'gallery-paintings' ? 'Phòng 02 (Tranh sơn dầu)' 
       : targetRoom === 'gallery-ceramics' ? ROOM_THREE_DISPLAY_NAME
       : 'Phòng 04 (Kinh tế thị trường)';
@@ -181,12 +181,19 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleStartRoomOneCountdown = () => {
+  const handleStartRoomOne = () => {
     if (!adminSocket) return;
-    if (window.confirm('Bắt đầu đếm ngược 7 giây cho tất cả người chơi trong Phòng 1?')) {
+    if (window.confirm('Bắt đầu Phòng 1? Trò chơi sẽ bắt đầu sau 5 giây đếm ngược.')) {
       adminSocket.emit('admin:start-room1-countdown');
     }
   };
+
+  const roomOnePlayersInRoom = roomOnePlayers.filter(
+    (player) => player.galleryId === 'gallery-subsidy'
+  );
+  const canStartRoomOne =
+    roomOnePlayersInRoom.length > 0 &&
+    roomOnePlayersInRoom.every((player) => player.ready);
 
   const handleForceEndRoomOne = () => {
     if (!adminSocket) return;
@@ -469,8 +476,13 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       type="button"
-                      onClick={handleStartRoomOneCountdown}
-                      className="px-3 py-2 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-violet-500/10 hover:bg-violet-500/25 border border-violet-500/25 text-violet-400"
+                      onClick={handleStartRoomOne}
+                      disabled={!canStartRoomOne}
+                      className={`px-3 py-2 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1.5 border ${
+                        canStartRoomOne
+                          ? 'cursor-pointer bg-violet-500/10 hover:bg-violet-500/25 border-violet-500/25 text-violet-400'
+                          : 'cursor-not-allowed bg-slate-900 border-slate-800 text-slate-600'
+                      }`}
                     >
                       <Clock size={12} />
                       Bắt đầu đếm ngược (7s)
@@ -741,7 +753,7 @@ export default function AdminDashboard() {
             {renderAdminDoor('door-room1', 'gallery-subsidy', 'Cửa số 01: Sảnh ↔ Phòng 01')}
 
             {/* 3. PHÒNG 1 */}
-            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Bao Cấp Việt Nam', 'Khu vực trưng bày thời kỳ kinh tế bao cấp (1976-1985)', ['door-room1', 'door-room5'])}
+            {renderAdminRoom('gallery-subsidy', 'Phòng 01: Dấu chân tìm đường', 'Hành trình tìm đường cứu nước của Nguyễn Ái Quốc, 1911–1930', ['door-room1', 'door-room5'])}
 
             {/* 4. CỬA 2 */}
             {renderAdminDoor('door-room2', 'gallery-paintings', 'Cửa số 02: Phòng 05 ↔ Phòng 02')}

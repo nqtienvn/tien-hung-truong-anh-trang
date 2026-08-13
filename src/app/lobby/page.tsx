@@ -15,6 +15,7 @@ import { ExhibitModal } from '@/components/ui/ExhibitModal';
 import MiniGameModal from '@/components/ui/MiniGameModal';
 import { InvestigationNotebook } from '@/components/ui/InvestigationNotebook';
 import { RoomWelcomeModal } from '@/components/ui/RoomWelcomeModal';
+import { RoomOneSoundtrack } from '@/components/ui/RoomOneSoundtrack';
 import { RoomTwoDocumentModal } from '@/components/ui/RoomTwoDocumentModal';
 import { RoomThreeVideoModal } from '@/components/ui/RoomThreeVideoModal';
 import { RoomThreeExhibitModal } from '@/components/ui/RoomThreeExhibitModal';
@@ -72,7 +73,7 @@ const DOOR_CONFIGS = [
     // Cửa đặt ở tường sau sảnh, tầng 2 (Y=3, Z=8)
     position: [0, 3.0, 8.0] as [number, number, number],
     rotation: [0, Math.PI, 0] as [number, number, number],
-    label: 'Phòng 01: Phòng Bao Cấp',
+    label: 'Phòng 01: Dấu chân tìm đường',
   },
   {
     doorId: 'door-room2',
@@ -115,7 +116,7 @@ const INTERACTIVE_DOORS = [
     doorId: 'door-room1',
     check: (x: number, z: number) => z >= 6.0 && z <= 8.0 && Math.abs(x) < 2.2,
     spawnPos: [0, 3.0, 10.0] as [number, number, number],
-    promptVi: 'vào Phòng 01: Phòng Bao Cấp',
+    promptVi: 'vào Phòng 01: Dấu chân tìm đường',
     promptEn: 'enter Room 01: Subsidy Room'
   },
   {
@@ -1103,7 +1104,7 @@ const LobbyPlayer: React.FC<{
       }
       return;
     }
-    if (selectedExhibit || transitionLoading || roomFourInteractionOpen || roomThreeVideoOpen) return;
+    if (selectedExhibit || transitionLoading || roomFourInteractionOpen || roomThreeVideoOpen || roomOneLocked || welcomeModalOpen) return;
 
     // Xử lý dịch chuyển tức thời khi đứng dậy để tránh trễ đồng bộ React state
     if (exitPositionRef.current) {
@@ -1535,7 +1536,7 @@ export default function LobbyPage() {
     }
     const ROOM_GALLERY_MAP: Record<string, { id: string; name: string }> = {
       'lobby': { id: 'lobby', name: 'Sảnh Bảo Tàng' },
-      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Phòng Bao Cấp' },
+      'gallery-subsidy': { id: 'gallery-subsidy', name: 'Phòng 01: Dấu chân tìm đường' },
       'gallery-paintings': { id: 'gallery-paintings', name: 'Phòng 02: Phòng Hội Nghị' },
       'gallery-ceramics': { id: 'gallery-ceramics', name: ROOM_THREE_DISPLAY_NAME },
       'gallery-market-economy': { id: 'gallery-market-economy', name: 'Phòng 04: Liên Xô — Quảng Châu' },
@@ -1954,9 +1955,11 @@ export default function LobbyPage() {
 
 
       {/* ═══ SỔ NHIỆM VỤ ĐIỀU TRA PHÒNG BAO CẤP ═══ */}
-      <InvestigationNotebook />
+       <InvestigationNotebook />
 
-      {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
+       <RoomOneSoundtrack />
+
+       {/* ═══ POPUP HƯỚNG DẪN KHI VÀO PHÒNG BAO CẤP ═══ */}
       <RoomWelcomeModal />
 
       {/* ═══ MÀN HÌNH TÀI LIỆU HỌP PHÒNG 2 ═══ */}

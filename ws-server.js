@@ -120,6 +120,7 @@ const broadcastRoomOnePlayers = () => {
     .map(u => ({
       socketId: u.id,
       nickname: u.nickname,
+      galleryId: u.galleryId,
       ready: !!u.room1Ready,
       completed: !!u.room1Completed,
       cluesCollectedCount: u.cluesCollectedCount || 0,
@@ -536,8 +537,8 @@ io.on('connection', (socket) => {
     console.log(`[ADMIN] Yêu cầu bắt đầu đếm ngược Phòng 1 từ admin.`);
     if (roomOneState === 'waiting') {
       roomOneState = 'countdown';
-      io.to('museum-unified').emit('room1:countdown-start', { duration: 7 });
-      console.log(`[ROOM-1] Bắt đầu đếm ngược 7 giây cho tất cả người chơi theo lệnh Admin.`);
+      io.to('museum-unified').emit('room1:countdown-start', { duration: 5 });
+      console.log(`[ROOM-1] Bắt đầu đếm ngược 5 giây cho tất cả người chơi theo lệnh Admin.`);
 
       roomOneCountdownTimer = setTimeout(() => {
         roomOneState = 'started';
@@ -545,7 +546,7 @@ io.on('connection', (socket) => {
         io.to('museum-unified').emit('room1:start-game', { roomOneStartTimestamp });
         console.log(`[ROOM-1] Trò chơi đã bắt đầu theo lệnh Admin. Start time: ${roomOneStartTimestamp}`);
         roomOneCountdownTimer = null;
-      }, 7000);
+      }, 5000);
     }
   });
 

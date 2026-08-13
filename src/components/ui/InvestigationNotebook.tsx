@@ -16,74 +16,85 @@ interface ShaftConfig {
 const SHAFTS_CONFIG: ShaftConfig[] = [
   {
     id: 1,
-    title: 'Trục Phân Phối (Distribution)',
-    desc: 'Cơ chế phân phối lương thực thiết yếu cho người dân.',
-    requiredGears: ['exhibit-coupon', 'exhibit-ricebook'],
-    requiredConclusion: 'Hàng hóa thiết yếu được phân phối theo tem phiếu và định mức do Nhà nước quy định, người dân không thể tự do mua theo nhu cầu.'
+    title: 'Trục Khởi Hành & Khảo Nghiệm',
+    desc: 'Từ Bến Nhà Rồng đến hành trình quan sát và khảo nghiệm thế giới.',
+    requiredGears: ['exhibit-coupon', 'exhibit-world-1911-1917'],
+    requiredConclusion: 'Hành trình từ năm 1911 giúp Nguyễn Tất Thành khảo nghiệm thực tiễn, nhận ra sự áp bức có tính phổ biến và từng bước tìm kiếm một con đường cứu nước mới.'
   },
   {
     id: 2,
-    title: 'Trục Sản Xuất (Production)',
-    desc: 'Quyết định chỉ tiêu sản xuất của nền kinh tế.',
-    requiredGears: ['exhibit-factory'],
-    requiredConclusion: 'Sản xuất chủ yếu dựa trên kế hoạch và chỉ tiêu được giao, chưa hoàn toàn dựa vào nhu cầu thị trường.'
+    title: 'Trục Đấu Tranh Dân Tộc',
+    desc: 'Đưa quyền lợi của dân tộc Việt Nam ra một diễn đàn quốc tế.',
+    requiredGears: ['exhibit-versailles-1919'],
+    requiredConclusion: 'Yêu sách năm 1919 đưa quyền lợi của dân tộc Việt Nam ra diễn đàn quốc tế, đồng thời cho thấy không thể trông chờ các cường quốc tự trao quyền tự do cho thuộc địa.'
   },
   {
     id: 3,
-    title: 'Trục Định Giá (Pricing)',
-    desc: 'Quyết định giá cả trao đổi các mặt hàng trên thị trường.',
-    requiredGears: ['exhibit-priceboard'],
-    requiredConclusion: 'Giá nhiều mặt hàng do Nhà nước quy định, chưa hình thành chủ yếu từ quan hệ cung – cầu trên thị trường.'
+    title: 'Trục Bước Ngoặt Tư Tưởng',
+    desc: 'Từ tìm kiếm lời giải đến xác định con đường cách mạng vô sản.',
+    requiredGears: ['exhibit-lenin-theses-1920'],
+    requiredConclusion: 'Luận cương của Lênin giúp Nguyễn Ái Quốc xác định cách mạng vô sản là phương hướng cơ bản cho sự nghiệp giải phóng dân tộc Việt Nam.'
   },
   {
     id: 4,
-    title: 'Trục Tiêu Dùng (Consumption)',
-    desc: 'Giải thích vì sao có tiền vẫn khó mua được hàng.',
-    requiredGears: ['exhibit-coupon', 'exhibit-ricebook', 'exhibit-shop'],
-    requiredConclusion: 'Tiền không phải yếu tố duy nhất quyết định khả năng mua hàng; người dân còn phụ thuộc vào tem phiếu, định mức và lượng hàng được phân phối.'
+    title: 'Trục Lựa Chọn Chính Trị',
+    desc: 'Chính thức lựa chọn Quốc tế III và con đường cách mạng vô sản.',
+    requiredGears: ['exhibit-tours-1920'],
+    requiredConclusion: 'Tại Đại hội Tours, Nguyễn Ái Quốc chính thức lựa chọn Quốc tế III và con đường cách mạng vô sản, chuyển từ người yêu nước thành người cộng sản.'
   },
   {
     id: 5,
-    title: 'Trục Khan Hiếm (Shortage)',
-    desc: 'Nguyên nhân sinh ra thiếu hụt hàng hóa mậu dịch thường xuyên.',
-    requiredGears: ['exhibit-factory', 'exhibit-shop'],
-    requiredConclusion: 'Sản xuất chưa đáp ứng nhu cầu, hàng hóa được phân phối theo kế hoạch nên nguồn cung hạn chế, dẫn đến thiếu hụt thường xuyên.'
+    title: 'Trục Chuẩn Bị Lực Lượng',
+    desc: 'Chuẩn bị tư tưởng, lý luận, cán bộ và tổ chức tại Quảng Châu.',
+    requiredGears: ['exhibit-guangzhou-1925-1927'],
+    requiredConclusion: 'Hoạt động tại Quảng Châu đã chuẩn bị tư tưởng, lý luận, cán bộ và tổ chức cho phong trào cách mạng Việt Nam.'
+  },
+  {
+    id: 6,
+    title: 'Trục Hội Tụ & Thống Nhất',
+    desc: 'Giải quyết sự phân tán của ba tổ chức cộng sản và hình thành sự lãnh đạo thống nhất.',
+    requiredGears: ['exhibit-convergence-1930'],
+    requiredConclusion: 'Việc thống nhất các tổ chức cộng sản đã khắc phục tình trạng phân tán, tạo nên một chính đảng duy nhất lãnh đạo cách mạng Việt Nam.'
   }
 ];
 
 const EXHIBIT_LABELS: Record<string, string> = {
-  'exhibit-coupon': '🧾 Tem phiếu',
-  'exhibit-ricebook': '📒 Sổ gạo',
-  'exhibit-factory': '🏭 Nhà máy',
-  'exhibit-priceboard': '📋 Bảng giá',
-  'exhibit-shop': '🏪 Cửa hàng mậu dịch',
-  'exhibit-witness': '👴 Góc nhân chứng',
+  'exhibit-coupon': '🚢 Người ra đi',
+  'exhibit-world-1911-1917': '🌍 Nhìn ra thế giới',
+  'exhibit-versailles-1919': '📜 Tiếng nói của một dân tộc',
+  'exhibit-lenin-theses-1920': '💡 Ánh sáng của con đường',
+  'exhibit-tours-1920': '🗳️ Sự lựa chọn lịch sử',
+  'exhibit-guangzhou-1925-1927': '📖 Chuẩn bị cho cách mạng',
+  'exhibit-convergence-1930': '🤝 Hội tụ',
 };
 
 const EXHIBIT_THUMBNAILS: Record<string, string> = {
-  'exhibit-coupon': 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=800&auto=format&fit=crop&q=80',
-  'exhibit-ricebook': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=800&auto=format&fit=crop&q=80',
-  'exhibit-factory': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=80',
-  'exhibit-priceboard': '/exhibits/priceboard.jpg',
-  'exhibit-shop': 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&auto=format&fit=crop&q=80',
-  'exhibit-witness': 'https://images.unsplash.com/photo-1473177134435-4eb84fc76076?w=800&auto=format&fit=crop&q=80'
+  'exhibit-coupon': '/exhibits/nguoi-ra-di.jpg',
+  'exhibit-world-1911-1917': '/exhibits/nhin-ra-the-gioi.gif',
+  'exhibit-versailles-1919': '/exhibits/tieng-noi-mot-dan-toc.jpg',
+  'exhibit-lenin-theses-1920': '/exhibits/anh-sang-cua-con-duong.jpg',
+  'exhibit-tours-1920': '/exhibits/su-lua-chon-lich-su.jpg',
+  'exhibit-guangzhou-1925-1927': '/exhibits/chuan-bi-cho-cach-mang.jpg',
+  'exhibit-convergence-1930': '/exhibits/hoi-tu-1930.jpg'
 };
 
 const CONCLUSION_OPTIONS = [
-  'Hàng hóa thiết yếu được phân phối theo tem phiếu và định mức do Nhà nước quy định, người dân không thể tự do mua theo nhu cầu.',
-  'Sản xuất chủ yếu dựa trên kế hoạch và chỉ tiêu được giao, chưa hoàn toàn dựa vào nhu cầu thị trường.',
-  'Giá nhiều mặt hàng do Nhà nước quy định, chưa hình thành chủ yếu từ quan hệ cung – cầu trên thị trường.',
-  'Tiền không phải yếu tố duy nhất quyết định khả năng mua hàng; người dân còn phụ thuộc vào tem phiếu, định mức và lượng hàng được phân phối.',
-  'Sản xuất chưa đáp ứng nhu cầu, hàng hóa được phân phối theo kế hoạch nên nguồn cung hạn chế, dẫn đến thiếu hụt thường xuyên.',
+  'Hành trình từ năm 1911 giúp Nguyễn Tất Thành khảo nghiệm thực tiễn, nhận ra sự áp bức có tính phổ biến và từng bước tìm kiếm một con đường cứu nước mới.',
+  'Yêu sách năm 1919 đưa quyền lợi của dân tộc Việt Nam ra diễn đàn quốc tế, đồng thời cho thấy không thể trông chờ các cường quốc tự trao quyền tự do cho thuộc địa.',
+  'Luận cương của Lênin giúp Nguyễn Ái Quốc xác định cách mạng vô sản là phương hướng cơ bản cho sự nghiệp giải phóng dân tộc Việt Nam.',
+  'Tại Đại hội Tours, Nguyễn Ái Quốc chính thức lựa chọn Quốc tế III và con đường cách mạng vô sản, chuyển từ người yêu nước thành người cộng sản.',
+  'Hoạt động tại Quảng Châu đã chuẩn bị tư tưởng, lý luận, cán bộ và tổ chức cho phong trào cách mạng Việt Nam.',
+  'Việc thống nhất các tổ chức cộng sản đã khắc phục tình trạng phân tán, tạo nên một chính đảng duy nhất lãnh đạo cách mạng Việt Nam.',
 ];
 
 const EXHIBITS_LIST = [
-  { id: 'exhibit-coupon', label: 'Tem phiếu', clue: 'Hàng hóa được mua theo tem phiếu', desc: 'Người dân muốn mua hàng thiết yếu phải có tem phiếu, không thể mua hoàn toàn theo nhu cầu cá nhân.' },
-  { id: 'exhibit-ricebook', label: 'Sổ gạo', clue: 'Lương thực được cấp theo định mức', desc: 'Số lượng gạo mỗi gia đình nhận phụ thuộc vào quy định chung, không do người dân tự quyết định.' },
-  { id: 'exhibit-factory', label: 'Nhà máy', clue: 'Sản xuất theo kế hoạch được giao', desc: 'Nhà máy thực hiện chỉ tiêu sản xuất do cơ quan quản lý đề ra, chưa hoạt động hoàn toàn theo nhu cầu thị trường.' },
-  { id: 'exhibit-priceboard', label: 'Bảng giá', clue: 'Giá hàng hóa do Nhà nước quy định', desc: 'Giá nhiều mặt hàng được giữ theo mức quy định, không thay đổi linh hoạt theo cung – cầu.' },
-  { id: 'exhibit-shop', label: 'Cửa hàng mậu dịch', clue: 'Hàng hóa phân phối hạn chế, thiếu hụt', desc: 'Nguồn hàng được phân phối theo kế hoạch, trong khi sản xuất chưa đáp ứng đủ nhu cầu.' },
-  { id: 'exhibit-witness', label: 'Góc nhân chứng', clue: 'Đời sống phụ thuộc vào phân phối', desc: 'Người dân phải tiết kiệm, chờ phân phối và sử dụng hàng hóa theo phần được cấp.' },
+  { id: 'exhibit-coupon', label: 'Người ra đi', clue: 'BẾN NHÀ RỒNG · 1911 · RA ĐI', desc: 'Ngày 5/6/1911, Nguyễn Tất Thành rời Tổ quốc từ Bến Nhà Rồng, mở đầu hành trình tìm đường cứu nước.' },
+  { id: 'exhibit-world-1911-1917', label: 'Nhìn ra thế giới', clue: 'PHÁP · CHÂU PHI · HOA KỲ · ANH · LAO ĐỘNG · QUAN SÁT', desc: 'Giai đoạn 1911–1917 giúp Nguyễn Tất Thành khảo nghiệm thực tiễn và nhận ra sự gần gũi giữa các dân tộc bị áp bức.' },
+  { id: 'exhibit-versailles-1919', label: 'Tiếng nói của một dân tộc', clue: 'VERSAILLES 1919 · NGUYỄN ÁI QUỐC · 8 ĐIỂM YÊU SÁCH · TỰ DO · DÂN CHỦ · BÌNH ĐẲNG', desc: 'Năm 1919, Nguyễn Ái Quốc đưa vấn đề quyền lợi của dân tộc Việt Nam ra một diễn đàn quốc tế.' },
+  { id: 'exhibit-lenin-theses-1920', label: 'Ánh sáng của con đường', clue: 'LUẬN CƯƠNG LÊNIN · DÂN TỘC & THUỘC ĐỊA · 1920 · CÁCH MẠNG VÔ SẢN', desc: 'Luận cương của Lênin giúp Nguyễn Ái Quốc xác định phương hướng cơ bản cho con đường giải phóng dân tộc Việt Nam.' },
+  { id: 'exhibit-tours-1920', label: 'Sự lựa chọn lịch sử', clue: 'ĐẠI HỘI TOURS · QUỐC TẾ III · ĐẢNG CỘNG SẢN PHÁP · CÁCH MẠNG VÔ SẢN · LỰA CHỌN', desc: 'Tại Đại hội Tours, Nguyễn Ái Quốc chính thức lựa chọn con đường cách mạng vô sản để giải phóng dân tộc.' },
+  { id: 'exhibit-guangzhou-1925-1927', label: 'Chuẩn bị cho cách mạng', clue: 'QUẢNG CHÂU · HỘI VIỆT NAM CÁCH MẠNG THANH NIÊN · HUẤN LUYỆN CÁN BỘ · ĐƯỜNG KÁCH MỆNH · CHUẨN BỊ TỔ CHỨC', desc: 'Hoạt động tại Quảng Châu chuẩn bị về tư tưởng, chính trị, cán bộ và tổ chức cho cách mạng Việt Nam.' },
+  { id: 'exhibit-convergence-1930', label: 'Hội tụ', clue: '1929 · BA TỔ CHỨC CỘNG SẢN · PHÂN TÁN · THỐNG NHẤT · HỒNG KÔNG 1930', desc: 'Nguyễn Ái Quốc triệu tập và chủ trì hội nghị nhằm thống nhất các tổ chức cộng sản, mở đường cho sự ra đời của Đảng Cộng sản Việt Nam.' },
 ];
 
 export const InvestigationNotebook: React.FC = () => {
@@ -125,12 +136,12 @@ export const InvestigationNotebook: React.FC = () => {
   // States for Clues tab details
   const [selectedClueId, setSelectedClueId] = useState<string>('exhibit-coupon');
 
-  // States for Deduction Game (Cỗ máy Bao cấp)
+  // States for Deduction Game (Bảng điều khiển hành trình)
   const [insertedGears, setInsertedGears] = useState<Record<number, string[]>>({
-    1: [], 2: [], 3: [], 4: [], 5: []
+    1: [], 2: [], 3: [], 4: [], 5: [], 6: []
   });
   const [insertedConclusions, setInsertedConclusions] = useState<Record<number, string>>({
-    1: '', 2: '', 3: '', 4: '', 5: ''
+    1: '', 2: '', 3: '', 4: '', 5: '', 6: ''
   });
   const [activeToolboxItem, setActiveToolboxItem] = useState<{ type: 'gear' | 'conclusion'; id: string } | null>(null);
   const [correctShafts, setCorrectShafts] = useState<number[]>([]);
@@ -147,7 +158,7 @@ export const InvestigationNotebook: React.FC = () => {
 
   // Open notebook automatically when all clues are collected
   useEffect(() => {
-    if (cluesCollected.length === 6 && !roomOneCompleted) {
+    if (cluesCollected.length === 7 && !roomOneCompleted) {
       setIsOpen(true);
       setActiveTab('deduction');
     }
@@ -213,13 +224,13 @@ export const InvestigationNotebook: React.FC = () => {
     });
 
     const cluePoints = cluesCollected.length * 5; // 5đ mỗi hiện vật thu thập thực tế
-    const totalScore = currentScore + cluePoints; // Max 50 + 30 = 80đ
+    const totalScore = currentScore + cluePoints;
 
     setScore(totalScore);
     setCorrectShafts(correctIds);
     setHasCheckedMachine(true);
 
-    if (correctIds.length === 5) {
+    if (correctIds.length === SHAFTS_CONFIG.length) {
       setFinalQuestionOpen(true);
       setShowError(false);
       confetti({ particleCount: 80, spread: 60 });
@@ -265,7 +276,7 @@ export const InvestigationNotebook: React.FC = () => {
     });
 
     const clientElapsedMs = roomOneStartTimestamp ? (Date.now() - roomOneStartTimestamp) : 0;
-    const finalBaseScore = (score || 80) + 10; // 80đ máy chạy + 10đ đóng dấu phê duyệt = 90đ tối đa điểm cơ bản
+    const finalBaseScore = (score ?? 95) + 10; // 95đ kết nối hành trình + 10đ đóng dấu = 105đ tối đa
 
     setTimeout(() => {
       if (socket && socket.connected) {
@@ -278,7 +289,7 @@ export const InvestigationNotebook: React.FC = () => {
   };
 
   const handleFinalSubmit = () => {
-    if (finalAnswer === 'no') {
+    if (finalAnswer === 'yes') {
       setIsReportApproved(true);
       confetti({ particleCount: 60, spread: 50 });
     } else {
@@ -289,8 +300,8 @@ export const InvestigationNotebook: React.FC = () => {
   const handleResetProgress = () => {
     if (confirm(language === 'vi' ? 'Bạn có muốn làm lại từ đầu không?' : 'Do you want to reset and start over?')) {
       resetRoomOne();
-      setInsertedGears({ 1: [], 2: [], 3: [], 4: [], 5: [] });
-      setInsertedConclusions({ 1: '', 2: '', 3: '', 4: '', 5: '' });
+      setInsertedGears({ 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
+      setInsertedConclusions({ 1: '', 2: '', 3: '', 4: '', 5: '', 6: '' });
       setActiveToolboxItem(null);
       setCorrectShafts([]);
       setHasCheckedMachine(false);
@@ -389,7 +400,7 @@ export const InvestigationNotebook: React.FC = () => {
         <button
           onClick={() => setIsOpen(true)}
           className={`flex items-center gap-2 px-5 py-3 rounded-full border shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer ${
-            cluesCollected.length === 6 && !roomOneCompleted
+            cluesCollected.length === 7 && !roomOneCompleted
               ? 'bg-amber-500 hover:bg-amber-400 border-amber-400 text-slate-950 font-bold animate-pulse'
               : roomOneCompleted
               ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white font-semibold'
@@ -401,7 +412,7 @@ export const InvestigationNotebook: React.FC = () => {
             {language === 'vi' ? 'Sổ điều tra' : 'Investigation Log'}
           </span>
           <span className="bg-black/30 px-2 py-0.5 rounded-full text-[10px] font-bold">
-            {cluesCollected.length}/6
+            {cluesCollected.length}/7
           </span>
         </button>
       </div>
@@ -462,7 +473,7 @@ export const InvestigationNotebook: React.FC = () => {
                     : 'bg-[#b69f7e] hover:bg-[#c7b08f] text-[#3a1f10] border-amber-900/40 shadow-sm'
                 }`}
               >
-                Cỗ Máy
+                Hành Trình
               </button>
             </div>
 
@@ -483,7 +494,7 @@ export const InvestigationNotebook: React.FC = () => {
                   </p>
                 </div>
                 <span className="text-[10px] font-mono bg-[#ebd9bd]/30 text-[#4e3629] px-2 py-0.5 rounded-full font-bold">
-                  {cluesCollected.length}/6 Manh mối
+                  {cluesCollected.length}/7 Manh mối
                 </span>
               </div>
 
@@ -491,7 +502,7 @@ export const InvestigationNotebook: React.FC = () => {
               {activeTab === 'clues' && (
                 <div className="flex-1 space-y-3.5 pr-2">
                   <div className="bg-[#ebd9bd]/20 border border-[#e5d5be] p-3.5 rounded-xl text-[12px] text-slate-900 font-medium italic leading-relaxed">
-                    "Hãy di chuyển xung quanh phòng trưng bày 3D, nhấp khám phá 6 vật phẩm để thu thập thông tin quan trọng điền vào sổ tay."
+                    &ldquo;Hãy khám phá 6 hiện vật trên tường để mở khóa tủ kính trung tâm, sau đó hoàn thành tư liệu thứ 7 và thu thập đủ bằng chứng cho Bảng điều khiển hành trình.&rdquo;
                   </div>
 
                   <div className="space-y-2">
@@ -653,19 +664,19 @@ export const InvestigationNotebook: React.FC = () => {
                       : 'text-[#4e3629]'
                   }`}>
                     <span>{activeTab === 'clues' ? '⚙️' : '🎮'}</span>
-                    {activeTab === 'clues' ? 'Dữ liệu điều tra' : 'Bảng Điều Khiển Cỗ Máy'}
+                    {activeTab === 'clues' ? 'Dữ liệu điều tra' : 'Bảng Điều Khiển Hành Trình'}
                   </h3>
                   <p className={`text-[9px] font-mono tracking-widest leading-none mt-1 ${
                     activeTab === 'deduction' && !roomOneCompleted && !isSubmitting && !isReportApproved
                       ? 'text-slate-500'
                       : 'text-[#725b29]'
                   }`}>
-                    {activeTab === 'clues' ? 'DETAILED INVESTIGATION DOSSIER' : 'VẬN HÀNH CỖ MÁY BAO CẤP'}
+                    {activeTab === 'clues' ? 'DETAILED INVESTIGATION DOSSIER' : 'KẾT NỐI HÀNH TRÌNH TÌM ĐƯỜNG'}
                   </p>
                 </div>
                 {activeTab === 'deduction' && score !== null && (
                   <span className="text-[10px] font-mono bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
-                    Điểm hiện tại: {score}/90đ
+                    Điểm hiện tại: {score}/105đ
                   </span>
                 )}
               </div>
@@ -726,7 +737,7 @@ export const InvestigationNotebook: React.FC = () => {
                 );
               })()}
 
-              {/* TAB 2 RIGHT PAGE: The Subsidy Gear Machine Puzzle */}
+              {/* TAB 2 RIGHT PAGE: Journey Timeline Machine Puzzle */}
               {activeTab === 'deduction' && (
                 <div className="flex-1 flex flex-col justify-between h-full pl-2">
                   
@@ -788,7 +799,7 @@ export const InvestigationNotebook: React.FC = () => {
                             KẾT LUẬN CỦA ĐIỀU TRA VIÊN
                           </h4>
                           <p className="text-[11px] text-slate-700 leading-relaxed text-justify">
-                            Nền kinh tế Việt Nam giai đoạn 1976–1985 vận hành theo cơ chế **kế hoạch hóa tập trung bao cấp**. Trong cơ chế này, Nhà nước nắm quyền quyết định hầu hết các hoạt động kinh tế: sản xuất cái gì, sản xuất bao nhiêu, mức giá cố định là gì và phân phối cho ai bằng tem phiếu. Người dân và doanh nghiệp đóng vai trò thực thi chỉ tiêu, có rất ít quyền tự chủ thương mại.
+                            Từ năm 1911 đến đầu năm 1930, Nguyễn Ái Quốc đã trải qua một hành trình liên tục: ra đi khảo nghiệm thế giới, đưa quyền dân tộc ra diễn đàn quốc tế, xác định và lựa chọn con đường cách mạng vô sản, chuẩn bị lực lượng rồi thống nhất các tổ chức cộng sản. Chuỗi sự kiện ấy tạo tiền đề trực tiếp cho sự ra đời của Đảng Cộng sản Việt Nam.
                           </p>
                         </div>
                       )}
@@ -848,10 +859,10 @@ export const InvestigationNotebook: React.FC = () => {
 
                         <div className="space-y-1.5 text-[11px] leading-relaxed font-sans text-slate-800 text-justify">
                           <p>
-                            Qua quá trình thám thính và giải mã cỗ máy, tôi xin xác nhận: nền kinh tế Việt Nam giai đoạn 1976-1985 hoạt động theo cơ chế <b>Kế hoạch hóa tập trung bao cấp</b>.
+                            Qua quá trình khảo sát và kết nối các tư liệu, tôi xác nhận hành trình tìm đường cứu nước của Nguyễn Ái Quốc từ năm 1911 đến năm 1930 là một quá trình phát triển liên tục từ <b>khảo nghiệm thực tiễn</b> đến <b>xác định con đường, chuẩn bị lực lượng và thống nhất tổ chức</b>.
                           </p>
                           <p>
-                            Nhà nước đóng vai trò quyết định, phân phối hàng hóa thiết yếu dựa trên chỉ tiêu hành chính thông qua tem phiếu và sổ gạo, triệt tiêu quyền tự do giao thương và thị trường tự do.
+                            Những bước chuyển đó tạo nền tảng tư tưởng, chính trị, cán bộ và tổ chức cho cách mạng Việt Nam, đồng thời dẫn tới sự ra đời của Đảng Cộng sản Việt Nam đầu năm 1930.
                           </p>
                         </div>
                       </div>
@@ -891,15 +902,15 @@ export const InvestigationNotebook: React.FC = () => {
                             {/* Needle */}
                             <div 
                               className="absolute bottom-1/2 left-1/2 w-0.5 h-4.5 bg-red-600 origin-bottom transform -translate-x-1/2 transition-transform duration-700" 
-                              style={{ transform: `translateX(-50%) rotate(${-60 + correctShafts.length * 30}deg)` }}
+                              style={{ transform: `translateX(-50%) rotate(${-60 + (correctShafts.length / SHAFTS_CONFIG.length) * 150}deg)` }}
                             />
                             {/* Center pin */}
                             <div className="w-2 h-2 rounded-full bg-[#181a1d] absolute" />
                           </div>
                           <div>
-                            <span className="text-[7.5px] font-mono text-slate-400 block leading-none">ÁP SUẤT CỔ MÁY</span>
+                            <span className="text-[7.5px] font-mono text-slate-400 block leading-none">MỨC ĐỘ HOÀN THIỆN</span>
                             <span className="text-[9px] font-mono text-amber-500 font-bold leading-none mt-1 block">
-                              {correctShafts.length * 20}% PSI PRESSURE
+                              {Math.round((correctShafts.length / SHAFTS_CONFIG.length) * 100)}% TIMELINE LINKED
                             </span>
                           </div>
                         </div>
@@ -907,11 +918,11 @@ export const InvestigationNotebook: React.FC = () => {
                         {/* Gauge 2: LEDs system */}
                         <div className="flex gap-2 relative z-10">
                           <div className="flex flex-col items-center">
-                            <div className={`w-3 h-3 rounded-full border border-black transition-all duration-300 ${correctShafts.length === 5 ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-850'}`} />
+                            <div className={`w-3 h-3 rounded-full border border-black transition-all duration-300 ${correctShafts.length === SHAFTS_CONFIG.length ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-slate-850'}`} />
                             <span className="text-[6px] font-mono text-slate-500 mt-1 uppercase">Online</span>
                           </div>
                           <div className="flex flex-col items-center">
-                            <div className={`w-3 h-3 rounded-full border border-black transition-all duration-300 ${hasCheckedMachine && correctShafts.length < 5 ? 'bg-rose-500 shadow-[0_0_8px_#f43f5e] animate-pulse' : 'bg-slate-850'}`} />
+                            <div className={`w-3 h-3 rounded-full border border-black transition-all duration-300 ${hasCheckedMachine && correctShafts.length < SHAFTS_CONFIG.length ? 'bg-rose-500 shadow-[0_0_8px_#f43f5e] animate-pulse' : 'bg-slate-850'}`} />
                             <span className="text-[6px] font-mono text-slate-500 mt-1 uppercase">Fault</span>
                           </div>
                         </div>
@@ -1035,7 +1046,7 @@ export const InvestigationNotebook: React.FC = () => {
                       {showError && (
                         <div className="bg-rose-950/40 border border-rose-900 p-2.5 rounded-xl text-rose-300 text-[10px] leading-relaxed flex items-center gap-2 animate-pulse font-mono">
                           <AlertCircle size={13} className="shrink-0 text-rose-400" />
-                          <span>ÁP SUẤT CẢNH BÁO: Hệ thống chưa hoạt động! Một vài bánh răng chưa khớp hoặc đúc kết chưa chính xác. Vui lòng tinh chỉnh lại cỗ máy.</span>
+                           <span>LIÊN KẾT CHƯA HOÀN CHỈNH: Một vài bằng chứng chưa đúng trục hoặc bản đúc kết chưa chính xác. Hãy kiểm tra lại dòng thời gian.</span>
                         </div>
                       )}
 
@@ -1046,7 +1057,7 @@ export const InvestigationNotebook: React.FC = () => {
                             onClick={handleCheckMachine}
                             className="bg-amber-600 hover:bg-amber-700 text-white font-mono font-bold text-[10px] py-2.5 px-6 rounded-full shadow-md transition-transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-1.5 uppercase"
                           >
-                            ⚙️ Khởi động cỗ máy bao cấp
+                             ⚙️ Hoàn tất dòng chảy lịch sử
                           </button>
                         </div>
                       )}
@@ -1055,38 +1066,38 @@ export const InvestigationNotebook: React.FC = () => {
                       {finalQuestionOpen && (
                         <div className="border border-amber-500 bg-[#161a1d] p-3.5 rounded-xl space-y-3.5 animate-fade-in relative shadow-md text-slate-200">
                           <div className="absolute -top-2.5 left-4 bg-amber-500 text-slate-950 font-mono font-bold text-[7.5px] uppercase tracking-widest px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                            <Sparkles size={8} /> CỖ MÁY ĐÃ VẬN HÀNH ĐỒNG BỘ
+                             <Sparkles size={8} /> HÀNH TRÌNH ĐÃ ĐƯỢC KẾT NỐI
                           </div>
                           
                           <div className="space-y-1 pt-1">
                             <h3 className="text-[8.5px] font-bold font-mono text-slate-400 uppercase tracking-widest leading-none">
-                              QUYẾT ĐỊNH BAO CẤP:
+                               KẾT LUẬN HÀNH TRÌNH:
                             </h3>
                             <p className="text-[10.5px] font-bold text-slate-100 leading-snug">
-                              Dựa trên cỗ máy đã vận hành, theo bạn: Nền kinh tế Việt Nam giai đoạn 1976–1985 có vận hành theo cơ chế thị trường tự do hay không?
+                               Chuỗi tư liệu từ năm 1911 đến năm 1930 có cho thấy con đường cứu nước của Nguyễn Ái Quốc được hình thành qua khảo nghiệm thực tiễn, xác định tư tưởng, lựa chọn chính trị, chuẩn bị lực lượng và thống nhất tổ chức hay không?
                             </p>
                           </div>
 
                           <div className="space-y-1.5 text-[9.5px]">
                             <button
                               onClick={() => setFinalAnswer('yes')}
-                              className={`w-full text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
-                                finalAnswer === 'yes'
-                                  ? 'bg-rose-950/40 border-rose-600 text-rose-300 font-bold'
-                                  : 'bg-[#22252a] border-slate-800 text-slate-300 hover:bg-[#2b2f36]'
-                              }`}
-                            >
-                              ○ Có, nền kinh tế lúc này tự do trao đổi và vận hành hoàn toàn theo quy luật cung - cầu thị trường.
-                            </button>
-                            <button
-                              onClick={() => setFinalAnswer('no')}
-                              className={`w-full text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
-                                finalAnswer === 'no'
+                                className={`w-full text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
+                                  finalAnswer === 'yes'
                                   ? 'bg-emerald-950/40 border-emerald-600 text-emerald-300 font-bold'
                                   : 'bg-[#22252a] border-slate-800 text-slate-300 hover:bg-[#2b2f36]'
                               }`}
                             >
-                              ○ Không, nền kinh tế vận hành theo cơ chế kế hoạch hóa tập trung, phân phối định mức và Nhà nước quyết định hoàn toàn.
+                               ○ Có. Đây là một quá trình phát triển liên tục, trong đó mỗi giai đoạn chuẩn bị cho bước chuyển tiếp theo.
+                            </button>
+                            <button
+                              onClick={() => setFinalAnswer('no')}
+                                className={`w-full text-left p-2.5 rounded-lg border transition-all cursor-pointer ${
+                                  finalAnswer === 'no'
+                                  ? 'bg-rose-950/40 border-rose-600 text-rose-300 font-bold'
+                                  : 'bg-[#22252a] border-slate-800 text-slate-300 hover:bg-[#2b2f36]'
+                              }`}
+                            >
+                               ○ Không. Các sự kiện tồn tại rời rạc và không tạo thành một quá trình phát triển có liên hệ với nhau.
                             </button>
                           </div>
 

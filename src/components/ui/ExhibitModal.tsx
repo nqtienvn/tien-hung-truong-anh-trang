@@ -8,6 +8,7 @@ import { GalleyWorkMission } from './GalleyWorkMission';
 import { VanBaProfile } from './VanBaProfile';
 import { DepartureMission } from './DepartureMission';
 import { ShipExplorationMission } from './ShipExplorationMission';
+import { ROOM_ONE_GAMEPLAY } from '@/lib/roomOneGameplay';
 
 interface QuizQuestion {
   question: string;
@@ -248,7 +249,9 @@ export const ExhibitModal: React.FC = () => {
 
   // --- States cho Gameplay Bao cấp (gallery-subsidy) ---
   const isSubsidyRoom = activeGallery?.id === 'gallery-subsidy';
-  const gameData = selectedExhibit ? GAMEPLAY_DICTIONARY[selectedExhibit.id] : null;
+  const gameData = selectedExhibit
+    ? ROOM_ONE_GAMEPLAY[selectedExhibit.id] ?? GAMEPLAY_DICTIONARY[selectedExhibit.id]
+    : null;
   const isDepartureMission = selectedExhibit?.id === 'nha-rong-departure-1911' && exhibitModalMode === 'game';
   const isFirstVoyageGame = selectedExhibit?.id === 'nha-rong-first-voyage' && exhibitModalMode === 'game';
   const isVanBaProfile = selectedExhibit?.id === 'nha-rong-latouche-treville' && exhibitModalMode === 'game';
@@ -583,7 +586,7 @@ export const ExhibitModal: React.FC = () => {
               : isFirstVoyageGame
               ? (language === 'vi' ? 'Trò chơi hải trình' : 'Voyage game')
               : isSubsidyRoom
-                ? 'Bao Cấp Việt Nam'
+                ? 'Theo dấu chân Người'
                 : (selectedExhibit.model_3d_url ? 'Điêu Khắc 3D' : 'Hội Họa 2D')}
           </span>
         </div>
