@@ -1605,6 +1605,21 @@ export default function LobbyPage() {
     }
     setInputError('');
     setNickname(inputNickname.trim());
+
+    const requestedRoom = new URLSearchParams(window.location.search).get('room');
+    const directRoomSpawns: Record<string, { x: number; y: number; z: number }> = {
+      'gallery-subsidy': { x: 0, y: 3.0, z: 10.0 },
+      'gallery-three': { x: 0, y: 3.0, z: roomFiveSpatial.spawnWorldZ },
+      'gallery-ceramics': { x: 0, y: 3.0, z: 152.0 },
+      'gallery-market-economy': { x: 0, y: 3.0, z: roomFourSpatial.spawnWorldZ },
+      'gallery-paintings': { x: 0, y: 3.0, z: 106.0 },
+    };
+
+    if (requestedRoom && directRoomSpawns[requestedRoom]) {
+      setCurrentRoom(requestedRoom);
+      setTeleportTarget(directRoomSpawns[requestedRoom]);
+    }
+
     setEntered(true);
   };
 
