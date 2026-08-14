@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Html } from '@react-three/drei';
 import Image from 'next/image';
 import {
@@ -29,6 +29,31 @@ export const RoomFourJourneyOverlay: React.FC<RoomFourJourneyOverlayProps> = ({
   activeStationId,
   onClose,
 }) => {
+  const portalRef = useRef<HTMLElement>(null!);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    portalRef.current = document.body;
+  }, []);
+
+  useEffect(() => {
+    if (!activeStationId) return;
+
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscape);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      window.removeEventListener('keydown', handleEscape);
+    };
+  }, [activeStationId, onClose]);
+
   if (!activeStationId) return null;
 
   const content = ROOM_FOUR_JOURNEY_CONTENT[activeStationId];
@@ -42,18 +67,30 @@ export const RoomFourJourneyOverlay: React.FC<RoomFourJourneyOverlayProps> = ({
   return (
     <Html
       fullscreen
+      portal={portalRef}
       zIndexRange={[20_000_000, 19_000_000]}
       calculatePosition={(_, __, size) => [size.width / 2, size.height / 2]}
+      // Html normally hides itself when its 3D anchor is behind the camera.
+      // This is a fullscreen DOM dialog, not a world label, so that behavior
+      // would lock the camera while making the only close control invisible.
+      onOcclude={() => undefined}
       style={{ pointerEvents: 'none', fontFamily: FONT_STACK }}
     >
-      <div className="absolute inset-0 flex items-center justify-center bg-[#071015]/78 p-4 text-slate-100 sm:p-7">
+      <div
+        className="pointer-events-auto absolute inset-0 flex items-center justify-center bg-[#071015]/78 p-4 text-slate-100 sm:p-7"
+        onPointerDown={(event) => {
+          if (event.target === event.currentTarget) onClose();
+        }}
+      >
         <section
           role="dialog"
           aria-modal="true"
           aria-labelledby="room-four-station-title"
+          onPointerDown={(event) => event.stopPropagation()}
           className="pointer-events-auto relative max-h-[min(860px,calc(100vh-32px))] w-[72vw] max-w-none overflow-y-auto border border-slate-400/25 bg-[#0d171c]/[0.98] px-6 py-11 text-center shadow-[0_28px_90px_rgba(0,0,0,0.58)] max-sm:w-full sm:max-h-[calc(100vh-56px)] sm:px-12 sm:py-14 lg:px-20"
         >
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="absolute right-4 top-4 grid h-10 w-10 place-items-center border border-slate-500/45 text-lg text-slate-300 transition-colors hover:border-[#d7a768] hover:bg-[#d7a768]/10 hover:text-[#f4dfbc] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d7a768] sm:right-6 sm:top-6"

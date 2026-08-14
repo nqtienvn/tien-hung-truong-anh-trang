@@ -106,7 +106,6 @@ export const ROOM_FOUR_SEAL_LINKS: Readonly<
 } as const;
 
 export const ROOM_FOUR_JOURNEY_ORDER: readonly RoomFourStationId[] = [
-  'card',
   's1',
   's2',
   's3',
@@ -117,8 +116,8 @@ export const ROOM_FOUR_JOURNEY_ORDER: readonly RoomFourStationId[] = [
   's8',
 ] as const;
 
-/** The entrance card begins the experience but is not one of the eight stations. */
-export const ROOM_FOUR_STATION_IDS = ROOM_FOUR_JOURNEY_ORDER.slice(1) as readonly RoomFourStationId[];
+/** The Room Four journey begins directly at Station 1 and runs through Station 8. */
+export const ROOM_FOUR_STATION_IDS = ROOM_FOUR_JOURNEY_ORDER;
 
 /**
  * The five outcomes that must remain visible at the Return Map after the
@@ -133,47 +132,6 @@ export const ROOM_FOUR_FINALE_SEAL_IDS = [
 ] as const satisfies readonly RoomFourSealId[];
 
 export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomFourJourneyContent>> = {
-  card: {
-    id: 'card',
-    eyebrowVi: 'Ngưỡng vào · 1923–1927',
-    eyebrowEn: 'Entrance threshold · 1923–1927',
-    leadVi: 'Nhận một Thẻ hành trình để mang các dấu ấn từ Moscow đến Quảng Châu.',
-    leadEn: 'Collect a Journey Card and carry its imprints from Moscow to Guangzhou.',
-    historyVi: [
-      'Thẻ không chấm điểm và không đặt câu hỏi đúng–sai. Mỗi trạm mở ra bằng một thao tác khám phá.',
-      'Bảy dấu hành trang sẽ cho thấy cách lý luận và quan hệ quốc tế trở thành tổ chức, báo chí, cán bộ và mạng lưới trở về Việt Nam.',
-    ],
-    historyEn: [
-      'The card has no score and no right-or-wrong quiz. Each station opens through an act of discovery.',
-      'Seven imprints reveal how theory and international relations became organisation, press, cadres and a network returning to Vietnam.',
-    ],
-    before: {
-      vi: 'Một Thẻ hành trình còn trống đang chờ nhận ở ngưỡng vào.',
-      en: 'A blank Journey Card waits at the entrance threshold.',
-    },
-    action: {
-      vi: 'Nhận Thẻ hành trình 1923–1927',
-      en: 'Collect the 1923–1927 Journey Card',
-    },
-    after: {
-      vi: 'Đường sáng trên Thẻ trùng với đường dẫn dưới sàn.',
-      en: 'The line on the card now matches the illuminated route on the floor.',
-    },
-    meaning: {
-      vi: 'Hành trình bắt đầu: học hỏi để chuẩn bị trở về.',
-      en: 'The journey begins: learning in preparation for the return.',
-    },
-    steps: [
-      {
-        id: 'collect-card',
-        titleVi: 'Nhận Thẻ',
-        titleEn: 'Collect the card',
-        detailVi: 'Đường sáng trên Thẻ trùng với đường dẫn dưới sàn.',
-        detailEn: 'The line on the card now matches the illuminated route on the floor.',
-      },
-    ],
-    sealIds: [],
-  },
   s1: {
     id: 's1',
     eyebrowVi: 'Trạm 01 · Moscow · 1923',

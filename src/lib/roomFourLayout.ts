@@ -1,7 +1,6 @@
 import spatial from './roomFourSpatial.json';
 
 export type RoomFourStationKind =
-  | 'journey-card'
   | 'study-desk'
   | 'forum-globe'
   | 'travel-ticket'
@@ -12,7 +11,7 @@ export type RoomFourStationKind =
   | 'return-map';
 
 export interface RoomFourStationLayout {
-  id: 'card' | 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8';
+  id: 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8';
   index: number;
   section: 'threshold' | 'soviet' | 'guangzhou';
   kind: RoomFourStationKind;
@@ -67,22 +66,6 @@ export const ROOM_FOUR_PORTALS: readonly RoomFourPortalLayout[] = [
 ] as const;
 
 export const ROOM_FOUR_STATIONS: readonly RoomFourStationLayout[] = [
-  {
-    id: 'card',
-    index: 0,
-    section: 'threshold',
-    kind: 'journey-card',
-    object: [-5.8, -70.2],
-    stop: [-2.8, -70.2],
-    footprint: [2.4, 1.4],
-    dateVi: '1923–1927',
-    dateEn: '1923–1927',
-    titleVi: 'Nhận Thẻ hành trình',
-    titleEn: 'Collect the Journey Card',
-    purposeVi: 'Mang theo hành trang qua tám trạm',
-    purposeEn: 'Carry the journey through eight stations',
-    focalLevel: 3,
-  },
   {
     id: 's1',
     index: 1,

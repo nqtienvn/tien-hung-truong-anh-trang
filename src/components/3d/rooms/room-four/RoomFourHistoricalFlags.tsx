@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Html, useTexture } from '@react-three/drei';
+import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import {
   ROOM_FOUR_FLAG_FRAMES,
@@ -75,55 +75,39 @@ const FramedFlag = ({
         <boxGeometry args={[width + 0.05, 0.035, 0.025]} />
       </mesh>
 
-      <Html
-        position={[0, height / 2 + 0.54, frontDepth + 0.16]}
-        center
-        transform
-        occlude
-        distanceFactor={8}
-        zIndexRange={[100, 0]}
-        style={{
-          pointerEvents: 'none',
-          userSelect: 'none',
-          // Html is rendered in the DOM, so mirror the Three visibility when
-          // a station form opens to prevent the heading from overlapping it.
-          visibility: visible ? 'visible' : 'hidden',
-        }}
-      >
-        <div
-          style={{
-            minWidth: 320,
-            textAlign: 'center',
-            textShadow: '0 3px 14px rgba(0, 0, 0, 0.8)',
-            whiteSpace: 'nowrap',
-          }}
+      {/* Use scene-native text rather than Html transform/occlusion. The label
+          is a fixed part of the wall display, so it must share WebGL depth
+          testing with the frame instead of re-evaluating DOM visibility. */}
+      <group position={[0, height / 2 + 0.54, frontDepth + 0.16]} visible={visible} raycast={IGNORE_RAYCAST}>
+        <Text
+          anchorX="center"
+          anchorY="middle"
+          color="#f2e5cc"
+          fontSize={0.34}
+          letterSpacing={0.06}
+          maxWidth={outerWidth - 0.25}
+          outlineWidth={0.014}
+          outlineColor="#080a0b"
+          renderOrder={12}
+          raycast={IGNORE_RAYCAST}
         >
-          <div
-            style={{
-              color: '#f2e5cc',
-              fontFamily: 'var(--font-eb-garamond), Georgia, serif',
-              fontSize: 34,
-              fontWeight: 700,
-              letterSpacing: '0.06em',
-              lineHeight: 0.96,
-            }}
-          >
-            {language === 'vi' ? frame.titleVi : frame.titleEn}
-          </div>
-          <div
-            style={{
-              color: '#d6ab69',
-              fontFamily: 'var(--font-space-grotesk), ui-monospace, monospace',
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.2em',
-              marginTop: 7,
-            }}
-          >
-            {language === 'vi' ? frame.timelineVi : frame.timelineEn}
-          </div>
-        </div>
-      </Html>
+          {language === 'vi' ? frame.titleVi : frame.titleEn}
+        </Text>
+        <Text
+          position={[0, -0.34, 0.01]}
+          anchorX="center"
+          anchorY="middle"
+          color="#d6ab69"
+          fontSize={0.12}
+          letterSpacing={0.18}
+          outlineWidth={0.008}
+          outlineColor="#080a0b"
+          renderOrder={12}
+          raycast={IGNORE_RAYCAST}
+        >
+          {language === 'vi' ? frame.timelineVi : frame.timelineEn}
+        </Text>
+      </group>
     </group>
   );
 };

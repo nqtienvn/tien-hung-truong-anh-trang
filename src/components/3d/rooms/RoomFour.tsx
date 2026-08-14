@@ -6,18 +6,7 @@ import { Text, useTexture } from '@react-three/drei';
 import * as THREE from 'three';
 import { useMuseum } from '@/context/MuseumContext';
 import {
-  ROOM_FOUR_JOURNEY_CONTENT,
   ROOM_FOUR_FINALE_SEAL_IDS,
-  ROOM_FOUR_SEAL_LINKS,
-  ROOM_FOUR_SEALS,
-  getNextRoomFourStation,
-  getRoomFourStationProgress,
-  isRoomFourFinaleReady,
-  isRoomFourJourneyToken,
-  roomFourCompletionToken,
-  roomFourFinaleToken,
-  roomFourSealToken,
-  roomFourStepToken,
   type RoomFourSealId,
   type RoomFourStationId,
 } from '@/lib/roomFourJourney';
@@ -1321,29 +1310,11 @@ const ReturnMap: React.FC<{
   );
 };
 
-const JourneyCardDesk: React.FC<{ collected: boolean }> = ({ collected }) => (
-  <group>
-    <StudyDesk progressCount={collected ? 3 : 0} />
-    <mesh
-      position={[0, collected ? 1.54 : 1.38, collected ? 0.1 : -0.03]}
-      rotation={[-0.18, 0, collected ? -0.05 : 0]}
-      material={collected ? SHARED_MATERIALS.coldLine : SHARED_MATERIALS.coldAccent}
-    >
-      <boxGeometry args={[1.22, 0.04, 0.74]} />
-    </mesh>
-    <mesh position={[0, 1.42, -0.08]} rotation={[-0.18, 0, 0]} material={SHARED_MATERIALS.coldPaper}>
-      <boxGeometry args={[1.04, 0.035, 0.58]} />
-    </mesh>
-  </group>
-);
-
 const ArtifactAssembly: React.FC<{
   kind: RoomFourStationKind;
   reducedDetail: boolean;
 }> = ({ kind, reducedDetail }) => {
   switch (kind) {
-    case 'journey-card':
-      return <JourneyCardDesk collected />;
     case 'study-desk':
       return <MoscowUniversityBuildingModel reducedDetail={reducedDetail} />;
     case 'forum-globe':
@@ -1955,14 +1926,6 @@ export const RoomFour: React.FC<BaseRoomProps> = ({
   }, [completeJourneyFinale, finalePlaying, shouldAnimateFinale]);
 
   */
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && activeStationId) closeInteraction();
-    };
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [activeStationId, closeInteraction]);
-
   useEffect(
     () => () => {
       setRoomFourInteractionOpen(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import { Html } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import {
   ROOM_FOUR_QUOTE_PANELS,
@@ -35,6 +35,8 @@ const HistoricalQuotePanel = ({
   const quoteLines = language === 'vi' ? panel.quoteLinesVi : panel.quoteLinesEn;
   const attribution = language === 'vi' ? panel.attributionVi : panel.attributionEn;
   const frontDepth = 0.08;
+  const quoteLineHeight = 0.38;
+  const quoteStartY = ((quoteLines.length - 1) * quoteLineHeight) / 2;
 
   return (
     <group
@@ -61,61 +63,41 @@ const HistoricalQuotePanel = ({
         <boxGeometry args={[0.035, height - 0.4, 0.025]} />
       </mesh>
 
-      <Html
-        // Lift the type block slightly so the signature has generous bottom space.
-        position={[0, 0.1, frontDepth + 0.11]}
-        center
-        transform
-        occlude
-        distanceFactor={8.8}
-        zIndexRange={[100, 0]}
-        style={{
-          pointerEvents: 'none',
-          userSelect: 'none',
-          // Html lives in the DOM, so mirror the Three group visibility here.
-          // This guarantees that no quotation can layer over an open station form.
-          visibility: visible ? 'visible' : 'hidden',
-        }}
-        >
-        <div
-          style={{
-            width: 620,
-            color: '#f2e5cc',
-            textAlign: 'center',
-            textShadow: '0 3px 12px rgba(0, 0, 0, 0.82)',
-          }}
-        >
-          <div
-            style={{
-              fontFamily: 'var(--font-eb-garamond), Georgia, serif',
-              fontSize: 25,
-              fontStyle: 'italic',
-              fontWeight: 700,
-              letterSpacing: '0.005em',
-              lineHeight: 1.14,
-            }}
+      {/* Wall copy is scene-native text, not a DOM overlay. This removes the
+          per-frame Html occlusion/z-index changes that caused it to flicker. */}
+      <group position={[0, 0.1, frontDepth + 0.11]} visible={visible} raycast={IGNORE_RAYCAST}>
+        {quoteLines.map((line, index) => (
+          <Text
+            key={line}
+            position={[0, quoteStartY - index * quoteLineHeight, 0]}
+            anchorX="center"
+            anchorY="middle"
+            color="#f2e5cc"
+            fontSize={0.3}
+            maxWidth={width - 0.8}
+            outlineWidth={0.012}
+            outlineColor="#080a0b"
+            renderOrder={12}
+            raycast={IGNORE_RAYCAST}
           >
-            {quoteLines.map((line) => (
-              <span key={line} style={{ display: 'block', whiteSpace: 'nowrap' }}>
-                {line}
-              </span>
-            ))}
-          </div>
-          <div
-            style={{
-              color: isSoviet ? '#9db9c2' : '#d7b17c',
-              fontFamily: 'var(--font-eb-garamond), Georgia, serif',
-              fontSize: 13,
-              fontWeight: 600,
-              fontStyle: 'italic',
-              letterSpacing: '0.025em',
-              marginTop: 17,
-            }}
-          >
-            {attribution}
-          </div>
-        </div>
-      </Html>
+            {line}
+          </Text>
+        ))}
+        <Text
+          position={[0, -quoteStartY - 0.44, 0.01]}
+          anchorX="center"
+          anchorY="middle"
+          color={isSoviet ? '#9db9c2' : '#d7b17c'}
+          fontSize={0.16}
+          letterSpacing={0.025}
+          outlineWidth={0.008}
+          outlineColor="#080a0b"
+          renderOrder={12}
+          raycast={IGNORE_RAYCAST}
+        >
+          {attribution}
+        </Text>
+      </group>
     </group>
   );
 };

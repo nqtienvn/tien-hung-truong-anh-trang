@@ -13,12 +13,6 @@ export interface RoomFourFootPlaqueContent {
 }
 
 export const ROOM_FOUR_FOOT_PLAQUES: Readonly<Record<RoomFourStationId, RoomFourFootPlaqueContent>> = {
-  card: {
-    timeVi: '1923-1927',
-    timeEn: '1923-1927',
-    eventVi: 'Nhận Thẻ hành trình trước khi bắt đầu khám phá.',
-    eventEn: 'Collect the Journey Card before beginning the exploration.',
-  },
   s1: {
     timeVi: 'Moscow · 1923',
     timeEn: 'Moscow · 1923',

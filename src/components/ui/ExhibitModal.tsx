@@ -252,9 +252,6 @@ export const ExhibitModal: React.FC = () => {
   const isRoomOneFinalRound = selectedExhibit?.id === ROOM_ONE_FINAL_EXHIBIT_ID;
   const hasAllRoomOnePoints = ROOM_ONE_REQUIRED_CLUE_IDS.every((id) => cluesCollected.includes(id));
   const finalArchiveClueCollected = cluesCollected.includes(ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID);
-  const hasCollectedCurrentClue = isRoomOneFinalRound
-    ? finalArchiveClueCollected
-    : selectedExhibit ? cluesCollected.includes(selectedExhibit.id) : false;
 
   const lastExhibitIdRef = useRef<string | null>(null);
 
@@ -286,7 +283,11 @@ export const ExhibitModal: React.FC = () => {
           return;
         }
 
-        if ((isRoomOneFinalRound && !hasAllRoomOnePoints) || hasCollectedCurrentClue) {
+        const alreadyCollected = isRoomOneFinalRound
+          ? cluesCollected.includes(ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID)
+          : cluesCollected.includes(selectedExhibit.id);
+
+        if ((isRoomOneFinalRound && !hasAllRoomOnePoints) || alreadyCollected) {
           setGameState('info');
         } else {
           setGameState('quiz');
