@@ -16,8 +16,8 @@ export const ROOM_FOUR_FOOT_PLAQUES: Readonly<Record<RoomFourStationId, RoomFour
   s1: {
     timeVi: 'Moscow · 1923',
     timeEn: 'Moscow · 1923',
-    eventVi: 'Củng cố lý luận tại Trường Đại học Cộng sản Phương Đông.',
-    eventEn: 'Strengthen revolutionary theory at the Communist University of the Toilers of the East.',
+    eventVi: 'Củng cố lý luận tại Trường Đại học Lao động Cộng sản Phương Đông',
+    eventEn: 'Strengthen theory at the Communist University of the Toilers of the East.',
   },
   s2: {
     timeVi: '1923-1924',

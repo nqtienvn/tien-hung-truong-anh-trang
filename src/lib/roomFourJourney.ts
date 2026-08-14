@@ -155,8 +155,8 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
       'Founded on 21 April 1921, the school trained revolutionary cadres from colonial and dependent countries.',
     ],
     before: {
-      vi: 'Ba quyển sách khép trong không gian học tập ở Moscow.',
-      en: 'Three closed books wait in the Moscow learning space.',
+      vi: 'Củng cố lý luận tại Trường Đại học Lao động Cộng sản Phương Đông',
+      en: 'Strengthen theory at the Communist University of the Toilers of the East.',
     },
     action: {
       vi: 'Mở lần lượt ba quyển sách',
