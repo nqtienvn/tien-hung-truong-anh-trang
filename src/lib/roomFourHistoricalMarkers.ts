@@ -82,17 +82,18 @@ export const ROOM_FOUR_QUOTE_PANELS: readonly RoomFourQuotePanel[] = [
     // Opposite the Soviet flag; it faces the room rather than the corridor.
     position: [-8.72, 3.5, -49.8],
     rotation: [0, Math.PI / 2, 0],
-    // Slightly oversized to give the two long text lines a clear margin on all sides.
+    // Slightly oversized to give the three-line quotation a clear margin on all sides.
     dimensions: [13.2, 2.95],
     quoteLinesVi: [
-      '“Vận mệnh của giai cấp vô sản thế giới … gắn chặt với',
-      'vận mệnh của giai cấp bị áp bức ở các thuộc địa.”',
+      '“Vận mệnh của giai cấp vô sản thế giới và đặc biệt là vận mệnh',
+      'của giai cấp vô sản ở các nước đi xâm lược thuộc địa gắn chặt',
+      'với vận mệnh của giai cấp bị áp bức ở các thuộc địa”',
     ],
     quoteLinesEn: [
       '“The fate of the world proletariat is closely tied',
       'to the fate of the oppressed in the colonies.”',
     ],
-    attributionVi: '— Nguyễn Ái Quốc',
+    attributionVi: 'Nguyễn Ái Quốc (Hồ Chí Minh) tại Đại hội lần thứ V của Quốc tế Cộng sản năm 1924',
     attributionEn: '— Nguyen Ai Quoc',
   },
   {
