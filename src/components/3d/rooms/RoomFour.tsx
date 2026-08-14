@@ -859,30 +859,6 @@ const MoscowUniversityBuildingModel: React.FC<{ reducedDetail: boolean }> = ({ r
 };
 
 /**
- * Phase 12 adds one contextual prop to each station. These are deliberately
- * static and raycast-free: the existing central exhibit and foot-plaque remain
- * the only visual and interaction anchors of the visitor journey.
- */
-const SupplementalStationModel: React.FC<{
-  stationId: RoomFourStationLayout['id'];
-}> = ({ stationId }) => {
-  switch (stationId) {
-    case 's1':
-      return null;
-    case 's2':
-      return null;
-    case 's3':
-      return null;
-    case 's4':
-      return null;
-    case 's5':
-      return null;
-    default:
-      return null;
-  }
-};
-
-/**
  * The S2 focal object is a static documentary screen. Its image sits within a
  * physical frame; only the existing foot-plaque can open the station modal.
  */
@@ -1603,7 +1579,6 @@ const StationBay: React.FC<{
           kind={station.kind}
           reducedDetail={reducedDetail}
         />
-        <SupplementalStationModel stationId={station.id} />
       </group>
       <mesh
         position={[station.stop[0], 0.075, station.stop[1]]}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Html, Text, useTexture } from '@react-three/drei';
 import { SRGBColorSpace, type Object3D } from 'three';
@@ -313,8 +313,19 @@ const HistoricDisplay: React.FC<HistoricDisplayProps> = ({
   </group>
 );
 
-const ExhibitStoryCard: React.FC<{ exhibit: HistoricDisplayData; onClose: () => void }> = ({ exhibit, onClose }) => (
-  <Html calculatePosition={(_, __, size) => [size.width / 2, size.height / 2]} fullscreen style={{ fontFamily: 'Hanken Grotesk, Manrope, sans-serif', pointerEvents: 'none' }} zIndexRange={[20_000_000, 19_000_000]}>
+const ExhibitStoryCard: React.FC<{
+  exhibit: HistoricDisplayData;
+  onClose: () => void;
+  portalRef: React.RefObject<HTMLElement>;
+}> = ({ exhibit, onClose, portalRef }) => (
+  <Html
+    calculatePosition={(_, __, size) => [size.width / 2, size.height / 2]}
+    fullscreen
+    onOcclude={() => undefined}
+    portal={portalRef}
+    style={{ fontFamily: 'Hanken Grotesk, Manrope, sans-serif', pointerEvents: 'none' }}
+    zIndexRange={[20_000_000, 19_000_000]}
+  >
     <div style={{ alignItems: 'center', background: 'rgba(7, 16, 21, 0.78)', boxSizing: 'border-box', color: '#f4ead8', display: 'flex', height: '100vh', justifyContent: 'center', overflowY: 'auto', padding: '32px', width: '100vw' }}>
       <article
         aria-label={`Tư liệu triển lãm: ${exhibit.title}`}
@@ -456,13 +467,24 @@ const Desk: React.FC = () => (
 
 export const RoomThreeHistoricExhibits: React.FC<RoomThreeHistoricExhibitsProps> = ({ isVisible = true }) => {
   const [selectedDisplayId, setSelectedDisplayId] = useState<string | null>(null);
+  const portalRef = useRef<HTMLElement>(null!);
   const selectedExhibit = historicDisplays.find((display) => display.id === selectedDisplayId);
+
+  useEffect(() => {
+    portalRef.current = document.body;
+  }, []);
 
   return (
     <group visible={isVisible}>
       {historicDisplays.map((display) => <HistoricDisplay key={display.id} {...display} onSelect={setSelectedDisplayId} />)}
       <Desk />
-      {selectedExhibit && <ExhibitStoryCard exhibit={selectedExhibit} onClose={() => setSelectedDisplayId(null)} />}
+      {selectedExhibit && (
+        <ExhibitStoryCard
+          exhibit={selectedExhibit}
+          onClose={() => setSelectedDisplayId(null)}
+          portalRef={portalRef}
+        />
+      )}
     </group>
   );
 };
