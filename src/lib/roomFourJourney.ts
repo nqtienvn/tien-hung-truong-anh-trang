@@ -32,6 +32,8 @@ export interface RoomFourJourneyContent {
   leadVi: string;
   leadEn: string;
   illustration?: RoomFourJourneyIllustration;
+  /** Optional archival material displayed after every historical paragraph. */
+  closingIllustration?: RoomFourJourneyIllustration;
   historyVi: readonly string[];
   historyEn: readonly string[];
   /** The fixed exhibition rhythm: see → act → witness → understand. */
@@ -97,11 +99,11 @@ export const ROOM_FOUR_SEAL_LINKS: Readonly<
   },
   relations: {
     sourceStationId: 's2',
-    targetStationIds: ['s4', 's8'],
+    targetStationIds: ['s4'],
   },
   method: {
     sourceStationId: 's2',
-    targetStationIds: ['s4', 's5', 's7', 's8'],
+    targetStationIds: ['s4', 's5', 's7'],
   },
 } as const;
 
@@ -113,10 +115,9 @@ export const ROOM_FOUR_JOURNEY_ORDER: readonly RoomFourStationId[] = [
   's5',
   's6',
   's7',
-  's8',
 ] as const;
 
-/** The Room Four journey begins directly at Station 1 and runs through Station 8. */
+/** The Room Four journey begins directly at Station 1 and ends at the Guangzhou training class. */
 export const ROOM_FOUR_STATION_IDS = ROOM_FOUR_JOURNEY_ORDER;
 
 /**
@@ -256,10 +257,10 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
   },
   s3: {
     id: 's3',
-    eyebrowVi: 'Trạm 03 · Vé đi Quảng Châu · 11/1924',
-    eyebrowEn: 'Station 03 · Ticket to Guangzhou · Nov 1924',
-    leadVi: 'Một con dấu biến hành trang lý luận thành nhiệm vụ tổ chức cách mạng Việt Nam.',
-    leadEn: 'A single stamp turns theoretical preparation into a mission to organise the Vietnamese revolution.',
+    eyebrowVi: 'Trạm 03 · Hành trình đến Quảng Châu · 11/1924',
+    eyebrowEn: 'Station 03 · Journey to Guangzhou · Nov 1924',
+    leadVi: 'Hồ sơ hành trình đánh dấu bước chuyển từ Liên Xô đến Quảng Châu, nơi một nhiệm vụ tổ chức mới bắt đầu.',
+    leadEn: 'The travel dossier marks the move from the Soviet Union to Guangzhou, where a new organisational mission began.',
     historyVi: [
       'Tháng 11/1924, Nguyễn Ái Quốc được cử đến Quảng Châu với tư cách Ủy viên Ban Phương Đông Quốc tế Cộng sản và Ủy viên Đoàn Chủ tịch Quốc tế Nông dân.',
     ],
@@ -267,28 +268,35 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
       'In November 1924, Nguyen Ai Quoc was sent to Guangzhou as a member of the Eastern Bureau of the Communist International and of the Presidium of the Peasant International.',
     ],
     before: {
-      vi: 'Tấm vé Quảng Châu chưa có dấu khởi hành.',
-      en: 'The Guangzhou ticket has not yet received its departure stamp.',
+      vi: 'Hồ sơ hành trình đến Quảng Châu',
+      en: 'Travel dossier to Guangzhou',
     },
     action: {
-      vi: 'Đóng dấu lên vé Quảng Châu',
-      en: 'Stamp the Guangzhou ticket',
+      vi: 'Quan sát tuyến Liên Xô – Quảng Châu',
+      en: 'View the Soviet Union–Guangzhou route',
     },
     after: {
-      vi: 'Vé dịch về phía đường sáng và hiện mốc 11/1924.',
-      en: 'The ticket shifts toward the light route and reveals Nov 1924.',
+      vi: 'Dấu Lý Thụy tại điểm đến mở ra trạm kế tiếp ở Quảng Châu.',
+      en: 'The Ly Thuy mark at the destination opens the next station in Guangzhou.',
     },
     meaning: {
-      vi: 'Lý luận trở thành nhiệm vụ.',
-      en: 'Theory becomes a mission.',
+      vi: 'Hành trình đưa sự chuẩn bị quốc tế vào thực tiễn cách mạng Việt Nam.',
+      en: 'The journey brought international preparation into the practice of Vietnam’s revolution.',
     },
     steps: [
       {
-        id: 'stamp-ticket',
-        titleVi: 'Đóng dấu · Quảng Châu — 11/1924',
-        titleEn: 'Stamp · Guangzhou — Nov 1924',
-        detailVi: 'Vé hành trình kích hoạt đường sáng xuyên qua vùng chuyển cảnh.',
-        detailEn: 'The journey ticket activates the illuminated route through the transition.',
+        id: 'soviet-to-guangzhou-route',
+        titleVi: 'Liên Xô → Quảng Châu · 11/1924',
+        titleEn: 'Soviet Union → Guangzhou · Nov 1924',
+        detailVi: 'Tuyến hành trình đưa Nguyễn Ái Quốc từ môi trường học tập quốc tế tới căn cứ hoạt động mới.',
+        detailEn: 'The route carried Nguyen Ai Quoc from the international learning environment to a new operational base.',
+      },
+      {
+        id: 'ly-thuy-destination-mark',
+        titleVi: 'Dấu đến · Lý Thụy',
+        titleEn: 'Arrival mark · Ly Thuy',
+        detailVi: 'Bí danh Lý Thụy được nhấn tại điểm đến, dẫn sang câu chuyện của Trạm 04.',
+        detailEn: 'The Ly Thuy alias is marked at the destination, leading into Station 04.',
       },
     ],
     sealIds: [],
@@ -297,8 +305,8 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
     id: 's4',
     eyebrowVi: 'Trạm 04 · Lý Thụy · 11/11/1924',
     eyebrowEn: 'Station 04 · Ly Thuy · 11 Nov 1924',
-    leadVi: 'Bàn làm việc mở ba nhiệm vụ cùng hướng về việc xây dựng lực lượng cách mạng.',
-    leadEn: 'The command desk opens three missions, all directed toward building a revolutionary force.',
+    leadVi: 'Ngày 11/11/1924, Nguyễn Ái Quốc đến Quảng Châu với bí danh Lý Thụy.',
+    leadEn: 'On 11 November 1924, Nguyen Ai Quoc arrived in Guangzhou under the alias Ly Thuy.',
     historyVi: [
       'Nguyễn Ái Quốc đến Quảng Châu ngày 11/11/1924 với bí danh Lý Thụy.',
       'Danh nghĩa công khai của Người là cán bộ phiên dịch trong phái bộ Bôrôđin của Liên Xô.',
@@ -308,42 +316,35 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
       'His public role was as an interpreter in Borodin’s Soviet mission.',
     ],
     before: {
-      vi: 'Ba phong bì niêm phong nằm trên bàn làm việc của Lý Thụy.',
-      en: 'Three sealed envelopes lie on Ly Thuy’s work desk.',
+      vi: 'Lý Thụy – bí danh tại Quảng Châu',
+      en: 'Ly Thuy – an alias in Guangzhou',
     },
     action: {
-      vi: 'Mở ba phong bì niêm phong',
-      en: 'Open the three sealed envelopes',
+      vi: 'Quan sát hồ sơ danh tính Lý Thụy',
+      en: 'View the Ly Thuy identity file',
     },
     after: {
-      vi: 'Ba tia dẫn mở ra ba nhiệm vụ từ cùng một bàn làm việc.',
-      en: 'Three guiding rays open three missions from one work desk.',
+      vi: 'Tấm thẻ danh tính cho thấy lớp vỏ công khai của một cán bộ phiên dịch.',
+      en: 'The identity card shows the public cover of an interpreter.',
     },
     meaning: {
-      vi: 'Đào tạo, tổ chức, theo dõi phong trào.',
-      en: 'Train, organise and observe the movement.',
+      vi: 'Bí danh Lý Thụy đánh dấu sự khởi đầu một căn cứ hoạt động cách mạng mới tại Quảng Châu.',
+      en: 'The Ly Thuy alias marked the start of a new revolutionary base in Guangzhou.',
     },
     steps: [
       {
-        id: 'train-youth',
-        titleVi: 'Đào tạo thanh niên',
-        titleEn: 'Train young people',
-        detailVi: 'Chuẩn bị một lực lượng có lý luận, phương pháp và khả năng hoạt động.',
-        detailEn: 'Prepare a force with theory, method and the capacity to act.',
+        id: 'ly-thuy-alias',
+        titleVi: 'Bí danh Lý Thụy',
+        titleEn: 'The Ly Thuy alias',
+        detailVi: 'Bí danh được sử dụng khi Nguyễn Ái Quốc đến Quảng Châu ngày 11/11/1924.',
+        detailEn: 'The alias used when Nguyen Ai Quoc arrived in Guangzhou on 11 November 1924.',
       },
       {
-        id: 'build-organisation',
-        titleVi: 'Xây dựng tổ chức',
-        titleEn: 'Build an organisation',
-        detailVi: 'Tạo hạt nhân để tập hợp, phân công và duy trì hoạt động lâu dài.',
-        detailEn: 'Create a nucleus capable of gathering, assigning and sustaining long-term work.',
-      },
-      {
-        id: 'observe-report',
-        titleVi: 'Theo dõi và báo cáo',
-        titleEn: 'Observe and report',
-        detailVi: 'Theo dõi phong trào Trung Quốc và Đông Nam Á, báo cáo Quốc tế Cộng sản.',
-        detailEn: 'Observe movements in China and Southeast Asia and report to the Communist International.',
+        id: 'public-interpreter-role',
+        titleVi: 'Danh nghĩa phiên dịch',
+        titleEn: 'Public interpreter role',
+        detailVi: 'Danh nghĩa công khai của Người là cán bộ phiên dịch trong phái bộ Bôrôđin của Liên Xô.',
+        detailEn: 'His public role was as an interpreter in Borodin’s Soviet mission.',
       },
     ],
     sealIds: [],
@@ -352,13 +353,22 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
     id: 's5',
     eyebrowVi: 'Trạm 05 · Hạt nhân tổ chức · 1925',
     eyebrowEn: 'Station 05 · Organisational nucleus · 1925',
-    leadVi: 'Những điểm sáng rời rạc được nối theo thứ tự để hình thành một mạng lưới.',
-    leadEn: 'Separate points of light connect in sequence to form an organisation and a network.',
+    leadVi: 'Ngôi nhà số 13/1, nay là số 248–250 đường Văn Minh, Quảng Châu là trụ sở của Hội Việt Nam Cách mạng Thanh niên.',
+    leadEn: 'House No. 13/1, now No. 248–250 Wenming Road in Guangzhou, was the headquarters of the Vietnamese Revolutionary Youth League.',
+    illustration: {
+      src: '/images/room4/station5/guangzhou-youth-league-headquarters.png',
+      altVi: 'Ngôi nhà số 13/1 đường Văn Minh, trụ sở Hội Việt Nam Cách mạng Thanh niên tại Quảng Châu.',
+      altEn: 'House No. 13/1 on Wenming Road, headquarters of the Vietnamese Revolutionary Youth League in Guangzhou.',
+      captionVi: 'Ngôi nhà số 13/1, nay là số 248–250 đường Văn Minh, thành phố Quảng Châu, Trung Quốc.',
+      captionEn: 'House No. 13/1, now No. 248–250 Wenming Road, Guangzhou, China.',
+    },
     historyVi: [
+      'Đây là nơi Nguyễn Ái Quốc mở các lớp huấn luyện, đào tạo cán bộ cho cách mạng Việt Nam trong những năm 1925–1927.',
       'Đầu năm 1925, từ các thành viên tích cực của Tâm Tâm xã hình thành nhóm bí mật, tức Cộng sản đoàn.',
       'Tháng 6/1925, Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên.',
     ],
     historyEn: [
+      'Here, Nguyen Ai Quoc led training classes for cadres of the Vietnamese revolution from 1925 to 1927.',
       'In early 1925, active members of Tam Tam Xa formed a secret group, the Communist Youth Group.',
       'In June 1925, Nguyen Ai Quoc founded the Vietnamese Revolutionary Youth League.',
     ],
@@ -407,101 +417,103 @@ export const ROOM_FOUR_JOURNEY_CONTENT: Readonly<Record<RoomFourStationId, RoomF
     id: 's6',
     eyebrowVi: 'Trạm 06 · Báo Thanh Niên · 21/6/1925',
     eyebrowEn: 'Station 06 · Thanh Nien newspaper · 21 Jun 1925',
-    leadVi: 'Máy in biến lý luận thành những tờ báo có thể bí mật vượt biên giới.',
-    leadEn: 'The press turns theory into printed sheets that can secretly cross borders.',
+    leadVi: 'Báo Thanh niên là tờ báo cách mạng đầu tiên của Việt Nam, đưa đường lối và tư tưởng cách mạng từ Quảng Châu về nước.',
+    leadEn: 'Thanh Nien was Vietnam’s first revolutionary newspaper, carrying the revolutionary path and ideas from Guangzhou back home.',
+    illustration: {
+      src: '/images/room4/station6/bao-thanh-nien-1926.png',
+      altVi: 'Trang Báo Thanh niên với măng sét tiếng Hán và tiếng Việt.',
+      altEn: 'A Thanh Nien newspaper page bearing its Chinese and Vietnamese masthead.',
+      captionVi: 'Báo Thanh niên – Tờ báo cách mạng đầu tiên của Việt Nam.',
+      captionEn: 'Thanh Nien – Vietnam’s first revolutionary newspaper.',
+    },
     historyVi: [
       'Ngày 21/6/1925, số đầu tiên của báo Thanh Niên ra đời tại Quảng Châu.',
-      'Báo viết bằng tiếng Việt, truyền bá chủ nghĩa Mác–Lênin, giải thích đường lối cách mạng và được bí mật đưa về nước.',
+      'Báo là cơ quan ngôn luận của Hội Việt Nam Cách mạng Thanh niên, truyền bá chủ nghĩa Mác–Lênin, tổ chức và hướng dẫn phong trào.',
+      'Mỗi số được in bí mật với số lượng hạn chế, rồi theo đường dây liên lạc chuyển về Việt Nam và các nơi khác để chuẩn bị cho sự ra đời của Đảng.',
     ],
     historyEn: [
       'On 21 June 1925, the first issue of Thanh Nien was published in Guangzhou.',
-      'Written in Vietnamese, it spread Marxism–Leninism, explained the revolutionary path and was secretly carried back into Vietnam.',
+      'As the voice of the Vietnamese Revolutionary Youth League, it spread Marxism–Leninism and guided the movement.',
+      'Limited copies were printed secretly and distributed through underground routes, helping prepare the political, ideological and organisational foundations for the Party.',
     ],
     before: {
-      vi: 'Một tờ giấy trắng nằm trong máy in Thanh Niên.',
-      en: 'A blank sheet rests inside the Thanh Nien press.',
+      vi: 'Báo Thanh niên – Tờ báo cách mạng đầu tiên của Việt Nam',
+      en: 'Thanh Nien – Vietnam’s first revolutionary newspaper',
     },
     action: {
-      vi: 'Kéo cần in số báo đầu tiên',
-      en: 'Pull the lever and print the first issue',
+      vi: 'Quan sát trang Báo Thanh niên',
+      en: 'View the Thanh Nien newspaper page',
     },
     after: {
-      vi: 'Số báo Thanh Niên xuất hiện, cùng một tuyến sáng hướng về Việt Nam.',
-      en: 'A Thanh Nien issue appears with a light route pointing toward Vietnam.',
+      vi: 'Trang báo cho thấy một phương tiện bí mật đưa lý luận cách mạng đến với phong trào trong nước.',
+      en: 'The page shows how clandestine journalism carried revolutionary theory to the movement in Vietnam.',
     },
     meaning: {
-      vi: 'Báo chí đưa tư tưởng về nước.',
-      en: 'The press carries ideas home.',
+      vi: 'Báo Thanh niên mở đầu truyền thống báo chí cách mạng Việt Nam.',
+      en: 'Thanh Nien opened the tradition of Vietnam’s revolutionary press.',
     },
     steps: [
       {
-        id: 'print-first-issue',
-        titleVi: 'In số báo · 21/6/1925',
-        titleEn: 'Print the issue · 21 Jun 1925',
-        detailVi: 'Tờ báo ảo rời bàn in, mang ba ý chính theo tuyến liên lạc về Việt Nam.',
-        detailEn: 'A virtual newspaper leaves the press, carrying three core ideas along the route to Vietnam.',
+        id: 'view-newspaper-page',
+        titleVi: 'Báo Thanh niên · 21/6/1925',
+        titleEn: 'Thanh Nien newspaper · 21 Jun 1925',
+        detailVi: 'Trang báo lưu dấu một khởi đầu quan trọng của báo chí cách mạng Việt Nam.',
+        detailEn: 'The page records a defining beginning for Vietnam’s revolutionary press.',
       },
     ],
     sealIds: ['press'],
   },
   s7: {
     id: 's7',
-    eyebrowVi: 'Trạm 07 · Lớp học bí mật · 1925–1927',
-    eyebrowEn: 'Station 07 · Clandestine classroom · 1925–1927',
-    leadVi: 'Bốn thẻ bài giảng cho thấy tri thức được chuyển thành năng lực hoạt động của cán bộ.',
-    leadEn: 'Four lesson cards show knowledge being transformed into the working capacity of cadres.',
+    eyebrowVi: 'Trạm 07 · Quảng Châu · 1926–1927',
+    eyebrowEn: 'Station 07 · Guangzhou · 1926–1927',
+    leadVi: 'Từ đầu năm 1926 đến tháng 4/1927, Nguyễn Ái Quốc trực tiếp mở ba lớp huấn luyện chính trị cho 75 thanh niên Việt Nam ưu tú tại Quảng Châu.',
+    leadEn: 'From early 1926 to April 1927, Nguyen Ai Quoc directly led three political training classes for 75 outstanding Vietnamese youths in Guangzhou.',
+    illustration: {
+      src: '/images/room4/station7/nguyen-ai-quoc-guangzhou-training.png',
+      altVi: 'Nguyễn Ái Quốc đứng giảng bài cho học viên trong lớp huấn luyện chính trị ở Quảng Châu.',
+      altEn: 'Nguyen Ai Quoc teaching students in a political training class in Guangzhou.',
+      captionVi: 'Nguyễn Ái Quốc và lớp huấn luyện chính trị ở Quảng Châu.',
+      captionEn: 'Nguyen Ai Quoc and the political training class in Guangzhou.',
+    },
     historyVi: [
-      'Từ giữa năm 1925 đến trước tháng 4/1927, Hội tổ chức hơn 10 lớp huấn luyện tại Quảng Châu, đào tạo khoảng 75 hội viên.',
-      'Các bài giảng sau này được tập hợp thành Đường Kách mệnh, xuất bản năm 1927.',
+      'Ba lớp đã bồi dưỡng những thanh niên yêu nước về chủ nghĩa cộng sản và phương pháp cách mạng mới.',
+      'Nhiều học viên sau đó trở về nước tổ chức, phát triển phong trào cách mạng Việt Nam.',
     ],
     historyEn: [
-      'From mid-1925 until before April 1927, the League organised more than ten training courses in Guangzhou for about seventy-five members.',
-      'The lectures were later compiled as The Revolutionary Path, published in 1927.',
+      'The three classes prepared patriotic young people in communism and a new revolutionary method.',
+      'Many students later returned to Vietnam to organise and develop the revolutionary movement.',
     ],
+    closingIllustration: {
+      src: '/images/room4/station7/duong-kach-menh-cover.png',
+      altVi: 'Bìa sách Đường Kách mệnh.',
+      altEn: 'The cover of The Revolutionary Path.',
+      captionVi: 'Sách “Đường Kách mệnh” tập hợp những bài giảng của Nguyễn Ái Quốc trong những năm 1925-1927 tại các lớp huấn luyện đào tạo cán bộ cho cách mạng Việt Nam tại Quảng Châu, Trung Quốc.',
+      captionEn: 'The Revolutionary Path collected Nguyen Ai Quoc’s lectures from 1925 to 1927 for cadre-training classes in Guangzhou, China.',
+    },
     before: {
-      vi: 'Bốn thẻ bài giảng còn chờ bên dưới bản đồ.',
-      en: 'Four lesson cards wait beneath the map.',
+      vi: 'Nguyễn Ái Quốc và lớp huấn luyện chính trị ở Quảng Châu',
+      en: 'Nguyen Ai Quoc and the political training class in Guangzhou',
     },
     action: {
-      vi: 'Đặt bốn thẻ bài giảng lên bản đồ',
-      en: 'Place four lesson cards on the map',
+      vi: 'Quan sát lớp huấn luyện chính trị',
+      en: 'View the political training class',
     },
     after: {
-      vi: 'Các tuyến Bắc–Trung–Nam Kỳ và Xiêm sáng lên từ những thẻ bài giảng.',
-      en: 'Routes to Tonkin, Annam, Cochinchina and Siam light up from the lesson cards.',
+      vi: 'Ảnh tư liệu làm rõ vai trò đào tạo cán bộ tại Quảng Châu.',
+      en: 'The archival photo highlights the cadre-training work in Guangzhou.',
     },
     meaning: {
-      vi: 'Cán bộ mang tri thức về nước.',
-      en: 'Cadres carry knowledge home.',
+      vi: 'Những hạt giống đỏ được bồi dưỡng để trở về phục vụ cách mạng Việt Nam.',
+      en: 'The first revolutionary cadres were prepared to return and serve Vietnam’s revolution.',
     },
     steps: [
       {
-        id: 'lesson-theory',
-        titleVi: 'Lý luận',
-        titleEn: 'Theory',
-        detailVi: 'Hiểu mục tiêu, lực lượng và con đường của cách mạng.',
-        detailEn: 'Understand the aims, forces and path of revolution.',
-      },
-      {
-        id: 'lesson-secrecy',
-        titleVi: 'Tổ chức bí mật',
-        titleEn: 'Clandestine organisation',
-        detailVi: 'Bảo vệ cơ sở, liên lạc và phân công trong điều kiện bí mật.',
-        detailEn: 'Protect bases, communications and assignments under clandestine conditions.',
-      },
-      {
-        id: 'lesson-propaganda',
-        titleVi: 'Tuyên truyền',
-        titleEn: 'Propaganda',
-        detailVi: 'Chuyển lý luận thành ngôn ngữ có thể truyền đạt và thuyết phục.',
-        detailEn: 'Turn theory into language that can be communicated and understood.',
-      },
-      {
-        id: 'lesson-masses',
-        titleVi: 'Vận động quần chúng',
-        titleEn: 'Mass mobilisation',
-        detailVi: 'Gắn tổ chức với công nhân, nông dân và phong trào trong nước.',
-        detailEn: 'Connect the organisation with workers, peasants and movements at home.',
+        id: 'view-training-class',
+        titleVi: 'Ba lớp huấn luyện · 75 học viên',
+        titleEn: 'Three classes · 75 students',
+        detailVi: 'Các học viên được chuẩn bị để trở về gây dựng phong trào cách mạng trong nước.',
+        detailEn: 'The students were prepared to return and build the revolutionary movement in Vietnam.',
       },
     ],
     sealIds: ['cadres'],

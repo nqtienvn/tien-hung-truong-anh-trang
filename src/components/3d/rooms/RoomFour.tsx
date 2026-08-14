@@ -667,128 +667,86 @@ const Connector: React.FC<{
   );
 };
 
-const StudyDesk: React.FC<{
-  warm?: boolean;
-  ticket?: boolean;
-  mission?: boolean;
-  progressCount?: number;
-}> = ({
-  warm = false,
-  ticket = false,
-  mission = false,
-  progressCount = 0,
-}) => {
-  const frame = warm ? SHARED_MATERIALS.warmFrame : SHARED_MATERIALS.coldFrame;
-  const surface = warm ? SHARED_MATERIALS.warmWood : SHARED_MATERIALS.darkInk;
-  const paper = warm ? SHARED_MATERIALS.warmPaper : SHARED_MATERIALS.coldPaper;
-  const accent = warm ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.coldAccent;
-  const line = warm ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.coldLine;
-  const openBookCount = Math.min(progressCount, 3);
+const S3_ROUTE_START: readonly [number, number, number] = [-0.84, 1.12, -0.5];
+const S3_ROUTE_MIDPOINT: readonly [number, number, number] = [-0.18, 1.12, -0.1];
+const S3_ROUTE_END: readonly [number, number, number] = [0.52, 1.12, 0.38];
 
-  return (
-    <group>
-      <mesh position={[0, 1, 0]} material={surface}>
-        <boxGeometry args={[2.65, 0.16, 1.25]} />
+/**
+ * Static travel dossier for Station 3. The front-facing document makes the
+ * Soviet Union → Guangzhou route legible before the visitor reaches the
+ * “Lý Thụy” identity desk in Station 4.
+ */
+const GuangzhouTravelDossier: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => (
+  <group name="room-four-s3-guangzhou-travel-dossier" raycast={IGNORE_RAYCAST}>
+    <mesh position={[0, 0.14, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[1.86, 0.28, 2.46]} />
+    </mesh>
+    <mesh position={[0, 0.55, 0]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[1.5, 0.62, 2.1]} />
+    </mesh>
+    <mesh position={[0, 0.9, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[1.62, 0.12, 2.22]} />
+    </mesh>
+
+    <group position={[0.72, 1.2, -0.42]} rotation={[0, 0.18, 0]}>
+      <mesh material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.65, 0.28, 0.58]} />
       </mesh>
-      {[-1.05, 1.05].map((x) => (
-        <mesh key={`desk-leg-${x}`} position={[x, 0.5, 0]} material={frame}>
-          <boxGeometry args={[0.12, 0.95, 0.92]} />
-        </mesh>
-      ))}
-
-      {!ticket && !mission && [-0.72, 0, 0.72].map((x, index) => {
-        const opened = index < openBookCount;
-        return (
-          <group
-            key={`moscow-book-${x}`}
-            position={[x, opened ? 1.28 + index * 0.025 : 1.17 + index * 0.02, -0.05]}
-            rotation={[0, -0.08 + index * 0.08, opened ? -0.08 : 0]}
-          >
-            <mesh material={frame}>
-              <boxGeometry args={[0.58, 0.1, 0.78]} />
-            </mesh>
-            {opened ? (
-              <>
-                <mesh position={[-0.145, 0.07, -0.05]} rotation={[0, 0.28, -0.08]} material={paper}>
-                  <boxGeometry args={[0.3, 0.022, 0.62]} />
-                </mesh>
-                <mesh position={[0.145, 0.07, -0.05]} rotation={[0, -0.28, 0.08]} material={paper}>
-                  <boxGeometry args={[0.3, 0.022, 0.62]} />
-                </mesh>
-                <mesh position={[0, 0.105, -0.05]} material={accent}>
-                  <boxGeometry args={[0.035, 0.018, 0.54]} />
-                </mesh>
-                <mesh position={[0, 0.21, 0.26]} material={line}>
-                  <sphereGeometry args={[0.07, 12, 8]} />
-                </mesh>
-              </>
-            ) : (
-              <mesh position={[0, 0.06, 0]} material={paper}>
-                <boxGeometry args={[0.45, 0.018, 0.63]} />
-              </mesh>
-            )}
-          </group>
-        );
-      })}
-
-      {ticket && (
-        <group
-          position={[0, progressCount > 0 ? 1.31 : 1.17, progressCount > 0 ? 0.66 : -0.05]}
-          rotation={[progressCount > 0 ? -0.1 : 0, 0.06, progressCount > 0 ? -0.05 : 0]}
-        >
-          <mesh material={paper}>
-            <boxGeometry args={[1.45, 0.055, 0.8]} />
-          </mesh>
-          <mesh position={[0.42, 0.04, 0]} material={accent}>
-            <cylinderGeometry args={[0.14, 0.14, 0.025, 20]} />
-          </mesh>
-        </group>
-      )}
-
-      {mission && [-0.72, 0, 0.72].map((x, index) => {
-        const opened = index < progressCount;
-        return (
-          <group key={`mission-envelope-${x}`} position={[x, opened ? 1.32 : 1.17, opened ? 0.18 + index * 0.14 : -0.05]}>
-            <mesh material={paper}>
-              <boxGeometry args={[0.58, 0.045, 0.72]} />
-            </mesh>
-            <mesh
-              position={[0, opened ? 0.12 : 0.05, opened ? -0.12 : 0.02]}
-              rotation={[opened ? -0.64 : -0.06, 0, 0]}
-              material={paper}
-            >
-              <boxGeometry args={[0.56, 0.025, 0.31]} />
-            </mesh>
-            <mesh position={[0, 0.055, 0.08]} material={accent}>
-              <cylinderGeometry args={[0.08, 0.08, 0.025, 12]} />
-            </mesh>
-          </group>
-        );
-      })}
-
-      {!ticket && !mission && (
-        <group position={[0.9, 1.12, -0.25]}>
-          <mesh position={[0, 0.48, 0]} material={frame}>
-            <cylinderGeometry args={[0.035, 0.035, 0.9, 10]} />
-          </mesh>
-          <mesh position={[-0.22, 0.88, 0]} rotation={[0, 0, Math.PI / 2]} material={accent}>
-            <coneGeometry args={[0.26, 0.48, 16, 1, true]} />
-          </mesh>
-        </group>
-      )}
-      {mission &&
-        [-0.72, 0, 0.72].map((x, index) => (
-          <Connector
-            key={`mission-ray-${x}`}
-            start={[x, 1.25, 0]}
-            end={[x * 1.4, 2.35, 1.25 + index * 0.25]}
-            material={index < progressCount ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.inactiveLine}
-            radius={0.024}
-          />
-        ))}
+      <mesh position={[-0.02, 0.27, 0]} rotation={[0, 0, 0.04]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.6, 0.48, 0.06]} />
+      </mesh>
+      <mesh position={[0.34, 0.1, 0]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+        <sphereGeometry args={[0.07, 10, 8]} />
+      </mesh>
     </group>
-  );
-};
+
+    {[[-0.44, 0.18] as const, [0.03, 0.36] as const].map(([x, z], index) => (
+      <group key={`s3-travel-paper-${index}`} position={[x, 1.0 + index * 0.018, z]} rotation={[0.035, index === 0 ? -0.18 : 0.1, index === 0 ? -0.04 : 0.05]}>
+        <mesh material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.8, 0.028, 0.53]} />
+        </mesh>
+        <mesh position={[0, 0.02, -0.11]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.5, 0.01, 0.025]} />
+        </mesh>
+        <mesh position={[0, 0.02, 0.05]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.35, 0.01, 0.018]} />
+        </mesh>
+      </group>
+    ))}
+
+    <Connector start={S3_ROUTE_START} end={S3_ROUTE_MIDPOINT} material={SHARED_MATERIALS.coldLine} radius={0.028} />
+    <Connector start={S3_ROUTE_MIDPOINT} end={S3_ROUTE_END} material={SHARED_MATERIALS.warmLine} radius={0.028} />
+    {[S3_ROUTE_START, S3_ROUTE_MIDPOINT, S3_ROUTE_END].map((position, index) => (
+      <mesh key={`s3-route-stop-${index}`} position={position} material={index === 2 ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+        <sphereGeometry args={[index === 2 ? 0.095 : 0.07, 12, 8]} />
+      </mesh>
+    ))}
+
+    <mesh position={[-0.56, 1.94, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[0.09, 1.66, 1.42]} />
+    </mesh>
+    <mesh position={[-0.62, 1.94, -0.53]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[0.025, 1.42, 0.07]} />
+    </mesh>
+    <Text position={[-0.61, 2.32, 0.02]} rotation={[0, -Math.PI / 2, 0]} anchorX="center" anchorY="middle" color={COLD.accent} fontSize={0.09} letterSpacing={0.04} raycast={IGNORE_RAYCAST}>
+      HỒ SƠ HÀNH TRÌNH
+    </Text>
+    <Text position={[-0.61, 2.05, 0.02]} rotation={[0, -Math.PI / 2, 0]} anchorX="center" anchorY="middle" color="#15212a" fontSize={0.13} letterSpacing={0.018} raycast={IGNORE_RAYCAST}>
+      LIÊN XÔ → QUẢNG CHÂU
+    </Text>
+    <Text position={[-0.61, 1.79, 0.02]} rotation={[0, -Math.PI / 2, 0]} anchorX="center" anchorY="middle" color="#253845" fontSize={0.12} letterSpacing={0.05} raycast={IGNORE_RAYCAST}>
+      11 · 1924
+    </Text>
+    <Text position={[-0.61, 1.51, 0.02]} rotation={[0, -Math.PI / 2, 0]} anchorX="center" anchorY="middle" color={COLD.accent} fontSize={0.21} letterSpacing={0.03} raycast={IGNORE_RAYCAST}>
+      LÝ THỤY
+    </Text>
+    {!reducedDetail && (
+      <Text position={[-0.61, 1.31, 0.02]} rotation={[0, -Math.PI / 2, 0]} anchorX="center" anchorY="middle" color="#3f5261" fontSize={0.06} letterSpacing={0.01} raycast={IGNORE_RAYCAST}>
+        DẤU ĐẾN · QUẢNG CHÂU
+      </Text>
+    )}
+  </group>
+);
 
 /**
  * S1 is a static architectural maquette inspired by the winter, neoclassical
@@ -907,126 +865,18 @@ const MoscowUniversityBuildingModel: React.FC<{ reducedDetail: boolean }> = ({ r
  */
 const SupplementalStationModel: React.FC<{
   stationId: RoomFourStationLayout['id'];
-  reducedDetail: boolean;
-}> = ({ stationId, reducedDetail }) => {
+}> = ({ stationId }) => {
   switch (stationId) {
     case 's1':
       return null;
     case 's2':
       return null;
     case 's3':
-      return (
-        <group name="room-four-s3-diplomatic-trunk" position={[1.46, 0.08, 0.56]} raycast={IGNORE_RAYCAST}>
-          <mesh position={[0, 0.32, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.82, 0.5, 0.56]} />
-          </mesh>
-          <mesh position={[0, 0.61, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.86, 0.12, 0.6]} />
-          </mesh>
-          {[-0.28, 0.28].map((x) => (
-            <mesh key={`s3-trunk-strap-${x}`} position={[x, 0.63, 0]} material={SHARED_MATERIALS.coldAccent} raycast={IGNORE_RAYCAST}>
-              <boxGeometry args={[0.055, 0.14, 0.62]} />
-            </mesh>
-          ))}
-          {!reducedDetail && (
-            <mesh position={[0, 0.74, 0]} rotation={[Math.PI / 2, 0, 0]} material={SHARED_MATERIALS.coldFrame} raycast={IGNORE_RAYCAST}>
-              <torusGeometry args={[0.14, 0.026, 6, 12]} />
-            </mesh>
-          )}
-        </group>
-      );
+      return null;
     case 's4':
-      return (
-        <group name="room-four-s4-three-drawer-file-cabinet" position={[-1.12, 0.08, 0.84]} raycast={IGNORE_RAYCAST}>
-          <mesh position={[0, 0.76, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.62, 1.5, 0.48]} />
-          </mesh>
-          {[-0.42, 0, 0.42].map((y, index) => (
-            <React.Fragment key={`s4-cabinet-drawer-${index}`}>
-              <mesh position={[0, 0.76 + y, -0.255]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
-                <boxGeometry args={[0.51, 0.33, 0.025]} />
-              </mesh>
-              <mesh position={[0, 0.76 + y, -0.278]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
-                <sphereGeometry args={[0.032, 8, 6]} />
-              </mesh>
-            </React.Fragment>
-          ))}
-        </group>
-      );
+      return null;
     case 's5':
-      return (
-        <group name="room-four-s5-secret-mailbox" position={[1.72, 0.08, -0.94]} raycast={IGNORE_RAYCAST}>
-          <mesh position={[0, 0.37, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.08, 0.72, 0.08]} />
-          </mesh>
-          <mesh position={[0, 0.88, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.68, 0.43, 0.36]} />
-          </mesh>
-          <mesh position={[0, 0.99, -0.19]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.38, 0.04, 0.025]} />
-          </mesh>
-          {!reducedDetail && (
-            <mesh position={[0.24, 0.82, -0.2]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
-              <circleGeometry args={[0.07, 10]} />
-            </mesh>
-          )}
-        </group>
-      );
-    case 's6':
-      return (
-        <group name="room-four-s6-lead-type-tray" position={[-1.4, 0.1, 0.72]} raycast={IGNORE_RAYCAST}>
-          <mesh position={[0, 0.74, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.86, 0.12, 0.6]} />
-          </mesh>
-          <mesh position={[0, 0.83, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.66, 0.09, 0.42]} />
-          </mesh>
-          {(reducedDetail ? [-0.18, 0.18] : [-0.24, -0.08, 0.08, 0.24]).map((x, index) => (
-            <mesh key={`s6-lead-type-${x}`} position={[x, 0.9, index % 2 === 0 ? -0.1 : 0.1]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
-              <boxGeometry args={[0.08, 0.08, 0.1]} />
-            </mesh>
-          ))}
-        </group>
-      );
-    case 's7':
-      return (
-        <group name="room-four-s7-camouflaged-bookshelf" position={[1.48, 0.08, 0.86]} rotation={[0, 0, -0.055]} raycast={IGNORE_RAYCAST}>
-          <mesh position={[0, 1.08, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.72, 2.16, 0.3]} />
-          </mesh>
-          {[-0.58, 0, 0.58].map((y) => (
-            <mesh key={`s7-shelf-${y}`} position={[0, 1.08 + y, -0.18]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
-              <boxGeometry args={[0.62, 0.06, 0.08]} />
-            </mesh>
-          ))}
-          {(reducedDetail ? [-0.16, 0.16] : [-0.22, -0.07, 0.08, 0.23]).map((x, index) => (
-            <mesh key={`s7-book-${x}`} position={[x, 1.08 + (index % 3 - 1) * 0.58, -0.205]} material={index % 2 === 0 ? SHARED_MATERIALS.warmPaper : SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
-              <boxGeometry args={[0.09, 0.34, 0.04]} />
-            </mesh>
-          ))}
-        </group>
-      );
-    case 's8':
-      return (
-        <group name="room-four-s8-homeward-journey-trunk" position={[-1.54, 0.08, -0.72]} raycast={IGNORE_RAYCAST}>
-          <mesh position={[0, 0.32, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.94, 0.5, 0.62]} />
-          </mesh>
-          <mesh position={[0, 0.62, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
-            <boxGeometry args={[0.98, 0.13, 0.66]} />
-          </mesh>
-          {[-0.3, 0.3].map((x) => (
-            <mesh key={`s8-trunk-strap-${x}`} position={[x, 0.65, -0.01]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
-              <boxGeometry args={[0.06, 0.16, 0.68]} />
-            </mesh>
-          ))}
-          {!reducedDetail && (
-            <mesh position={[0, 0.71, -0.08]} rotation={[-0.13, 0.1, 0]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
-              <boxGeometry args={[0.48, 0.025, 0.3]} />
-            </mesh>
-          )}
-        </group>
-      );
+      return null;
     default:
       return null;
   }
@@ -1101,107 +951,291 @@ const InternationalForumScreen: React.FC<{
   );
 };
 
-const OrganisationNetwork: React.FC<{ progressCount: number }> = ({ progressCount }) => {
-  const nodes: ReadonlyArray<readonly [number, number, number]> = [
-    [-1.2, 1.1, 0],
-    [0, 2.35, 0],
-    [1.2, 1.1, 0],
-    [0, 0.55, 0],
-  ];
+/**
+ * The Guangzhou training photograph reuses Station 2's documentary-screen
+ * language while facing the central walking lane in the warm section.
+ */
+const GuangzhouTrainingPhotoScreen: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => {
+  const imageTexture = useTexture('/images/room4/station7/nguyen-ai-quoc-guangzhou-training.png');
+  const screenTexture = useMemo(() => {
+    const texture = imageTexture.clone();
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  }, [imageTexture]);
+
+  useEffect(() => () => screenTexture.dispose(), [screenTexture]);
+
   return (
-    <group>
-      <mesh position={[0, 1.42, 0]} rotation={[Math.PI / 2, 0, 0]} material={SHARED_MATERIALS.warmFrame}>
-        <torusGeometry args={[1.55, 0.09, 10, 48]} />
+    <group name="room-four-s7-guangzhou-training-photo" raycast={IGNORE_RAYCAST}>
+      <mesh position={[0.4, 0.15, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.9, 0.3, 3.38]} />
       </mesh>
-      {nodes.map((node, index) => (
-        <React.Fragment key={`network-node-${index}`}>
-          <mesh
-            position={node as [number, number, number]}
-            material={
-              index === 0 || index <= progressCount
-                ? index === 1
-                  ? SHARED_MATERIALS.warmAccent
-                  : SHARED_MATERIALS.warmPaper
-                : SHARED_MATERIALS.darkInk
-            }
-          >
-            <sphereGeometry args={[index === 1 ? 0.24 : 0.18, 16, 12]} />
-          </mesh>
-          {index > 0 && (
-            <Connector
-              start={nodes[0]}
-              end={node}
-              material={index <= progressCount ? SHARED_MATERIALS.warmLine : SHARED_MATERIALS.inactiveLine}
-            />
-          )}
-        </React.Fragment>
+      <mesh position={[0.4, 0.36, 0]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.64, 0.16, 2.92]} />
+      </mesh>
+      {[-1.12, 1.12].map((z) => (
+        <mesh key={`s7-screen-foot-${z}`} position={[-0.03, 0.12, z]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.58, 0.17, 0.42]} />
+        </mesh>
       ))}
-      <mesh position={[0, 0.2, 0]} material={SHARED_MATERIALS.warmWood}>
-        <cylinderGeometry args={[1.2, 1.45, 0.35, 24]} />
+
+      <mesh position={[0.34, 1.67, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.18, 2.72, 3.58]} />
       </mesh>
+      <mesh position={[0.23, 1.67, 0]} rotation={[0, -Math.PI / 2, 0]} raycast={IGNORE_RAYCAST}>
+        <planeGeometry args={[3.26, 2.17]} />
+        <meshBasicMaterial map={screenTexture} toneMapped={false} />
+      </mesh>
+      {[
+        { position: [0.2, 2.94, 0] as const, scale: [0.14, 0.16, 3.58] as const },
+        { position: [0.2, 0.4, 0] as const, scale: [0.14, 0.16, 3.58] as const },
+        { position: [0.2, 1.67, -1.71] as const, scale: [0.14, 2.7, 0.16] as const },
+        { position: [0.2, 1.67, 1.71] as const, scale: [0.14, 2.7, 0.16] as const },
+      ].map((framePart, index) => (
+        <mesh key={`s7-screen-frame-${index}`} position={framePart.position} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={framePart.scale} />
+        </mesh>
+      ))}
+
+      {!reducedDetail && (
+        <mesh position={[0.18, 3.1, 0]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.05, 0.06, 2.58]} />
+        </mesh>
+      )}
     </group>
   );
 };
 
-const PrintingPress: React.FC<{ completed: boolean }> = ({ completed }) => (
-  <group>
-    {[-0.95, 0.95].map((x) => (
-      <mesh key={`press-post-${x}`} position={[x, 1.35, 0]} material={SHARED_MATERIALS.warmFrame}>
-        <boxGeometry args={[0.16, 2.45, 1.35]} />
+/**
+ * S6 is a fixed 9:16 archival screen, facing the central walking lane. The
+ * portrait frame deliberately replaces the former interactive printing press.
+ */
+const ThanhNienNewspaperPhotoScreen: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => {
+  const imageTexture = useTexture('/images/room4/station6/bao-thanh-nien-1926.png');
+  const screenTexture = useMemo(() => {
+    const texture = imageTexture.clone();
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  }, [imageTexture]);
+
+  useEffect(() => () => screenTexture.dispose(), [screenTexture]);
+
+  return (
+    <group name="room-four-s6-thanh-nien-newspaper-photo" raycast={IGNORE_RAYCAST}>
+      <mesh position={[-0.4, 0.15, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.9, 0.3, 2.16]} />
       </mesh>
-    ))}
-    <mesh position={[0, 2.45, 0]} material={SHARED_MATERIALS.warmFrame}>
-      <boxGeometry args={[2.1, 0.18, 1.35]} />
-    </mesh>
-    {[-0.34, 0.36].map((y) => (
-      <mesh key={`press-roller-${y}`} position={[0, 1.65 + y, 0]} rotation={[0, 0, Math.PI / 2]} material={SHARED_MATERIALS.warmAccent}>
-        <cylinderGeometry args={[0.24, 0.24, 1.75, 20]} />
+      <mesh position={[-0.4, 0.36, 0]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.64, 0.16, 1.7]} />
       </mesh>
-    ))}
-    <mesh position={[0, 0.72, 0.05]} material={SHARED_MATERIALS.warmWood}>
-      <boxGeometry args={[2.5, 0.18, 1.7]} />
-    </mesh>
-    <mesh
-      position={[0, completed ? 0.92 : 0.84, completed ? 0.78 : 0.05]}
-      rotation={[0, completed ? 0.02 : -0.04, 0]}
-      material={SHARED_MATERIALS.warmPaper}
-    >
-      <boxGeometry args={[1.65, 0.035, 1.3]} />
-    </mesh>
-    {completed && (
-      <group position={[0, 0.96, 0.78]} rotation={[0, 0.02, 0]}>
-        <mesh position={[0, 0, -0.32]} material={SHARED_MATERIALS.darkInk}>
-          <boxGeometry args={[1.12, 0.018, 0.06]} />
+      {[-0.66, 0.66].map((z) => (
+        <mesh key={`s6-screen-foot-${z}`} position={[0.03, 0.12, z]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.58, 0.17, 0.42]} />
         </mesh>
-        {[-0.17, 0.03, 0.2].map((z, index) => (
-          <mesh key={`newspaper-column-${z}`} position={[index === 1 ? -0.13 : 0.18, 0.015, z]} material={index === 1 ? SHARED_MATERIALS.warmAccent : SHARED_MATERIALS.darkInk}>
-            <boxGeometry args={[index === 1 ? 0.72 : 0.92, 0.016, 0.035]} />
-          </mesh>
-        ))}
+      ))}
+
+      <mesh position={[-0.34, 2.1, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.18, 3.72, 2.16]} />
+      </mesh>
+      <mesh position={[-0.23, 2.1, 0]} rotation={[0, Math.PI / 2, 0]} raycast={IGNORE_RAYCAST}>
+        <planeGeometry args={[1.8, 3.2]} />
+        <meshBasicMaterial map={screenTexture} toneMapped={false} />
+      </mesh>
+      {[
+        { position: [-0.2, 3.85, 0] as const, scale: [0.14, 0.16, 2.16] as const },
+        { position: [-0.2, 0.35, 0] as const, scale: [0.14, 0.16, 2.16] as const },
+        { position: [-0.2, 2.1, -1] as const, scale: [0.14, 3.62, 0.16] as const },
+        { position: [-0.2, 2.1, 1] as const, scale: [0.14, 3.62, 0.16] as const },
+      ].map((framePart, index) => (
+        <mesh key={`s6-screen-frame-${index}`} position={framePart.position} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={framePart.scale} />
+        </mesh>
+      ))}
+
+      {!reducedDetail && (
+        <mesh position={[-0.18, 4.08, 0]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.05, 0.06, 1.5]} />
+        </mesh>
+      )}
+    </group>
+  );
+};
+
+const HEADQUARTERS_COLUMN_Z = [-1.48, -0.5, 0.5, 1.48] as const;
+const HEADQUARTERS_BALUSTER_Z = [-1.28, -0.96, -0.64, -0.32, 0, 0.32, 0.64, 0.96, 1.28] as const;
+const HEADQUARTERS_UPPER_WINDOWS = [-0.86, 0.86] as const;
+const LY_THUY_ROUTE_START: readonly [number, number, number] = [-0.96, 1.18, -0.4];
+const LY_THUY_ROUTE_END: readonly [number, number, number] = [-0.08, 1.18, 0.38];
+
+/**
+ * A static identity desk for Station 4. The front-facing card makes the
+ * alias “Lý Thụy” unmistakable, while the suitcase, interpreter dossier and
+ * route marker situate the arrival in Guangzhou on 11 November 1924.
+ */
+const LyThuyIdentityDesk: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => (
+  <group name="room-four-s4-ly-thuy-identity-desk" raycast={IGNORE_RAYCAST}>
+    <mesh position={[0, 0.98, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[2.65, 0.16, 1.3]} />
+    </mesh>
+    {[-1.05, 1.05].map((x) => (
+      <mesh key={`s4-identity-desk-leg-${x}`} position={[x, 0.5, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.14, 0.96, 0.94]} />
+      </mesh>
+    ))}
+
+    <group position={[-0.82, 1.2, -0.1]} rotation={[0, -0.18, 0]}>
+      <mesh material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.74, 0.24, 0.54]} />
+      </mesh>
+      <mesh position={[-0.02, 0.27, 0]} rotation={[0, 0, -0.06]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+        <boxGeometry args={[0.7, 0.48, 0.055]} />
+      </mesh>
+      <mesh position={[0.38, 0.1, 0]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+        <sphereGeometry args={[0.07, 10, 8]} />
+      </mesh>
+    </group>
+
+    {[
+      { position: [-0.34, 1.11, 0.08] as const, rotation: [0.04, -0.22, 0.06] as const },
+      { position: [0.05, 1.135, -0.2] as const, rotation: [-0.02, 0.12, -0.04] as const },
+    ].map((dossier, index) => (
+      <group key={`s4-interpreter-dossier-${index}`} position={dossier.position} rotation={dossier.rotation}>
+        <mesh material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.72, 0.032, 0.48]} />
+        </mesh>
+        <mesh position={[0, 0.022, -0.11]} material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.46, 0.012, 0.025]} />
+        </mesh>
+        <mesh position={[0, 0.022, 0.04]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.34, 0.012, 0.018]} />
+        </mesh>
       </group>
-    )}
-    <Connector
-      start={[1.02, 2.15, 0.45]}
-      end={[1.62, 1.25, 0.7]}
-      material={SHARED_MATERIALS.warmLine}
-      radius={0.055}
-    />
-    <mesh position={[1.66, 1.18, 0.72]} material={SHARED_MATERIALS.warmAccent}>
-      <sphereGeometry args={[0.13, 14, 10]} />
+    ))}
+
+    <Connector start={LY_THUY_ROUTE_START} end={LY_THUY_ROUTE_END} material={SHARED_MATERIALS.warmLine} radius={0.028} />
+    {[LY_THUY_ROUTE_START, LY_THUY_ROUTE_END].map((position, index) => (
+      <mesh key={`s4-route-marker-${index}`} position={position} material={index === 0 ? SHARED_MATERIALS.coldAccent : SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+        <sphereGeometry args={[0.085, 12, 8]} />
+      </mesh>
+    ))}
+
+    <mesh position={[0.54, 2.12, 0]} material={SHARED_MATERIALS.coldPaper} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[0.09, 1.42, 1.72]} />
     </mesh>
-    {completed && (
-      <>
-        <Connector
-          start={[0.64, 1.02, 0.78]}
-          end={[2.45, 1.38, 1.5]}
-          material={SHARED_MATERIALS.warmLine}
-          radius={0.035}
-        />
-        <mesh position={[2.45, 1.38, 1.5]} material={SHARED_MATERIALS.warmAccent}>
-          <sphereGeometry args={[0.12, 14, 10]} />
-        </mesh>
-      </>
+    <mesh position={[0.6, 2.12, -0.66]} material={SHARED_MATERIALS.warmAccent} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[0.026, 1.22, 0.08]} />
+    </mesh>
+    <Text position={[0.598, 2.48, 0.1]} rotation={[0, Math.PI / 2, 0]} anchorX="center" anchorY="middle" color={WARM.accent} fontSize={0.1} letterSpacing={0.05} raycast={IGNORE_RAYCAST}>
+      DANH TÍNH
+    </Text>
+    <Text position={[0.598, 2.17, 0.08]} rotation={[0, Math.PI / 2, 0]} anchorX="center" anchorY="middle" color="#1f1810" fontSize={0.28} letterSpacing={0.025} raycast={IGNORE_RAYCAST}>
+      LÝ THỤY
+    </Text>
+    <Text position={[0.598, 1.9, 0.08]} rotation={[0, Math.PI / 2, 0]} anchorX="center" anchorY="middle" color="#3f3021" fontSize={0.075} letterSpacing={0.01} raycast={IGNORE_RAYCAST}>
+      PHIÊN DỊCH · PHÁI BỘ BÔRÔĐIN
+    </Text>
+    {!reducedDetail && (
+      <Text position={[0.598, 1.72, 0.08]} rotation={[0, Math.PI / 2, 0]} anchorX="center" anchorY="middle" color="#5a3828" fontSize={0.07} letterSpacing={0.02} raycast={IGNORE_RAYCAST}>
+        QUẢNG CHÂU · 11.11.1924
+      </Text>
     )}
+  </group>
+);
+
+/**
+ * A static architectural reconstruction of House No. 13/1 (now 248–250
+ * Wenming Road): its stacked arcades, columns and balcony railings are based
+ * on the supplied archival photograph. The foot-plaque remains the only
+ * interaction target for this station.
+ */
+const GuangzhouHeadquartersBuilding: React.FC<{ reducedDetail: boolean }> = ({ reducedDetail }) => (
+  <group name="room-four-s5-guangzhou-headquarters" raycast={IGNORE_RAYCAST}>
+    <mesh position={[0, 0.1, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[1.82, 0.2, 3.94]} />
+    </mesh>
+    <mesh position={[0, 2.78, 0]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[1.46, 5.36, 3.62]} />
+    </mesh>
+    <mesh position={[0, 5.46, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[1.64, 0.26, 3.82]} />
+    </mesh>
+    <mesh position={[-0.84, 5.68, 0]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+      <boxGeometry args={[0.12, 0.2, 3.42]} />
+    </mesh>
+
+    {[0.92, 2.66, 4.38].map((y) => (
+      <React.Fragment key={`s5-headquarters-column-row-${y}`}>
+        {HEADQUARTERS_COLUMN_Z.map((z) => (
+          <group key={`s5-headquarters-column-${y}-${z}`} position={[-0.86, y, z]}>
+            <mesh material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+              <cylinderGeometry args={[0.1, 0.115, 1.5, 10]} />
+            </mesh>
+            <mesh position={[0, -0.78, 0]} material={SHARED_MATERIALS.warmWood} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.22, 0.08, 0.22]} />
+            </mesh>
+            <mesh position={[0, 0.78, 0]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.24, 0.1, 0.24]} />
+            </mesh>
+          </group>
+        ))}
+      </React.Fragment>
+    ))}
+
+    {[1.72, 3.45].map((y) => (
+      <React.Fragment key={`s5-headquarters-balcony-${y}`}>
+        <mesh position={[-0.98, y, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.42, 0.16, 3.8]} />
+        </mesh>
+        {!reducedDetail && (
+          <>
+            <mesh position={[-1.08, y + 0.35, 0]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.08, 0.08, 3.54]} />
+            </mesh>
+            {HEADQUARTERS_BALUSTER_Z.map((z) => (
+              <mesh key={`s5-headquarters-baluster-${y}-${z}`} position={[-1.08, y + 0.17, z]} material={SHARED_MATERIALS.warmPaper} raycast={IGNORE_RAYCAST}>
+                <cylinderGeometry args={[0.032, 0.032, 0.38, 8]} />
+              </mesh>
+            ))}
+          </>
+        )}
+      </React.Fragment>
+    ))}
+
+    {[-0.86, 0.86].map((z) => (
+      <group key={`s5-headquarters-ground-entrance-${z}`} position={[-0.78, 0.9, z]}>
+        <mesh material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.09, 1.28, 0.68]} />
+        </mesh>
+        <mesh position={[-0.05, 0, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.035, 0.11, 0.76]} />
+        </mesh>
+        <mesh position={[-0.05, 0, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+          <boxGeometry args={[0.035, 1.12, 0.045]} />
+        </mesh>
+      </group>
+    ))}
+
+    {[2.65, 4.35].map((y) => (
+      <React.Fragment key={`s5-headquarters-window-row-${y}`}>
+        {HEADQUARTERS_UPPER_WINDOWS.map((z) => (
+          <group key={`s5-headquarters-window-${y}-${z}`} position={[-0.78, y, z]}>
+            <mesh material={SHARED_MATERIALS.darkInk} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.09, 0.72, 0.6]} />
+            </mesh>
+            <mesh position={[-0.05, 0, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+              <boxGeometry args={[0.035, 0.09, 0.68]} />
+            </mesh>
+            {!reducedDetail && (
+              <mesh position={[-0.05, 0, 0]} material={SHARED_MATERIALS.warmFrame} raycast={IGNORE_RAYCAST}>
+                <boxGeometry args={[0.035, 0.62, 0.04]} />
+              </mesh>
+            )}
+          </group>
+        ))}
+      </React.Fragment>
+    ))}
   </group>
 );
 
@@ -1319,14 +1353,16 @@ const ArtifactAssembly: React.FC<{
       return <MoscowUniversityBuildingModel reducedDetail={reducedDetail} />;
     case 'forum-globe':
       return <InternationalForumScreen progressCount={3} reducedDetail={reducedDetail} />;
-    case 'travel-ticket':
-      return <StudyDesk ticket progressCount={3} />;
-    case 'mission-desk':
-      return <StudyDesk warm mission progressCount={3} />;
-    case 'organisation-network':
-      return <OrganisationNetwork progressCount={3} />;
-    case 'printing-press':
-      return <PrintingPress completed />;
+    case 'guangzhou-travel-dossier':
+      return <GuangzhouTravelDossier reducedDetail={reducedDetail} />;
+    case 'ly-thuy-identity-desk':
+      return <LyThuyIdentityDesk reducedDetail={reducedDetail} />;
+    case 'guangzhou-headquarters':
+      return <GuangzhouHeadquartersBuilding reducedDetail={reducedDetail} />;
+    case 'thanh-nien-newspaper-photo':
+      return <ThanhNienNewspaperPhotoScreen reducedDetail={reducedDetail} />;
+    case 'guangzhou-training-photo':
+      return <GuangzhouTrainingPhotoScreen reducedDetail={reducedDetail} />;
     case 'secret-classroom':
       return <ClassroomAssembly progressCount={4} />;
     case 'return-map':
@@ -1567,7 +1603,7 @@ const StationBay: React.FC<{
           kind={station.kind}
           reducedDetail={reducedDetail}
         />
-        <SupplementalStationModel stationId={station.id} reducedDetail={reducedDetail} />
+        <SupplementalStationModel stationId={station.id} />
       </group>
       <mesh
         position={[station.stop[0], 0.075, station.stop[1]]}

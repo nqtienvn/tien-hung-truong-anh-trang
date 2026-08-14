@@ -63,6 +63,7 @@ export const RoomFourJourneyOverlay: React.FC<RoomFourJourneyOverlayProps> = ({
   const lead = isVietnamese ? content.leadVi : content.leadEn;
   const history = isVietnamese ? content.historyVi : content.historyEn;
   const illustration = content.illustration;
+  const closingIllustration = content.closingIllustration;
 
   return (
     <Html
@@ -142,6 +143,22 @@ export const RoomFourJourneyOverlay: React.FC<RoomFourJourneyOverlayProps> = ({
               ))}
             </div>
           </div>
+
+          {closingIllustration && (
+            <figure className="mx-auto mt-10 max-w-xl overflow-hidden border border-slate-500/40 bg-[#070c0f] shadow-[0_18px_48px_rgba(0,0,0,0.28)]">
+              <Image
+                src={closingIllustration.src}
+                alt={isVietnamese ? closingIllustration.altVi : closingIllustration.altEn}
+                width={600}
+                height={878}
+                sizes="(max-width: 768px) calc(100vw - 64px), 576px"
+                className="h-auto w-full object-contain"
+              />
+              <figcaption className="border-t border-slate-600/45 px-5 py-4 text-xs leading-5 text-slate-400 sm:px-8 sm:text-[13px]">
+                {isVietnamese ? closingIllustration.captionVi : closingIllustration.captionEn}
+              </figcaption>
+            </figure>
+          )}
         </section>
       </div>
     </Html>

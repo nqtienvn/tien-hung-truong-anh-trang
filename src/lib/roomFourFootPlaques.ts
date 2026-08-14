@@ -28,14 +28,14 @@ export const ROOM_FOUR_FOOT_PLAQUES: Readonly<Record<RoomFourStationId, RoomFour
   s3: {
     timeVi: '11/1924',
     timeEn: 'Nov 1924',
-    eventVi: 'Chuyển từ học hỏi quốc tế sang nhiệm vụ tổ chức.',
-    eventEn: 'Move from international learning to an organisational mission.',
+    eventVi: 'Hành trình từ Liên Xô đến Quảng Châu, mở đầu nhiệm vụ mới.',
+    eventEn: 'The journey from the Soviet Union to Guangzhou opens a new mission.',
   },
   s4: {
     timeVi: 'Quảng Châu · 11/11/1924',
     timeEn: 'Guangzhou · 11 Nov 1924',
-    eventVi: 'Bắt đầu ba nhiệm vụ: đào tạo, tổ chức, theo dõi phong trào.',
-    eventEn: 'Begin three missions: training, organisation and observing the movement.',
+    eventVi: 'Nguyễn Ái Quốc đến Quảng Châu với bí danh Lý Thụy.',
+    eventEn: 'Nguyen Ai Quoc arrives in Guangzhou under the alias Ly Thuy.',
   },
   s5: {
     timeVi: '1925',
@@ -46,15 +46,17 @@ export const ROOM_FOUR_FOOT_PLAQUES: Readonly<Record<RoomFourStationId, RoomFour
   s6: {
     timeVi: '21/6/1925',
     timeEn: '21 Jun 1925',
-    eventVi: 'Báo Thanh Niên truyền bá tư tưởng cách mạng về nước.',
-    eventEn: 'Thanh Nien carries revolutionary ideas back to Vietnam.',
+    eventVi: 'Báo Thanh niên – Tờ báo cách mạng đầu tiên của Việt Nam.',
+    eventEn: "Thanh Nien – Vietnam's first revolutionary newspaper.",
   },
   s7: {
-    timeVi: '1925-1927',
-    timeEn: '1925-1927',
-    eventVi: 'Huấn luyện cán bộ và hệ thống hóa bài giảng.',
-    eventEn: 'Train cadres and systematise the lessons.',
+    timeVi: 'Quảng Châu · 1926–1927',
+    timeEn: 'Guangzhou · 1926–1927',
+    eventVi: 'Nguyễn Ái Quốc mở ba lớp huấn luyện cho 75 thanh niên Việt Nam.',
+    eventEn: 'Nguyen Ai Quoc led three training classes for 75 Vietnamese youths.',
   },
+  // Retained only for compatibility with historical persisted progress. There
+  // is no longer an S8 layout, model, plaque, collider, or interaction point.
   s8: {
     timeVi: '1925-1927',
     timeEn: '1925-1927',
