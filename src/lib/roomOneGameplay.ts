@@ -200,6 +200,16 @@ export const ROOM_ONE_GAMEPLAY: Record<string, RoomOneGameplayData> = {
         ],
         correctIndex: 2,
       },
+      {
+        question: 'Vai trò của Nguyễn Ái Quốc tại Hội nghị hợp nhất các tổ chức cộng sản đầu năm 1930 là gì?',
+        options: [
+          'Triệu tập và chủ trì hội nghị, thống nhất các tổ chức cộng sản để thành lập Đảng Cộng sản Việt Nam',
+          'Chỉ quan sát hội nghị mà không tham gia vào nội dung thảo luận',
+          'Lãnh đạo cuộc tổng khởi nghĩa giành chính quyền ngay tại Hồng Kông',
+          'Ký hiệp định chấm dứt chiến tranh với thực dân Pháp',
+        ],
+        correctIndex: 0,
+      },
     ],
     historyText: 'HỘI TỤ - Hồng Kông, đầu năm 1930. Từ những trải nghiệm thực tiễn, hoạt động quốc tế, việc tiếp cận chủ nghĩa Mác - Lênin và quá trình chuẩn bị lực lượng, Nguyễn Ái Quốc đã triệu tập hội nghị hợp nhất các tổ chức cộng sản. Sự kiện này dẫn tới sự ra đời của Đảng Cộng sản Việt Nam.',
     clueText: 'Vòng cuối đã hoàn thành',

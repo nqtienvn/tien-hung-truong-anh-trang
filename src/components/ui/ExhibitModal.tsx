@@ -8,7 +8,7 @@ import { GalleyWorkMission } from './GalleyWorkMission';
 import { VanBaProfile } from './VanBaProfile';
 import { DepartureMission } from './DepartureMission';
 import { ShipExplorationMission } from './ShipExplorationMission';
-import { ROOM_ONE_FINAL_EXHIBIT_ID, ROOM_ONE_GAMEPLAY, ROOM_ONE_REQUIRED_CLUE_IDS } from '@/lib/roomOneGameplay';
+import { ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID, ROOM_ONE_FINAL_EXHIBIT_ID, ROOM_ONE_GAMEPLAY, ROOM_ONE_REQUIRED_CLUE_IDS } from '@/lib/roomOneGameplay';
 
 interface QuizQuestion {
   question: string;
@@ -215,7 +215,6 @@ export const ExhibitModal: React.FC = () => {
     initializeGame,
     cluesCollected,
     addClue,
-    setRoomOneCompleted,
     activeGallery,
     exhibitModalMode,
     nickname,
@@ -252,6 +251,10 @@ export const ExhibitModal: React.FC = () => {
   const [isCorrect, setIsCorrect] = useState(false);
   const isRoomOneFinalRound = selectedExhibit?.id === ROOM_ONE_FINAL_EXHIBIT_ID;
   const hasAllRoomOnePoints = ROOM_ONE_REQUIRED_CLUE_IDS.every((id) => cluesCollected.includes(id));
+  const finalArchiveClueCollected = cluesCollected.includes(ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID);
+  const hasCollectedCurrentClue = isRoomOneFinalRound
+    ? finalArchiveClueCollected
+    : selectedExhibit ? cluesCollected.includes(selectedExhibit.id) : false;
 
   const lastExhibitIdRef = useRef<string | null>(null);
 
@@ -283,8 +286,7 @@ export const ExhibitModal: React.FC = () => {
           return;
         }
 
-        const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
-        if ((isRoomOneFinalRound && !hasAllRoomOnePoints) || alreadyCollected) {
+        if ((isRoomOneFinalRound && !hasAllRoomOnePoints) || hasCollectedCurrentClue) {
           setGameState('info');
         } else {
           setGameState('quiz');
@@ -467,8 +469,10 @@ export const ExhibitModal: React.FC = () => {
       setSelectedOptions([]);
       setAnswerChecked(false);
       setIsCorrect(false);
-    } else if (gameData.isFinalRound) {
-      setRoomOneCompleted(true);
+    } else if (isRoomOneFinalRound) {
+      // Câu hỏi trong tủ kính là manh mối thứ 7; hoàn thành Room 1 chỉ xảy ra
+      // sau khi người chơi giải puzzle tổng kết trong Sổ điều tra.
+      addClue(ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID);
       setGameState('info');
     } else {
       // A Room 1 point is only awarded after every question for this exhibit is correct.
@@ -659,8 +663,8 @@ export const ExhibitModal: React.FC = () => {
                             <p className="text-xs text-emerald-300/80">
                               {currentQuizIndex < gameData.quizzes.length - 1
                                 ? 'Tiếp tục trả lời câu tiếp theo để nhận điểm.'
-                                : gameData.isFinalRound
-                                  ? 'Bạn đã hoàn thành câu hỏi cuối.'
+                                : isRoomOneFinalRound
+                                  ? 'Bạn đã đúng câu hỏi cuối và sẽ nhận điểm cuối để mở Sổ điều tra.'
                                   : 'Bạn đã đúng toàn bộ câu hỏi và sẽ nhận 1 điểm.'}
                             </p>
                           </div>
@@ -682,8 +686,8 @@ export const ExhibitModal: React.FC = () => {
                             <>
                               {currentQuizIndex < gameData.quizzes.length - 1
                                 ? 'Câu tiếp theo'
-                                : gameData.isFinalRound
-                                  ? 'Hoàn thành Room 1'
+                                : isRoomOneFinalRound
+                                  ? 'Nhận điểm cuối'
                                   : 'Nhận 1 điểm'}
                               <ArrowRight size={14} />
                             </>
@@ -711,12 +715,20 @@ export const ExhibitModal: React.FC = () => {
 
 
 
-                    {gameData.isFinalRound && roomOneCompleted ? (
+                    {isRoomOneFinalRound && roomOneCompleted ? (
                       <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
                         <span className="text-xl">✓</span>
                         <div>
                           <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã hoàn thành Room 1</span>
                           <span className="text-xs font-semibold leading-relaxed font-sans">Bạn đã giải đúng câu hỏi cuối trong tủ kính trung tâm.</span>
+                        </div>
+                      </div>
+                    ) : isRoomOneFinalRound && finalArchiveClueCollected ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
+                        <span className="text-xl">✓</span>
+                        <div>
+                          <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã nhận điểm cuối</span>
+                          <span className="text-xs font-semibold leading-relaxed font-sans">Sổ điều tra đã mở để bạn hoàn thành puzzle tổng kết.</span>
                         </div>
                       </div>
                     ) : cluesCollected.includes(selectedExhibit.id) ? (

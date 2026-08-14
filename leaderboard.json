@@ -1,5 +1,10 @@
 [
   {
+    "nickname": "đă",
+    "score": 115,
+    "time": "0s"
+  },
+  {
     "nickname": "123",
     "score": 60,
     "time": "2s"
@@ -41,11 +46,6 @@
   },
   {
     "nickname": "123",
-    "score": 0,
-    "time": "180s"
-  },
-  {
-    "nickname": "f",
     "score": 0,
     "time": "180s"
   }
