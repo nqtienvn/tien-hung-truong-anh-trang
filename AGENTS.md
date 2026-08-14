@@ -7,3 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Persistent default scope: Room 1
+
+For every future code-change request, treat Room 1 (`gallery-subsidy`) as the default and mandatory scope, unless the user explicitly overrides it. Read and follow [ROOM1_RULES.md](ROOM1_RULES.md) before editing. Do not modify other rooms or broaden a shared change beyond a Room 1-specific branch without explicit user approval.

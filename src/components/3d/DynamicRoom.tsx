@@ -6,6 +6,7 @@ import { ExhibitObject } from './ExhibitObject';
 import { LoadedRoom } from '@/context/MuseumContext';
 import roomFourSpatial from '@/lib/roomFourSpatial.json';
 import roomFiveSpatial from '@/lib/roomFiveSpatial.json';
+import { ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID } from '@/lib/roomOneGameplay';
 
 /**
  * DynamicRoom — Component tải phòng triển lãm động tại offset Z cho trước
@@ -61,6 +62,13 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({
 }) => {
   const { galleryId, exhibits, gallery } = room;
   const groupRef = useRef<THREE.Group>(null);
+  // The 1930 image is reserved for the locked final archive in the middle of Room 1.
+  const roomExhibits = useMemo(
+    () => galleryId === 'gallery-subsidy'
+      ? exhibits.filter((exhibit) => exhibit.id !== ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID)
+      : exhibits,
+    [galleryId, exhibits],
+  );
   const roomCullCenterZ = useMemo(
     () => galleryId === 'gallery-market-economy'
       ? (roomFourSpatial.worldStartZ + roomFourSpatial.worldEndZ) / 2
@@ -75,21 +83,21 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({
   );
 
   // Cơ chế đếm số hiện vật được phép hiển thị để load từ từ (staggered loading)
-  const [visibleCount, setVisibleCount] = useState(() => isVisible ? Math.min(1, exhibits.length) : 0);
+  const [visibleCount, setVisibleCount] = useState(() => isVisible ? Math.min(1, roomExhibits.length) : 0);
 
   // Khi phòng được hiển thị, tăng dần số lượng hiện vật để tránh giật lag đột ngột
   useEffect(() => {
-    const initialCount = isVisible ? Math.min(1, exhibits.length) : 0;
+    const initialCount = isVisible ? Math.min(1, roomExhibits.length) : 0;
     const resetTimer = window.setTimeout(() => setVisibleCount(initialCount), 0);
 
-    if (!isVisible || exhibits.length <= 1) {
+    if (!isVisible || roomExhibits.length <= 1) {
       return () => window.clearTimeout(resetTimer);
     }
 
     // Cứ mỗi 150ms mount thêm 1 hiện vật để chia đều tải tải lưới (geometry) và tải hoạ tiết (texture)
     const interval = window.setInterval(() => {
       setVisibleCount((prev) => {
-        if (prev >= exhibits.length) {
+        if (prev >= roomExhibits.length) {
           window.clearInterval(interval);
           return prev;
         }
@@ -101,7 +109,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({
       window.clearTimeout(resetTimer);
       window.clearInterval(interval);
     };
-  }, [isVisible, exhibits.length]);
+  }, [isVisible, roomExhibits.length]);
 
   // Cơ chế Occlusion Culling (LOD): ẩn phòng nếu người chơi đi quá xa để giảm tải GPU vẽ hình
   useFrame((state) => {
@@ -155,7 +163,7 @@ export const DynamicRoom: React.FC<DynamicRoomProps> = ({
         />
 
         {/* Các hiện vật trong phòng - Load từ từ từng cái một để giảm lag */}
-        {exhibits.slice(0, visibleCount).map((exhibit) => (
+        {roomExhibits.slice(0, visibleCount).map((exhibit) => (
           <ExhibitObject key={exhibit.id} exhibit={exhibit} isVisible={isVisible} />
         ))}
       </Suspense>

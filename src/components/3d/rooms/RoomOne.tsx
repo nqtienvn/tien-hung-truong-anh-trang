@@ -4,23 +4,55 @@ import { Edges, Html, RoundedBox, useTexture } from '@react-three/drei';
 import { useMuseum } from '@/context/MuseumContext';
 import { BaseRoom, BaseRoomProps } from './BaseRoom';
 import type { Exhibit } from '@/lib/db';
+import { ROOM_ONE_FINAL_EXHIBIT_ID, ROOM_ONE_REQUIRED_CLUE_IDS } from '@/lib/roomOneGameplay';
 
-const REQUIRED_CLUES_FOR_CENTRAL_ARCHIVE = [
-  'exhibit-coupon',
-  'exhibit-world-1911-1917',
-  'exhibit-versailles-1919',
-  'exhibit-lenin-theses-1920',
-  'exhibit-tours-1920',
-  'exhibit-guangzhou-1925-1927',
-];
+const CENTRAL_ARCHIVE_EXHIBIT: Exhibit = {
+  id: ROOM_ONE_FINAL_EXHIBIT_ID,
+  gallery_id: 'gallery-subsidy',
+  title: { vi: 'Hồ sơ trung tâm: Hội tụ 1930', en: 'Central archive: Convergence 1930' },
+  author: { vi: 'Vòng câu hỏi cuối', en: 'Final question round' },
+  description: {
+    vi: 'Bức ảnh trong tủ kính lưu giữ kết quả của toàn bộ hành trình tìm đường cứu nước.',
+    en: 'The image in this glass case preserves the conclusion of the entire journey.',
+  },
+  model_3d_url: '',
+  thumbnail_url: '/exhibits/hoi-tu-1930.jpg',
+  image_urls: ['/exhibits/hoi-tu-1930.jpg'],
+  coordinate_x: 0,
+  coordinate_y: 0,
+  coordinate_z: 0,
+  rotation_x: 0,
+  rotation_y: 0,
+  rotation_z: 0,
+  scale_x: 1,
+  scale_y: 1,
+  scale_z: 1,
+};
 
 const CentralArchiveShowcase: React.FC<{
-  exhibit: Exhibit;
   unlocked: boolean;
   collectedCount: number;
   onOpen: () => void;
-}> = ({ exhibit, unlocked, collectedCount, onOpen }) => {
-  const texture = useTexture(exhibit.thumbnail_url);
+}> = ({ unlocked, collectedCount, onOpen }) => {
+  const texture = useTexture(CENTRAL_ARCHIVE_EXHIBIT.thumbnail_url);
+  const displayTexture = React.useMemo(() => {
+    const preparedTexture = texture.clone();
+    preparedTexture.colorSpace = THREE.SRGBColorSpace;
+    preparedTexture.needsUpdate = true;
+    return preparedTexture;
+  }, [texture]);
+  const imageMaterialRef = React.useRef<THREE.MeshBasicMaterial>(null);
+  const archiveLightColor = unlocked ? '#4ade80' : '#ef4444';
+
+  // Đồng bộ texture sau khi ảnh tải xong để material của tủ luôn được cập nhật.
+  React.useEffect(() => {
+    if (!imageMaterialRef.current) return;
+    imageMaterialRef.current.map = displayTexture;
+    imageMaterialRef.current.color.set('#ffffff');
+    imageMaterialRef.current.needsUpdate = true;
+  }, [displayTexture]);
+
+  React.useEffect(() => () => displayTexture.dispose(), [displayTexture]);
 
   const openExhibit = (event: { stopPropagation: () => void }) => {
     event.stopPropagation();
@@ -51,18 +83,20 @@ const CentralArchiveShowcase: React.FC<{
         <meshStandardMaterial color="#d7c39c" roughness={0.5} metalness={0.08} />
       </RoundedBox>
 
-      {/* Khung tài liệu và ảnh đặt đúng chiều, hơi nâng khỏi mặt bệ */}
-      <RoundedBox args={[3.25, 0.075, 2.2]} radius={0.045} smoothness={4} position={[0, 1.055, 0]} castShadow>
+      {/* Ảnh nằm phẳng trên đáy tủ, phủ mặt bệ màu nâu nhưng vẫn chừa viền khung. */}
+      <RoundedBox args={[3.98, 0.045, 2.15]} radius={0.045} smoothness={4} position={[0, 1.06, 0]} castShadow>
         <meshStandardMaterial color="#33241b" roughness={0.3} metalness={0.42} />
       </RoundedBox>
       <mesh
-        position={[0, 1.15, 0]}
-        rotation={[-Math.PI / 2, 0, Math.PI]}
+        position={[0, 1.13, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
         renderOrder={2}
       >
-        <planeGeometry args={[3.05, 2.0]} />
+        <planeGeometry args={[3.84, 2.01]} />
         <meshBasicMaterial
-          map={texture}
+          ref={imageMaterialRef}
+          map={displayTexture}
+          color="#ffffff"
           toneMapped={false}
           side={THREE.DoubleSide}
           polygonOffset
@@ -75,18 +109,18 @@ const CentralArchiveShowcase: React.FC<{
       {[-2.08, 2.08].map((x) => (
         <mesh key={`glass-side-${x}`} position={[x, 1.54, 0]}>
           <boxGeometry args={[0.025, 1.02, 2.3]} />
-          <meshPhysicalMaterial color="#d9ffff" transparent opacity={0.18} roughness={0.04} transmission={0.9} thickness={0.04} depthWrite={false} />
+          <meshBasicMaterial color="#d9ffff" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
       ))}
       {[-1.14, 1.14].map((z) => (
         <mesh key={`glass-front-${z}`} position={[0, 1.54, z]}>
           <boxGeometry args={[4.18, 1.02, 0.025]} />
-          <meshPhysicalMaterial color="#d9ffff" transparent opacity={0.16} roughness={0.04} transmission={0.9} thickness={0.04} depthWrite={false} />
+          <meshBasicMaterial color="#d9ffff" transparent opacity={0.08} side={THREE.DoubleSide} depthWrite={false} />
         </mesh>
       ))}
       <mesh position={[0, 2.055, 0]}>
         <boxGeometry args={[4.18, 0.03, 2.3]} />
-        <meshPhysicalMaterial color="#efffff" transparent opacity={0.14} roughness={0.03} transmission={0.94} thickness={0.035} depthWrite={false} />
+        <meshBasicMaterial color="#efffff" transparent opacity={0.06} side={THREE.DoubleSide} depthWrite={false} />
       </mesh>
 
       {/* Khung đồng mảnh ở các góc và viền mái kính */}
@@ -109,9 +143,9 @@ const CentralArchiveShowcase: React.FC<{
         </mesh>
       ))}
 
-      {/* Ánh sáng bảo tàng dịu bên trong tủ */}
-      <pointLight position={[-1.45, 1.82, 0.68]} color="#ffd98a" intensity={0.34} distance={3.4} decay={2} />
-      <pointLight position={[1.45, 1.82, -0.68]} color="#ffd98a" intensity={0.34} distance={3.4} decay={2} />
+      {/* Đèn đỏ khi khóa; chuyển xanh khi đủ 6 điểm. */}
+      <pointLight position={[-1.45, 1.82, 0.68]} color={archiveLightColor} intensity={unlocked ? 0.62 : 0.48} distance={3.4} decay={2} />
+      <pointLight position={[1.45, 1.82, -0.68]} color={archiveLightColor} intensity={unlocked ? 0.62 : 0.48} distance={3.4} decay={2} />
 
       {/* Bảng khóa đồng ở mặt trước, màu trạng thái thay đổi khi đủ bằng chứng */}
       <RoundedBox args={[0.72, 0.42, 0.15]} radius={0.065} smoothness={4} position={[0, 1.3, 1.22]} castShadow>
@@ -132,16 +166,16 @@ const CentralArchiveShowcase: React.FC<{
           minWidth: 250,
           padding: '10px 16px',
           borderRadius: 999,
-          border: `1px solid ${unlocked ? '#4ade80' : '#f59e0b'}`,
+          border: `1px solid ${unlocked ? '#4ade80' : '#ef4444'}`,
           background: 'linear-gradient(135deg, rgba(15,23,42,.96), rgba(36,23,18,.95))',
-          color: unlocked ? '#86efac' : '#fde68a',
+          color: unlocked ? '#86efac' : '#fecaca',
           fontSize: 12,
           fontWeight: 700,
           textAlign: 'center',
           whiteSpace: 'nowrap',
-          boxShadow: `0 8px 28px ${unlocked ? 'rgba(34,197,94,.2)' : 'rgba(245,158,11,.18)'}`,
+          boxShadow: `0 8px 28px ${unlocked ? 'rgba(34,197,94,.2)' : 'rgba(239,68,68,.18)'}`,
         }}>
-          {unlocked ? '🔓 Đã mở khóa · Nhấp để khám phá HỘI TỤ' : `🔒 Tư liệu trung tâm · Đã thu thập ${collectedCount}/6`}
+          {unlocked ? '🔓 Vòng cuối sẵn sàng · Nhấp tủ kính để trả lời' : `🔒 Vòng cuối khóa · Đã thu thập ${collectedCount}/6 điểm`}
         </div>
       </Html>
     </group>
@@ -240,7 +274,6 @@ const VelvetRopeBarrier: React.FC<{
 
 type RoomOneProps = BaseRoomProps & {
   ropeBarriersConfig?: string;
-  centralExhibit?: Exhibit;
 };
 
 export const RoomOne: React.FC<RoomOneProps> = ({ 
@@ -249,7 +282,6 @@ export const RoomOne: React.FC<RoomOneProps> = ({
   isVisible = true,
   onRopeClick,
   ropeBarriersConfig,
-  centralExhibit,
 }) => {
   const {
     activeGallery,
@@ -257,8 +289,8 @@ export const RoomOne: React.FC<RoomOneProps> = ({
     setSelectedExhibit,
     setExhibitModalMode,
   } = useMuseum();
-  const collectedRequiredClues = REQUIRED_CLUES_FOR_CENTRAL_ARCHIVE.filter((id) => cluesCollected.includes(id)).length;
-  const isCentralArchiveUnlocked = collectedRequiredClues === REQUIRED_CLUES_FOR_CENTRAL_ARCHIVE.length;
+  const collectedRequiredClues = ROOM_ONE_REQUIRED_CLUE_IDS.filter((id) => cluesCollected.includes(id)).length;
+  const isCentralArchiveUnlocked = collectedRequiredClues === ROOM_ONE_REQUIRED_CLUE_IDS.length;
 
   // Parse config riêng từng dây từ customSettings hoặc DB
   // Thứ tự: [0]=trái-18, [1]=trái-8, [2]=trái+2, [3]=phải-18, [4]=phải-8, [5]=phải+2
@@ -346,17 +378,14 @@ export const RoomOne: React.FC<RoomOneProps> = ({
       <VelvetRopeBarrier side="right" zPoints={[-3, 3]} xOffset={-ropeConfigs[4].xOffset} zOffset={ropeConfigs[4].zOffset} onClick={() => onRopeClick?.(4)} />
       <VelvetRopeBarrier side="right" zPoints={[13, 19]} xOffset={-ropeConfigs[5].xOffset} zOffset={ropeConfigs[5].zOffset} onClick={() => onRopeClick?.(5)} />
 
-      {centralExhibit && (
-        <CentralArchiveShowcase
-          exhibit={centralExhibit}
-          unlocked={isCentralArchiveUnlocked}
-          collectedCount={collectedRequiredClues}
-          onOpen={() => {
-            setExhibitModalMode('game');
-            setSelectedExhibit(centralExhibit);
-          }}
-        />
-      )}
+      <CentralArchiveShowcase
+        unlocked={isCentralArchiveUnlocked}
+        collectedCount={collectedRequiredClues}
+        onOpen={() => {
+          setExhibitModalMode('game');
+          setSelectedExhibit(CENTRAL_ARCHIVE_EXHIBIT);
+        }}
+      />
     </BaseRoom>
   );
 };

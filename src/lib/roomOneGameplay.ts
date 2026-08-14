@@ -11,12 +11,25 @@ export interface RoomOneGameplayData {
   quizzes: RoomOneQuizQuestion[];
   historyText: string;
   clueText: string;
+  isFinalRound?: boolean;
 }
+
+export const ROOM_ONE_REQUIRED_CLUE_IDS = [
+  'exhibit-coupon',
+  'exhibit-world-1911-1917',
+  'exhibit-versailles-1919',
+  'exhibit-lenin-theses-1920',
+  'exhibit-tours-1920',
+  'exhibit-guangzhou-1925-1927',
+] as const;
+
+export const ROOM_ONE_FINAL_ARCHIVE_IMAGE_ID = 'exhibit-convergence-1930';
+export const ROOM_ONE_FINAL_EXHIBIT_ID = 'room-one-final-archive';
 
 export const ROOM_ONE_GAMEPLAY: Record<string, RoomOneGameplayData> = {
   'exhibit-coupon': {
-    hasTimer: true,
-    timerDuration: 10,
+    hasTimer: false,
+    timerDuration: 0,
     quizzes: [
       {
         question: 'Nguyễn Tất Thành rời Tổ quốc tìm đường cứu nước vào thời gian nào?',
@@ -94,8 +107,8 @@ export const ROOM_ONE_GAMEPLAY: Record<string, RoomOneGameplayData> = {
     clueText: 'VERSAILLES 1919 · NGUYỄN ÁI QUỐC · 8 ĐIỂM YÊU SÁCH · TỰ DO · DÂN CHỦ · BÌNH ĐẲNG',
   },
   'exhibit-lenin-theses-1920': {
-    hasTimer: true,
-    timerDuration: 10,
+    hasTimer: false,
+    timerDuration: 0,
     quizzes: [
       {
         question: 'Luận cương của V.I. Lênin mà Nguyễn Ái Quốc đọc tháng 7/1920 đề cập trực tiếp đến vấn đề nào?',
@@ -172,32 +185,23 @@ export const ROOM_ONE_GAMEPLAY: Record<string, RoomOneGameplayData> = {
     historyText: 'CHUẨN BỊ CHO CÁCH MẠNG — Quảng Châu, Trung Quốc, 1925–1927. Nguyễn Ái Quốc thành lập Hội Việt Nam Cách mạng Thanh niên, tổ chức các lớp huấn luyện chính trị, đào tạo cán bộ và truyền bá chủ nghĩa Mác – Lênin vào Việt Nam. Các bài giảng được tập hợp và xuất bản thành Đường Kách Mệnh năm 1927, góp phần chuẩn bị về tư tưởng, chính trị, cán bộ và tổ chức cho cách mạng Việt Nam.',
     clueText: 'QUẢNG CHÂU · HỘI VIỆT NAM CÁCH MẠNG THANH NIÊN · HUẤN LUYỆN CÁN BỘ · ĐƯỜNG KÁCH MỆNH · CHUẨN BỊ TỔ CHỨC',
   },
-  'exhibit-convergence-1930': {
-    hasTimer: true,
-    timerDuration: 10,
+  [ROOM_ONE_FINAL_EXHIBIT_ID]: {
+    hasTimer: false,
+    timerDuration: 0,
+    isFinalRound: true,
     quizzes: [
       {
-        question: 'Vì sao việc thống nhất các tổ chức cộng sản trở nên cấp thiết vào cuối năm 1929?',
+        question: 'Kết quả có ý nghĩa quyết định của hành trình tìm đường cứu nước từ năm 1911 đến đầu năm 1930 là gì?',
         options: [
-          'Vì các tổ chức hoạt động riêng rẽ, tranh giành ảnh hưởng và thiếu sự lãnh đạo thống nhất',
-          'Vì phong trào công nhân và phong trào yêu nước đã hoàn toàn chấm dứt',
-          'Vì Việt Nam lúc đó chưa có bất kỳ tổ chức cộng sản nào',
-          'Vì Quốc tế Cộng sản yêu cầu giải thể toàn bộ lực lượng cách mạng',
+          'Nguyễn Ái Quốc trở về nước ngay sau khi rời Bến Nhà Rồng',
+          'Các phong trào yêu nước chấm dứt hoàn toàn',
+          'Đảng Cộng sản Việt Nam ra đời đầu năm 1930',
+          'Việt Nam giành được độc lập ngay trong năm 1930',
         ],
-        correctIndex: 0,
-      },
-      {
-        question: 'Nguyễn Ái Quốc đến Hồng Kông đầu năm 1930 để thực hiện nhiệm vụ gì?',
-        options: [
-          'Thành lập thêm một tổ chức cộng sản hoạt động riêng rẽ',
-          'Triệu tập và chủ trì hội nghị nhằm thống nhất các tổ chức cộng sản',
-          'Tổ chức một hội nghị thương mại quốc tế',
-          'Chấm dứt hoạt động của phong trào cách mạng Việt Nam',
-        ],
-        correctIndex: 1,
+        correctIndex: 2,
       },
     ],
-    historyText: 'HỘI TỤ — Việt Nam – Hồng Kông, 1929–1930. Năm 1929, ba tổ chức cộng sản lần lượt xuất hiện nhưng tồn tại riêng rẽ, tranh giành ảnh hưởng và thiếu sự lãnh đạo thống nhất. Với tư cách đại diện Quốc tế Cộng sản, Nguyễn Ái Quốc từ Xiêm đến Hồng Kông để triệu tập và chủ trì một hội nghị nhằm thống nhất các tổ chức cộng sản, mở đường cho sự thành lập Đảng Cộng sản Việt Nam.',
-    clueText: '1929 · BA TỔ CHỨC CỘNG SẢN · PHÂN TÁN · THỐNG NHẤT · HỒNG KÔNG 1930',
+    historyText: 'HỘI TỤ - Hồng Kông, đầu năm 1930. Từ những trải nghiệm thực tiễn, hoạt động quốc tế, việc tiếp cận chủ nghĩa Mác - Lênin và quá trình chuẩn bị lực lượng, Nguyễn Ái Quốc đã triệu tập hội nghị hợp nhất các tổ chức cộng sản. Sự kiện này dẫn tới sự ra đời của Đảng Cộng sản Việt Nam.',
+    clueText: 'Vòng cuối đã hoàn thành',
   },
 };

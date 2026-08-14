@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Globe, User, BookOpen, Gamepad2, HelpCircle, Check, AlertTriangle, ArrowRight, Save, Clock, Volume2, Pause, Play } from 'lucide-react';
+import { X, Globe, User, BookOpen, Gamepad2, HelpCircle, Check, AlertTriangle, ArrowRight, Volume2, Pause, Play } from 'lucide-react';
 import { useMuseum } from '@/context/MuseumContext';
 import { FirstVoyageGame } from './FirstVoyageGame';
 import { GalleyWorkMission } from './GalleyWorkMission';
 import { VanBaProfile } from './VanBaProfile';
 import { DepartureMission } from './DepartureMission';
 import { ShipExplorationMission } from './ShipExplorationMission';
-import { ROOM_ONE_GAMEPLAY } from '@/lib/roomOneGameplay';
+import { ROOM_ONE_FINAL_EXHIBIT_ID, ROOM_ONE_GAMEPLAY, ROOM_ONE_REQUIRED_CLUE_IDS } from '@/lib/roomOneGameplay';
 
 interface QuizQuestion {
   question: string;
@@ -23,6 +23,7 @@ interface GameplayData {
   quizzes: QuizQuestion[];
   historyText: string;
   clueText: string;
+  isFinalRound?: boolean;
 }
 
 interface ExhibitMediaCarouselProps {
@@ -214,6 +215,7 @@ export const ExhibitModal: React.FC = () => {
     initializeGame,
     cluesCollected,
     addClue,
+    setRoomOneCompleted,
     activeGallery,
     exhibitModalMode,
     nickname,
@@ -241,37 +243,15 @@ export const ExhibitModal: React.FC = () => {
   const isShipExplorationMission = selectedExhibit?.id === 'nha-rong-ship-exploration' && exhibitModalMode === 'game';
   const isNhaRongExhibit = selectedExhibit?.gallery_id === 'gallery-three';
 
-  const [gameState, setGameState] = useState<'observe' | 'quiz' | 'info'>('observe');
+  const [gameState, setGameState] = useState<'quiz' | 'info'>('quiz');
   const effectiveGameState = exhibitModalMode === 'info' ? 'info' : gameState;
-  const [countdown, setCountdown] = useState(0);
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]); // Cho chi-choice
   const [answerChecked, setAnswerChecked] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [canCollectCurrentClue, setCanCollectCurrentClue] = useState(false);
-  const [failedQuizIds, setFailedQuizIds] = useState<string[]>([]);
-
-  // Tải danh sách câu hỏi đã làm sai từ localStorage để lưu trữ vĩnh viễn không bị reset khi load lại trang
-  useEffect(() => {
-    if (typeof window !== 'undefined' && nickname) {
-      const saved = localStorage.getItem(`failed_quizzes_${nickname}`);
-      if (saved) {
-        try {
-          setFailedQuizIds(JSON.parse(saved));
-        } catch (e) {
-          console.error(e);
-        }
-      }
-    }
-  }, [nickname]);
-
-  const updateFailedQuizIds = (newFailed: string[]) => {
-    setFailedQuizIds(newFailed);
-    if (typeof window !== 'undefined' && nickname) {
-      localStorage.setItem(`failed_quizzes_${nickname}`, JSON.stringify(newFailed));
-    }
-  };
+  const isRoomOneFinalRound = selectedExhibit?.id === ROOM_ONE_FINAL_EXHIBIT_ID;
+  const hasAllRoomOnePoints = ROOM_ONE_REQUIRED_CLUE_IDS.every((id) => cluesCollected.includes(id));
 
   const lastExhibitIdRef = useRef<string | null>(null);
 
@@ -286,55 +266,39 @@ export const ExhibitModal: React.FC = () => {
     if (selectedExhibit.id === lastExhibitIdRef.current) return;
     lastExhibitIdRef.current = selectedExhibit.id;
 
-    setAudioProgress(0);
-    setAudioPlaying(false);
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       speechUtteranceRef.current = null;
       speechKeyRef.current = null;
     }
 
-    const length = selectedExhibit.id.length * 7 + 80;
-    setAudioDuration(length);
+    const resetTimer = window.setTimeout(() => {
+      setAudioProgress(0);
+      setAudioPlaying(false);
+      setAudioDuration(selectedExhibit.id.length * 7 + 80);
 
-    if (isSubsidyRoom && gameData) {
-      if (exhibitModalMode === 'info' || roomOneCompleted) {
-        setGameState('info');
-        setCanCollectCurrentClue(false);
-        return;
+      if (isSubsidyRoom && gameData) {
+        if (exhibitModalMode === 'info' || roomOneCompleted) {
+          setGameState('info');
+          return;
+        }
+
+        const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
+        if ((isRoomOneFinalRound && !hasAllRoomOnePoints) || alreadyCollected) {
+          setGameState('info');
+        } else {
+          setGameState('quiz');
+          setCurrentQuizIndex(0);
+          setSelectedOption(null);
+          setSelectedOptions([]);
+          setAnswerChecked(false);
+          setIsCorrect(false);
+        }
       }
+    }, 0);
 
-      const alreadyCollected = cluesCollected.includes(selectedExhibit.id);
-      const alreadyFailed = failedQuizIds.includes(selectedExhibit.id);
-      if (alreadyCollected || alreadyFailed) {
-        setGameState('info');
-        setCanCollectCurrentClue(false);
-      } else {
-        setGameState(gameData.hasTimer ? 'observe' : 'quiz');
-        setCountdown(gameData.timerDuration);
-        setCurrentQuizIndex(0);
-        setSelectedOption(null);
-        setSelectedOptions([]);
-        setAnswerChecked(false);
-        setIsCorrect(false);
-        setCanCollectCurrentClue(false);
-      }
-    }
-  }, [selectedExhibit?.id, cluesCollected, failedQuizIds, isSubsidyRoom, gameData, exhibitModalMode, roomOneCompleted]);
-
-  // Bộ đếm ngược thời gian quan sát hiện vật
-  useEffect(() => {
-    if (exhibitModalMode === 'info') return;
-
-    if (isSubsidyRoom && gameState === 'observe' && countdown > 0) {
-      const timer = setTimeout(() => {
-        setCountdown(prev => prev - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    } else if (isSubsidyRoom && gameState === 'observe' && countdown === 0 && gameData) {
-      setGameState('quiz');
-    }
-  }, [gameState, countdown, gameData, isSubsidyRoom, exhibitModalMode]);
+    return () => window.clearTimeout(resetTimer);
+  }, [selectedExhibit, cluesCollected, isSubsidyRoom, gameData, exhibitModalMode, roomOneCompleted, isRoomOneFinalRound, hasAllRoomOnePoints, setAudioPlaying]);
 
   // Mô phỏng Audio thuyết minh chạy giây tăng dần
   useEffect(() => {
@@ -484,18 +448,18 @@ export const ExhibitModal: React.FC = () => {
 
     setIsCorrect(correct);
     setAnswerChecked(true);
-    setCanCollectCurrentClue(correct);
-
-    if (!correct && selectedExhibit) {
-      const newFailed = failedQuizIds.includes(selectedExhibit.id)
-        ? failedQuizIds
-        : [...failedQuizIds, selectedExhibit.id];
-      updateFailedQuizIds(newFailed);
-    }
   };
 
   const handleNextStep = () => {
     if (!gameData) return;
+
+    if (!isCorrect) {
+      setSelectedOption(null);
+      setSelectedOptions([]);
+      setAnswerChecked(false);
+      setIsCorrect(false);
+      return;
+    }
 
     if (currentQuizIndex < gameData.quizzes.length - 1) {
       setCurrentQuizIndex(prev => prev + 1);
@@ -503,14 +467,14 @@ export const ExhibitModal: React.FC = () => {
       setSelectedOptions([]);
       setAnswerChecked(false);
       setIsCorrect(false);
+    } else if (gameData.isFinalRound) {
+      setRoomOneCompleted(true);
+      setGameState('info');
     } else {
+      // A Room 1 point is only awarded after every question for this exhibit is correct.
+      addClue(selectedExhibit!.id);
       setGameState('info');
     }
-  };
-
-  const handleCollectClue = () => {
-    addClue(selectedExhibit.id);
-    setSelectedExhibit(null); // Đóng modal sau khi thu thập
   };
 
   return (
@@ -635,26 +599,7 @@ export const ExhibitModal: React.FC = () => {
                 </div>
                 <hr className="border-slate-800/80" />
 
-                {/* BƯỚC 1: QUAN SÁT HIỆN VẬT CÓ ĐẾM NGƯỢC */}
-                {effectiveGameState === 'observe' && (
-                  <div className="bg-slate-900/60 border border-slate-800 p-5 rounded-2xl flex flex-col items-center justify-center text-center space-y-4">
-                    <div className="w-14 h-14 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center border border-amber-500/20 animate-pulse relative">
-                      <Clock size={24} />
-                      <div className="absolute inset-0 rounded-full border border-amber-500/35 animate-ping opacity-25" />
-                    </div>
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-amber-400 font-mono uppercase tracking-widest">
-                        Thời gian quan sát hiện vật
-                      </span>
-                      <h3 className="text-3xl font-mono font-black text-white">{countdown} giây</h3>
-                      <p className="text-[11px] text-slate-400 max-w-xs leading-relaxed font-sans pt-1">
-                        Hãy rê chuột xung quanh hoặc ngắm kỹ bức tranh/hiện vật trong phòng 3D. Hết thời gian quan sát sẽ mở khóa câu hỏi trắc nghiệm lịch sử.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* BƯỚC 2: TRẢ LỜI CÂU HỎI TRẮC NGHIỆM */}
+                {/* Mở tranh là vào câu hỏi ngay, không có thời gian chờ. */}
                 {effectiveGameState === 'quiz' && currentQuiz && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-1.5 text-amber-400 font-mono font-bold text-[10px] uppercase tracking-wider">
@@ -711,13 +656,19 @@ export const ExhibitModal: React.FC = () => {
                           <div className="bg-emerald-500/10 border border-emerald-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-emerald-400">
                             <Check size={30} />
                             <span className="font-mono font-bold text-sm">Đáp án chính xác!</span>
-                            <p className="text-xs text-emerald-300/80">Bạn có thể chuyển sang tư liệu để thu thập vật phẩm.</p>
+                            <p className="text-xs text-emerald-300/80">
+                              {currentQuizIndex < gameData.quizzes.length - 1
+                                ? 'Tiếp tục trả lời câu tiếp theo để nhận điểm.'
+                                : gameData.isFinalRound
+                                  ? 'Bạn đã hoàn thành câu hỏi cuối.'
+                                  : 'Bạn đã đúng toàn bộ câu hỏi và sẽ nhận 1 điểm.'}
+                            </p>
                           </div>
                         ) : (
                           <div className="bg-rose-500/10 border border-rose-500/25 p-5 rounded-2xl flex flex-col items-center text-center gap-3 text-rose-400">
                             <AlertTriangle size={30} />
                             <span className="font-mono font-bold text-sm">Lựa chọn chưa đúng.</span>
-                            <p className="text-xs text-rose-300/80">Câu hỏi này đã khóa cho lượt chơi của bạn. Bạn vẫn có thể đọc tư liệu nhưng không thu thập được vật phẩm này.</p>
+                            <p className="text-xs text-rose-300/80">Hãy chọn lại đáp án đúng để tiếp tục câu hỏi này.</p>
                           </div>
                         )}
 
@@ -729,11 +680,15 @@ export const ExhibitModal: React.FC = () => {
                         >
                           {isCorrect ? (
                             <>
-                              Tiếp tục thu thập
+                              {currentQuizIndex < gameData.quizzes.length - 1
+                                ? 'Câu tiếp theo'
+                                : gameData.isFinalRound
+                                  ? 'Hoàn thành Room 1'
+                                  : 'Nhận 1 điểm'}
                               <ArrowRight size={14} />
                             </>
                           ) : (
-                            'Tiếp tục xem tư liệu'
+                            'Thử lại câu này'
                           )}
                         </button>
                       </div>
@@ -756,26 +711,23 @@ export const ExhibitModal: React.FC = () => {
 
 
 
-                    {/* Nút lưu manh mối: chỉ hiện trong luồng chơi/câu hỏi, không hiện khi bấm bệ xem thông tin */}
-                    {exhibitModalMode === 'game' && canCollectCurrentClue && (
-                      !cluesCollected.includes(selectedExhibit.id) ? (
-                        <button
-                          onClick={handleCollectClue}
-                          className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-4 px-4 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 uppercase font-sans tracking-widest text-[11px]"
-                        >
-                          <Save size={16} />
-                          Thu thập manh mối
-                        </button>
-                      ) : (
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
-                          <span className="text-xl">📒</span>
-                          <div>
-                            <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã lưu vào Sổ điều tra</span>
-                            <span className="text-xs font-semibold leading-relaxed font-sans">{gameData.clueText}</span>
-                          </div>
+                    {gameData.isFinalRound && roomOneCompleted ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
+                        <span className="text-xl">✓</span>
+                        <div>
+                          <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã hoàn thành Room 1</span>
+                          <span className="text-xs font-semibold leading-relaxed font-sans">Bạn đã giải đúng câu hỏi cuối trong tủ kính trung tâm.</span>
                         </div>
-                      )
-                    )}
+                      </div>
+                    ) : cluesCollected.includes(selectedExhibit.id) ? (
+                      <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex items-center gap-3 text-emerald-400">
+                        <span className="text-xl">✓</span>
+                        <div>
+                          <span className="text-[10px] font-bold block tracking-wider uppercase font-sans text-emerald-500">Đã nhận 1 điểm</span>
+                          <span className="text-xs font-semibold leading-relaxed font-sans">{gameData.clueText}</span>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </div>
